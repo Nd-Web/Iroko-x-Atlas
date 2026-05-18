@@ -17,7 +17,7 @@
  *       {type:"complete", answer, agent_trace, citations, suggested_followups} → done
  *       {type:"error", message} → show error
  */
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 interface AgentStep {
   agent: string;
@@ -38,7 +38,7 @@ interface Props {
   onError: () => void;
 }
 
-const AGENT_META: Record<string, { color: string; bg: string; icon: JSX.Element; label: string }> = {
+const AGENT_META: Record<string, { color: string; bg: string; icon: React.ReactElement; label: string }> = {
   Watchdog: {
     color: "#EF4444", bg: "rgba(239,68,68,0.08)", label: "Watchdog",
     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
