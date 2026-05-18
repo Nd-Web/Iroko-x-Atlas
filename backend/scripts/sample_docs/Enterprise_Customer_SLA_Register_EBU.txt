@@ -1,0 +1,153 @@
+MTN NIGERIA COMMUNICATIONS PLC
+ENTERPRISE BUSINESS UNIT — CUSTOMER SLA REGISTER
+
+Document Reference : MTN-EBU-SLA-REG-2026
+Register Title     : Enterprise Customer SLA Register — EBU
+Department         : Enterprise Business
+Document Type      : Contract Register
+Classification     : Confidential — Enterprise Sales
+Prepared By        : Enterprise Business Unit (EBU), Commercial Operations
+Reviewed By        : VP, Enterprise Business
+Date of Register   : 1 January 2026
+Last Updated       : 31 March 2026
+Review Frequency   : Quarterly
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1.1  This register records the Service Level Agreements (SLAs) for all
+     active MTN Nigeria Enterprise Business Unit (EBU) customers as at
+     Q1 2026.
+
+1.2  Summary Statistics:
+
+     Total active enterprise customers        :  47
+     Total annual contract value              :  NGN 890,000,000
+     Tier 1 customers (≥ NGN 50M/yr)         :  8
+     Tier 2 customers (NGN 10M–50M/yr)       :  21
+     Tier 3 customers (< NGN 10M/yr)         :  18
+
+1.3  SLA Credit Exposure (Ikeja Cluster Outage — 14 Feb 2026):
+     Three Tier-1 customers had primary connectivity via the Ikeja cluster.
+     Total SLA credit exposure: NGN 2,100,000.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. SLA TIER DEFINITIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2.1  Tier 1 — Enterprise Premium
+
+     Contracted Uptime    : 99.9% per calendar month
+     Measurement Window  : 24 × 7, including planned maintenance windows
+                           (must be pre-notified 72 hours in advance)
+     SLA Credit Formula  : 10% of monthly contract value per hour of
+                           downtime below contracted uptime
+     Maximum Credit      : 50% of monthly contract value in any month
+     Escalation          : Dedicated Account Manager + VP Enterprise response
+                           within 2 hours of P1 fault notification
+
+2.2  Tier 2 — Enterprise Standard
+
+     Contracted Uptime   : 99.5% per calendar month
+     SLA Credit Formula  : 5% of monthly contract value per hour of downtime
+     Maximum Credit      : 30% of monthly contract value in any month
+     Escalation          : Account Manager response within 4 hours
+
+2.3  Tier 3 — Enterprise Basic
+
+     Contracted Uptime   : 99.0% per calendar month
+     SLA Credit Formula  : 2% of monthly contract value per hour of downtime
+     Maximum Credit      : 20% of monthly contract value in any month
+     Escalation          : Standard NOC process
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. SLA TERMS AND CREDIT SCHEDULE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3.1  SLA Credit Calculation
+
+     The SLA credit is calculated as follows:
+
+         Monthly Credit = (Hours of Downtime × Monthly Contract Value
+                          × Credit Rate per Hour)
+
+         Where Credit Rate per Hour:
+           Tier 1 : 10% of monthly contract value per hour
+           Tier 2 : 5% of monthly contract value per hour
+           Tier 3 : 2% of monthly contract value per hour
+
+     Example (Tier 1, Zenith Bank):
+       Monthly contract value: NGN 7,916,667 (NGN 95M / 12 months)
+       Downtime: 4.2 hours (Ikeja cluster outage, 14 Feb 2026)
+       Credit: 4.2 × 10% × NGN 7,916,667 = NGN 3,325,000 ← EXCEEDS CAP
+       Credit capped at 50% of monthly value: NGN 3,958,334
+
+     NOTE: Actual credit is 4.2 × 10% = 42% of monthly value, below the
+     50% cap. Credit = NGN 3,325,000. Internal calculation shows total
+     NGN 2.1M across three affected customers after proportional adjustment.
+
+3.2  SLA Credit Process
+     (a) EBU is notified by NOC of P1 outage affecting enterprise customers.
+     (b) EBU Account Manager notifies affected customer within 2 hours (Tier 1).
+     (c) SLA credit is calculated and confirmed within 5 business days.
+     (d) Credit is applied to the following month's invoice.
+     (e) Customer confirms acceptance of credit in writing.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. TIER 1 CUSTOMER REGISTER (TOP 8 CUSTOMERS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Customer            Annual Value (NGN)  Primary Site      Account Manager
+——————————————————  ——————————————————  ————————————————  ———————————————
+Zenith Bank Plc     95,000,000          Ikeja, Lagos       [AM Name]
+GTBank Plc          82,000,000          Victoria Island    [AM Name]
+NNPC Ltd            78,000,000          Ikeja, Lagos       [AM Name]
+Dangote Group       65,000,000          Ilupeju, Lagos     [AM Name]
+Access Bank Plc     58,000,000          Marina, Lagos      [AM Name]
+UBA Plc             54,000,000          Marina, Lagos      [AM Name]
+Oando Plc           52,000,000          VI, Lagos          [AM Name]
+Flour Mills Nigeria 50,000,000          Apapa, Lagos       [AM Name]
+————————————————————————————————————————————————————
+TIER 1 SUBTOTAL     534,000,000
+
+Ikeja cluster customers (Zenith Bank, NNPC, Dangote Group) account for
+NGN 238M annual contract value and were directly affected by the
+14 February 2026 outage.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. SLA INCIDENT LOG — Q1 2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Incident Ref          Date          Customer(s)           Credit (NGN)    Status
+————————————————————  ————————————  ————————————————————  —————————————   ——————
+INC-2026-IKJ-0147     14 Feb 2026   Zenith Bank, NNPC,    2,100,000       PENDING
+                                    Dangote Group                         NOTIFICATION
+
+No other P1 incidents affecting Tier-1 enterprise customers were recorded
+in Q1 2026.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. CONTRACT RENEWAL CALENDAR — 2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Customer            Contract Expiry    Renewal Notice Due   Status
+——————————————————  ————————————————   ———————————————————  ——————
+Zenith Bank Plc     31 Dec 2026        30 Sep 2026          Active
+GTBank Plc          31 Mar 2027        31 Dec 2026          Active
+NNPC Ltd            30 Jun 2026        31 Mar 2026          RENEWAL DUE !!
+Dangote Group       31 Dec 2026        30 Sep 2026          Active
+Access Bank Plc     31 Dec 2026        30 Sep 2026          Active
+
+NNPC Ltd contract expires 30 June 2026. Renewal notice was due 31 March
+2026. EBU Account Manager to engage NNPC procurement immediately.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. APPROVALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Prepared By : EBU Commercial Operations Manager   Date: 1 Jan 2026
+Reviewed By : VP, Enterprise Business             Date: 5 Jan 2026
+Last Updated: EBU Commercial Operations           Date: 31 Mar 2026
+
+Document End.

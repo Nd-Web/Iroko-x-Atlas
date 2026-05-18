@@ -1,0 +1,159 @@
+MTN NIGERIA COMMUNICATIONS PLC
+DATA PROTECTION OFFICE — PROCESSING ACTIVITY RECORD
+
+Document Reference : MTN-NDPA-ART24-2026-001
+Record Title       : Article 24 Data Processing Activity Record
+Department         : Legal/Regulatory
+Document Type      : Policy / Compliance Record
+Classification     : Confidential — Data Protection
+Prepared By        : Data Protection Office
+Data Protection Officer: [DPO Name], dpo@mtn.com.ng
+Date Prepared      : 15 January 2026
+Status             : DRAFT — DPO Sign-Off Pending (Section 4)
+Review Frequency   : Annual
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. PURPOSE AND LEGAL BASIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1.1  This record is maintained pursuant to Article 24 of the Nigeria Data
+     Protection Act 2023 (NDPA), which requires every data controller of
+     major importance to maintain a record of all processing activities.
+
+1.2  MTN Nigeria Communications Plc is classified as a Data Controller of
+     Major Importance under the NDPA by virtue of its subscriber base
+     exceeding 1 million data subjects and its operation of critical
+     communications infrastructure.
+
+1.3  Legal basis for processing: Contractual necessity (Article 25(2)(b)),
+     Legitimate interests (Article 25(2)(f)), and Legal obligation
+     (Article 25(2)(c)) as applicable to each processing purpose described
+     in Section 2.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. PROCESSING PURPOSES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2.1  Subscriber Onboarding and Identity Verification
+     Purpose      : Verify subscriber identity per NCC SIM registration
+                    requirements; open service account.
+     Legal Basis  : Legal obligation (NCC Regulations) and contractual.
+     Data Used    : National ID number, BVN, name, address, biometrics.
+
+2.2  Service Delivery and Network Operations
+     Purpose      : Provide telecommunications services (voice, data, SMS);
+                    operate and maintain network infrastructure.
+     Legal Basis  : Contractual necessity.
+     Data Used    : MSISDN, IMSI, IMEI, call/data records, location data.
+
+2.3  Billing and Payment Processing
+     Purpose      : Generate invoices; process airtime and MoMo wallet
+                    transactions; manage credit and debt.
+     Legal Basis  : Contractual necessity.
+     Data Used    : Call records, data usage, payment card details,
+                    MoMo wallet transaction logs.
+
+2.4  Fraud Prevention and Security
+     Purpose      : Detect and prevent fraudulent transactions; protect
+                    subscriber accounts; comply with AML obligations.
+     Legal Basis  : Legitimate interests; legal obligation.
+     Data Used    : Transaction patterns, device identifiers, location,
+                    call patterns.
+
+2.5  Regulatory Reporting
+     Purpose      : Submit QoS returns, lawful intercept, and other
+                    mandatory NCC and government filings.
+     Legal Basis  : Legal obligation.
+     Data Used    : Aggregate network data, subscriber records as required
+                    by court order or regulatory direction.
+
+2.6  Marketing and Customer Retention
+     Purpose      : Send promotional offers; personalise service
+                    recommendations.
+     Legal Basis  : Consent (where obtained); legitimate interests.
+     Data Used    : Usage patterns, demographics, location (aggregated).
+     Note         : Opt-out mechanism available via *123# and MTN app.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. DATA CATEGORIES AND RETENTION PERIODS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Category                    Retention Period    Basis
+——————————————————————————  ——————————————————  ——————————————————————
+Subscriber identity data    5 years post-churn  NCC SIM Regs
+Call detail records (CDR)   5 years             MTN Policy v3.2 Sec 4.2
+Data usage logs             5 years             MTN Policy v3.2 Sec 4.2
+Billing records             7 years             FIRS / Tax obligations
+MoMo transaction logs       7 years             CBN regulations
+Fraud investigation records 7 years             EFCC / Legal hold
+Network performance logs    5 years*            MTN Policy v3.2 Sec 4.2
+
+* NOTE: NCC Consumer Protection Regulations 2023 require network
+  performance logs to be retained for 7 years. MTN Policy v3.2 specifies
+  5 years. A policy update (v3.3) is in progress. Interim preservation
+  extended to 7 years pending formal policy amendment. DPO to confirm.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. CROSS-BORDER DATA TRANSFERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4.1  MTN Group — South Africa
+     Recipient    : MTN Group Limited, Johannesburg, South Africa.
+     Purpose      : Group-level reporting, fraud intelligence, roaming
+                    settlement, and shared IT infrastructure.
+     Transfer Basis: Standard Contractual Clauses (SCCs) — DRAFT.
+                    DPO SIGN-OFF PENDING.
+     DPIA Reference: MTN-DPIA-2026-003 — NOT YET LINKED TO THIS RECORD.
+
+4.2  Amazon Web Services (AWS) — Ireland
+     Recipient    : Amazon Web Services EMEA SARL, Dublin, Ireland.
+     Purpose      : Cloud hosting for MTN Digital platforms and MoMo
+                    infrastructure.
+     Transfer Basis: Standard Contractual Clauses (SCCs) — DRAFT.
+                    DPO SIGN-OFF PENDING.
+     AWS DPA      : Executed 1 March 2025 — current.
+     DPIA Reference: MTN-DPIA-2026-004 — NOT YET LINKED TO THIS RECORD.
+
+4.3  !! COMPLIANCE GAP NOTICE !!
+     Both cross-border transfer arrangements in Sections 4.1 and 4.2 are
+     classified as INCOMPLETE pending:
+     (a) DPO review and formal sign-off on Standard Contractual Clauses.
+     (b) Linkage of DPIA references (MTN-DPIA-2026-003 and -004) to this
+         processing record.
+
+     The NDPA requires that cross-border transfers to countries without
+     adequate protection (as determined by NITDA) be conducted under
+     approved transfer mechanisms. Failure to complete this record before
+     the next NDPA compliance review constitutes a regulatory risk.
+
+     DPO is required to complete sign-off by 30 April 2026.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. DATA SUBJECT RIGHTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1  MTN Nigeria has established a data subject rights handling process:
+     — Access requests  : Responded to within 72 hours.
+     — Deletion requests: Processed within 30 days (subject to legal holds).
+     — Correction       : Processed within 14 days.
+     — Portability      : Available for CDR and billing data in JSON/CSV.
+     — Objection        : Marketing opt-out effective within 24 hours.
+
+5.2  DPO contact: dpo@mtn.com.ng | Tel: +234-1-XXX-XXXX
+     Postal: Data Protection Officer, MTN Nigeria, MTN Plaza, Falomo,
+     Ikoyi, Lagos, Nigeria.
+
+5.3  Complaints may also be submitted to NITDA at complaints.nitda.gov.ng.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. DPO SIGN-OFF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: PENDING
+Required By: 30 April 2026
+
+DPO Name  : ____________________________________
+Signature : ____________________________________
+Date      : ____________________________________
+
+Document End.

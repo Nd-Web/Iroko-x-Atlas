@@ -1,0 +1,142 @@
+MTN NIGERIA COMMUNICATIONS PLC
+LEGAL AND REGULATORY DIVISION — REGULATORY SUBMISSION
+
+Document Reference : MTN-NCC-QOS-Q4-2025
+Submission Title   : NCC Quality of Service Quarterly Return — Q4 2025
+Department         : Legal/Regulatory
+Document Type      : Policy / Regulatory Submission
+Classification     : Regulatory — Confidential
+Reporting Period   : 1 October 2025 — 31 December 2025
+Prepared By        : Regulatory Affairs Team
+Reviewed By        : Chief Regulatory Officer
+Date of Submission : 13 February 2026
+Submission Status  : Submitted to NCC
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. PURPOSE AND BASIS OF SUBMISSION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This document constitutes MTN Nigeria's Quality of Service Quarterly
+Return to the Nigerian Communications Commission (NCC) for Q4 2025,
+submitted pursuant to the NCC Quality of Service Regulations 2012
+(as amended) and the NCC Consumer Protection Regulations 2023.
+
+Submission deadline : 13 February 2026 (45 days after period end)
+Submitted on        : 13 February 2026 (on time)
+NCC reference       : NCC/QOS/MTN/Q4-2025/001
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. NETWORK PERFORMANCE METRICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2.1  Network Availability
+
+     KPI                             Q4 2025 Actual   NCC Benchmark   Status
+     ——————————————————————————————  ——————————————   —————————————   ——————
+     Network Availability             99.1%           ≥ 99.0%         COMPLIANT
+     Call Setup Success Rate          97.3%           ≥ 95.0%         COMPLIANT
+     Call Drop Rate                    1.8%           ≤ 3.0%          COMPLIANT
+     SMS Delivery Rate                99.4%           ≥ 98.0%         COMPLIANT
+     Data Throughput (4G avg)        12.4 Mbps        ≥ 8.0 Mbps      COMPLIANT
+     Data Throughput (3G avg)         3.1 Mbps        ≥ 1.5 Mbps      COMPLIANT
+
+2.2  Complaint Resolution Performance
+
+     KPI                             Q4 2025 Actual   NCC Benchmark   Status
+     ——————————————————————————————  ——————————————   —————————————   ——————
+     Complaints resolved within 24h    71%            ≥ 50%           COMPLIANT
+     Complaints resolved within 7d     89%            ≥ 80%           COMPLIANT
+     Total complaints received        988             —               —
+     Complaints escalated to NCC        3             —               —
+
+2.3  Coverage
+
+     Metric                          Q4 2025 Actual   NCC Benchmark   Status
+     ——————————————————————————————  ——————————————   —————————————   ——————
+     Population coverage (2G)         99.3%           ≥ 90%           COMPLIANT
+     Population coverage (3G)         94.1%           ≥ 80%           COMPLIANT
+     Population coverage (4G LTE)     87.4%           ≥ 60%           COMPLIANT
+     LGAs covered (total 774)          768             ≥ 700           COMPLIANT
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. INCIDENTS AND OUTAGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3.1  Significant outages during Q4 2025 affecting ≥ 10,000 subscribers:
+
+     Date          Location            Duration   Subscribers Impacted
+     ————————————  ——————————————————  ————————   ————————————————————
+     12 Oct 2025   Port Harcourt Zone  2.1 hours  14,200
+     28 Nov 2025   Kano North Cluster  1.4 hours  11,800
+
+3.2  No P1 outages were recorded in December 2025.
+
+3.3  Both incidents were caused by third-party utility power failures with
+     generator switch-over delays. Corrective actions completed.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. CUSTOMER COMPLAINT ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4.1  Total complaints received Q4 2025: 988
+4.2  Top complaint categories:
+     — Slow data speeds: 31%
+     — Call quality issues: 24%
+     — Billing disputes: 22%
+     — SIM/roaming issues: 14%
+     — Other: 9%
+
+4.3  Three (3) complaints were escalated to NCC during Q4 2025. All three
+     have been resolved and NCC has been notified of resolutions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. UPCOMING SUBMISSION: Q1 2026 RETURN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1  Submission deadline for Q1 2026 (January–March 2026): 13 May 2026.
+5.2  Internal data compilation deadline: 5 May 2026.
+5.3  Note: Q1 2026 includes the Ikeja cluster P1 outage (February 14, 2026,
+     INC-2026-IKJ-0147). Network availability for February may fall below
+     the 99.0% NCC benchmark for the Lagos region. Regulatory Affairs must
+     verify and prepare explanatory narrative if required.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. SPECTRUM AND LICENCE COMPLIANCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6.1  MTN Nigeria's operating licences are current and valid:
+     — Unified Access Service Licence (UASL): Valid to 2031
+     — International Gateway Licence: Valid to 2028
+     — Spectrum assignments (900 MHz, 1800 MHz, 2100 MHz, 2600 MHz):
+       All current and fee payments up to date as at Q4 2025.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. DATA RETENTION AND COMPLIANCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7.1  All data and records underpinning this QoS return are retained in
+     compliance with NCC Regulation requirements.
+
+7.2  Per NCC Consumer Protection Regulations 2023, all QoS data and
+     supporting network logs must be retained for a minimum of seven (7)
+     years from the date of this submission (i.e., until 13 February 2033).
+
+7.3  MTN Nigeria's current Data Retention Policy (v3.2, Section 4.2)
+     specifies a 5-year retention period for operational network data.
+     A policy update is in progress to align with the 7-year NCC requirement.
+     Regulatory Affairs has confirmed interim data preservation measures are
+     in place pending formal policy update.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. DECLARATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+I, the undersigned, being duly authorised to submit this return on behalf
+of MTN Nigeria Communications Plc, hereby declare that the information
+provided in this QoS Quarterly Return is true, accurate and complete to
+the best of my knowledge and belief.
+
+Name  : Chief Regulatory Officer, MTN Nigeria Communications Plc
+Date  : 13 February 2026
+
+Document End.

@@ -1,0 +1,12 @@
+.env*
+.git
+.github
+venv
+node_modules
+.next
+__pycache__
+*.pyc
+*.pyo
+atlas.db
+.DS_Store
+*.log

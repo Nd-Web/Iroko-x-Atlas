@@ -1,0 +1,136 @@
+MTN NIGERIA COMMUNICATIONS PLC
+CUSTOMER EXPERIENCE DIVISION — COMPLAINT ANALYSIS REPORT
+
+Document Reference : CX-COMPLAINT-MOMO-Q1-2026
+Report Title       : Q1 2026 MoMo Wallet Deduction Complaint Analysis
+Department         : Customer Experience
+Document Type      : Complaint Analysis Report
+Classification     : Internal — Restricted
+Reporting Period   : 1 January 2026 — 31 March 2026
+Prepared By        : Customer Experience Analytics Team
+Approved By        : VP, Customer Experience
+Date of Report     : 14 April 2026
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. EXECUTIVE SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MTN Nigeria received 2,847 customer complaints related to MoMo wallet
+deductions during Q1 2026, representing a 187% increase over Q4 2025
+(988 complaints). Total disputed transaction value: NGN 45,000,000.
+
+Resolution rate as at report date: 73% (2,079 complaints resolved;
+NGN 32,800,000 refunded). 768 complaints remain open.
+
+The primary driver is unauthorised deduction complaints linked to the
+Ikeja cluster power outage on 14 February 2026 (Incident INC-2026-IKJ-0147),
+where MoMo transaction retries during network reconnection generated
+duplicate deductions for approximately 1,730 affected subscribers.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. COMPLAINT ANALYSIS SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2.1  Total Volume
+
+     Metric                          Q1 2026      Q4 2025    Change
+     ——————————————————————————————  ————————     ————————   ——————
+     Total complaints received       2,847        988        +187%
+     Total disputed value (NGN)      45,000,000   12,300,000 +266%
+     Complaints resolved             2,079        881        +136%
+     Complaints pending              768          107        +618%
+     Resolution rate                 73%          89%        -16pp
+     Avg resolution time (days)      8.2          3.1        +5.1d
+
+2.2  Complaint Categories
+
+     Category                        Count   % of Total
+     —————————————————————————————   ——————  ——————————
+     Unauthorised deductions         1,736   61.0%
+     Failed transfer — funds debited   412   14.5%
+     Double billing                    341   12.0%
+     Wallet freeze post-transaction    248    8.7%
+     Other MoMo issues                 110    3.9%
+
+2.3  Top Complaint Category: Unauthorised Deductions
+     Of the 1,736 unauthorised deduction complaints, 1,730 (99.7%) occurred
+     between 06:23 WAT and 09:00 WAT on 14 February 2026 — the period
+     immediately following restoration of the Ikeja cluster (see Section 4).
+     The MoMo platform's 30-second idempotency window failed to detect
+     retries triggered after the 4.2-hour outage gap.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. GEOGRAPHIC DISTRIBUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Region                Count   % of Total
+———————————————————   ——————  ——————————
+Lagos                 1,143   40.1%
+  — Ikeja             712     25.0%
+  — Other Lagos       431     15.1%
+Abuja                 387     13.6%
+Ogun                  264     9.3%
+Rivers                198     7.0%
+Kano                  183     6.4%
+Other                 672     23.6%
+
+Lagos recorded the highest complaint volume, consistent with the Ikeja
+cluster being the epicentre of the February 14 outage-related deduction
+spike. Ikeja sub-region alone accounted for 25% of all Q1 complaints.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. ROOT CAUSE — IKEJA OUTAGE LINKAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4.1  The Ikeja base station cluster power outage (02:14–06:23 WAT,
+     14 February 2026) caused active MoMo sessions to be interrupted.
+     When connectivity was restored at 06:23 WAT, the MoMo client
+     applications on affected subscriber handsets automatically retried
+     pending transactions.
+
+4.2  The MoMo platform's idempotency key expiry window is set at 30
+     seconds. Retries arriving 4.2 hours after the original transaction
+     were treated as new transactions by the platform, resulting in
+     duplicate deductions.
+
+4.3  Corrective action required: extend the MoMo idempotency window to
+     a minimum of 6 hours to cover extended outage reconnection gaps.
+     This has been escalated to the MoMo Technology team (ticket:
+     MOMO-TECH-2026-0341).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. FINANCIAL IMPACT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1  Total disputed value        : NGN 45,000,000
+5.2  Refunds processed to date   : NGN 32,800,000 (73% of total)
+5.3  Outstanding refund liability: NGN 12,200,000
+5.4  Regulatory exposure (NCC)   : Complaints exceeding 30-day resolution
+     may attract NCC consumer protection penalties. 214 complaints are
+     currently at 30+ days outstanding.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. RECOMMENDED ACTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6.1  Expedite resolution of 768 open complaints to avoid NCC penalties.
+     Internal deadline: 30 April 2026.
+
+6.2  Deploy MoMo idempotency window patch (MOMO-TECH-2026-0341) by
+     30 April 2026. Testing in UAT environment completed 10 April 2026.
+
+6.3  Proactively notify all 1,730 affected Ikeja subscribers of the
+     duplicate deduction and offer automatic refund within 48 hours of
+     patch deployment.
+
+6.4  File incident linkage report connecting INC-2026-IKJ-0147 and
+     CX-COMPLAINT-MOMO-Q1-2026 for regulatory audit trail.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. APPROVALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Prepared By : Customer Experience Analytics Manager   Date: 14 April 2026
+Approved By : VP, Customer Experience                 Date: 15 April 2026
+
+Document End.

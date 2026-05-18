@@ -1,0 +1,418 @@
+================================================================================
+                    IROKO AI — COMPLETE PAGE-BY-PAGE GUIDE
+================================================================================
+
+This document explains every page in the Iroko AI dashboard — what it does,
+what data it shows, and why it exists. Use this as your reference when
+navigating or working on the project.
+
+Total pages: 31 routes across 6 functional areas.
+
+
+================================================================================
+  1. AUTHENTICATION PAGES (3 pages)
+================================================================================
+  These pages live OUTSIDE the main dashboard shell — no sidebar or topbar.
+  They use a split-screen layout: branded panel on the left, form on the right.
+
+  /login
+  ──────
+  The sign-in page. Two auth methods:
+  • Microsoft SSO (primary) — "Continue with Microsoft SSO" button at the top
+  • Email + password (fallback) — standard form below
+  There's also a "Forgot password?" link and a "Request access" mailto link.
+  The left panel shows the Iroko AI logo, a headline about cite-first AI,
+  and three feature bullet points (cite-first, audit-grade, multilingual).
+
+  /invite
+  ───────
+  The invitation acceptance page. When an admin invites a new user, they
+  receive an email link that brings them here. The left panel shows their
+  pre-assigned access details (role, department, region, who invited them).
+  The form collects: first/last name, password, confirm password, and
+  preferred language (English, Pidgin, Yoruba, Hausa, Igbo).
+
+  /forgot-password
+  ────────────────
+  Simple centered card (no split layout). Shows the Iroko AI logo, a brief
+  explanation, an email input field, and a "Send reset link" button.
+  There's a "Back to sign in" link below.
+
+
+================================================================================
+  2. MAIN DASHBOARD (1 page)
+================================================================================
+
+  /dashboard
+  ──────────
+  The home page — the first thing users see after signing in. It gives an
+  executive overview of the entire system at a glance.
+
+  What's on it:
+  • 5 KPI stat cards across the top — active incidents, SLA at risk,
+    queries today, citation accuracy, open DSRs. Each card has a number,
+    a delta (up/down trend), and a coloured accent bar.
+  • Agent performance section — 5 horizontal bars showing each agent's
+    query count and average latency (NOC, Contracts, Compliance, Care, Field).
+  • Recent queries table — the last 5 user queries with the agent used,
+    response latency, sources cited, and model tier (Haiku/Sonnet/Opus).
+  • Agent quick-access cards — 5 clickable cards at the bottom, one for each
+    agent, showing their status (e.g., "Operational – 7 active incidents")
+    and linking to the full agent page.
+
+
+================================================================================
+  3. AI CHAT (1 page)
+================================================================================
+
+  /chat
+  ─────
+  The main AI conversation interface. This is where users actually ask
+  questions and get answers from Iroko AI.
+
+  Layout (3 columns):
+  • Left: Agent selector dropdown + conversation messages area + input box
+  • Right sidebar: Context panel showing:
+    - Active incident summary (e.g., "Ikeja Cluster — 4G Sector Fault")
+    - SLA exposure countdown timer (e.g., "₦27.3M at risk, 1h 42m left")
+    - Source citations for the current answer — each citation shows the
+      document title, relevance score, and a text excerpt
+    - Confidence indicator (e.g., "High confidence — 5 sources")
+
+  Users can switch between agents using the dropdown at the top. The chat
+  supports both English and Pidgin queries (the sample data shows both).
+
+
+================================================================================
+  4. AGENT PAGES (5 pages)
+================================================================================
+  Each agent has its own dedicated dashboard showing domain-specific data.
+  All agent pages share the same layout pattern: stat cards at the top,
+  then data tables and panels below.
+
+  /agents/noc — NOC (Network Operations Centre) Agent
+  ────────────────────────────────────────────────────
+  For network engineers monitoring live incidents and infrastructure.
+
+  Shows:
+  • 4 stat cards: open incidents, SLA at risk (₦), changes today, BTS degraded
+  • Active incidents table with columns: ID, description, cluster, severity
+    (critical/high/medium badges), status, age, SLA exposure amount
+  • Recent RCAs panel — root cause analysis reports with ID, title, cause
+  • Today's changes panel — change management records with risk level
+    and approval status (approved/pending/completed)
+
+  /agents/compliance — Compliance Agent
+  ─────────────────────────────────────
+  For compliance officers, DPOs, and regulatory affairs staff.
+
+  Shows:
+  • 4 stat cards: open DSRs, pending DPIAs, filings due in 30 days,
+    processing records count
+  • Regulatory filings panel — NCC returns and NDPA audit filings with
+    status badges (in progress, not started, submitted, clear)
+  • DPIA tracker panel — Data Protection Impact Assessments with risk
+    level and approval status (in review, draft, approved)
+  • DSR queue table — Data Subject Requests (right to access, erasure,
+    rectification) with SLA countdown (days left) and urgency badges
+
+  What is a DPIA?
+  A Data Protection Impact Assessment — required by Nigeria's data protection
+  law (NDPA) before any new processing activity that involves personal data.
+  For example, before MTN launches a new analytics pipeline on mobile money
+  transactions, they must complete a DPIA documenting what data is processed,
+  the lawful basis, risks, and mitigations.
+
+  What is a DSR?
+  A Data Subject Request — when a customer exercises their right to access,
+  correct, or delete their personal data. MTN must respond within 30 days.
+
+  /agents/contracts — Contracts Agent
+  ───────────────────────────────────
+  For procurement managers and legal teams managing vendor and customer contracts.
+
+  Shows:
+  • 4 stat cards: active contracts count, total SLA exposure (₦),
+    auto-renewing in 30 days, expiring in 90 days
+  • High-exposure contracts table — sorted by SLA credit exposure, showing
+    contract ID, counterparty name, contract type (Vendor MSA, Enterprise
+    Customer, Tower Lease), contract value, SLA exposure, and renewal date
+
+  What is SLA exposure?
+  The amount of money MTN would owe in penalties if they breach the Service
+  Level Agreement. For example, if a vendor contract says MTTR (Mean Time
+  To Repair) is 4 hours, and an incident exceeds that, MTN owes penalty
+  credits. The dashboard shows the total ₦ amount currently at risk.
+
+  /agents/care — Care Agent
+  ─────────────────────────
+  For customer care agents and CX managers.
+
+  Shows:
+  • 4 stat cards: CSAT score, calls today, churn risk accounts, NPS score
+  • CSAT trend chart (simulated) — satisfaction trend over recent weeks
+  • Voice analytics panel — top call reasons with percentage breakdown
+  • Active churn risk table — high-value accounts flagged for retention
+  • Quick tariff lookup — common data plan pricing reference
+
+  /agents/field — Field Agent
+  ───────────────────────────
+  For field engineers managing physical network infrastructure.
+
+  Shows:
+  • 4 stat cards: active sites, rollout in progress, vandalism alerts,
+    offline bundles count
+  • Recent site cards panel — BTS sites with ID, name, region, last
+    maintenance date, and operational status (operational/degraded/maintenance)
+  • Offline bundles panel — pre-cached document sets for field use,
+    showing bundle name, engineer, size, doc count, sync date
+  • Active rollout programmes table — ongoing network expansion projects
+    with region, site count, lead engineer, target date, and status
+    (on track / at risk / not started)
+
+
+================================================================================
+  5. SEARCH & DOCUMENTS (2 pages)
+================================================================================
+
+  /search
+  ───────
+  Full document search interface. Uses hybrid BM25 + vector search.
+
+  Layout:
+  • Left sidebar: three filter panels — Document Type (All types, Contract,
+    RCA Report, HLD/LLD, NCC Return, DPIA, Ticket, Runbook), Source
+    (SharePoint, ServiceNow, Google Drive, OSS, BSS, Confluence), Language
+  • Main area: search bar at top, then result cards below. Each result shows:
+    type badge, document title, text excerpt, source, language, relevance score
+
+  The filters are interactive — clicking a type or source filters results
+  in real-time (client-side filtering on the demo data).
+
+  /documents
+  ──────────
+  Document corpus browser — a table view of all indexed documents.
+
+  Shows:
+  • 4 stat cards: total documents (24,811), indexed today (+341),
+    pending parsing (12), PII redacted spans (4,218)
+  • Filter bar: search input + type dropdown + source dropdown
+  • Documents table with columns: document title (with file icon), type,
+    source, language, last updated date, classification badge
+    (Public/Internal/Confidential/Restricted — colour-coded)
+
+
+================================================================================
+  6. KNOWLEDGE GRAPH (1 page)
+================================================================================
+
+  /knowledge-graph
+  ────────────────
+  Explorer for the eTOM-aligned knowledge graph that powers Iroko AI's
+  entity-aware retrieval.
+
+  Shows:
+  • 4 stat cards: total entities (48,214), edge types (11),
+    relationships (214,881), last rebuilt time
+  • Entity types table — lists all node classes (NetworkElement, Site,
+    Contract, SLA, Vendor, Customer, Incident, ProcessingActivity, DPIA,
+    Filing) with their count
+  • Edge types table — lists all relationship types (LOCATED_AT, SUPPLIED_BY,
+    GOVERNED_BY, HAS_SLA, AFFECTED_BY, etc.) with their count
+
+
+================================================================================
+  7. COMPLIANCE & AUDIT (3 pages)
+================================================================================
+
+  /compliance/reports
+  ───────────────────
+  Compliance report dashboard — regulatory filing status and DPIA wizard.
+
+  Shows:
+  • 3 report cards: NCC Q1 2026 QoS Return (60% progress), NDPA Annual
+    Audit Return (not started), NDPA Breach Notification Log (clear/100%).
+    Each card shows the regulator (NCC/NDPC), due date, progress bar.
+  • DPIA Wizard CTA — large card prompting users to start a new Data
+    Protection Impact Assessment, with a description of how Iroko AI
+    pre-fills fields from existing records.
+  • DSR queue summary — 3 active data subject requests with urgency
+    badges and "Respond" buttons.
+
+  /audit-trail
+  ────────────
+  The append-only query audit log — every question asked to Iroko AI
+  is recorded here with full provenance.
+
+  Shows:
+  • 4 stat cards: queries today (1,284), unique users, high-stakes queries
+    (frontier model used), refused queries (guardrail triggered)
+  • Integrity banner — green bar confirming "Audit log integrity verified —
+    All 1,284 entries cryptographically chained. Last hash verified 30s ago."
+  • Query log table: entry ID, user name, the actual query text, agent used,
+    model used (claude-haiku-4 / sonnet-4 / opus-4), number of source chunks,
+    response latency, and timestamp
+
+  /analytics
+  ──────────
+  Usage analytics dashboard — trends and breakdowns.
+
+  Shows:
+  • 4 KPI cards: queries this week (8,412), avg latency (1.84s),
+    citation accuracy (98.4%), refusal rate (0.18%)
+  • Queries by agent — horizontal bar chart showing NOC (41%), Contracts (22%),
+    Compliance (14%), Care (12%), Field (11%)
+  • Language breakdown — horizontal bar chart showing English (72%),
+    Pidgin (20%), Hausa (5%), Yoruba (2%), Igbo (1%)
+  • Model tier usage — 3 cards showing Haiku (62% / lookup), Sonnet (34% /
+    synthesis), Opus (4% / high-stakes) with query counts
+
+
+================================================================================
+  8. USER MANAGEMENT (4 pages)
+================================================================================
+
+  /user-management
+  ────────────────
+  Main user admin page with 3 tabs: Users, Pending Invites, Roles.
+
+  Users tab:
+  • 4 stat cards: total users, active, pending invites, suspended
+  • User table: avatar+name+email, role (colour-coded badge), department,
+    region, status (active/invited/suspended with dot indicator),
+    Edit and Suspend action buttons
+
+  Pending Invites tab:
+  • Table showing: invitee name+email, role, sent date+by whom, expiry date,
+    status badge (pending/accepted/expired/revoked), Resend/Revoke buttons
+
+  Roles tab:
+  • Table showing: role name, agent access scope, max document classification
+    (with colour-coded badge), user count, Edit button
+
+  /user-management/invite
+  ───────────────────────
+  New user invitation form. Fields:
+  • Work email address (must be mtn.ng or approved domain)
+  • First name + Last name
+  • Role (dropdown: Super Admin, Admin, NOC Engineer, Compliance Officer,
+    DPO, Procurement Manager, Field Engineer, Care Agent, Finance Analyst,
+    Read Only)
+  • Department + Region dropdowns
+  • Agent access scope — checkboxes for each of the 5 agents
+  • Maximum document classification (Public/Internal/Confidential/Restricted)
+  • Preferred language
+  • Personal message (optional textarea)
+  • Send invitation button + Cancel link
+
+
+================================================================================
+  9. SETTINGS (4 pages)
+================================================================================
+
+  /settings/profile
+  ─────────────────
+  Personal account settings.
+  • Personal information card: avatar (AO initials), name, email (disabled —
+    managed through Microsoft Entra ID), department, region
+  • Language & display card: preferred language dropdown, voice input toggle
+  • Save changes + Cancel buttons
+
+  /settings/system
+  ────────────────
+  System-wide configuration (admin only).
+  • LLM router policy — shows 4 routing rules: single-fact lookup → Haiku,
+    synthesis (3-10 chunks) → Sonnet, high-stakes/compliance → Opus,
+    multilingual generation → Sonnet. Each with a description and
+    colour-coded model tier badge.
+  • Features: Multiple language support (English, Pidgin, Yoruba, Hausa, Igbo).
+  • Security: Enterprise SSO and invite-only access.
+
+  /settings/integrations
+  ──────────────────────
+  Third-party integration management.
+  • 6 integration cards in a 2-column grid:
+    - Microsoft Teams (connected) — bot in channels/meetings
+    - WhatsApp Business (connected) — voice notes + text for field staff
+    - Microsoft Entra ID (connected) — SSO + ABAC + MFA
+    - Slack (not connected) — bot fallback
+    - Outlook Plugin (not connected) — inline answers in email
+    - MCP / Copilot (not connected) — Model Context Protocol server
+  • Each card shows: icon, name, category, status badge, description,
+    Configure/Connect button
+
+  /settings/offline
+  ─────────────────
+  Offline bundle manager for field engineers.
+  • Info banner explaining offline mode (quantised 7B on-device model)
+  • Bundle list — 3 bundles: Kano-Kaduna Rollout Q2 (48 MB, ready),
+    Lagos Fibre Phase 3 (62 MB, ready), Abuja 5G FWA Sites (31 MB,
+    update available). Each shows doc count, size, last sync time.
+  • "Build new bundle" button at top
+
+
+================================================================================
+  NAVIGATION STRUCTURE (Sidebar)
+================================================================================
+
+  The sidebar is divided into 4 sections:
+
+  MAIN
+  • Dashboard          → /dashboard
+  • Chat               → /chat
+  • Search             → /search
+  • Documents          → /documents
+  • Knowledge Graph    → /knowledge-graph
+
+  AGENTS
+  • NOC                → /agents/noc
+  • Compliance         → /agents/compliance
+  • Contracts          → /agents/contracts
+  • Care               → /agents/care
+  • Field              → /agents/field
+
+  COMPLIANCE
+  • Reports            → /compliance/reports
+  • Audit Trail        → /audit-trail
+  • Analytics          → /analytics
+
+  SETTINGS
+  • User Management    → /user-management
+  • Settings           → /settings/profile
+
+  FOOTER
+  • User avatar + name + role + Sign out button
+
+
+================================================================================
+  KEY TERMINOLOGY
+================================================================================
+
+  Term              What it means in this app
+  ─────────────     ──────────────────────────────────────────────────────
+  Cite-first        Every AI answer must reference specific source documents
+  NDPA              Nigeria Data Protection Act — the privacy law
+  NCC               Nigerian Communications Commission — telecom regulator
+  DPIA              Data Protection Impact Assessment — required before
+                    processing personal data in new ways
+  DSR               Data Subject Request — when customers want their data
+                    accessed, corrected, or deleted (30-day response SLA)
+  SLA exposure      The ₦ amount MTN owes in penalties if they breach
+                    service level agreements with vendors or customers
+  RCA               Root Cause Analysis — post-incident investigation report
+  BTS               Base Transceiver Station — a cell tower / radio site
+  BoQ               Bill of Quantities — itemised cost breakdown for rollout
+  CSAT              Customer Satisfaction score (percentage)
+  NPS               Net Promoter Score (customer loyalty metric)
+  MTTR              Mean Time To Repair — SLA metric for resolution speed
+  eTOM              Enhanced Telecom Operations Map — telecom industry
+                    standard framework for business processes
+  MCP               Model Context Protocol — Microsoft 365 Copilot connector
+  ABAC              Attribute-Based Access Control — auth model from Entra ID
+  Turbopack         Next.js bundler (replaces Webpack)
+  LLM Router        System that picks which AI model to use based on
+                    query complexity (Haiku for simple, Opus for critical)
+
+================================================================================
+  END OF GUIDE
+================================================================================

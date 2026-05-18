@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-iroko}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-iroko_secret}
+      POSTGRES_DB:       ${POSTGRES_DB:-iroko_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-iroko}:${POSTGRES_PASSWORD:-iroko_secret}@postgres:5432/${POSTGRES_DB:-iroko_db}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app           # hot-reload in dev; remove bind-mount for prod
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ── Next.js frontend ───────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./frontend/.env.local
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app          # hot-reload in dev
+      - /app/node_modules        # keep container node_modules intact
+    command: npm run dev
+
+volumes:
+  postgres_data:

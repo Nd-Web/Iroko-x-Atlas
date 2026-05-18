@@ -1,0 +1,156 @@
+MTN NIGERIA COMMUNICATIONS PLC
+NETWORK OPERATIONS — ROOT CAUSE ANALYSIS REPORT
+
+Document Reference : INC-RCA-2026-IKJ-0147
+Incident Reference : INC-2026-IKJ-0147
+Department         : Network Operations
+Document Type      : Report
+Classification     : Internal — Restricted
+Prepared By        : Network Operations Centre (NOC), Lagos
+Reviewed By        : Head of Network Engineering
+Date of Report     : 28 February 2026
+Status             : Final
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. INCIDENT SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+On 14 February 2026 at 02:14 WAT, the Ikeja base station cluster experienced
+a full power outage resulting in degradation of service across six (6) base
+stations. Tower 4471 serves as the anchor site for the Ikeja cluster and was
+the primary site affected. The incident lasted 4.2 hours, from 02:14 WAT to
+06:23 WAT, impacting approximately 18,000 subscribers during the off-peak
+window.
+
+Incident Severity  : P1 — Critical
+Affected Sites     : IKJ-001, IKJ-002, IKJ-003, IKJ-004, IKJ-005, IKJ-006
+Anchor Site        : Tower 4471 (IKJ-001), Ikeja, Lagos State
+Total Downtime     : 4.2 hours (252 minutes)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. TIMELINE OF EVENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+02:14 WAT  — AES utility power failure on feeder supplying Ikeja cluster.
+              Generator auto-transfer relay on IKJ-001 (Tower 4471) fails to
+              activate. Sites IKJ-001 through IKJ-006 lose power within 90
+              seconds.
+
+02:19 WAT  — NOC NMS system raises P1 alarm: "Ikeja cluster — full site
+              outage". On-call engineer notified via automated page.
+
+02:31 WAT  — On-call engineer acknowledges alarm. Confirms 6-site outage.
+              ServiceNow ticket INC-2026-IKJ-0147 raised.
+
+02:45 WAT  — Field maintenance team dispatched to Tower 4471 (IKJ-001).
+              Ericsson on-call team notified per RAN Maintenance SLA
+              (ERIC/MTN/RAN/2026-001). Response SLA: 4 hours.
+
+03:10 WAT  — Field team arrives at Tower 4471. Diagnoses generator
+              auto-transfer relay fault. Requests replacement relay unit
+              from Ericsson parts depot.
+
+05:50 WAT  — Replacement relay unit delivered from Ericsson Lagos depot.
+
+06:10 WAT  — Generator auto-transfer relay replaced and tested successfully.
+
+06:23 WAT  — All 6 base stations restored to service. IHS Nigeria tower
+              lease site IHS/MTN/IKJ/2024-001 uptime clock resumes.
+
+06:30 WAT  — NOC confirms full service restoration. ServiceNow ticket
+              INC-2026-IKJ-0147 resolved.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. ROOT CAUSE ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3.1 Primary Root Cause
+    Failure of the generator automatic transfer switch (ATS) relay at Tower
+    4471 (IKJ-001). When the AES utility feeder failed, the ATS did not
+    transfer the load to the on-site diesel generator within the specified
+    10-second window. The relay had not been replaced since installation in
+    2021 and showed signs of mechanical wear beyond its rated service life.
+
+3.2 Contributing Factors
+    (a) IHS Nigeria tower lease (IHS/MTN/IKJ/2024-001) Schedule 4 requires
+        quarterly preventive maintenance of ATS relays. The last recorded
+        maintenance was September 2025 (Q3). The Q4 2025 maintenance visit
+        was not completed — no record in the change-management log.
+    (b) Ericsson RAN Maintenance SLA (ERIC/MTN/RAN/2026-001) specifies a
+        4-hour critical fault response. Actual response time for relay
+        delivery was 4 hours 12 minutes — a breach of 12 minutes. Ericsson
+        has been notified.
+    (c) No backup power interconnect between IKJ-001 and IKJ-002 to allow
+        partial cluster continuity during single-site generator failure.
+
+3.3 Why It Was Not Caught Earlier
+    The Q4 2025 IHS Nigeria preventive maintenance record was not entered
+    into the change-management log. This allowed the degraded relay to
+    remain in service without triggering a replacement alert.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. SLA IMPACT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4.1 IHS Nigeria Tower Lease SLA
+    Contracted uptime: 99.5% per calendar month.
+    February 2026 actual uptime (Tower 4471): 99.42%.
+    Breach: 0.08% below contracted SLA.
+    Applicable penalty: 2% monthly lease fee reduction per 0.1% shortfall.
+    Estimated penalty: NGN 560,000 (2% × NGN 28,000,000 monthly fee).
+
+4.2 Enterprise Customer SLA Exposure
+    Per the Enterprise Customer SLA Register — EBU (MTN-EBU-SLA-REG-2026),
+    three (3) Tier-1 enterprise customers with Ikeja cluster connectivity
+    are entitled to SLA credits.
+    Credit formula: 10% of monthly contract value per hour of downtime.
+    Total enterprise SLA credit exposure: NGN 2,100,000.
+    Affected customers: Zenith Bank, NNPC, Dangote Group.
+
+4.3 Ericsson RAN SLA
+    Response SLA: 4 hours for critical faults.
+    Actual response: 4 hours 12 minutes.
+    Breach: 12 minutes. Ericsson escalation credit applicable per Schedule B
+    of ERIC/MTN/RAN/2026-001.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. CORRECTIVE ACTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1 Immediate (Completed)
+    [X] Replace generator ATS relay at Tower 4471 (IKJ-001) — completed
+        06:10 WAT, 14 February 2026.
+    [X] Audit ATS relay condition at all Ikeja cluster sites (IKJ-001 to
+        IKJ-006) — completed 15 February 2026. Two further relays flagged
+        for replacement at IKJ-003 and IKJ-005.
+
+5.2 Short-Term (Due by 31 March 2026)
+    [ ] Replace ATS relays at IKJ-003 and IKJ-005.
+        Owner: NOC Field Engineering. Due: 15 March 2026.
+    [ ] File SLA credit claim against IHS Nigeria for February uptime breach.
+        Owner: Procurement. Due: 28 February 2026.
+    [ ] Notify affected enterprise customers (Zenith Bank, NNPC, Dangote
+        Group) of SLA credit entitlement.
+        Owner: Enterprise Business Unit. Due: 20 February 2026.
+    [ ] Raise escalation credit claim against Ericsson for response SLA
+        breach. Owner: Procurement. Due: 28 February 2026.
+
+5.3 Long-Term (Due by 30 June 2026)
+    [ ] Implement backup power interconnect between IKJ-001 and IKJ-002 to
+        provide partial cluster continuity. Owner: Network Engineering.
+    [ ] Enforce quarterly ATS maintenance logging in change-management
+        system — mandatory entry with IHS Nigeria site engineer sign-off.
+        Owner: NOC Operations.
+    [ ] Review and update IHS Nigeria tower lease (IHS/MTN/IKJ/2024-001)
+        preventive maintenance schedule at renewal.
+        Owner: Procurement / Legal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. APPROVALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Prepared By : NOC Operations Manager          Date: 28 February 2026
+Reviewed By : Head of Network Engineering     Date: 28 February 2026
+Approved By : Chief Technical Officer         Date: 28 February 2026
+
+Document End.

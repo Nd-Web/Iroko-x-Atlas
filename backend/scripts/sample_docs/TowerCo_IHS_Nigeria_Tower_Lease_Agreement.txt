@@ -1,0 +1,157 @@
+MTN NIGERIA COMMUNICATIONS PLC
+PROCUREMENT DIVISION — VENDOR CONTRACT
+
+Document Reference : IHS/MTN/IKJ/2024-001
+Contract Title     : Tower Site Lease Agreement — Ikeja Cluster
+Department         : Procurement
+Document Type      : Contract
+Classification     : Confidential — Internal
+Parties            : IHS Nigeria Limited ("Lessor") and
+                     MTN Nigeria Communications Plc ("Lessee")
+Commencement Date  : 1 July 2024
+Expiry Date        : 30 June 2026
+Date Executed      : 25 June 2024
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. PARTIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1.1  Lessor: IHS Nigeria Limited, a company incorporated in Nigeria with
+     registration number RC 622974, having its registered office at 4 Adeola
+     Odeku Street, Victoria Island, Lagos, Nigeria ("IHS Nigeria").
+
+1.2  Lessee: MTN Nigeria Communications Plc, a company incorporated in Nigeria
+     with registration number RC 395010, having its registered office at
+     MTN Plaza, Falomo, Ikoyi, Lagos, Nigeria ("MTN Nigeria").
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. LEASED SITES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2.1  The Lessor agrees to lease to the Lessee the following tower sites
+     constituting the Ikeja Cluster:
+
+     Site ID   Tower No.   Location                  Tower Type   Height
+     ——————    —————————   ————————————————————————  ——————————   ——————
+     IKJ-001   4471        Ikeja GRA, Lagos           Guyed        60m
+     IKJ-002   4472        Allen Avenue, Ikeja         Monopole     45m
+     IKJ-003   4473        Obafemi Awolowo Way         Monopole     45m
+     IKJ-004   4474        Computer Village, Ikeja     Rooftop      30m
+     IKJ-005   4475        Alausa Secretariat          Guyed        60m
+     IKJ-006   4476        Ogba, Ikeja                 Monopole     45m
+
+2.2  Tower 4471 (IKJ-001) is designated the anchor site for the Ikeja
+     Cluster. All cluster performance SLA measurements shall reference the
+     aggregate uptime of all six (6) sites in Schedule 1.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. CONTRACT TERMS AND CONDITIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3.1  Lease Term
+     This Agreement shall commence on 1 July 2024 and expire on 30 June
+     2026, unless earlier terminated in accordance with Section 9 or
+     renewed pursuant to Section 3.3 below.
+
+3.2  Monthly Lease Fee
+     The monthly lease fee payable by MTN Nigeria to IHS Nigeria for all
+     six (6) sites shall be NGN 28,000,000 (Twenty-Eight Million Naira),
+     exclusive of applicable taxes. Payment is due on the 1st business day
+     of each calendar month.
+
+3.3  Renewal
+     Either party may initiate renewal negotiations no later than ninety
+     (90) calendar days before the Expiry Date (i.e., no later than
+     1 April 2026). Failure to serve written renewal notice by 1 April
+     2026 shall result in automatic expiry of this Agreement on 30 June
+     2026 without further obligation by either party.
+
+3.4  Annual Fee Escalation
+     The monthly lease fee shall increase by 10% per annum on each
+     anniversary of the Commencement Date, effective 1 July 2025.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. SERVICE LEVEL AGREEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4.1  Uptime Guarantee
+     IHS Nigeria guarantees a minimum aggregate uptime of 99.5% per
+     calendar month across all six (6) leased sites. Uptime is measured
+     from the first day to the last day of each calendar month.
+
+4.2  Penalty for SLA Breach
+     In the event that aggregate uptime in any calendar month falls below
+     99.5%, IHS Nigeria shall apply a fee reduction to the following
+     month's invoice at the rate of:
+
+         2% (two percent) of the monthly lease fee per 0.1% (zero point
+         one percent) by which actual uptime is below the 99.5% threshold.
+
+     Example: Uptime of 99.3% = 0.2% shortfall = 4% fee reduction.
+              Fee reduction = 4% × NGN 28,000,000 = NGN 1,120,000.
+
+4.3  Measurement and Reporting
+     IHS Nigeria shall provide a monthly uptime report to MTN Nigeria
+     by the 5th business day of the following month. MTN Nigeria may
+     dispute reported uptime within 10 business days of receipt.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. MAINTENANCE OBLIGATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1  IHS Nigeria shall carry out preventive maintenance on each leased
+     site on a quarterly basis. Maintenance records shall be provided to
+     MTN Nigeria within 5 business days of each maintenance visit and
+     entered into the MTN Nigeria change-management system.
+
+5.2  IHS Nigeria shall maintain each site's diesel generator and automatic
+     transfer switch (ATS) in full working order at all times. Any ATS
+     relay with more than 4 years of operational service shall be replaced
+     during the next scheduled quarterly maintenance visit.
+
+5.3  MTN Nigeria may commission independent audits of maintenance records
+     with 48 hours' written notice to IHS Nigeria.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. POWER AND UTILITIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6.1  IHS Nigeria is responsible for utility power procurement and diesel
+     supply for each leased site. Utility power failures beyond IHS
+     Nigeria's control do not excuse SLA obligations where the failure
+     exceeds the generator autonomy period (72 hours of diesel supply).
+
+6.2  IHS Nigeria shall maintain a minimum 72-hour diesel reserve at each
+     site at all times.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. TERMINATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7.1  Either party may terminate this Agreement with 90 days' written
+     notice for cause, including but not limited to: material breach of
+     SLA obligations (defined as three (3) consecutive months below the
+     99.5% uptime threshold), insolvency, or regulatory action.
+
+7.2  MTN Nigeria may terminate individual site leases with 30 days'
+     written notice in the event of planned network decommissioning or
+     technology upgrade requiring site vacating.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. GOVERNING LAW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This Agreement shall be governed by and construed in accordance with
+the laws of the Federal Republic of Nigeria. Disputes shall be resolved
+by arbitration in Lagos, Nigeria, under the rules of the Lagos Court
+of Arbitration.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SIGNATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For IHS Nigeria Limited:              For MTN Nigeria Communications Plc:
+Name  : [Chief Executive Officer]     Name  : [Chief Technical Officer]
+Date  : 25 June 2024                  Date  : 25 June 2024
+
+Document End.

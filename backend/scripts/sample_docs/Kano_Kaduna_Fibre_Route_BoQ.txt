@@ -1,0 +1,146 @@
+MTN NIGERIA COMMUNICATIONS PLC
+NETWORK OPERATIONS — PROJECT DOCUMENTATION
+
+Document Reference : MTN-FIBRE-KNO-KAD-2025-007
+Document Title     : Bill of Quantities — Kano-Kaduna Fibre Route Deployment
+Department         : Network Operations
+Document Type      : Bill of Quantities / Project Report
+Classification     : Internal — Restricted
+Prepared By        : Network Infrastructure Team
+Reviewed By        : Head of Infrastructure Projects
+Approved By        : Chief Technical Officer
+Date of Document   : 15 October 2025
+Last Updated       : 31 March 2026
+Status             : Civil Works In Progress
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. PROJECT OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1.1  Project Name    : Kano-Kaduna Fibre Route Deployment
+1.2  Project Reference: MTN-FIBRE-KNO-KAD-2025-007
+1.3  Route           : Kano City Centre to Kaduna Central Business District
+1.4  Total Route Length: 287 kilometres
+1.5  Number of POP Sites: 12 (Points of Presence)
+1.6  Total Project Value: NGN 4,200,000,000 (Four Billion, Two Hundred Million Naira)
+1.7  Main Contractor : Julius Berger Nigeria Plc
+1.8  Contract Execution Date: 1 November 2025
+1.9  Target Completion: 30 September 2026 (Q3 2026)
+1.10 Contract Type   : Lump Sum Turnkey
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. SCOPE OF WORKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2.1  The scope of works includes the full design, procurement, civil
+     works, installation, and commissioning of a 287 km fibre optic cable
+     route from Kano to Kaduna, including:
+
+     (a) Fibre optic cable — 288-core single-mode fibre (G.652D standard)
+     (b) Duct installation — HDPE microduct system, 2× 40mm ducts
+     (c) Civil works — directional drilling at major road crossings;
+         open trenching in rural sections
+     (d) 12 POP shelter constructions along the route
+     (e) Optical equipment installation and commissioning at each POP
+     (f) Power systems — solar + battery backup at each POP
+     (g) Fibre acceptance testing — OTDR and power budget validation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. BILL OF QUANTITIES SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Item   Description                       Unit     Qty      Unit Rate (NGN)   Total (NGN)
+—————  ————————————————————————————————  ——————   ——————   ———————————————   ———————————
+1.01   Fibre optic cable (288-core)      per km   287      4,500,000         1,291,500,000
+1.02   HDPE microduct installation       per km   287      1,800,000           516,600,000
+1.03   Civil works (open trench)         per km   194      2,200,000           426,800,000
+1.04   Civil works (directional drill)   per km    93      5,500,000           511,500,000
+1.05   POP shelter construction          each      12     18,000,000           216,000,000
+1.06   Optical equipment per POP         each      12     25,000,000           300,000,000
+1.07   Power systems per POP             each      12     12,500,000           150,000,000
+1.08   Cable jointing and testing        lump sum   1    287,600,000           287,600,000
+1.09   Project management and prelims    lump sum   1    200,000,000           200,000,000
+                                                                     ———————————————————
+       TOTAL PROJECT VALUE                                           4,200,000,000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. POP SITE SCHEDULE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+POP No.  Location                  Km Mark   State     RoW Status
+———————  ————————————————————————  ————————  ——————    ——————————
+POP-01   Kano City Centre (Anchor)  0 km     Kano       CLEARED
+POP-02   Kano Ring Road             24 km    Kano       CLEARED
+POP-03   Kura Junction              48 km    Kano       CLEARED
+POP-04   Kafanchan North            72 km    Kaduna     CLEARED
+POP-05   Saminaka                   96 km    Kaduna     CLEARED
+POP-06   Kauru                     120 km    Kaduna     PENDING *
+POP-07   Ikara                     144 km    Kaduna     PENDING *
+POP-08   Ikara South               168 km    Kaduna     PENDING *
+POP-09   Giwa                      192 km    Kaduna     CLEARED
+POP-10   Chikun                    216 km    Kaduna     CLEARED
+POP-11   Rigasa                    240 km    Kaduna     CLEARED
+POP-12   Kaduna Central (Terminus) 287 km    Kaduna     CLEARED
+
+* POP-06, POP-07, POP-08: Right-of-Way clearances pending with Kaduna
+  State Ministry of Lands. Escalation submitted January 2026. Resolution
+  required by May 2026 to protect Q3 2026 completion target.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. PROJECT PROGRESS (AS AT 31 MARCH 2026)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1  Overall Progress: 33% complete (94 km of 287 km)
+5.2  Civil works: POP-01 to POP-04 completed. POP-05 in progress.
+5.3  Fibre installation: 94 km blown. Testing complete to POP-03.
+5.4  POP shelters: POP-01 and POP-02 constructed and fitted.
+
+5.5  Delays to Date:
+     — Q1 2026 harmattan weather caused a 3-week delay on open trench
+       sections between POP-02 and POP-03 (Kano Ring Road to Kura).
+       Julius Berger has submitted a revised programme adding 2 weeks
+       to the overall schedule.
+     — RoW clearance pending for POP-06, POP-07, POP-08 (Kaduna State).
+       If not resolved by 31 May 2026, Q3 2026 completion is at risk.
+
+5.6  Schedule Risk Assessment:
+     — GREEN: Q3 2026 target achievable IF RoW clearances secured by
+              31 May 2026.
+     — AMBER: 2-week harmattan delay already absorbed in revised programme.
+     — RED: If RoW resolution delayed beyond 31 May 2026, completion
+            slips to Q4 2026.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. PAYMENT SCHEDULE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Milestone                          % Value    Amount (NGN)        Due Date
+—————————————————————————————————  ————————   ————————————————   ——————————
+Contract mobilisation             10%         420,000,000        Nov 2025 (PAID)
+POP-01 to POP-04 civil complete   20%         840,000,000        Feb 2026 (PAID)
+POP-01 to POP-06 fibre blown      20%         840,000,000        May 2026
+POP-07 to POP-10 civil complete   20%         840,000,000        Jul 2026
+Full route fibre and testing       20%         840,000,000        Sep 2026
+Final acceptance and handover     10%         420,000,000        Oct 2026
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. CONTRACTOR DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Contractor   : Julius Berger Nigeria Plc
+RC Number    : RC 3680
+Address      : Julius Berger House, Plot 756, Adeyemo Alakija Street,
+               Victoria Island, Lagos, Nigeria
+Project Manager (Site): [Name], +234-[Mobile]
+MTN Project Manager  : [Name], Network Infrastructure Team
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. APPROVALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Prepared By : Network Infrastructure Project Manager   Date: 15 Oct 2025
+Reviewed By : Head of Infrastructure Projects          Date: 20 Oct 2025
+Approved By : Chief Technical Officer                  Date: 25 Oct 2025
+Updated By  : Project Management Office                Date: 31 Mar 2026
+
+Document End.

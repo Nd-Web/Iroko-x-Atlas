@@ -1,0 +1,163 @@
+MTN NIGERIA COMMUNICATIONS PLC
+PROCUREMENT DIVISION — VENDOR CONTRACT
+
+Document Reference : ERIC/MTN/RAN/2026-001
+Contract Title     : RAN Equipment Corrective and Preventive Maintenance SLA
+Department         : Procurement
+Document Type      : Contract
+Classification     : Confidential — Internal
+Parties            : Ericsson Nigeria Limited ("Service Provider") and
+                     MTN Nigeria Communications Plc ("Customer")
+Commencement Date  : 1 January 2026
+Expiry Date        : 31 December 2026
+Date Executed      : 15 December 2025
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. PARTIES AND BACKGROUND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1.1  Service Provider: Ericsson Nigeria Limited, RC 123456, 3 Kofo Abayomi
+     Street, Victoria Island, Lagos, Nigeria ("Ericsson").
+
+1.2  Customer: MTN Nigeria Communications Plc, RC 395010, MTN Plaza,
+     Falomo, Ikoyi, Lagos, Nigeria ("MTN Nigeria").
+
+1.3  This Agreement governs the provision of corrective and preventive
+     maintenance services for MTN Nigeria's Radio Access Network (RAN)
+     equipment portfolio as described in Schedule 1.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. SCOPE OF SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2.1  Covered Equipment
+     This Agreement covers maintenance services for 847 (eight hundred and
+     forty-seven) base stations nationwide as listed in Schedule 1 (Site
+     Register). The Site Register shall be updated by mutual agreement
+     within 30 days of any network expansion or decommissioning activity.
+
+2.2  Corrective Maintenance
+     Ericsson shall provide corrective maintenance services (fault diagnosis,
+     repair, and restoration) for all covered base stations in response to
+     fault notifications raised by MTN Nigeria's NOC.
+
+2.3  Preventive Maintenance
+     Ericsson shall perform scheduled preventive maintenance visits to all
+     covered base stations on a bi-annual basis (every 6 months). A
+     preventive maintenance calendar for 2026 is attached as Schedule 2.
+
+2.4  Spare Parts Availability
+     Ericsson shall maintain a critical spares inventory at its Lagos Depot
+     sufficient to guarantee availability of 95% of critical RAN spare
+     parts within 2 hours of fault notification for Lagos sites, and 8 hours
+     for all other regions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. SERVICE LEVEL COMMITMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3.1  Response Time SLA
+
+     Fault Priority   Definition                    Response Time   Resolution Time
+     —————————————    ————————————————————————————  —————————————   ———————————————
+     Critical (P1)    Full site outage or full       4 hours         24 hours
+                      cluster outage
+     High (P2)        Sector outage (≥ 50% capacity) 8 hours         48 hours
+     Medium (P3)      Degraded performance           24 hours        5 business days
+     Low (P4)         Non-service-affecting          72 hours        15 business days
+
+3.2  Response time is measured from the time MTN Nigeria logs a fault in
+     the ServiceNow system (as notified to Ericsson by automated alert)
+     to the time an Ericsson field engineer arrives on-site.
+
+3.3  Resolution time is measured from the time of response to the time
+     the affected site is restored to full service.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. COMMERCIAL TERMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4.1  Monthly Service Fee
+     The monthly fee payable by MTN Nigeria to Ericsson for services under
+     this Agreement shall be NGN 15,000,000 (Fifteen Million Naira),
+     exclusive of applicable taxes. Payment is due on the 5th business day
+     of each calendar month.
+
+4.2  Annual Value
+     Total annual contract value: NGN 180,000,000 (One Hundred and Eighty
+     Million Naira).
+
+4.3  Fee Escalation
+     The monthly fee shall increase by 8% per annum on each anniversary
+     of the Commencement Date.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. SLA BREACH AND CREDITS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1  In the event of a response time SLA breach for a P1 fault, Ericsson
+     shall apply a service credit to the following month's invoice per the
+     schedule in Schedule B of this Agreement.
+
+5.2  Schedule B (Credit Schedule — P1 Response Breach):
+     — Breach by up to 30 minutes  : NGN 50,000 credit per occurrence
+     — Breach by 30–60 minutes     : NGN 150,000 credit per occurrence
+     — Breach by over 60 minutes   : NGN 300,000 credit per occurrence
+
+5.3  Total credits in any calendar month shall not exceed 20% of the
+     monthly service fee.
+
+5.4  Note: Incident INC-2026-IKJ-0147 (14 February 2026) — Ericsson
+     response time was 4 hours 12 minutes (12-minute breach of 4-hour P1
+     SLA). Credit of NGN 50,000 is applicable per Schedule B.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. PARTS AND LOGISTICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6.1  Ericsson shall maintain a Lagos parts depot stocked with all critical
+     RAN spare parts. Parts availability guarantee: 95% of critical spares
+     available within 2 hours for Lagos sites.
+
+6.2  For sites outside Lagos, Ericsson shall maintain regional depots in
+     Abuja, Port Harcourt, and Kano with 8-hour parts availability SLA.
+
+6.3  All parts used under this Agreement must be genuine Ericsson-certified
+     components. No third-party or grey-market parts shall be used.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. REPORTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7.1  Ericsson shall provide a monthly maintenance report to MTN Nigeria
+     by the 5th business day of the following month, covering:
+     — All P1 and P2 faults attended
+     — Response and resolution times vs SLA
+     — Preventive maintenance visits completed
+     — Parts usage and depot stock levels
+
+7.2  Monthly service review meetings shall be held on the 3rd Tuesday
+     of each month between Ericsson account management and MTN Nigeria
+     Network Operations.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. TERM AND RENEWAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+8.1  This Agreement expires on 31 December 2026. Renewal discussions
+     should commence no later than 30 September 2026 (3 months before
+     expiry).
+
+8.2  Either party may terminate with 60 days' written notice for cause,
+     including persistent SLA failure (defined as 3 consecutive months
+     with more than 5% of P1 faults breaching response SLA).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SIGNATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For Ericsson Nigeria Limited:         For MTN Nigeria Communications Plc:
+Name  : [Country Manager]             Name  : [Chief Technical Officer]
+Date  : 15 December 2025              Date  : 15 December 2025
+
+Document End.
