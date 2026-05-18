@@ -52,9 +52,9 @@ function decodeLonLats(topo: RawTopo): LonLat[][] {
 
   // Normalise both Polygon and MultiPolygon to a flat list of rings
   const polys: number[][][] =
-    nigeria.type === "Polygon"
-      ? [nigeria.arcs as number[][]]
-      : (nigeria.arcs as number[][][][]).flat();
+  nigeria.type === "Polygon"
+    ? [nigeria.arcs as unknown as number[][]]
+    : (nigeria.arcs as unknown as number[][][][]).flat();
 
   return polys.flat().map(ring);
 }
