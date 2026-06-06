@@ -11,6 +11,12 @@ Stack: FastAPI + Semantic Kernel + Azure OpenAI + Azure AI Search
 from dotenv import load_dotenv
 load_dotenv()
 
+import sys
+import asyncio
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 # Load remaining secrets from Azure Key Vault (fills any gaps not covered by .env)
 from services.keyvault import load_secrets_from_keyvault
 load_secrets_from_keyvault()
@@ -53,6 +59,8 @@ from routes.insights import router as insights_router
 from routes.search import router as search_router_v2
 from routes.agents import router as agents_router
 from routes.chat import router as chat_router
+from routes.web_intel import router as web_intel_router
+from routes.pdf import router as pdf_router
 
 # Database
 from models.database import init_db
@@ -143,7 +151,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Iroko AI",
-    description="Iroko AI, powered by Atlas — enterprise document intelligence. "
+    description="Iroko AI, powered by Atlas — enterprise web intelligence and compliance platform for telecoms. "
                 "Multi-agent system built on Azure OpenAI + Microsoft Semantic Kernel.",
     version="1.0.0",
     docs_url="/docs",
@@ -186,6 +194,8 @@ app.include_router(search_router_v2)
 app.include_router(agents_router)
 app.include_router(chat_router)
 app.include_router(fraud_router)
+app.include_router(web_intel_router)
+app.include_router(pdf_router, prefix="/api/v1/pdf", tags=["pdf"])
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 

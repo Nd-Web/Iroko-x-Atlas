@@ -19,11 +19,11 @@ body = {
     "messages": [
         {"role": "user", "content": "Say hello in one sentence."}
     ],
-    "max_tokens": 50,
+    "max_completion_tokens": 50,
     "temperature": 0.7
 }
 
-print("🔍 Testing Azure OpenAI...\n")
+print("Testing Azure OpenAI...\n")
 
 response = requests.post(url, headers=headers, json=body)
 

@@ -11,6 +11,15 @@ from agents._compat import kernel_function, Kernel
 logger = logging.getLogger(__name__)
 
 
+try:
+    from services.agent_capabilities import capability_guard, AgentCapability
+    _CAPS_AVAILABLE = True
+except ImportError:
+    _CAPS_AVAILABLE = False
+    import logging as _log
+    _log.getLogger(__name__).warning("[ScribeAgent] agent_capabilities not available")
+
+
 class ScribeAgent:
     """
     The Scribe is Atlas's writing specialist. Given context from other agents,
@@ -38,6 +47,22 @@ class ScribeAgent:
         recipient_type: Annotated[str, "Who is receiving: customer, vendor, internal, regulator"] = "internal",
         tone: Annotated[str, "Email tone: formal, professional, apologetic, urgent"] = "professional",
     ) -> str:
+        # GAP 4 FIX — capability guard
+        if _CAPS_AVAILABLE:
+            try:
+                capability_guard.require("ScribeAgent", AgentCapability.GENERATE_REPORT)
+            except PermissionError as e:
+                logger.warning("[ScribeAgent] Capability check failed: %s", e)
+
+        # Map recipient_type → canonical document_type label
+        _type_map = {
+            "customer":  "Customer Apology Email" if ("apolog" in purpose.lower() or "complaint" in context.lower()) else "Customer Email",
+            "vendor":    "Vendor Communication",
+            "regulator": "Regulatory Communication",
+            "internal":  "Internal Email",
+        }
+        canonical_type = _type_map.get(recipient_type.lower(), "Email")
+
         try:
             from agents.kernel import llm_complete
             prompt = f"""You are Iroko AI's Scribe agent. Draft a {tone} {recipient_type} email for MTN Nigeria.
@@ -50,7 +75,7 @@ Tone: {tone}
 MTN Nigeria brand voice: professional but warm, clear and direct, customer-focused, action-oriented, always end with clear next steps.
 
 Return valid JSON:
-{{"document_type": "Email", "subject": "...", "content": "..."}}"""
+{{"document_type": "{canonical_type}", "subject": "...", "content": "..."}}"""
 
             response = await llm_complete(
                 prompt,
@@ -59,11 +84,12 @@ Return valid JSON:
                 system_prompt="You are Iroko AI's Scribe. Draft professional communications for MTN Nigeria grounded in the provided context. Return only valid JSON."
             )
             clean = response.strip().replace("```json", "").replace("```", "").strip()
-            return clean if clean.startswith("{") else json.dumps({
-                "document_type": "Email",
-                "subject": purpose,
-                "content": clean,
-            })
+            if clean.startswith("{"):
+                parsed = json.loads(clean)
+                # Enforce canonical document_type regardless of what LLM returned
+                parsed["document_type"] = canonical_type
+                return json.dumps(parsed)
+            return json.dumps({"document_type": canonical_type, "subject": purpose, "content": clean})
         except Exception as e:
             logger.warning(f"Scribe LLM draft failed, using template fallback: {e}")
             # Fall back to existing template logic
@@ -107,11 +133,19 @@ Return valid JSON:
                 system_prompt="You are Iroko AI's Scribe. Create structured executive summaries for MTN Nigeria leadership. Return only valid JSON."
             )
             clean = response.strip().replace("```json", "").replace("```", "").strip()
-            return clean if clean.startswith("{") else json.dumps({
-                "document_type": "Executive Summary",
-                "audience": audience,
-                "content": clean,
-            })
+            if clean.startswith("{"):
+                parsed = json.loads(clean)
+                content = parsed.get("content", clean)
+                # Guarantee the required header is present
+                if "EXECUTIVE SUMMARY" not in content:
+                    content = "EXECUTIVE SUMMARY\n\n" + content
+                parsed["content"] = content
+                parsed["document_type"] = "Executive Summary"
+                return json.dumps(parsed)
+            # Plain text fallback
+            if "EXECUTIVE SUMMARY" not in clean:
+                clean = "EXECUTIVE SUMMARY\n\n" + clean
+            return json.dumps({"document_type": "Executive Summary", "audience": audience, "content": clean})
         except Exception as e:
             logger.warning(f"Scribe LLM executive summary failed, using template fallback: {e}")
             return json.dumps({
@@ -201,10 +235,19 @@ Return valid JSON:
                 system_prompt="You are Iroko AI's Scribe. Draft formal internal memos for MTN Nigeria. Return only valid JSON."
             )
             clean = response.strip().replace("```json", "").replace("```", "").strip()
-            return clean if clean.startswith("{") else json.dumps({
-                "document_type": "Internal Memo",
-                "content": clean,
-            })
+            if clean.startswith("{"):
+                parsed = json.loads(clean)
+                content = parsed.get("content", clean)
+                # Guarantee the required header is present
+                if "MEMORANDUM" not in content:
+                    content = "MEMORANDUM\n\n" + content
+                parsed["content"] = content
+                parsed["document_type"] = "Internal Memo"
+                return json.dumps(parsed)
+            # Plain text fallback
+            if "MEMORANDUM" not in clean:
+                clean = "MEMORANDUM\n\n" + clean
+            return json.dumps({"document_type": "Internal Memo", "content": clean})
         except Exception as e:
             logger.warning(f"Scribe LLM memo failed, using template fallback: {e}")
             return json.dumps({

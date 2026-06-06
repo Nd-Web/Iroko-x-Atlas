@@ -31,6 +31,7 @@ interface FinalResult {
   risk_score: number;
   citations?: unknown[];
   reasoning_steps?: AgentStep[];
+  verdict?: string;
 }
 interface Props {
   query: string;
@@ -293,6 +294,7 @@ export default function ReasoningChain({ query, onComplete, onError }: Props) {
               response: answer,
               risk_score: riskScore,
               citations: (event.citations as unknown[]) ?? [],
+              verdict: (event.verdict as string) ?? "MONITOR",
             });
             setIsStreaming(false);
             onComplete(answer, riskScore);
@@ -368,6 +370,16 @@ export default function ReasoningChain({ query, onComplete, onError }: Props) {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#8B5CF6] animate-pulse" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#8B5CF6]">Output</span>
+                {finalResult.verdict && (
+                  <span className="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-full border tracking-wide"
+                    style={{
+                      background: finalResult.verdict === "NO-GO" ? "rgba(239,68,68,0.15)" : finalResult.verdict === "GO" ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)",
+                      color: finalResult.verdict === "NO-GO" ? "#EF4444" : finalResult.verdict === "GO" ? "#10B981" : "#F59E0B",
+                      borderColor: finalResult.verdict === "NO-GO" ? "rgba(239,68,68,0.3)" : finalResult.verdict === "GO" ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"
+                    }}>
+                    {finalResult.verdict}
+                  </span>
+                )}
               </div>
               <RiskBadgeLarge score={finalResult.risk_score} />
             </div>

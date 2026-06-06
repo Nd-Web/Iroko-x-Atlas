@@ -22,6 +22,7 @@ interface RawAlert {
     document_id?: string;
     [key: string]: unknown;
   };
+  verdict?: string;
   suggested_actions?: string[];
   draft_content?: string;
   related_document_ids?: string[];
@@ -45,6 +46,7 @@ interface AlertRecord {
   age: string;
   sla: string;
   timeline: string[];
+  verdict: string;
 }
 
 // ─── Base stats config ───────────────────────────────────────────────────────
@@ -108,6 +110,7 @@ function mapToAlertRecord(a: RawAlert, idx: number): AlertRecord {
     age: a.created_at ? relativeAge(a.created_at) : "—",
     sla: slaValue,
     timeline: a.suggested_actions ?? [],
+    verdict: a.verdict ?? "MONITOR",
   };
 }
 
@@ -121,7 +124,7 @@ const SEV: Record<string, { color: string; bg: string }> = {
   low: { color: "var(--color-success-700)", bg: "var(--color-success-50)" },
 };
 
-const COL = "100px 1fr 90px 110px 60px 110px";
+const COL = "100px 1fr 90px 85px 110px 60px 110px";
 const PAGE_SIZE = 15;
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -337,6 +340,7 @@ export default function AlertsContent() {
                 "ID",
                 "Description",
                 "Severity",
+                "Verdict",
                 "Status",
                 "Age",
                 "SLA Exposure",
@@ -360,6 +364,7 @@ export default function AlertsContent() {
                   <div className="h-3 w-20 rounded bg-gray-200 animate-pulse" />
                   <div className="h-3 w-full rounded bg-gray-200 animate-pulse" />
                   <div className="h-5 w-14 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="h-5 w-14 rounded bg-gray-200 animate-pulse" />
                   <div className="h-3 w-16 rounded bg-gray-200 animate-pulse" />
                   <div className="h-3 w-8 rounded bg-gray-200 animate-pulse" />
                   <div className="h-3 w-14 rounded bg-gray-200 animate-pulse" />
@@ -391,6 +396,16 @@ export default function AlertsContent() {
                     >
                       {alert.severity.charAt(0).toUpperCase() +
                         alert.severity.slice(1)}
+                    </span>
+                    <span
+                      className="text-[10px] font-bold px-2 py-[2px] rounded-full border w-fit"
+                      style={{
+                        background: alert.verdict === "NO-GO" ? "rgba(239,68,68,0.1)" : alert.verdict === "GO" ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+                        color: alert.verdict === "NO-GO" ? "#EF4444" : alert.verdict === "GO" ? "#10B981" : "#F59E0B",
+                        borderColor: alert.verdict === "NO-GO" ? "rgba(239,68,68,0.2)" : alert.verdict === "GO" ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.2)"
+                      }}
+                    >
+                      {alert.verdict}
                     </span>
                     <div className="flex items-center gap-[5px]">
                       <span
@@ -517,7 +532,17 @@ export default function AlertsContent() {
                       {selected.severity.charAt(0).toUpperCase() +
                         selected.severity.slice(1)}
                     </span>
-                    <div className="flex items-center gap-1.5">
+                    <span
+                      className="text-[11px] font-bold px-2 py-[2px] rounded-full border"
+                      style={{
+                        background: selected.verdict === "NO-GO" ? "rgba(239,68,68,0.15)" : selected.verdict === "GO" ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)",
+                        color: selected.verdict === "NO-GO" ? "#EF4444" : selected.verdict === "GO" ? "#10B981" : "#F59E0B",
+                        borderColor: selected.verdict === "NO-GO" ? "rgba(239,68,68,0.3)" : selected.verdict === "GO" ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"
+                      }}
+                    >
+                      {selected.verdict}
+                    </span>
+                    <div className="flex items-center gap-1.5 ml-2">
                       <span
                         className="w-1.5 h-1.5 rounded-full"
                         style={{

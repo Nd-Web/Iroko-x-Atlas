@@ -21,7 +21,7 @@
 
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { readStream } from "@/lib/stream";
 import type {
   Citation,
@@ -66,6 +66,34 @@ export function useChat(): UseChatReturn {
 
   const conversationIdRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Load from session storage on mount
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("iroko_chat_state");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.messages && Array.isArray(parsed.messages)) {
+          setMessages(parsed.messages);
+        }
+        if (parsed.conversationId) {
+          conversationIdRef.current = parsed.conversationId;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load chat from session storage", e);
+    }
+  }, []);
+
+  // Save to session storage whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem("iroko_chat_state", JSON.stringify({
+        messages,
+        conversationId: conversationIdRef.current
+      }));
+    }
+  }, [messages]);
 
   const sendMessage = useCallback(async (content: string) => {
     const trimmed = content.trim();
@@ -145,9 +173,22 @@ export function useChat(): UseChatReturn {
             completionData = evt as SseCompleteEvent;
             break;
 
-          case "agent_action":
-            // Agent steps — collected and attached on completion
+          case "agent_action": {
+            const step: AgentTraceStep = {
+              agent: evt.agent,
+              tool: evt.tool,
+              description: evt.description,
+              timestamp: evt.timestamp || new Date().toISOString(),
+            };
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, trace: [...(m.trace || []), step] }
+                  : m,
+              ),
+            );
             break;
+          }
 
           case "start":
             // No-op
@@ -202,6 +243,7 @@ export function useChat(): UseChatReturn {
     setError(null);
     setIsLoading(false);
     conversationIdRef.current = null;
+    sessionStorage.removeItem("iroko_chat_state");
   }, []);
 
   return { messages, isLoading, error, sendMessage, clearChat };

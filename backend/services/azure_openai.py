@@ -20,14 +20,34 @@ from openai import (
     APITimeoutError,
     APIConnectionError,
 )
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential_jitter,
+    retry_if_exception_type,
+    before_sleep_log,
+)
 
 from core.config import settings
 
 logger = logging.getLogger(__name__)
 
+# ── Tenacity retry policy ─────────────────────────────────────────────────────
+
+_RETRYABLE_ERRORS = (RateLimitError, APITimeoutError, APIConnectionError)
+
+_azure_retry = retry(
+    retry=retry_if_exception_type(_RETRYABLE_ERRORS),
+    stop=stop_after_attempt(3),
+    wait=wait_exponential_jitter(initial=1, max=30),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+    reraise=True,
+)
+
 # ── Lazy singleton client ─────────────────────────────────────────────────────
 
 _client: Optional[AsyncAzureOpenAI] = None
+_embedding_client: Optional[AsyncAzureOpenAI] = None
 
 
 def _get_client() -> AsyncAzureOpenAI:
@@ -47,14 +67,29 @@ def _get_client() -> AsyncAzureOpenAI:
     return _client
 
 
-# ── Retry config ──────────────────────────────────────────────────────────────
+def _get_embedding_client() -> AsyncAzureOpenAI:
+    """Return an AsyncAzureOpenAI client specifically for embeddings."""
+    global _embedding_client
+    if _embedding_client is None:
+        endpoint = settings.AZURE_OPENAI_EMBEDDING_ENDPOINT or settings.AZURE_OPENAI_ENDPOINT
+        api_key = settings.AZURE_OPENAI_EMBEDDING_API_KEY or settings.AZURE_OPENAI_API_KEY
+        api_version = settings.AZURE_OPENAI_EMBEDDING_API_VERSION or settings.AZURE_OPENAI_API_VERSION
+        if not endpoint or not api_key:
+            raise RuntimeError(
+                "Azure OpenAI embeddings are not configured."
+            )
+        _embedding_client = AsyncAzureOpenAI(
+            azure_endpoint=endpoint,
+            api_key=api_key,
+            api_version=api_version,
+        )
+    return _embedding_client
 
-_RETRY_DELAY_SECONDS = 2
-_RETRYABLE_ERRORS = (RateLimitError, APITimeoutError, APIConnectionError)
 
 
 # ── Chat completion ───────────────────────────────────────────────────────────
 
+@_azure_retry
 async def get_chat_completion(
     messages: list[dict[str, str]],
     system_prompt: str = "",
@@ -65,29 +100,8 @@ async def get_chat_completion(
 ) -> str:
     """
     Call Azure OpenAI GPT-4o deployment and return the assistant's response.
-
-    Parameters
-    ----------
-    messages : list[dict]
-        Conversation messages (``[{"role": "user", "content": "..."}]``).
-    system_prompt : str
-        Optional system message prepended to the conversation.
-    max_tokens : int
-        Maximum tokens in the completion.
-    temperature : float
-        Sampling temperature.
-    deployment : str, optional
-        Override the deployment name (defaults to ``settings.AZURE_OPENAI_DEPLOYMENT``).
-
-    Returns
-    -------
-    str
-        The model's text response.
-
-    Raises
-    ------
-    RuntimeError
-        If both the initial call and the retry fail.
+    Automatically retried up to 3 times with exponential backoff + jitter on
+    RateLimitError, APITimeoutError, and APIConnectionError.
     """
     client = _get_client()
     model = deployment or settings.AZURE_OPENAI_DEPLOYMENT
@@ -97,35 +111,18 @@ async def get_chat_completion(
         full_messages.append({"role": "system", "content": system_prompt})
     full_messages.extend(messages)
 
-    for attempt in range(2):  # initial + 1 retry
-        try:
-            response = await client.chat.completions.create(
-                model=model,
-                messages=full_messages,
-                max_completion_tokens=max_tokens,
-                temperature=temperature,
-            )
-            return response.choices[0].message.content or ""
-        except _RETRYABLE_ERRORS as exc:
-            if attempt == 0:
-                logger.warning(
-                    f"Azure OpenAI rate-limit/transient error: {exc} "
-                    f"— retrying in {_RETRY_DELAY_SECONDS}s"
-                )
-                await asyncio.sleep(_RETRY_DELAY_SECONDS)
-            else:
-                logger.error(f"Azure OpenAI retry exhausted: {exc}")
-                raise RuntimeError(f"Azure OpenAI call failed after retry: {exc}") from exc
-        except Exception as exc:
-            logger.error(f"Azure OpenAI non-retryable error: {exc}")
-            raise RuntimeError(f"Azure OpenAI call failed: {exc}") from exc
-
-    # Should not reach here, but safety net
-    raise RuntimeError("Azure OpenAI call failed unexpectedly")
+    response = await client.chat.completions.create(
+        model=model,
+        messages=full_messages,
+        max_completion_tokens=max_tokens,
+        temperature=temperature,
+    )
+    return response.choices[0].message.content or ""
 
 
 # ── Embedding ─────────────────────────────────────────────────────────────────
 
+@_azure_retry
 async def get_embedding(
     text: str,
     *,
@@ -133,44 +130,16 @@ async def get_embedding(
 ) -> list[float]:
     """
     Generate a vector embedding for the given text using Azure OpenAI.
-
-    Parameters
-    ----------
-    text : str
-        Input text to embed.
-    deployment : str, optional
-        Override the embedding deployment name.
-
-    Returns
-    -------
-    list[float]
-        The embedding vector (3072 dimensions for text-embedding-3-large).
+    Automatically retried up to 3 times with exponential backoff + jitter.
     """
-    client = _get_client()
+    client = _get_embedding_client()
     model = deployment or settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT
 
-    for attempt in range(2):  # initial + 1 retry
-        try:
-            response = await client.embeddings.create(
-                model=model,
-                input=text,
-            )
-            return response.data[0].embedding
-        except _RETRYABLE_ERRORS as exc:
-            if attempt == 0:
-                logger.warning(
-                    f"Embedding rate-limit/transient error: {exc} "
-                    f"— retrying in {_RETRY_DELAY_SECONDS}s"
-                )
-                await asyncio.sleep(_RETRY_DELAY_SECONDS)
-            else:
-                logger.error(f"Embedding retry exhausted: {exc}")
-                raise RuntimeError(f"Embedding call failed after retry: {exc}") from exc
-        except Exception as exc:
-            logger.error(f"Embedding non-retryable error: {exc}")
-            raise RuntimeError(f"Embedding call failed: {exc}") from exc
-
-    raise RuntimeError("Embedding call failed unexpectedly")
+    response = await client.embeddings.create(
+        model=model,
+        input=text,
+    )
+    return response.data[0].embedding
 
 
 # ── Streaming (for SSE routes) ────────────────────────────────────────────────

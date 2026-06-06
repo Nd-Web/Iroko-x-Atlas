@@ -24,6 +24,15 @@ except ImportError:
         yield ""
 
 
+try:
+    from services.agent_capabilities import capability_guard, AgentCapability
+    _CAPS_AVAILABLE = True
+except ImportError:
+    _CAPS_AVAILABLE = False
+    import logging as _log
+    _log.getLogger(__name__).warning("[StrategistAgent] agent_capabilities not available")
+
+
 class StrategistAgent:
     def __init__(self, kernel: Optional[Kernel] = None):
         self.kernel = kernel
@@ -41,6 +50,13 @@ class StrategistAgent:
 
     @kernel_function(description="Investigate any question with real agent orchestration.")
     async def investigate(self, question: Annotated[str, "The question"], depth: Annotated[str, "quick|standard|thorough"] = "standard") -> str:
+        # GAP 4 FIX — capability guard
+        if _CAPS_AVAILABLE:
+            try:
+                capability_guard.require("StrategistAgent", AgentCapability.FETCH_MARKET_INTEL)
+            except PermissionError as e:
+                logger.warning("[StrategistAgent] Capability check failed: %s", e)
+
         start = time.time()
         self.trace = []
         is_pidgin = self._detect_pidgin(question)
@@ -78,10 +94,39 @@ class StrategistAgent:
             if "citations" in result:
                 result["citations"] = self._dedupe_citations(result["citations"])
 
+            # ── Wire VerdictEngine ────────────────────────────────────────────────
+            try:
+                from services.verdict_engine import verdict_engine
+                conf_val = 0.85 if result.get("confidence") == "high" else (0.6 if result.get("confidence") == "medium" else 0.4)
+                comp_res = {"verdict": "MONITOR", "compliant": True}
+                if intent == "regulatory_compliance" or "compliance" in topic.lower():
+                    if "NO-GO" in result.get("answer", "") or "violation" in result.get("answer", "").lower():
+                        comp_res = {"verdict": "NO-GO", "compliant": False}
+                verdict = verdict_engine.compute_verdict(
+                    confidence=conf_val,
+                    compliance_result=comp_res,
+                    signal_strength=max(1, len(result.get("citations", [])))
+                )
+                result["verdict"] = verdict
+                self._log_trace("Strategist", "verdict", f"Official verdict stamped: {verdict}")
+            except Exception as e:
+                logger.warning(f"Verdict engine failed in strategist: {e}")
+
+            # ── Wire Boardroom Formatter (business intents only) ──────────────────
+            _BOARDROOM_INTENTS = {"network_operations", "regulatory_compliance",
+                                  "fraud_intelligence", "customer_complaint", "document_query"}
+            if intent in _BOARDROOM_INTENTS:
+                try:
+                    from services.boardroom_formatter import boardroom_formatter
+                    result = await boardroom_formatter.format_executive_summary(result, is_pidgin)
+                    self._log_trace("Strategist", "formatter", "Applied executive language transformation")
+                except Exception as e:
+                    logger.warning(f"Boardroom formatter failed in strategist: {e}")
+
             self.conversation_history.append({"question": question, "intent": intent, "topic": topic, "answer_summary": result.get("answer", "")[:300], "timestamp": datetime.utcnow().isoformat()})
             self.conversation_history = self.conversation_history[-5:]
 
-            return json.dumps({"question": question, "answer": result["answer"], "confidence": result.get("confidence", "high"), "is_pidgin": is_pidgin, "agent_trace": self.trace, "citations": result.get("citations", []), "suggested_actions": result.get("suggested_actions", []), "suggested_followups": result.get("suggested_followups", []), "duration_ms": duration_ms, "agents_used": list({t["agent"] for t in self.trace}), "intent": intent, "topic": topic})
+            return json.dumps({"question": question, "answer": result["answer"], "confidence": result.get("confidence", "high"), "verdict": result.get("verdict", "MONITOR"), "is_pidgin": is_pidgin, "agent_trace": self.trace, "citations": result.get("citations", []), "suggested_actions": result.get("suggested_actions", []), "suggested_followups": result.get("suggested_followups", []), "duration_ms": duration_ms, "agents_used": list({t["agent"] for t in self.trace}), "intent": intent, "topic": topic})
 
         except Exception as e:
             logger.error(f"Strategist failed: {e}", exc_info=True)
@@ -146,7 +191,21 @@ class StrategistAgent:
                 result = await self._orchestrate_agents(question, is_pidgin, depth)
                 tokens_streamed = False
 
+            _BOARDROOM_INTENTS = {"network_operations", "regulatory_compliance",
+                                  "fraud_intelligence", "customer_complaint", "document_query"}
             if result and not tokens_streamed:
+                if intent in _BOARDROOM_INTENTS:
+                    try:
+                        from services.boardroom_formatter import boardroom_formatter
+                        result = await boardroom_formatter.format_executive_summary(result, is_pidgin)
+                        self._log_trace("Strategist", "formatter", "Applied executive language transformation")
+                    except Exception as e:
+                        logger.warning(f"Boardroom formatter failed in stream: {e}")
+
+                if intent != "document_query":
+                    for t in self.trace:
+                        yield {"type": "agent_action", **t}
+
                 answer = result.get("answer", "")
                 words = answer.split(" ")
                 for i in range(0, len(words), 4):
@@ -193,7 +252,25 @@ class StrategistAgent:
                 except Exception as _fraud_err:
                     logger.warning(f"Fraud summary fetch failed: {_fraud_err}")
 
-            yield {"type": "complete", "answer": result.get("answer", "") if result else "", "citations": result.get("citations", []) if result else [], "suggested_followups": result.get("suggested_followups", []) if result else [], "agent_trace": self.trace, "duration_ms": duration_ms, "map_data": map_data, "fraud_data": fraud_data}
+            verdict_str = "MONITOR"
+            if result:
+                try:
+                    from services.verdict_engine import verdict_engine
+                    conf_val = 0.85 if result.get("confidence") == "high" else (0.6 if result.get("confidence") == "medium" else 0.4)
+                    comp_res = {"verdict": "MONITOR", "compliant": True}
+                    if intent == "regulatory_compliance" or "compliance" in topic.lower():
+                        if "NO-GO" in result.get("answer", "") or "violation" in result.get("answer", "").lower():
+                            comp_res = {"verdict": "NO-GO", "compliant": False}
+                    verdict_str = verdict_engine.compute_verdict(
+                        confidence=conf_val,
+                        compliance_result=comp_res,
+                        signal_strength=max(1, len(result.get("citations", [])))
+                    )
+                    self._log_trace("Strategist", "verdict", f"Official verdict stamped: {verdict_str}")
+                except Exception as e:
+                    logger.warning(f"Verdict engine failed in stream: {e}")
+
+            yield {"type": "complete", "answer": result.get("answer", "") if result else "", "citations": result.get("citations", []) if result else [], "suggested_followups": result.get("suggested_followups", []) if result else [], "agent_trace": self.trace, "duration_ms": duration_ms, "map_data": map_data, "fraud_data": fraud_data, "verdict": verdict_str}
 
         except Exception as e:
             logger.error(f"Stream failed: {e}", exc_info=True)

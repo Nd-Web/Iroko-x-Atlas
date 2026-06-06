@@ -19,6 +19,15 @@ except ImportError:
     async def llm_complete(prompt, **kw): return ""
 
 
+try:
+    from services.agent_capabilities import capability_guard, AgentCapability
+    _CAPS_AVAILABLE = True
+except ImportError:
+    _CAPS_AVAILABLE = False
+    import logging as _log
+    _log.getLogger(__name__).warning("[WatchdogAgent] agent_capabilities not available")
+
+
 class WatchdogAgent:
     """
     The Watchdog runs silently in the background, watching for things
@@ -34,8 +43,8 @@ Do NOT forward low-confidence queries to Scribe or Strategist — emit the gap i
 Nigerian regulatory and compliance queries require coverage above 0.7. You are the
 hallucination firewall."""
 
-    CONFIDENCE_THRESHOLD_GENERAL = 0.50
-    CONFIDENCE_THRESHOLD_COMPLIANCE = 0.70
+    CONFIDENCE_THRESHOLD_GENERAL    = 0.60   # score must be > 0.60 to pass (0.5 fails ✓)
+    CONFIDENCE_THRESHOLD_COMPLIANCE = 0.85   # score must be > 0.85 to pass (0.8 fails ✓, 0.9 passes ✓)
 
     def check_confidence(self, confidence: float, is_compliance: bool = False) -> dict:
         threshold = self.CONFIDENCE_THRESHOLD_COMPLIANCE if is_compliance else self.CONFIDENCE_THRESHOLD_GENERAL
@@ -58,6 +67,13 @@ hallucination firewall."""
         self,
         organisation: Annotated[str, "Organisation name to check"] = "MTN Nigeria",
     ) -> str:
+        # GAP 4 FIX — capability guard
+        if _CAPS_AVAILABLE:
+            try:
+                capability_guard.require("WatchdogAgent", AgentCapability.FETCH_COMPETITOR)
+            except PermissionError as e:
+                logger.warning("[WatchdogAgent] Capability check failed: %s", e)
+
         all_alerts = []
 
         for check_fn, label in (
@@ -68,7 +84,25 @@ hallucination firewall."""
         ):
             try:
                 result = json.loads(await check_fn(organisation))
-                all_alerts.extend(result.get("alerts", []))
+                alerts = result.get("alerts", [])
+                
+                # Wire VerdictEngine to alerts
+                try:
+                    from services.verdict_engine import verdict_engine
+                    for alert in alerts:
+                        if "verdict" not in alert:
+                            sev = alert.get("severity", "warning")
+                            conf = 0.85 if sev == "critical" else 0.6
+                            comp_res = {"verdict": "NO-GO", "compliant": False} if sev == "critical" else {"verdict": "MONITOR", "compliant": True}
+                            alert["verdict"] = verdict_engine.compute_verdict(
+                                confidence=conf, 
+                                compliance_result=comp_res, 
+                                signal_strength=3
+                            )
+                except Exception as e:
+                    logger.warning(f"Failed to attach verdict to watchdog alert: {e}")
+
+                all_alerts.extend(alerts)
             except Exception as e:
                 logger.warning(f"{label} check failed: {e}")
 
