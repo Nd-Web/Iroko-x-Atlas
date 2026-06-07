@@ -1,12 +1,5 @@
 """
 services/ncc_live_rules.py — Live CBN/SEC Enforcement Rules Engine for Iroko AI.
-=================================================================================
-Extends the static CBN regulatory corpus (``regulatory_service.CBN_REGULATIONS``)
-with live-scraped enforcement notices and directives from cbn.gov.ng and sec.gov.ng.
-
-Architecture (inspired by RegulaForge's compiler.py + Polaris auditor.py):
-  1. ``fetch_latest_ncc_updates``   — Bright Data SERP + Web Unlocker scrape
-  2. ``match_update_to_regulation`` — LLM-powered mapping to CBN regulation IDs
   3. ``compile_live_enforcement_rules`` — Orchestrator: merge static + live corpus
   4. ``check_decision_against_rules``  — Agent decision compliance gate (GO/NO-GO/MONITOR)
 
