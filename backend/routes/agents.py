@@ -72,7 +72,7 @@ class AgentStatusResponse(BaseModel):
 
 class RunRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000)
-    org_id: str = Field(default="MTN Nigeria")
+    org_id: str = Field(default="African Fintech Platform")
 
 
 class AgentStep(BaseModel):

@@ -89,9 +89,9 @@ async def _generate_insights():
             if org:
                 organisations.add(org)
 
-        # Fallback: always check MTN Nigeria (the primary tenant)
+        # Fallback: always check the primary tenant
         if not organisations:
-            organisations = {"MTN Nigeria"}
+            organisations = {"African Fintech Platform"}
 
         logger.info(
             f"Insight scheduler: checking {len(organisations)} organisation(s)."

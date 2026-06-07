@@ -25,8 +25,9 @@ async def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
     Sends requests in batches of 16 to stay within Azure OpenAI limits.
     Any individual failure returns None for that slot rather than raising.
     """
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
+    endpoint = os.getenv("AZURE_OPENAI_EMBEDDING_ENDPOINT") or os.getenv("AZURE_OPENAI_ENDPOINT")
+    api_key = os.getenv("AZURE_OPENAI_EMBEDDING_API_KEY") or os.getenv("AZURE_OPENAI_API_KEY")
+    api_version = os.getenv("AZURE_OPENAI_EMBEDDING_API_VERSION") or os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
 
     if not endpoint or not api_key:
         logger.warning("Azure OpenAI not configured — embeddings unavailable.")
@@ -37,7 +38,7 @@ async def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
         client = AsyncAzureOpenAI(
             azure_endpoint=endpoint,
             api_key=api_key,
-            api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview"),
+            api_version=api_version,
         )
     except Exception as e:
         logger.error(f"Failed to create OpenAI client: {e}")

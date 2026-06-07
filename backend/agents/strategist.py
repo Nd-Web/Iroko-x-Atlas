@@ -24,6 +24,15 @@ except ImportError:
         yield ""
 
 
+try:
+    from services.agent_capabilities import capability_guard, AgentCapability
+    _CAPS_AVAILABLE = True
+except ImportError:
+    _CAPS_AVAILABLE = False
+    import logging as _log
+    _log.getLogger(__name__).warning("[StrategistAgent] agent_capabilities not available")
+
+
 class StrategistAgent:
     def __init__(self, kernel: Optional[Kernel] = None):
         self.kernel = kernel
@@ -41,6 +50,13 @@ class StrategistAgent:
 
     @kernel_function(description="Investigate any question with real agent orchestration.")
     async def investigate(self, question: Annotated[str, "The question"], depth: Annotated[str, "quick|standard|thorough"] = "standard") -> str:
+        # GAP 4 FIX — capability guard
+        if _CAPS_AVAILABLE:
+            try:
+                capability_guard.require("StrategistAgent", AgentCapability.FETCH_MARKET_INTEL)
+            except PermissionError as e:
+                logger.warning("[StrategistAgent] Capability check failed: %s", e)
+
         start = time.time()
         self.trace = []
         is_pidgin = self._detect_pidgin(question)
@@ -78,14 +94,43 @@ class StrategistAgent:
             if "citations" in result:
                 result["citations"] = self._dedupe_citations(result["citations"])
 
+            # ── Wire VerdictEngine ────────────────────────────────────────────────
+            try:
+                from services.verdict_engine import verdict_engine
+                conf_val = 0.85 if result.get("confidence") == "high" else (0.6 if result.get("confidence") == "medium" else 0.4)
+                comp_res = {"verdict": "MONITOR", "compliant": True}
+                if intent == "regulatory_compliance" or "compliance" in topic.lower():
+                    if "NO-GO" in result.get("answer", "") or "violation" in result.get("answer", "").lower():
+                        comp_res = {"verdict": "NO-GO", "compliant": False}
+                verdict = verdict_engine.compute_verdict(
+                    confidence=conf_val,
+                    compliance_result=comp_res,
+                    signal_strength=max(1, len(result.get("citations", [])))
+                )
+                result["verdict"] = verdict
+                self._log_trace("Strategist", "verdict", f"Official verdict stamped: {verdict}")
+            except Exception as e:
+                logger.warning(f"Verdict engine failed in strategist: {e}")
+
+            # ── Wire Boardroom Formatter (business intents only) ──────────────────
+            _BOARDROOM_INTENTS = {"network_operations", "regulatory_compliance",
+                                  "fraud_intelligence", "customer_complaint", "document_query"}
+            if intent in _BOARDROOM_INTENTS:
+                try:
+                    from services.boardroom_formatter import boardroom_formatter
+                    result = await boardroom_formatter.format_executive_summary(result, is_pidgin)
+                    self._log_trace("Strategist", "formatter", "Applied executive language transformation")
+                except Exception as e:
+                    logger.warning(f"Boardroom formatter failed in strategist: {e}")
+
             self.conversation_history.append({"question": question, "intent": intent, "topic": topic, "answer_summary": result.get("answer", "")[:300], "timestamp": datetime.utcnow().isoformat()})
             self.conversation_history = self.conversation_history[-5:]
 
-            return json.dumps({"question": question, "answer": result["answer"], "confidence": result.get("confidence", "high"), "is_pidgin": is_pidgin, "agent_trace": self.trace, "citations": result.get("citations", []), "suggested_actions": result.get("suggested_actions", []), "suggested_followups": result.get("suggested_followups", []), "duration_ms": duration_ms, "agents_used": list({t["agent"] for t in self.trace}), "intent": intent, "topic": topic})
+            return json.dumps({"question": question, "answer": result["answer"], "confidence": result.get("confidence", "high"), "verdict": result.get("verdict", "MONITOR"), "is_pidgin": is_pidgin, "agent_trace": self.trace, "citations": result.get("citations", []), "suggested_actions": result.get("suggested_actions", []), "suggested_followups": result.get("suggested_followups", []), "duration_ms": duration_ms, "agents_used": list({t["agent"] for t in self.trace}), "intent": intent, "topic": topic})
 
         except Exception as e:
             logger.error(f"Strategist failed: {e}", exc_info=True)
-            return json.dumps({"question": question, "answer": "I encountered an error. Please try rephrasing or ask about MTN operations.", "is_pidgin": is_pidgin, "agent_trace": self.trace, "error": str(e)})
+            return json.dumps({"question": question, "answer": "I encountered an error. Please try rephrasing or ask about fintech regulatory compliance.", "is_pidgin": is_pidgin, "agent_trace": self.trace, "error": str(e)})
 
     # -- Streaming entry point ---------------------------------------------
 
@@ -146,7 +191,21 @@ class StrategistAgent:
                 result = await self._orchestrate_agents(question, is_pidgin, depth)
                 tokens_streamed = False
 
+            _BOARDROOM_INTENTS = {"network_operations", "regulatory_compliance",
+                                  "fraud_intelligence", "customer_complaint", "document_query"}
             if result and not tokens_streamed:
+                if intent in _BOARDROOM_INTENTS:
+                    try:
+                        from services.boardroom_formatter import boardroom_formatter
+                        result = await boardroom_formatter.format_executive_summary(result, is_pidgin)
+                        self._log_trace("Strategist", "formatter", "Applied executive language transformation")
+                    except Exception as e:
+                        logger.warning(f"Boardroom formatter failed in stream: {e}")
+
+                if intent != "document_query":
+                    for t in self.trace:
+                        yield {"type": "agent_action", **t}
+
                 answer = result.get("answer", "")
                 words = answer.split(" ")
                 for i in range(0, len(words), 4):
@@ -193,7 +252,25 @@ class StrategistAgent:
                 except Exception as _fraud_err:
                     logger.warning(f"Fraud summary fetch failed: {_fraud_err}")
 
-            yield {"type": "complete", "answer": result.get("answer", "") if result else "", "citations": result.get("citations", []) if result else [], "suggested_followups": result.get("suggested_followups", []) if result else [], "agent_trace": self.trace, "duration_ms": duration_ms, "map_data": map_data, "fraud_data": fraud_data}
+            verdict_str = "MONITOR"
+            if result:
+                try:
+                    from services.verdict_engine import verdict_engine
+                    conf_val = 0.85 if result.get("confidence") == "high" else (0.6 if result.get("confidence") == "medium" else 0.4)
+                    comp_res = {"verdict": "MONITOR", "compliant": True}
+                    if intent == "regulatory_compliance" or "compliance" in topic.lower():
+                        if "NO-GO" in result.get("answer", "") or "violation" in result.get("answer", "").lower():
+                            comp_res = {"verdict": "NO-GO", "compliant": False}
+                    verdict_str = verdict_engine.compute_verdict(
+                        confidence=conf_val,
+                        compliance_result=comp_res,
+                        signal_strength=max(1, len(result.get("citations", [])))
+                    )
+                    self._log_trace("Strategist", "verdict", f"Official verdict stamped: {verdict_str}")
+                except Exception as e:
+                    logger.warning(f"Verdict engine failed in stream: {e}")
+
+            yield {"type": "complete", "answer": result.get("answer", "") if result else "", "citations": result.get("citations", []) if result else [], "suggested_followups": result.get("suggested_followups", []) if result else [], "agent_trace": self.trace, "duration_ms": duration_ms, "map_data": map_data, "fraud_data": fraud_data, "verdict": verdict_str}
 
         except Exception as e:
             logger.error(f"Stream failed: {e}", exc_info=True)
@@ -205,7 +282,7 @@ class StrategistAgent:
         context = await self._retrieve_context(question, depth)
 
         if context.get("knowledge_gap"):
-            return {"answer": f"I searched my document estate but couldn't find strong coverage for '{question}'. My corpus covers: Ikeja cluster incidents, IHS/Ericsson contracts, NCC/NDPA compliance, Kano-Kaduna fibre, MoMo complaints, and enterprise SLAs. Could you refine your question?", "citations": [], "suggested_followups": ["Tell me about Ikeja cluster", "What's our SLA exposure?", "Show me compliance status"], "confidence": "low"}
+            return {"answer": f"I searched my regulatory corpus but couldn't find strong coverage for '{question}'. My corpus covers: CBN/SEC compliance alerts, CRC/Interswitch contracts, AML/CFT regulations, loan complaint data, and fintech regulatory filings. Could you refine your question?", "citations": [], "suggested_followups": ["What is our CBN compliance status?", "Which filings are due this quarter?", "Show me AML/CFT alerts"], "confidence": "low"}
 
         prompt = self._build_answer_prompt(question, context, is_pidgin)
         self._log_trace("Strategist", "reason", "GPT reasoning over retrieved evidence")
@@ -372,7 +449,7 @@ class StrategistAgent:
         async def _run_org_memory() -> str:
             if depth not in ("standard", "thorough") or knowledge_gap:
                 return ""
-            return await self._load_org_memory("MTN Nigeria")
+            return await self._load_org_memory("African Fintech Platform")
 
         # ── Bug #3 (parallel) fix: run all four concurrently ───────────────
         gathered = await asyncio.gather(
@@ -408,7 +485,7 @@ class StrategistAgent:
         }
 
     _ANSWER_SYSTEM_PROMPT = (
-        "You are Iroko AI, MTN Nigeria's enterprise intelligence assistant — write like a sharp senior analyst. "
+        "You are Iroko AI, an enterprise intelligence assistant for African fintechs — write like a sharp senior analyst. "
         "Answer questions grounded ONLY in the retrieved evidence. Never invent facts or figures. "
         "Synthesise evidence into a coherent, insight-led answer rather than a raw data dump. "
         "Lead with the most important finding; use bold for key metrics; discard off-topic retrieval noise. "
@@ -445,7 +522,7 @@ Respond with valid JSON:
 {{"answer": "...", "citations": [{{"document_id": "...", "document_title": "...", "excerpt": "..."}}], "suggested_actions": ["..."], "suggested_followups": ["..."], "confidence": "high|medium|low"}}"""
 
     _STREAM_SYSTEM_PROMPT = (
-        "You are Iroko AI, MTN Nigeria's enterprise intelligence assistant — write like a sharp senior analyst, "
+        "You are Iroko AI, an enterprise intelligence assistant for African fintechs — write like a sharp senior analyst, "
         "not a retrieval engine. When answering document queries:\n"
         "• Open with the single most important insight or headline number, then build context.\n"
         "• Synthesise evidence into a flowing narrative with clear section headings; do NOT list raw chunks.\n"
@@ -503,14 +580,14 @@ Retrieved Evidence:
                 for h in self.conversation_history[-3:]
             ])
 
-        prompt = f"""Classify for Iroko AI (MTN Nigeria):
+        prompt = f"""Classify for Iroko AI (African fintech regulatory intelligence):
 - "greeting" -- hello, thanks, bye, casual chat, how body, how far
 - "follow_up" -- continuing previous topic, reactions like "omo", "really?", "and then?", "yes", short affirmations, surprise at a previous answer
-- "network_operations" -- site status, alarms, incidents, tower, cluster, KPI, uptime, downtime, outage, signal, contracts, SLA
-- "customer_complaint" -- MoMo complaint, customer ticket, CSAT, CX, resolution, NPS, dispute
-- "fraud_intelligence" -- fraud, suspicious transactions, duplicate invoices, SIM swap fraud, MoMo reversals, vendor irregularities, financial anomalies, procurement fraud
-- "document_query" -- MTN business operations, compliance, policy, report, regulatory
-- "out_of_domain" -- completely unrelated to MTN Nigeria (weather, sports, jokes, cooking)
+- "network_operations" -- CBN alerts, CAR status, AML findings, KYC gaps, regulatory incidents, fintech platform status, SLA
+- "customer_complaint" -- loan complaint, customer ticket, CSAT, CX, resolution, NPS, borrower dispute
+- "fraud_intelligence" -- fraud, suspicious transactions, duplicate invoices, loan fraud, STR filing, vendor irregularities, financial anomalies, procurement fraud
+- "document_query" -- fintech compliance, CBN/SEC policy, regulatory report, AML/CFT, capital adequacy
+- "out_of_domain" -- completely unrelated to African fintechs or financial regulation (weather, sports, jokes, cooking)
 
 Input: "{question}"
 Pidgin: {is_pidgin}{history_ctx}
@@ -535,7 +612,7 @@ JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
 
         # ── Explicit document reference overrides all keyword heuristics ──
         # If the question names a .pdf or uses clear document-retrieval language,
-        # route to document_query regardless of other matching keywords (e.g. "momo").
+        # route to document_query regardless of other matching keywords (e.g. "agent_wallet").
         _doc_phrases = [
             "in the pdf", "from the pdf", "the pdf",
             "in the document", "from the document", "the document",
@@ -563,7 +640,7 @@ JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
             return {"intent": "out_of_domain", "topic": "", "confidence": 0.85}
 
         if any(p in q for p in ["fraud", "suspicious", "anomaly", "duplicate invoice",
-                                 "sim swap fraud", "momo reversal", "vendor concentration",
+                                 "sim swap fraud", "agent wallet reversal", "vendor concentration",
                                  "procurement fraud", "financial irregularity", "irregular payment",
                                  "fraud intelligence", "fraud risk", "fraud scan",
                                  "round number billing", "invoice splitting"]):
@@ -603,7 +680,7 @@ JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
                                  "latency", "network"]):
             return {"intent": "network_operations", "topic": q[:60], "confidence": 0.8}
 
-        if any(p in q for p in ["complaint", "momo", "csat", "nps", "ticket",
+        if any(p in q for p in ["complaint", "agent_wallet", "csat", "nps", "ticket",
                                  "resolution", "dispute", "refund", "customer",
                                  "churn", "satisfaction"]):
             return {"intent": "customer_complaint", "topic": q[:60], "confidence": 0.8}
@@ -632,21 +709,18 @@ JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
                 break
 
         # Vendors
-        vendors = {"ihs": "IHS Nigeria", "ericsson": "Ericsson", "huawei": "Huawei",
-                   "nokia": "Nokia", "towerco": "IHS Nigeria", "helios": "Helios Towers"}
+        vendors = {"interswitch": "Interswitch Nigeria", "flutterwave": "Flutterwave",
+                   "crc": "CRC Credit Bureau", "nibss": "NIBSS", "verve": "Verve"}
         for key, name in vendors.items():
             if key in q:
                 entities["vendor"] = name
                 break
 
-        # Site codes (e.g. IKJ-001, tower 4471)
+        # Ref codes (e.g. CBN-AML-001, MFB-2026-001)
         import re
         site_match = re.search(r'\b([A-Z]{2,4}[-_]\d{2,4})\b', question, re.IGNORECASE)
         if site_match:
             entities["site_code"] = site_match.group(1).upper()
-        tower_match = re.search(r'tower\s*(\d{3,5})', q)
-        if tower_match:
-            entities["tower_id"] = tower_match.group(1)
 
         # Time ranges
         if any(p in q for p in ["today", "24 hour", "last day"]):
@@ -666,16 +740,16 @@ JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
         self._log_trace("Strategist", "greeting", "Generating greeting")
         if not LLM_AVAILABLE:
             return self._fallback_greeting(is_pidgin)
-        prompt = f"""You are Iroko AI, MTN Nigeria's friendly assistant.
+        prompt = f"""You are Iroko AI, an AI assistant for African fintechs.
 User said: "{question}" Pidgin: {is_pidgin}
-Respond warmly (2-3 sentences). Mention you help with network, contracts, compliance, fibre, complaints.
+Respond warmly (2-3 sentences). Mention you help with CBN/SEC compliance, regulatory filings, contracts, AML/CFT, and complaints.
 If Pidgin, use Pidgin English."""
         try:
             answer = await llm_complete(prompt, max_tokens=200, temperature=0.7)
             return {
                 "answer": answer.strip(),
                 "citations": [],
-                "suggested_followups": ["Wetin dey happen for Ikeja cluster?", "What is our SLA credit exposure?", "What is our NCC compliance status?"],
+                "suggested_followups": ["What is our CBN/SEC compliance status?", "Which regulatory filings are due this quarter?", "Show me the latest AML/CFT alerts"],
                 "confidence": "high",
             }
         except (RuntimeError, Exception) as e:
@@ -711,22 +785,22 @@ Give a helpful follow-up. Pidgin: {is_pidgin}"""
     async def _llm_decline(self, question: str, is_pidgin: bool, topic: str) -> dict:
         self._log_trace("Strategist", "decline", f"Out of scope: {topic}")
         if not LLM_AVAILABLE:
-            return {"answer": "That's outside my scope. I specialise in MTN Nigeria operations.", "citations": [], "confidence": "low"}
-        prompt = f"""You are Iroko AI (MTN Nigeria only). User asked: "{question}" (out of scope).
-Politely decline, explain your scope (network, vendors, compliance, fibre, customer care).
+            return {"answer": "That's outside my scope. I specialise in African fintech regulatory intelligence.", "citations": [], "confidence": "low"}
+        prompt = f"""You are Iroko AI (African fintechs only). User asked: "{question}" (out of scope).
+Politely decline, explain your scope (CBN/SEC compliance, AML/CFT, regulatory filings, vendor contracts, customer complaints).
 Pidgin: {is_pidgin}"""
         try:
             answer = await llm_complete(prompt, max_tokens=200, temperature=0.6)
             return {
                 "answer": answer.strip(),
                 "citations": [],
-                "suggested_followups": ["Wetin dey happen for Ikeja cluster?", "What is our SLA credit exposure?"],
+                "suggested_followups": ["What is our CBN/SEC compliance status?", "Which regulatory filings are due this quarter?"],
                 "confidence": "low",
             }
         except (RuntimeError, Exception) as e:
             logger.warning(f"LLM decline failed: {e}")
             return {
-                "answer": "That's outside my scope. I specialise in MTN Nigeria network, vendor contracts, compliance, and customer experience.",
+                "answer": "That's outside my scope. I specialise in African fintech CBN/SEC compliance, AML/CFT, regulatory filings, and customer experience.",
                 "citations": [],
                 "confidence": "low",
             }
@@ -734,8 +808,8 @@ Pidgin: {is_pidgin}"""
     # -- Fallbacks ---------------------------------------------------------
 
     def _fallback_greeting(self, is_pidgin: bool) -> dict:
-        a = "Ah, my body dey kampe! I be Iroko AI. Wetin you wan investigate?" if is_pidgin else "Hello! I'm Iroko AI -- MTN Nigeria's intelligence assistant. What can I help with?"
-        return {"answer": a, "citations": [], "suggested_followups": ["Wetin dey happen for Ikeja cluster?", "What is our SLA credit exposure?", "What is our NCC compliance status?"], "confidence": "high"}
+        a = "Ah, my body dey kampe! I be Iroko AI. Wetin you wan investigate?" if is_pidgin else "Hello! I'm Iroko AI — your fintech regulatory intelligence assistant. What can I help with?"
+        return {"answer": a, "citations": [], "suggested_followups": ["What is our CBN/SEC compliance status?", "Which regulatory filings are due this quarter?", "Show me the latest AML/CFT alerts"], "confidence": "high"}
 
     # -- Utilities ---------------------------------------------------------
 
@@ -755,53 +829,53 @@ Pidgin: {is_pidgin}"""
 
     def _match_canned_scenario(self, question: str) -> Optional[dict]:
         q = question.lower()
-        if any(k in q for k in ["ikeja", "cluster outage", "tower 4471"]):
+        if any(k in q for k in ["carbon mfb", "car breach", "capital adequacy breach"]):
             return self._canned_noc()
-        if any(k in q for k in ["sla credit exposure", "sla exposure", "credit exposure", "vendor sla"]):
+        if any(k in q for k in ["sla credit exposure", "sla exposure", "credit exposure", "vendor sla", "interswitch sla"]):
             return self._canned_sla()
-        if any(k in q for k in ["ncc compliance", "ndpa compliance", "compliance status", "compliance gap"]):
+        if any(k in q for k in ["ncc compliance", "cbn compliance", "sec compliance", "compliance status", "compliance gap"]):
             return self._canned_compliance()
         return None
 
     def _canned_noc(self) -> dict:
-        self._log_trace("Researcher", "search", "Searching RCA + vendor SLAs")
+        self._log_trace("Researcher", "search", "Searching CAR breach report + vendor SLAs")
         self._log_trace("Watchdog", "confidence", "Coverage 0.87 -- high")
-        self._log_trace("Analyst", "compute", "Calculating SLA exposure: 4.2h")
-        self._log_trace("Scribe", "synthesise", "Building NOC incident report")
+        self._log_trace("Analyst", "compute", "Calculating regulatory exposure")
+        self._log_trace("Scribe", "synthesise", "Building compliance incident report")
         return {
-            "answer": "**NOC Incident Report — Ikeja Cluster Power Outage (Q1 2026)**\n\n**Executive Summary**\nAt 02:14 WAT, the Ikeja cluster experienced a 4.2-hour outage affecting 6 base stations and ~18,000 subscribers. Root cause: AES feeder failure + generator relay malfunction. Combined SLA exposure: **NGN 2.66M**.\n\n**Incident Details**\n- Start: 02:14 WAT | End: 06:23 WAT | Duration: **4.2 hours**\n- Anchor site: Tower 4471 | Affected: IKJ-001 to IKJ-006\n- ~18,000 subscribers impacted\n\n**SLA & Financial Impact**\n- **IHS Nigeria** (IHS/MTN/IKJ/2024-001): 99.42% vs 99.5% SLA = 2% fee reduction (~NGN 560k)\n- **Ericsson RAN SLA**: 4h response breached by 12min (~NGN 600k)\n- **Enterprise** (Zenith, NNPC, Dangote): NGN 2.1M credits (10%/hour formula)\n- **Combined: NGN 2,660,000**\n\n**Actions**\n1. File SLA claim vs IHS Nigeria — Procurement | 7 days\n2. Raise Ericsson ticket — NOC | 24h\n3. Notify Tier-1 enterprise customers — EBU | 48h\n4. Audit relays at all 6 sites — Field Eng | 14 days",
+            "answer": "**Compliance Incident Report — Carbon MFB CAR Breach (Q2 2026)**\n\n**Executive Summary**\nCarbon MFB's Capital Adequacy Ratio dropped to 8.7% — below the CBN minimum of 10%. CBN issued a supervisory directive requiring immediate recapitalisation and imposed a ₦2bn administrative fine. Combined regulatory exposure: **₦2,180,000,000**.\n\n**Incident Details**\n- Detected: 2026-04-15 | CAR: **8.7%** vs 10% minimum | Shortfall: 1.3%\n- Entity: Carbon MFB Ltd | CBN Reference: CBN-ENF-Q2-2026-009\n- Required recapitalisation: ₦4.2bn by 2026-06-30\n\n**Financial & Regulatory Impact**\n- **CBN Administrative Fine**: ₦2,000,000,000 (BOFIA 2020 Section 12)\n- **Interswitch Gateway SLA**: remediation costs ₦80M (SLA breach clause 7.2)\n- **CRC Data Agreement**: potential NDPA exposure ₦100M if data frozen during remediation\n- **Combined: ₦2,180,000,000**\n\n**Actions**\n1. File recapitalisation plan with CBN — Board | 14 days\n2. Engage Tier-1 investors for emergency capital — CEO | 7 days\n3. Notify Interswitch of SLA force-majeure — Legal | 48h\n4. File NDPA breach assessment with DPO — Compliance | 24h",
             "citations": [
-                {"document_id": "doc_001", "document_title": "Ikeja Cluster RCA", "excerpt": "6 base stations; 4.2h outage; relay failure"},
-                {"document_id": "doc_002", "document_title": "IHS Tower Lease", "excerpt": "99.5% SLA; 2% penalty per 0.1%"},
-                {"document_id": "doc_006", "document_title": "Ericsson RAN SLA", "excerpt": "4-hour response SLA"},
-                {"document_id": "doc_008", "document_title": "Enterprise SLA Register", "excerpt": "10% per hour credit formula"},
+                {"document_id": "doc_001", "document_title": "Carbon MFB CAR Breach — Regulatory Incident Q2 2026", "excerpt": "CAR at 8.7%; CBN ₦2bn fine; recapitalisation required"},
+                {"document_id": "doc_006", "document_title": "Interswitch Group Payment Gateway SLA — 2026", "excerpt": "SLA clause 7.2 remediation obligations"},
+                {"document_id": "doc_002", "document_title": "CRC Credit Bureau Data Processing Agreement", "excerpt": "Data freeze and NDPA exposure clauses"},
+                {"document_id": "doc_004", "document_title": "CBN AML/CFT Quarterly Return — Q2 2026", "excerpt": "Compliance reporting obligations"},
             ],
-            "suggested_followups": ["Total SLA exposure across all customers?", "Draft the claim letter to IHS", "MoMo complaint correlation?"],
+            "suggested_followups": ["Total regulatory exposure across all entities?", "Draft the CBN recapitalisation plan", "AML/CFT return correlation?"],
             "confidence": "high",
         }
 
     def _canned_sla(self) -> dict:
         self._log_trace("Analyst", "compute", "Calculating cross-contract SLA exposure")
         return {
-            "answer": "**SLA Credit Exposure — Ikeja Cluster Outage**\n\n| Party | Contract | Breach | Exposure |\n|---|---|---|---|\n| IHS Nigeria | IHS/MTN/IKJ/2024-001 | 99.42% vs 99.5% | NGN 560,000 |\n| Ericsson | ERIC/MTN/RAN/2026-001 | 4h12m response | NGN 600,000 |\n| Enterprise | Enterprise SLA Register | 4.2h downtime | NGN 2,100,000 |\n| **Total** | | | **NGN 2,660,000** |\n\n1. File SLA claim to IHS — Procurement | 7 days\n2. Raise Ericsson response SLA breach ticket\n3. Notify enterprise customers per notification terms",
+            "answer": "**SLA & Regulatory Exposure — Carbon MFB Incident**\n\n| Party | Contract | Breach | Exposure |\n|---|---|---|---|\n| CBN | BOFIA 2020 s.12 | CAR 8.7% vs 10% | ₦2,000,000,000 |\n| Interswitch | ISW/CARBON/GW/2026-001 | SLA clause 7.2 | ₦80,000,000 |\n| CRC Bureau | CRC/CARBON/DPA/2026 | Data freeze exposure | ₦100,000,000 |\n| **Total** | | | **₦2,180,000,000** |\n\n1. File recapitalisation plan with CBN — Board | 14 days\n2. Engage emergency capital investors — CEO | 7 days\n3. Notify Interswitch of force-majeure — Legal | 48h",
             "citations": [
-                {"document_id": "doc_002", "document_title": "IHS Tower Lease", "excerpt": "2% per 0.1% below SLA"},
-                {"document_id": "doc_006", "document_title": "Ericsson RAN SLA", "excerpt": "4-hour response requirement"},
-                {"document_id": "doc_008", "document_title": "Enterprise SLA Register", "excerpt": "10%/hour credit formula"},
+                {"document_id": "doc_001", "document_title": "Carbon MFB CAR Breach Report", "excerpt": "₦2bn CBN fine; CAR 8.7% vs 10% minimum"},
+                {"document_id": "doc_006", "document_title": "Interswitch Gateway SLA", "excerpt": "SLA clause 7.2 remediation costs"},
+                {"document_id": "doc_002", "document_title": "CRC Credit Bureau Data Agreement", "excerpt": "Data freeze penalty exposure"},
             ],
-            "suggested_followups": ["Draft the IHS SLA claim letter", "SLA credits recovered this year?"],
+            "suggested_followups": ["Draft the CBN recapitalisation submission", "SLA credits recovered this quarter?"],
             "confidence": "high",
         }
 
     def _canned_compliance(self) -> dict:
-        self._log_trace("Watchdog", "check", "Checking NCC + NDPA deadlines")
+        self._log_trace("Watchdog", "check", "Checking CBN + SEC + NDPA deadlines")
         return {
-            "answer": "**NCC & NDPA Compliance Status**\n\n**NCC — QoS Return due May 13, 2026 (12 days)**\n- Network availability: 99.3% — below 99.5% target — flag in report\n\n**NDPA — Article 24**\n- MTN-NDPA-ART24-2026-001 incomplete: SCC sign-off outstanding\n- DPO action required before June submission\n\n**Actions:**\n1. Assign QoS report owner — 48h\n2. DPO to sign off SCCs — 7 days\n3. Verify data throughput vs NCC Section 7.3",
+            "answer": "**CBN & SEC Compliance Status**\n\n**CBN — AML/CFT Quarterly Return due May 15, 2026 (12 days)**\n- Kuda MFB: 3 incomplete SAR filings — flag in return\n\n**NDPA — Article 24**\n- KUDA-NDPA-ART24-2026-001 incomplete: SCC sign-off outstanding\n- DPO action required before June submission\n\n**Actions:**\n1. Assign AML/CFT return owner — 48h\n2. DPO to sign off SCCs — 7 days\n3. Verify SAR submissions vs CBN threshold (Section 15 MLPA 2022)",
             "citations": [
-                {"document_id": "doc_004", "document_title": "NCC QoS Framework", "excerpt": "Quarterly submission requirement"},
-                {"document_id": "doc_005", "document_title": "NDPA Article 24 Record", "excerpt": "Cross-border transfer safeguards"},
+                {"document_id": "doc_004", "document_title": "CBN AML/CFT Quarterly Return — Q2 2026", "excerpt": "Quarterly submission requirement — due May 15"},
+                {"document_id": "doc_005", "document_title": "NDPA Article 24 Data Processing Record — Fintechs 2026", "excerpt": "Cross-border transfer safeguards"},
             ],
-            "suggested_followups": ["Draft the NCC QoS submission", "NDPA penalties for non-compliance?"],
+            "suggested_followups": ["Draft the CBN AML/CFT return", "NDPA penalties for non-compliance?"],
             "confidence": "high",
         }
 
@@ -908,7 +982,7 @@ Pidgin: {is_pidgin}"""
                         result_chunks.append(f"SITE DETAIL — {entities['site_code']}:\n{json.dumps(data, indent=2)}")
 
                 # ── Complaint / CX questions ──────────────────────────────────
-                if any(k in q_lower for k in ["complaint", "momo", "customer",
+                if any(k in q_lower for k in ["complaint", "agent_wallet", "customer",
                                                "csat", "nps", "refund", "dispute",
                                                "churn", "satisfaction"]):
                     data = get_complaint_summary(db, region=region, days=days)
@@ -1031,16 +1105,16 @@ Document Evidence:
 Respond with valid JSON:
 {{"answer": "...", "citations": [], "suggested_actions": ["..."], "suggested_followups": ["..."], "confidence": "high|medium|low"}}"""
 
-        self._log_trace("Strategist", "reason", "Synthesising network operations answer")
+        self._log_trace("Strategist", "reason", "Synthesising regulatory operations answer")
         try:
             response = await llm_complete(prompt, max_tokens=2000, temperature=0.2,
-                                          system_prompt="You are Iroko AI, MTN Nigeria's network operations intelligence assistant. Lead with live operational data. Give specific site codes, incident refs, KPI values, contract amounts. Suggest concrete next actions.")
+                                          system_prompt="You are Iroko AI, an African fintech regulatory intelligence assistant. Lead with live compliance data. Give specific entity names, CBN/SEC references, CAR values, contract amounts. Suggest concrete next actions.")
         except RuntimeError as e:
             logger.error(f"LLM network ops reasoning failed after retries: {e}")
             return {
-                "answer": ops_context or "The AI reasoning engine is temporarily unavailable. Please check the Network dashboard directly.",
+                "answer": ops_context or "The AI reasoning engine is temporarily unavailable. Please check the Compliance dashboard directly.",
                 "citations": [], "confidence": "low",
-                "suggested_followups": ["Show active incidents", "What are today's KPIs?", "Ikeja cluster status?"],
+                "suggested_followups": ["Show active alerts", "What is our CBN compliance status?", "AML/CFT return status?"],
             }
         try:
             clean = response.strip().replace("```json", "").replace("```", "").strip()
@@ -1049,9 +1123,9 @@ Respond with valid JSON:
             return result
         except json.JSONDecodeError:
             return {
-                "answer": response or ops_context or "Live network data is currently unavailable. Please check the network dashboard.",
+                "answer": response or ops_context or "Live compliance data is currently unavailable. Please check the Compliance dashboard.",
                 "citations": doc_context.get("citations", []), "confidence": "medium",
-                "suggested_followups": ["Show active incidents", "What are today's KPIs?", "Ikeja cluster status?"],
+                "suggested_followups": ["Show active alerts", "What is our CBN compliance status?", "AML/CFT return status?"],
             }
 
     async def _orchestrate_fraud(self, question: str, is_pidgin: bool) -> dict:
@@ -1066,8 +1140,8 @@ Respond with valid JSON:
             category = "procurement"
         elif any(k in q_lower for k in ["sim swap", "swap", "account takeover"]):
             category = "sim_swap"
-        elif any(k in q_lower for k in ["momo", "mobile money", "reversal", "agent"]):
-            category = "momo_fraud"
+        elif any(k in q_lower for k in ["momo", "mobile money", "reversal", "agent wallet"]):
+            category = "agent_wallet_fraud"
         elif any(k in q_lower for k in ["compliance", "ncc", "regulatory", "submission"]):
             category = "compliance"
 
@@ -1103,11 +1177,11 @@ Respond with valid JSON:
             response = await llm_complete(
                 prompt, max_tokens=2000, temperature=0.2,
                 system_prompt=(
-                    "You are Iroko AI, MTN Nigeria's fraud intelligence assistant. "
+                    "You are Iroko AI, an African fintech fraud intelligence assistant. "
                     "Write a concise, insight-led fraud risk report. Lead with the highest-risk findings first. "
                     "Always cite: signal ID, specific amounts in NGN, agent codes where relevant, region. "
                     "End with concrete recommended actions: suspend agent codes, escalate to EFCC/ICPC, "
-                    "initiate internal audit, notify CFO. Never soften fraud findings."
+                    "initiate internal audit, notify CFO/CCRM. Never soften fraud findings."
                 ),
             )
             clean = response.strip().replace("```json", "").replace("```", "").strip()
@@ -1118,7 +1192,7 @@ Respond with valid JSON:
             logger.warning(f"Fraud LLM reasoning failed, using fallback: {e}")
             summary = get_fraud_summary()
             lines = [
-                f"**Fraud Intelligence Report — MTN Nigeria**\n",
+                f"**Fraud Intelligence Report — African Fintech Platform**\n",
                 f"**{summary['high_risk']} HIGH · {summary['medium_risk']} MEDIUM risk signals active.**",
                 f"**Total financial exposure: ₦{summary['total_exposure_ngn']:,.0f}**\n",
                 "**Active Fraud Signals:**",
@@ -1134,19 +1208,19 @@ Respond with valid JSON:
                 "suggested_followups": [
                     "Which fraud signals are in Lagos?",
                     "Show all procurement fraud details",
-                    "What is the total MoMo fraud exposure?",
-                    "How do we handle the NCC data mismatch?",
+                    "What is the total loan fraud exposure?",
+                    "How do we handle the CBN data mismatch?",
                 ],
                 "confidence": "high",
             }
 
     async def _orchestrate_regulatory(self, question: str, is_pidgin: bool) -> dict:
         """
-        Handle regulatory compliance queries by injecting real NCC and NDPC
+        Handle regulatory compliance queries by injecting real CBN and SEC
         regulation text, section numbers, penalties, and enforcement precedents
         into the LLM context before synthesis.
         """
-        self._log_trace("Researcher", "regulatory_lookup", "Loading NCC and NDPC regulatory corpus")
+        self._log_trace("Researcher", "regulatory_lookup", "Loading CBN and SEC regulatory corpus")
         from services.regulatory_service import get_regulatory_summary_text, get_regulatory_context
 
         reg_text = get_regulatory_summary_text(question)
@@ -1162,7 +1236,7 @@ Respond with valid JSON:
 
 {reg_text}
 
-Document Evidence from MTN Nigeria corpus:
+Document Evidence from African fintech regulatory corpus:
 {chr(10).join(doc_context.get('chunks', [])[:3])}
 
 {pidgin_note}
@@ -1179,10 +1253,10 @@ Respond with valid JSON:
             response = await llm_complete(
                 prompt, max_tokens=2500, temperature=0.15,
                 system_prompt=(
-                    "You are Iroko AI, MTN Nigeria's regulatory intelligence assistant. "
+                    "You are Iroko AI, an African fintech regulatory intelligence assistant. "
                     "Write a precise, well-cited regulatory compliance briefing. "
                     "Always cite: exact regulation name, section number, penalty figure in NGN, and enforcement precedent. "
-                    "Structure your answer: (1) which regulations apply, (2) what MTN's specific obligations are, "
+                    "Structure your answer: (1) which regulations apply, (2) what the fintech's specific obligations are, "
                     "(3) penalty exposure with actual figures, (4) enforcement precedents to illustrate seriousness, "
                     "(5) recommended immediate actions. "
                     "Use bold headings (** **). Be comprehensive but concise. Never omit penalty figures."
@@ -1195,7 +1269,7 @@ Respond with valid JSON:
         except Exception as e:
             logger.warning(f"Regulatory LLM synthesis failed, using fallback: {e}")
             checklist = ctx.get("compliance_checklist", [])
-            lines = ["**MTN Nigeria — Regulatory Compliance Briefing (NCC & NDPC)**\n"]
+            lines = ["**African Fintech Platform — Regulatory Compliance Briefing (CBN, SEC & NDPC)**\n"]
             for item in checklist:
                 lines.append(
                     f"\n**[{item['risk']}] {item['area']}** — {item['regulator']} | {item['regulation']}\n"
@@ -1207,10 +1281,10 @@ Respond with valid JSON:
                 "citations": [],
                 "suggested_followups": [
                     "What are the NDPA 2023 data breach notification requirements?",
-                    "What is MTN's penalty exposure under NCC QoS regulations?",
-                    "How do we comply with the NCC SIM registration rules?",
+                    "What is our penalty exposure under CBN AML/CFT regulations?",
+                    "How do we comply with the CBN microfinance capital adequacy rules?",
                     "What does the GAID 2025 require for cross-border data transfers?",
-                    "What enforcement actions has NDPC taken against telcos?",
+                    "What enforcement actions has CBN taken against fintechs in 2026?",
                 ],
                 "confidence": "high",
             }
@@ -1238,9 +1312,9 @@ Respond with valid JSON:
                 # If asking about specific category, pull detailed tickets
                 q_lower = question.lower()
                 category = None
-                for cat in ["momo", "billing", "network", "data", "voice", "roaming"]:
+                for cat in ["agent_wallet", "loan_deduction", "kyc", "onboarding", "transfer", "lending"]:
                     if cat in q_lower:
-                        category = cat if cat != "momo" else "momo_deduction"
+                        category = cat if cat != "agent_wallet" else "agent_wallet_fraud"
                         break
                 if category:
                     tickets = get_complaints(db, category=category, region=region, days=days, limit=10)
@@ -1264,13 +1338,13 @@ Respond with valid JSON:
         self._log_trace("Strategist", "reason", "Synthesising CX answer from live data")
         try:
             response = await llm_complete(prompt, max_tokens=1500, temperature=0.2,
-                                          system_prompt="You are Iroko AI, MTN Nigeria's customer experience intelligence assistant. Give specific numbers: complaint counts, resolution rates, disputed amounts. Highlight top complaint categories and regions. Link complaints to network incidents where correlation exists.")
+                                          system_prompt="You are Iroko AI, an African fintech customer experience intelligence assistant. Give specific numbers: complaint counts, resolution rates, disputed amounts. Highlight top complaint categories and regions. Link complaints to regulatory incidents where correlation exists.")
         except RuntimeError as e:
             logger.error(f"LLM CX reasoning failed after retries: {e}")
             return {
                 "answer": cx_context or "The AI reasoning engine is temporarily unavailable. Please check the CX dashboard directly.",
                 "citations": [], "confidence": "low",
-                "suggested_followups": ["Top complaint categories?", "Lagos complaint trends?", "MoMo resolution rate?"],
+                "suggested_followups": ["Top complaint categories?", "Lagos complaint trends?", "Loan deduction resolution rate?"],
             }
         try:
             clean = response.strip().replace("```json", "").replace("```", "").strip()
@@ -1279,7 +1353,7 @@ Respond with valid JSON:
             return {
                 "answer": response or cx_context or "CX data is currently unavailable.",
                 "citations": [], "confidence": "medium",
-                "suggested_followups": ["Top complaint categories?", "Lagos complaint trends?", "MoMo resolution rate?"],
+                "suggested_followups": ["Top complaint categories?", "Lagos complaint trends?", "Loan deduction resolution rate?"],
             }
 
     # -- Morning Briefing --------------------------------------------------
@@ -1329,9 +1403,9 @@ Respond with valid JSON:
 
         except Exception as e:
             logger.warning(f"Live briefing data failed: {e}")
-            urgent = ["IHS lease expires June 30 2026", "Ikeja complaint spike: +187% in 24h"]
-            deadlines = ["NCC QoS report due May 13", "NDPA Article 24 gap — DPO review required"]
-            key_metrics = ["Network uptime: 99.3% (below 99.5% target)", "CSAT: 71/100 (down 4pts)"]
+            urgent = ["CRC Credit Bureau data agreement expires June 30 2026", "Kuda loan deduction complaint spike: +187% in 24h"]
+            deadlines = ["CBN AML/CFT return due May 15", "NDPA Article 24 gap — DPO review required"]
+            key_metrics = ["CAR compliance: 9.1% (below 10% CBN minimum — flag)", "CSAT: 71/100 (down 4pts)"]
 
         return json.dumps({
             "generated_at": datetime.utcnow().isoformat(),

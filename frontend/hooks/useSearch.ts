@@ -1,16 +1,17 @@
 /**
  * hooks/useSearch.ts
  *
- * React hook for debounced document search.
- *
- * - Manages query string, results array, loading and error states.
- * - Debounces search calls by 300ms to avoid hammering the backend.
- * - Calls POST /api/documents/search via the client-side api helper.
+ * Migrated to @tanstack/react-query + use-debounce.
+ * - use-debounce replaces manual setTimeout/clearTimeout
+ * - React Query handles loading/error state, caching, and deduplication
+ * - Results for the same query are served from cache instantly
  */
 
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "use-debounce";
 import { apiFetch } from "@/lib/api";
 import type { DocumentSearchResult, DocumentSearchResponse } from "@/lib/types";
 
@@ -25,91 +26,37 @@ export interface UseSearchReturn {
   setQuery: (q: string) => void;
 }
 
-// ── Constants ────────────────────────────────────────────────────────────────
-
-const DEBOUNCE_MS = 300;
-
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useSearch(initialQuery = ""): UseSearchReturn {
   const [query, setQuery] = useState(initialQuery);
-  const [results, setResults] = useState<DocumentSearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  // Debounce the query string — fires 300ms after the user stops typing
+  const [debouncedQuery] = useDebounce(query, 300);
 
-  /**
-   * Execute the search after the debounce window.
-   * Cancels any in-flight request before starting a new one.
-   */
-  const executeSearch = useCallback(async (q: string) => {
-    const trimmed = q.trim();
-    if (!trimmed) {
-      setResults([]);
-      setIsSearching(false);
-      return;
-    }
+  const { data, isFetching, error } = useQuery<DocumentSearchResponse>({
+    queryKey: ["document-search", debouncedQuery],
+    queryFn: () =>
+      apiFetch<DocumentSearchResponse>("/api/documents/search", {
+        method: "POST",
+        body: JSON.stringify({ q: debouncedQuery.trim(), top: 20 }),
+      }),
+    // Only run the query when there's something to search
+    enabled: debouncedQuery.trim().length > 0,
+    // Cache results per query — same query typed again returns instantly
+    staleTime: 1000 * 60 * 2,
+  });
 
-    // Cancel previous in-flight request
-    abortRef.current?.abort();
-    abortRef.current = new AbortController();
+  const search = (q: string) => setQuery(q);
 
-    setIsSearching(true);
-    setError(null);
-
-    try {
-      const data = await apiFetch<DocumentSearchResponse>(
-        "/api/documents/search",
-        {
-          method: "POST",
-          body: JSON.stringify({ q: trimmed, top: 20 }),
-          signal: abortRef.current.signal,
-        },
-      );
-      setResults(data.results ?? []);
-    } catch (err: unknown) {
-      if ((err as Error)?.name === "AbortError") return;
-      const message =
-        err instanceof Error ? err.message : "Search failed.";
-      setError(message);
-      setResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, []);
-
-  /**
-   * Public search function — debounces by 300ms.
-   */
-  const search = useCallback(
-    (q: string) => {
-      setQuery(q);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => executeSearch(q), DEBOUNCE_MS);
-    },
-    [executeSearch],
-  );
-
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      abortRef.current?.abort();
-    };
-  }, []);
-
-  // If initialQuery was provided, trigger an immediate search
-  useEffect(() => {
-    if (initialQuery.trim()) {
-      executeSearch(initialQuery);
-    }
-    // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return { query, results, isSearching, error, search, setQuery };
+  return {
+    query,
+    results: data?.results ?? [],
+    isSearching: isFetching,
+    error: error ? (error instanceof Error ? error.message : "Search failed.") : null,
+    search,
+    setQuery,
+  };
 }
 
 export default useSearch;

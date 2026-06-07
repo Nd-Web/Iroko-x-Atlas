@@ -11,11 +11,11 @@ const STATS = [
 ];
 
 const CONTRACTS = [
-  { id: "HW-MTN-2024-0341",   party: "Huawei Technologies Nigeria",  type: "Vendor MSA",         value: "₦4.2B", exposure: "₦27.3M", renewal: "Jan 2027" },
-  { id: "ENT-ACC-2023-0088",  party: "AccessBank HQ",                type: "Enterprise Customer", value: "₦1.8B", exposure: "₦8.4M",  renewal: "Aug 2026" },
-  { id: "ENT-MTN-LZ2-0112",   party: "MTN Enterprise Lagos Zone 2",  type: "Enterprise Customer", value: "₦2.1B", exposure: "₦12.1M", renewal: "Dec 2026" },
-  { id: "ENT-DAN-2024-0071",  party: "Dangote Group",                type: "Enterprise Customer", value: "₦3.4B", exposure: "₦6.8M",  renewal: "Mar 2027" },
-  { id: "IHS-LEA-2023-0044",  party: "IHS Towers Nigeria",           type: "Tower Lease",         value: "₦8.9B", exposure: "₦4.2M",  renewal: "Jun 2026" },
+  { id: "CBN-MFB-2024-0341",   party: "CBN Microfinance Licence Renewal",    type: "Regulatory Licence",    value: "₦5B capital", exposure: "₦27.3M", renewal: "Jan 2027" },
+  { id: "SEC-DIG-2023-0088",   party: "SEC Digital Assets Registration",     type: "Regulatory Registration", value: "₦500M capital", exposure: "₦8.4M",  renewal: "Aug 2026" },
+  { id: "KUD-PSP-2024-0112",   party: "Kuda MFB — Payment Processor SLA",   type: "Vendor MSA",            value: "₦2.1B", exposure: "₦12.1M", renewal: "Dec 2026" },
+  { id: "CBN-AML-2024-0071",   party: "AML Compliance Software (SaaS)",      type: "Vendor SaaS",           value: "₦340M", exposure: "₦6.8M",  renewal: "Mar 2027" },
+  { id: "MON-CRB-2023-0044",   party: "CRC Credit Bureau — Data Agreement",  type: "Data Partnership",      value: "₦890M", exposure: "₦4.2M",  renewal: "Jun 2026" },
 ];
 
 const COL = "160px 1.5fr 1fr 100px 110px 110px";

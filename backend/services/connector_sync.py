@@ -645,7 +645,7 @@ async def _send_morning_briefing():
                     alert_type=alert_data.get("alert_type", "general"),
                     extra_metadata=alert_data.get("metadata", {}),
                     suggested_actions=alert_data.get("suggested_actions", []),
-                    organisation="MTN Nigeria",
+                    organisation="African Fintech Platform",
                 ))
         db.commit()
 

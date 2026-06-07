@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 
 class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000)
-    org_id: str = Field(default="MTN Nigeria")
+    org_id: str = Field(default="African Fintech Platform")
     category: Optional[str] = None
     top_k: int = Field(default=5, ge=1, le=20)
 
@@ -43,7 +43,7 @@ class SearchResponse(BaseModel):
 
 class ContextRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000)
-    org_id: str = Field(default="MTN Nigeria")
+    org_id: str = Field(default="African Fintech Platform")
     top_k: int = Field(default=5, ge=1, le=20)
 
 

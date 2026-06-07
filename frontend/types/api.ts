@@ -213,23 +213,50 @@ export interface LoginResponse {
   user: User;
 }
 
-// ── Network intelligence ──────────────────────────────────────────────────────
+// ── Fintech regulatory intelligence ──────────────────────────────────────────
 
-export interface NetworkSite {
+export enum RegulatoryBody {
+  CBN  = "Central Bank of Nigeria",
+  SEC  = "Securities and Exchange Commission",
+  NDPA = "Nigeria Data Protection Commission",
+  FIRS = "Federal Inland Revenue Service",
+}
+
+export enum ComplianceArea {
+  LENDING         = "Lending Guidelines",
+  KYC_AML         = "Know Your Customer / AML",
+  CAPITAL         = "Capital Adequacy",
+  DATA_PROTECTION = "Data Protection",
+  PAYMENTS        = "Payment Services",
+  CROWDFUNDING    = "Crowdfunding / Digital Assets",
+}
+
+export interface FintechPlatform {
   id: string;
   name: string;
   region: string;
   latitude: number;
   longitude: number;
-  status: "operational" | "degraded" | "down";
+  status: "compliant" | "monitor" | "breach";
   active_incidents: number;
+  licence_type: string;
+  regulatory_body: string;
 }
 
-export interface NetworkHealthResponse {
+export interface RegulatoryHealthResponse {
   overall_score: number; // 0–100
+  lending_compliance: number;
+  kyc_coverage: number;
+  capital_adequacy: number;
+  platforms: FintechPlatform[];
+  timestamp: string;
+}
+
+// Legacy alias kept for backward compatibility with existing components
+export interface NetworkSite extends FintechPlatform {}
+export interface NetworkHealthResponse extends RegulatoryHealthResponse {
   ran_health: number;
   core_health: number;
   transmission_health: number;
-  sites: NetworkSite[];
-  timestamp: string;
+  sites: FintechPlatform[];
 }

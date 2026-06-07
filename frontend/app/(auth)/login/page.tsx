@@ -52,7 +52,7 @@ const BrandPanel = () => (
           Iroko AI
         </div>
         <div className="text-[11px] text-white/40 leading-none">
-          MTN Nigeria
+          Fintech RegIntel
         </div>
       </div>
     </div>
@@ -64,9 +64,9 @@ const BrandPanel = () => (
         <span className="text-[#818CF8]">Cite-first answers.</span>
       </h2>
       <p className="text-sm text-white/50 leading-[1.7] mb-11 max-w-[330px]">
-        Purpose-built for MTN Nigeria — multilingual AI that grounds every
-        answer in your verified document corpus and logs every interaction for
-        regulatory audit.
+        Purpose-built for African fintechs — multilingual AI that grounds every
+        answer in your verified regulatory corpus and logs every interaction for
+        CBN/SEC audit.
       </p>
 
       <div className="flex flex-col gap-[22px]">
@@ -77,7 +77,7 @@ const BrandPanel = () => (
           },
           {
             title: "Audit-grade compliance logging",
-            desc: "Cryptographically chained records for NCC and NDPA",
+            desc: "Cryptographically chained records for CBN, SEC and NDPA",
           },
           {
             title: "Multilingual by design",
@@ -193,7 +193,7 @@ export default function LoginPage() {
                   Iroko AI
                 </div>
                 <div className="text-[10px] text-gray-400 mt-0.5">
-                  MTN Nigeria
+                  Fintech RegIntel
                 </div>
               </div>
             </div>
@@ -226,7 +226,7 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 className="input-base"
-                placeholder="you@mtn.ng"
+                placeholder="you@iroko.ai"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -318,7 +318,7 @@ export default function LoginPage() {
           <p className="mt-7 text-xs text-gray-300 text-center leading-[1.6]">
             Access is by invitation only.{" "}
             <a
-              href="mailto:iroko-admin@mtn.ng"
+              href="mailto:admin@iroko.ai"
               className="text-brand-600 no-underline font-medium"
             >
               Request access

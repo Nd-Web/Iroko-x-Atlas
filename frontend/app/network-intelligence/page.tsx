@@ -1,43 +1,43 @@
 "use client";
 /**
- * app/network-intelligence/page.tsx — Full NOC dashboard.
- * Circular health gauge, Nigeria network map, incident feed, chat.
+ * app/network-intelligence/page.tsx — Fintech Regulatory Intelligence dashboard.
+ * Compliance health gauge, Nigeria fintech map, regulatory incident feed, chat.
  */
 import { useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useChat } from "@/hooks/useChat";
 import InputBar from "@/components/chat/InputBar";
 import ChatWindow from "@/components/chat/ChatWindow";
-import { cn } from "@/lib/utils";
+import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { useRouter } from "next/navigation";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const REGIONS = [
-  { name: "Lagos",    lat: 6.45,  lng: 3.4,   score: 97.2, status: "operational", incidents: 1, sites: 42 },
-  { name: "Abuja",    lat: 9.07,  lng: 7.4,   score: 91.4, status: "degraded",    incidents: 3, sites: 28 },
-  { name: "Kano",     lat: 12.0,  lng: 8.52,  score: 88.9, status: "degraded",    incidents: 2, sites: 19 },
-  { name: "PH",       lat: 4.84,  lng: 7.04,  score: 95.1, status: "operational", incidents: 0, sites: 24 },
-  { name: "Enugu",    lat: 6.46,  lng: 7.55,  score: 78.3, status: "degraded",    incidents: 4, sites: 16 },
-  { name: "Ibadan",   lat: 7.38,  lng: 3.9,   score: 93.6, status: "operational", incidents: 1, sites: 21 },
-  { name: "Benin",    lat: 6.34,  lng: 5.63,  score: 99.1, status: "operational", incidents: 0, sites: 14 },
-  { name: "Kaduna",   lat: 10.52, lng: 7.43,  score: 84.7, status: "degraded",    incidents: 2, sites: 18 },
+  { name: "Lagos",  lat: 6.45,  lng: 3.4,  score: 94.2, status: "operational", incidents: 1, sites: 12, label: "Kuda HQ + Agent Hub" },
+  { name: "Abuja",  lat: 9.07,  lng: 7.4,  score: 88.9, status: "degraded",    incidents: 3, sites: 6,  label: "Kuda Agent Hub" },
+  { name: "Kano",   lat: 12.0,  lng: 8.52, score: 91.1, status: "operational", incidents: 1, sites: 4,  label: "Kuda Agent Hub" },
+  { name: "PH",     lat: 4.84,  lng: 7.04, score: 96.3, status: "operational", incidents: 0, sites: 5,  label: "Kuda Agent Hub" },
+  { name: "Ibadan", lat: 7.38,  lng: 3.9,  score: 93.1, status: "operational", incidents: 0, sites: 4,  label: "Kuda Agent Hub" },
 ];
 
-const INCIDENTS = [
-  { id: "i1", title: "Abuja zone 3 — BTS overload", region: "Abuja",  sev: "critical", age: "8m",  sla: true  },
-  { id: "i2", title: "Enugu cluster — 4 sites offline", region: "Enugu", sev: "critical", age: "22m", sla: true  },
-  { id: "i3", title: "Kano — RAN latency spike",      region: "Kano",   sev: "warning",  age: "45m", sla: false },
-  { id: "i4", title: "Kaduna — fibre cut PH-KD link", region: "Kaduna", sev: "warning",  age: "1h",  sla: true  },
-  { id: "i5", title: "Lagos — MTR congestion on A1",  region: "Lagos",  sev: "info",     age: "2h",  sla: false },
+const KUDA_INCIDENTS = [
+  { id: "i1", title: "Kuda MFB — lending exposure limit approaching CBN threshold",        region: "Lagos", sev: "critical", age: "8m",  sla: true  },
+  { id: "i2", title: "Kuda MFB — AML/CFT quarterly return due in 12 days",                region: "Abuja", sev: "warning",  age: "1h",  sla: false },
+  { id: "i3", title: "Kuda MFB — 3 incomplete SAR filings flagged by CBN",                 region: "Abuja", sev: "warning",  age: "2h",  sla: false },
+  { id: "i4", title: "Kuda MFB — KYC gap detected in Q2 onboarding batch (187 accounts)", region: "Lagos", sev: "info",     age: "3h",  sla: false },
+];
+
+const COMPETITOR_INCIDENTS = [
+  { id: "c1", title: "Carbon MFB — CAR breach detected, capital shortfall ₦42M",  region: "Lagos", sev: "critical", age: "22m" },
+  { id: "c2", title: "Moniepoint — AML return 3 days late, CBN notified",          region: "Abuja", sev: "warning",  age: "45m" },
+  { id: "c3", title: "Fairmoney — KYC gap in Q2 onboarding cohort (482 accounts)", region: "Lagos", sev: "warning",  age: "1h"  },
 ];
 
 const SEV_COL: Record<string, string> = { critical: "#EF4444", warning: "#F59E0B", info: "#3B7BF6" };
 const STATUS_COL = (s: string) => s === "operational" ? "#10B981" : s === "degraded" ? "#F59E0B" : "#EF4444";
 
-// Nigeria outline paths
-const _x = (lng: number) => ((lng - 2.5) / 12) * 440;
-const _y = (lat: number) => ((14.5 - lat) / 11) * 340;
-const OUTLINE = "M32,262 L88,290 L106,307 L141,327 L158,332 L194,327 L221,321 L244,300 L280,280 L297,267 L332,257 L368,223 L385,190 L402,140 L420,73 L425,33 L385,23 L332,10 L262,10 L209,13 L157,13 L104,10 L59,30 L35,23 L18,23 L7,43 L7,73 L12,157 L7,207 L7,240 Z";
+const geoUrl = "/nigeria-states.json";
 
 // ── Components ────────────────────────────────────────────────────────────────
 
@@ -55,10 +55,10 @@ function HealthGauge({ score }: { score: number }) {
       </svg>
       <div className="-mt-20 text-center">
         <div className="text-4xl font-black" style={{ color: col }}>{score.toFixed(1)}</div>
-        <div className="text-[11px] text-[#6B7280] mt-0.5">Network Health</div>
+        <div className="text-[11px] text-[#6B7280] mt-0.5">Compliance Health</div>
       </div>
       <div className="grid grid-cols-3 gap-3 mt-6 w-full">
-        {[["RAN", "98.7%", "#10B981"], ["Core", "91.4%", "#F59E0B"], ["TX", "95.2%", "#10B981"]].map(([k, v, c]) => (
+        {[["Lending", "94.2%", "#10B981"], ["KYC", "98.7%", "#10B981"], ["CAR", "12.4%", "#10B981"]].map(([k, v, c]) => (
           <div key={k as string} className="text-center">
             <div className="text-[16px] font-black" style={{ color: c as string }}>{v}</div>
             <div className="text-[10px] text-[#6B7280]">{k}</div>
@@ -69,12 +69,18 @@ function HealthGauge({ score }: { score: number }) {
   );
 }
 
-function NetworkMap() {
+function NetworkMap({
+  selectedRegion,
+  onSelectRegion
+}: {
+  selectedRegion: string | null;
+  onSelectRegion: (region: string | null) => void;
+}) {
   const [tooltip, setTooltip] = useState<typeof REGIONS[0] | null>(null);
   return (
-    <div className="rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: "#0F1320" }}>
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
-        <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Nigeria Network Map</h2>
+    <div className="rounded-2xl border border-white/[0.06] overflow-hidden flex flex-col" style={{ background: "#0F1320" }}>
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] shrink-0">
+        <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Nigeria Fintech Regulatory Map</h2>
         <div className="flex items-center gap-3 text-[10px]">
           {[["#10B981","Operational"],["#F59E0B","Degraded"],["#EF4444","Down"]].map(([c,l]) => (
             <span key={l as string} className="flex items-center gap-1.5">
@@ -83,30 +89,93 @@ function NetworkMap() {
           ))}
         </div>
       </div>
-      <div className="p-4 relative">
-        <svg viewBox="0 0 440 340" className="w-full" style={{ maxHeight: 280 }}>
-          <path d={OUTLINE} fill="#131625" stroke="#2D3250" strokeWidth="1.5" />
-          {REGIONS.map(r => {
-            const cx = _x(r.lng), cy = _y(r.lat);
+      <div className="flex-1 relative flex items-center justify-center p-4 min-h-[340px]">
+        <ComposableMap
+          projection="geoMercator"
+          projectionConfig={{
+            center: [8, 9],
+            scale: 2400
+          }}
+          className="w-full h-full"
+        >
+          <Geographies geography={geoUrl}>
+            {({ geographies }) =>
+              geographies.map((geo) => (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  fill="#131625"
+                  stroke="#2D3250"
+                  strokeWidth={0.5}
+                  style={{
+                    default: { outline: "none" },
+                    hover: { outline: "none", fill: "#1a1e32" },
+                    pressed: { outline: "none" }
+                  }}
+                />
+              ))
+            }
+          </Geographies>
+
+          {REGIONS.map((r) => {
             const col = STATUS_COL(r.status);
-            const rad = Math.max(7, Math.min(18, 6 + r.sites * 0.25));
+            const rad = Math.max(5, Math.min(12, 4 + r.sites * 0.2));
             return (
-              <g key={r.name} onMouseEnter={() => setTooltip(r)} onMouseLeave={() => setTooltip(null)} style={{ cursor: "pointer" }}>
-                {r.incidents > 0 && <circle cx={cx} cy={cy} r={rad + 8} fill={col} opacity={0.12} style={{ animation: "ping-svg 2s ease infinite" }} />}
-                <circle cx={cx} cy={cy} r={rad} fill={col} opacity={0.9} stroke="white" strokeWidth="0.6" />
-                <text x={cx} y={cy - rad - 4} textAnchor="middle" fontSize="6" fill="#E5E7EB" fontWeight="700">{r.name}</text>
-                <text x={cx} y={cy + 4} textAnchor="middle" fontSize="5" fill="white" fontWeight="bold">{r.score}%</text>
-              </g>
+              <Marker
+                key={r.name}
+                coordinates={[r.lng, r.lat]}
+                onMouseEnter={() => setTooltip(r)}
+                onMouseLeave={() => setTooltip(null)}
+                onClick={() => onSelectRegion(selectedRegion === r.name ? null : r.name)}
+                style={{
+                  default: { outline: "none" },
+                  hover: { outline: "none" },
+                  pressed: { outline: "none" }
+                }}
+              >
+                {r.incidents > 0 && (
+                  <circle
+                    r={rad + 6}
+                    fill={col}
+                    opacity={0.12}
+                    style={{ animation: "ping-svg 2s ease infinite", cursor: "pointer" }}
+                  />
+                )}
+                <circle
+                  r={rad}
+                  fill={col}
+                  opacity={selectedRegion && selectedRegion !== r.name ? 0.3 : 0.9}
+                  stroke={selectedRegion === r.name ? "white" : "white"}
+                  strokeWidth={selectedRegion === r.name ? "2" : "0.6"}
+                  style={{ cursor: "pointer" }}
+                />
+                <text
+                  textAnchor="middle"
+                  y={-rad - 4}
+                  style={{ fontSize: "8px", fill: "#E5E7EB", fontWeight: 700 }}
+                >
+                  {r.name}
+                </text>
+                <text
+                  textAnchor="middle"
+                  y={3}
+                  style={{ fontSize: "7px", fill: "white", fontWeight: "bold" }}
+                >
+                  {r.score}%
+                </text>
+              </Marker>
             );
           })}
-        </svg>
+        </ComposableMap>
+
         {tooltip && (
-          <div className="absolute bottom-6 left-6 px-4 py-3 rounded-xl text-xs pointer-events-none z-10"
+          <div className="absolute bottom-6 left-6 px-4 py-3 rounded-xl text-xs pointer-events-none z-10 shadow-lg"
             style={{ background: "#1a1d27", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <div className="font-bold text-[#E5E7EB] mb-1">{tooltip.name}</div>
+            <div className="font-bold text-[#E5E7EB] mb-0.5">{tooltip.name}</div>
+            <div className="text-[9px] text-amber-400 mb-1">{tooltip.label}</div>
             <div className="text-[#6B7280] space-y-0.5">
-              <div>Health: <span style={{ color: STATUS_COL(tooltip.status) }}>{tooltip.score}%</span></div>
-              <div>Sites: {tooltip.sites}</div>
+              <div>Compliance: <span style={{ color: STATUS_COL(tooltip.status) }}>{tooltip.score}%</span></div>
+              <div>Agent points: {tooltip.sites}</div>
               <div>Incidents: <span className={tooltip.incidents > 0 ? "text-red-400" : "text-emerald-400"}>{tooltip.incidents}</span></div>
             </div>
           </div>
@@ -120,16 +189,18 @@ function NetworkMap() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function NetworkIntelligencePage() {
+  const router = useRouter();
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const { messages, isLoading, sendMessage } = useChat();
   const chatMessages = messages.map(m => ({
     id: m.id, role: m.role, content: m.content,
     reasoning_steps: m.trace?.map(t => ({ agent: t.agent, status: "done" as const, message: t.description, timestamp: t.timestamp })),
     timestamp: m.timestamp,
   }));
-  const overallScore = REGIONS.reduce((s, r) => s + r.score, 0) / REGIONS.length;
+  const overallScore = (94.2 + 98.7) / 2;
 
   return (
-    <AppShell title="Network Intelligence" subtitle="Real-time RAN, Core and Transmission health"
+    <AppShell title="Fintech Regulatory Intelligence" subtitle="Kuda MFB — Real-time CBN/SEC Compliance Monitor"
       actions={
         <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-3 py-1.5 rounded-full">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "pulse-live 2s ease infinite" }} />Live
@@ -139,24 +210,72 @@ export default function NetworkIntelligencePage() {
         {/* Left column: gauge + incidents */}
         <div className="space-y-4">
           <HealthGauge score={overallScore} />
-          {/* Incident feed */}
+
+          {/* Kuda incident feed */}
           <div className="rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: "#0F1320" }}>
             <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold text-[#E5E7EB]">Active Incidents</h3>
+              <h3 className="text-[13px] font-semibold text-[#E5E7EB]">
+                {selectedRegion ? `Kuda Incidents — ${selectedRegion}` : "Kuda MFB Active Incidents"}
+                {selectedRegion && (
+                  <button onClick={() => setSelectedRegion(null)} className="ml-3 text-[10px] text-gray-400 hover:text-white underline">
+                    Clear
+                  </button>
+                )}
+              </h3>
               <span className="text-[10px] font-bold text-red-400 bg-red-400/10 px-2 py-0.5 rounded-full">
-                {INCIDENTS.filter(i => i.sev === "critical").length} critical
+                {KUDA_INCIDENTS.filter(i => i.sev === "critical" && (!selectedRegion || i.region === selectedRegion)).length} critical
               </span>
             </div>
             <div className="divide-y divide-white/[0.04]">
-              {INCIDENTS.map(inc => {
+              {KUDA_INCIDENTS.filter(i => !selectedRegion || i.region === selectedRegion).map(inc => {
                 const c = SEV_COL[inc.sev];
                 return (
-                  <div key={inc.id} className="flex items-start gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors" style={{ borderLeft: `3px solid ${c}` }}>
+                  <div
+                    key={inc.id}
+                    onClick={() => router.push(`/chat?q=${encodeURIComponent('Tell me about this regulatory incident: ' + inc.title)}`)}
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-white/[0.06] transition-colors cursor-pointer"
+                    style={{ borderLeft: `3px solid ${c}` }}
+                  >
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-[#D1D5DB] font-medium truncate">{inc.title}</p>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[9px] font-bold text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded-full border border-blue-400/20">Internal</span>
+                      </div>
+                      <p className="text-[12px] text-[#D1D5DB] font-medium truncate hover:text-white">{inc.title}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full" style={{ color: c, background: `${c}15` }}>{inc.sev}</span>
                         {inc.sla && <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-full">SLA</span>}
+                        <span className="text-[10px] text-[#4B5563]">{inc.age} ago</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Competitor intelligence section */}
+          <div className="rounded-2xl border border-orange-400/20 overflow-hidden" style={{ background: "#0F1320" }}>
+            <div className="px-4 py-3 border-b border-orange-400/20 flex items-center justify-between">
+              <h3 className="text-[13px] font-semibold text-[#E5E7EB]">Competitor Intelligence</h3>
+              <span className="text-[9.5px] font-bold text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full border border-orange-400/20">Market Watch</span>
+            </div>
+            <div className="divide-y divide-white/[0.04]">
+              {COMPETITOR_INCIDENTS.map(inc => {
+                const c = SEV_COL[inc.sev];
+                return (
+                  <div
+                    key={inc.id}
+                    onClick={() => router.push(`/chat?q=${encodeURIComponent('Tell me about this competitor regulatory incident: ' + inc.title)}`)}
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-white/[0.04] transition-colors cursor-pointer"
+                    style={{ borderLeft: `3px solid #F97316` }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[9px] font-bold text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded-full border border-orange-400/20">Competitor Intel</span>
+                      </div>
+                      <p className="text-[12px] text-[#D1D5DB] font-medium truncate hover:text-white">{inc.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full" style={{ color: c, background: `${c}15` }}>{inc.sev}</span>
                         <span className="text-[10px] text-[#4B5563]">{inc.age} ago</span>
                       </div>
                     </div>
@@ -169,16 +288,16 @@ export default function NetworkIntelligencePage() {
 
         {/* Map */}
         <div className="xl:col-span-2 space-y-4">
-          <NetworkMap />
+          <NetworkMap selectedRegion={selectedRegion} onSelectRegion={setSelectedRegion} />
           {/* NOC Chat */}
           <div className="rounded-2xl border border-white/[0.06] flex flex-col overflow-hidden" style={{ background: "#0F1320", minHeight: 280 }}>
             <div className="px-4 py-3 border-b border-white/[0.06]">
-              <h3 className="text-[13px] font-bold text-[#E5E7EB]">🛡️ Network Intelligence Query</h3>
+              <h3 className="text-[13px] font-bold text-[#E5E7EB]">🛡️ Regulatory Intelligence Query</h3>
             </div>
             <div className="flex-1 min-h-0">
               <ChatWindow conversationId="net" messages={chatMessages} isStreaming={isLoading} />
             </div>
-            <InputBar onSend={sendMessage} isStreaming={isLoading} placeholder="Ask about network incidents, coverage, SLA…" />
+            <InputBar onSend={sendMessage} isStreaming={isLoading} placeholder="Ask about CBN directives, lending limits, KYC gaps…" />
           </div>
         </div>
       </div>

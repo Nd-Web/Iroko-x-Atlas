@@ -47,8 +47,8 @@ class AppSettings(BaseSettings):
     AZURE_TENANT_ID: str = Field(
         ..., description="Azure AD tenant ID"
     )
-    AZURE_KEYVAULT_URL: str = Field(
-        ..., description="Azure Key Vault URL (e.g. https://irokovault2026.vault.azure.net/)"
+    AZURE_KEYVAULT_URL: Optional[str] = Field(
+        default=None, description="Azure Key Vault URL (e.g. https://irokovault2026.vault.azure.net/)"
     )
 
     # -- Azure AI Services -------------------------------------------------
@@ -89,11 +89,11 @@ class AppSettings(BaseSettings):
 
     # -- Azure Document Intelligence ---------------------------------------
 
-    AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT: str = Field(
-        ..., description="Azure Document Intelligence endpoint"
+    AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT: Optional[str] = Field(
+        default=None, description="Azure Document Intelligence endpoint"
     )
-    AZURE_DOCUMENT_INTELLIGENCE_KEY: str = Field(
-        ..., description="Azure Document Intelligence API key"
+    AZURE_DOCUMENT_INTELLIGENCE_KEY: Optional[str] = Field(
+        default=None, description="Azure Document Intelligence API key"
     )
 
     # -- Azure Blob Storage ------------------------------------------------
@@ -158,6 +158,123 @@ class AppSettings(BaseSettings):
         default=None, description="Azure Speech Services key"
     )
 
+    # -- Bright Data (hackathon-provided web intelligence) -----------------
+
+    BRIGHTDATA_API_KEY: Optional[str] = Field(
+        default=None,
+        description=(
+            "Bright Data account API key. When absent the BrightDataClient operates "
+            "in mock mode: fetch_url falls back to plain httpx GET, and SERP / "
+            "Scraper APIs are disabled. Set this to enable full proxy-based "
+            "web intelligence for the Iroko AI agent pipeline."
+        ),
+    )
+    BRIGHTDATA_CUSTOMER_ID: Optional[str] = Field(
+        default=None,
+        description=(
+            "Bright Data numeric customer/account ID. Required alongside "
+            "BRIGHTDATA_API_KEY to construct proxy auth credentials "
+            "(brd-customer-{id}-zone-{zone}). Find it in the Bright Data "
+            "dashboard under Account Settings."
+        ),
+    )
+    BRIGHTDATA_WEB_UNLOCKER_ENDPOINT: str = Field(
+        default="https://brd.superproxy.io:22225",
+        description=(
+            "Bright Data Web Unlocker proxy host:port. Routes requests through "
+            "the residential proxy network to bypass JS rendering gates and "
+            "Cloudflare challenges on ncc.gov.ng and African telco sources."
+        ),
+    )
+    BRIGHTDATA_SERP_API_ENDPOINT: str = Field(
+        default="https://api.brightdata.com/serp",
+        description=(
+            "Bright Data SERP API base URL. Used by fetch_competitor_signals() "
+            "and fetch_market_intel_signals() to issue structured Google/Bing "
+            "SERP queries without a browser instance."
+        ),
+    )
+    BRIGHTDATA_ZONE: str = Field(
+        default="residential",
+        description=(
+            "Bright Data proxy zone name. Must match the zone created in your "
+            "Bright Data dashboard (e.g. 'residential', 'datacenter', 'isp'). "
+            "Used to build the proxy auth username."
+        ),
+    )
+    BRIGHTDATA_PROXY_PASSWORD: Optional[str] = Field(
+        default=None,
+        description=(
+            "Bright Data proxy zone password (specifically for Web Unlocker proxy auth). "
+            "If not set, falls back to BRIGHTDATA_API_KEY."
+        ),
+    )
+    BRIGHTDATA_SERP_ZONE: str = Field(
+        default="serp_api1",
+        description="Bright Data SERP API zone name (e.g. 'serp_api1').",
+    )
+    BRIGHTDATA_SCRAPING_BROWSER_ZONE: str = Field(
+        default="scraping_browser1",
+        description="Bright Data Scraping Browser zone name (e.g. 'scraping_browser1').",
+    )
+    BRIGHTDATA_MCP_SERVER_URL: Optional[str] = Field(
+        default=None,
+        description=(
+            "Optional Bright Data MCP (Model Context Protocol) server URL. "
+            "When set, Semantic Kernel agents can invoke live web fetches "
+            "as native tool calls mid-reasoning without round-tripping to "
+            "the FastAPI layer. Requires the MCP Server add-on to be enabled "
+            "in your Bright Data account."
+        ),
+    )
+    BRIGHTDATA_SCRAPER_DATASET_ID: Optional[str] = Field(
+        default=None,
+        description=(
+            "Bright Data Web Scraper API dataset ID (Datasets v3). Used by "
+            "scrape_structured() for schema-driven extraction from procurement "
+            "portals and regulatory gazette PDFs. Falls back to Web Unlocker "
+            "+ raw HTML when absent."
+        ),
+    )
+
+    # -- Web Intelligence Pipeline Tuning ----------------------------------
+
+    WEB_INTEL_REFRESH_INTERVAL_SECONDS: int = Field(
+        default=300,
+        description=(
+            "How often (in seconds) the background signal poller refreshes "
+            "live web intelligence data across all 5 domains. Default 300 "
+            "(5 minutes). Reduce for demos; raise for production to stay "
+            "within Bright Data quota."
+        ),
+    )
+    AUDIT_TRAIL_MAX_ENTRIES: int = Field(
+        default=10_000,
+        description=(
+            "Maximum number of hash-chained audit trail entries retained in "
+            "the database. Oldest entries are pruned automatically when this "
+            "limit is reached. Default 10,000."
+        ),
+    )
+    NCC_LIVE_RULES_ENABLED: bool = Field(
+        default=True,
+        description=(
+            "When True, ncc_live_rules_service.compile_live_enforcement_rules() "
+            "fetches the latest NCC enforcement bulletins via Bright Data on "
+            "each regulatory scan. Set to False to use the cached corpus only "
+            "(useful when offline or running against Bright Data quota limits)."
+        ),
+    )
+    SIGNAL_GRAPH_RISK_THRESHOLD: float = Field(
+        default=0.6,
+        description=(
+            "Minimum compound risk score (0.0–1.0) for the SignalGraphService "
+            "to surface an entity as a high-risk compound threat. Entities whose "
+            "NetworkX-computed compound_risk_score falls below this threshold "
+            "are excluded from get_high_risk_entities() output. Default 0.6."
+        ),
+    )
+
     # -- Validators --------------------------------------------------------
 
     @field_validator("SECRET_KEY")
@@ -182,10 +299,12 @@ class AppSettings(BaseSettings):
         "ACS_CONNECTION_STRING",
     )
     @classmethod
-    def required_not_blank(cls, v: str, info) -> str:
-        if not v or not v.strip():
+    def required_not_blank(cls, v: Optional[str], info) -> Optional[str]:
+        if v is None:
+            return v
+        if not str(v).strip():
             raise ValueError(f"{info.field_name} is required and cannot be blank.")
-        return v.strip()
+        return str(v).strip()
 
     class Config:
         env_file = ".env"
@@ -281,8 +400,96 @@ def _warn_optional_missing(settings: AppSettings):
         warnings.append("COHERE_API_KEY -- Cohere reranking disabled")
     if not settings.AZURE_SPEECH_KEY:
         warnings.append("AZURE_SPEECH_KEY -- Azure Speech Services disabled")
+    if not settings.BRIGHTDATA_API_KEY or not settings.BRIGHTDATA_CUSTOMER_ID:
+        warnings.append(
+            "BRIGHTDATA_API_KEY / BRIGHTDATA_CUSTOMER_ID -- Bright Data web intelligence disabled; "
+            "BrightDataClient will run in mock mode (plain httpx GET, no SERP/Scraper APIs). "
+            "Both BRIGHTDATA_API_KEY and BRIGHTDATA_CUSTOMER_ID are required to enable full proxy-based scraping."
+        )
 
     if warnings:
         logger.warning("Optional environment variables not set:")
         for w in warnings:
             logger.warning(f"  [!]  {w}")
+
+
+# ==============================================================================
+# BrightDataSettings — Bright Data product surface configuration
+# ==============================================================================
+# These are derived from AppSettings fields. Use as a convenience accessor
+# when a service only needs Bright Data config, not the full AppSettings.
+#
+# Usage:
+#   from services.settings import get_brightdata_settings
+#   bd = get_brightdata_settings()
+#   print(bd.api_key, bd.zone)
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class BrightDataSettings:
+    """Read-only view of all Bright Data configuration fields."""
+    api_key: Optional[str]
+    customer_id: Optional[str]
+    web_unlocker_endpoint: str
+    serp_api_endpoint: str
+    zone: str
+    mcp_server_url: Optional[str]
+    scraper_dataset_id: Optional[str]
+    proxy_password: Optional[str]
+    serp_zone: str
+    scraping_browser_zone: str
+
+    @property
+    def mock_mode(self) -> bool:
+        """True when API key or customer ID is absent — client runs in mock mode."""
+        return not self.api_key or not self.customer_id
+
+    @property
+    def proxy_username(self) -> str:
+        """Bright Data proxy auth username string."""
+        return f"brd-customer-{self.customer_id}-zone-{self.zone}"
+
+    @classmethod
+    def from_app_settings(cls, s: AppSettings) -> "BrightDataSettings":
+        return cls(
+            api_key=s.BRIGHTDATA_API_KEY,
+            customer_id=s.BRIGHTDATA_CUSTOMER_ID,
+            web_unlocker_endpoint=s.BRIGHTDATA_WEB_UNLOCKER_ENDPOINT,
+            serp_api_endpoint=s.BRIGHTDATA_SERP_API_ENDPOINT,
+            zone=s.BRIGHTDATA_ZONE,
+            mcp_server_url=s.BRIGHTDATA_MCP_SERVER_URL,
+            scraper_dataset_id=s.BRIGHTDATA_SCRAPER_DATASET_ID,
+            proxy_password=s.BRIGHTDATA_PROXY_PASSWORD,
+            serp_zone=s.BRIGHTDATA_SERP_ZONE,
+            scraping_browser_zone=s.BRIGHTDATA_SCRAPING_BROWSER_ZONE,
+        )
+
+
+@dataclass(frozen=True)
+class WebIntelSettings:
+    """Read-only view of web intelligence pipeline tuning fields."""
+    refresh_interval_seconds: int
+    audit_trail_max_entries: int
+    ncc_live_rules_enabled: bool
+    signal_graph_risk_threshold: float
+
+    @classmethod
+    def from_app_settings(cls, s: AppSettings) -> "WebIntelSettings":
+        return cls(
+            refresh_interval_seconds=s.WEB_INTEL_REFRESH_INTERVAL_SECONDS,
+            audit_trail_max_entries=s.AUDIT_TRAIL_MAX_ENTRIES,
+            ncc_live_rules_enabled=s.NCC_LIVE_RULES_ENABLED,
+            signal_graph_risk_threshold=s.SIGNAL_GRAPH_RISK_THRESHOLD,
+        )
+
+
+def get_brightdata_settings() -> BrightDataSettings:
+    """Return Bright Data config derived from the current AppSettings singleton."""
+    return BrightDataSettings.from_app_settings(get_settings())
+
+
+def get_web_intel_settings() -> WebIntelSettings:
+    """Return web intelligence tuning config derived from the current AppSettings singleton."""
+    return WebIntelSettings.from_app_settings(get_settings())

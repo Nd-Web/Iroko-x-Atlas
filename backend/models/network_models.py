@@ -1,16 +1,16 @@
 """
-Iroko AI — Telecom Operations Data Models
-==========================================
-First-class representations of MTN Nigeria's operational entities.
-These models enable the AI agents to query structured telecom data
+Iroko AI — Fintech Regulatory Operations Data Models
+=====================================================
+First-class representations of African fintech operational entities.
+These models enable the AI agents to query structured compliance data
 alongside unstructured document search.
 
 Entities:
-  - NetworkSite      — towers, base stations, POPs
-  - NetworkIncident  — outages, alarms, RCAs
-  - VendorContract   — parsed SLA terms, penalty formulas
-  - ComplaintTicket   — customer complaints with resolution tracking
-  - NetworkKPI       — time-series: availability, CSR, throughput
+  - NetworkSite      — fintech entities / licensed platforms (schema retained for compat)
+  - NetworkIncident  — regulatory incidents, CAR breaches, AML findings
+  - VendorContract   — parsed agreement terms, SLA/penalty formulas
+  - ComplaintTicket   — customer complaints with CBN resolution tracking
+  - NetworkKPI       — time-series: CAR, KYC coverage, AML filing rates
 """
 from sqlalchemy import (
     Column, String, Integer, Float, Boolean, DateTime, Text, JSON,

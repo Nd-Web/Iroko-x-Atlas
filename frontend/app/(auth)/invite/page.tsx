@@ -78,7 +78,7 @@ function InviteRedirector() {
           invitation email, or contact your administrator.
         </p>
         <a
-          href="mailto:iroko-admin@mtn.ng"
+          href="mailto:admin@iroko.ai"
           className="btn-primary py-2.5 px-5 text-sm no-underline"
         >
           Contact admin

@@ -494,33 +494,32 @@ async def extract_text(file_path: str, file_type: str) -> Optional[str]:
 
 def _mock_document_text(file_type: str) -> str:
     """Returns realistic mock document text for development."""
-    return """MTN Nigeria Internal Document
+    return """Iroko AI — Internal Regulatory Intelligence Document
 
 EXECUTIVE SUMMARY
 
-This document contains enterprise information for MTN Nigeria Limited.
-Network performance data indicates strong growth in subscriber base across
-all regions. Lagos, Abuja, and Port Harcourt remain top revenue contributors.
+This document contains enterprise information for African Fintech Platform.
+Regulatory compliance data indicates active monitoring of CBN/SEC obligations
+across all licensed entities. Lagos, Abuja, and Port Harcourt remain top revenue contributors.
 
 Key Metrics for Q1 2026:
 
-- Total subscribers: 76.5 million
-- Network uptime: 99.3%
+- Total active customers: 4.2 million
+- Platform uptime: 99.3%
 - Customer satisfaction index: 71/100
-- Revenue growth: 12% year-on-year
-- Total revenue: NGN 245,000,000,000
+- Revenue growth: 18% year-on-year
+- Total revenue: NGN 12,400,000,000
 
 AREAS REQUIRING ATTENTION
 
-Lagos Zone 7 network capacity is operating below acceptable thresholds.
-The TowerCo contract renewal requires immediate action — expiry is imminent.
-NCC compliance updates must be filed before the quarterly deadline.
+Carbon MFB Capital Adequacy Ratio is operating below the CBN minimum of 10%.
+The CRC Credit Bureau data processing agreement renewal requires immediate action — expiry is imminent.
+CBN AML/CFT quarterly return must be filed before the quarterly deadline.
 
-Tower Maintenance Status:
+Compliance Status:
 
-Tower 4471 in Ikeja experienced intermittent failures on four occasions this quarter,
-affecting approximately 12,000 subscribers during peak hours (18:00-21:00).
-Emergency maintenance has been scheduled but not yet completed.
+Q2 2026 AML/CFT return flagged 14 potential structuring patterns — none escalated to STR
+as required by CBN AML/CFT Regulations 2022 Section 15. Remediation required within 48 hours.
 
 CONTRACT STATUS
 

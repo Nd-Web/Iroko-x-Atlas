@@ -194,7 +194,7 @@ export default function InviteTokenPage({
             {tokenError}
           </p>
           <a
-            href="mailto:iroko-admin@mtn.ng"
+            href="mailto:admin@iroko.ai"
             className="btn-primary py-2.5 px-5 text-sm no-underline"
           >
             Contact admin
@@ -236,7 +236,7 @@ export default function InviteTokenPage({
               Iroko AI
             </div>
             <div className="text-[11px] text-white/40 leading-none">
-              MTN Nigeria
+              Fintech RegIntel
             </div>
           </div>
         </div>
@@ -248,8 +248,8 @@ export default function InviteTokenPage({
             <span className="text-[#818CF8]">Iroko AI.</span>
           </h2>
           <p className="text-sm text-white/50 leading-[1.7] max-w-[330px]">
-            Set up your account below to start using enterprise document
-            intelligence built for MTN Nigeria.
+            Set up your account below to start using enterprise regulatory
+            intelligence built for African fintechs.
           </p>
 
           {/* Access summary card — populated from the validated token */}
@@ -300,7 +300,7 @@ export default function InviteTokenPage({
                 Iroko AI
               </div>
               <div className="text-[10px] text-gray-400 mt-0.5">
-                MTN Nigeria
+                Fintech RegIntel
               </div>
             </div>
           </div>

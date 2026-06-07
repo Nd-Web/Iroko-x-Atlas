@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 
 const ENTRIES = [
-  { id: "AUD-29041", user: "Adaeze Okonkwo",  query: "Wetin dey happen for Ikeja cluster?",          agent: "Strategist", chunks: 5, latency: "1.84s", time: "09:41:22" },
-  { id: "AUD-29040", user: "Adaeze Okonkwo",  query: "SLA exposure if not resolved in 2 hours?",      agent: "Analyst",    chunks: 3, latency: "2.31s", time: "09:43:07" },
-  { id: "AUD-29039", user: "Tunde Adeyemi",   query: "List DPIAs without DPO approval",               agent: "Researcher", chunks: 4, latency: "1.62s", time: "09:10:55" },
-  { id: "AUD-29038", user: "Ifeoma Chukwu",   query: "Generate draft NDPA audit return Q1 2026",      agent: "Scribe",     chunks: 9, latency: "4.12s", time: "08:54:31" },
-  { id: "AUD-29037", user: "Bukola Adesanya", query: "Current data tariff for Yello Pulse 5GB",       agent: "Researcher", chunks: 2, latency: "0.94s", time: "08:32:14" },
-  { id: "AUD-29036", user: "Musa Garba",      query: "Site card for KAN-0341",                        agent: "Researcher", chunks: 1, latency: "0.71s", time: "07:18:40" },
+  { id: "AUD-29041", user: "Adaeze Okonkwo",  query: "What is Kuda MFB's current CAR vs CBN minimum?",          agent: "Strategist", chunks: 5, latency: "1.84s", time: "09:41:22" },
+  { id: "AUD-29040", user: "Adaeze Okonkwo",  query: "Fine exposure if lending limit breached for 48h?",         agent: "Analyst",    chunks: 3, latency: "2.31s", time: "09:43:07" },
+  { id: "AUD-29039", user: "Tunde Adeyemi",   query: "List DPIAs without DPO approval",                          agent: "Researcher", chunks: 4, latency: "1.62s", time: "09:10:55" },
+  { id: "AUD-29038", user: "Ifeoma Chukwu",   query: "Generate draft CBN AML/CFT quarterly return Q2 2026",      agent: "Scribe",     chunks: 9, latency: "4.12s", time: "08:54:31" },
+  { id: "AUD-29037", user: "Bukola Adesanya", query: "Current CBN lending rate cap for microfinance banks",       agent: "Researcher", chunks: 2, latency: "0.94s", time: "08:32:14" },
+  { id: "AUD-29036", user: "Musa Garba",      query: "KYC coverage report for Moniepoint Q2 onboarding cohort",  agent: "Researcher", chunks: 1, latency: "0.71s", time: "07:18:40" },
 ];
 
 const AGENT_COLORS: Record<string, string> = {
@@ -20,12 +20,12 @@ const AGENT_COLORS: Record<string, string> = {
 };
 
 const SOURCES: Record<string, string[]> = {
-  "AUD-29041": ["INC-4821 ServiceNow record", "Ikeja Cluster HLD v3.2", "NOC ops runbook Q1-2026", "INC-4311 RCA report", "CHG-8819 change log"],
-  "AUD-29040": ["HW-MTN-2024-0341 SLA Schedule", "INC-4821 impact assessment", "Contracts penalty calculator"],
-  "AUD-29039": ["DPIA register 2026", "MoMo Analytics DPIA v2", "NDPA Art. 34 checklist", "DPO approval log"],
-  "AUD-29038": ["NDPA audit template Q1-2026", "Processing activities register", "Breach notification log", "Data transfer agreements", "Q4-2025 audit return", "DPIAs (×3)", "NCC QoS Return Q4-2025", "NDPC correspondence log", "Legal opinions archive"],
-  "AUD-29037": ["Yello Pulse tariff sheet Apr-2026", "Care agent escalation log"],
-  "AUD-29036": ["KAN-0341 site card", "Kano cluster network diagram"],
+  "AUD-29041": ["Kuda MFB CAR Report Q2-2026", "CBN Microfinance Capital Guidelines 2022", "Monthly CAR computation sheet", "CBN FinA submission log"],
+  "AUD-29040": ["CBN MFB-001 Exposure Limits", "Lending batch #7 exposure summary", "CBN fine schedule 2024"],
+  "AUD-29039": ["DPIA register 2026", "Credit Scoring ML Pipeline DPIA v3", "NDPA Art. 34 checklist", "DPO approval log"],
+  "AUD-29038": ["CBN AML/CFT template Q2-2026", "Transaction monitoring reports", "STR log Q2-2026", "Data transfer agreements", "Q1-2026 AML return", "DPIAs (×3)", "CBN Lending Return Q1-2026", "NDPA correspondence log", "Legal opinions archive"],
+  "AUD-29037": ["CBN lending rate circular Apr-2026", "MFB lending rate tracker"],
+  "AUD-29036": ["Moniepoint KYC coverage report", "Onboarding cohort analysis Q2-2026"],
 };
 
 const STATS = [

@@ -1,16 +1,16 @@
 /**
  * hooks/useInsights.ts
  *
- * React hook for fetching insights / active alerts from the backend.
- *
- * - Fetches GET /api/alerts on mount and every 60 seconds.
- * - Returns { insights, isLoading, error, refetch }.
- * - On error sets error state without throwing.
+ * Migrated to @tanstack/react-query.
+ * - Automatic background refetching every 60s (refetchInterval)
+ * - Deduplication: multiple components sharing this hook hit the network once
+ * - Stale-while-revalidate built-in
+ * - No manual setInterval / clearInterval needed
  */
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -39,52 +39,23 @@ export interface UseInsightsReturn {
   refetch: () => void;
 }
 
-// ── Polling interval ─────────────────────────────────────────────────────────
-
-const POLL_INTERVAL_MS = 60_000; // 60 seconds
-
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useInsights(): UseInsightsReturn {
-  const [insights, setInsights] = useState<Insight[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { data, isLoading, error, refetch } = useQuery<AlertsResponse>({
+    queryKey: ["insights"],
+    queryFn: () => apiFetch<AlertsResponse>("/api/alerts?status=all&limit=50"),
+    refetchInterval: 60_000,       // poll every 60s
+    staleTime: 30_000,             // treat data as fresh for 30s
+    refetchOnWindowFocus: true,    // refresh when user returns to tab
+  });
 
-  const fetchInsights = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const data = await apiFetch<AlertsResponse>("/api/alerts?status=all&limit=50");
-      setInsights(data.alerts ?? []);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch insights.";
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Initial fetch + polling
-  useEffect(() => {
-    fetchInsights();
-
-    intervalRef.current = setInterval(fetchInsights, POLL_INTERVAL_MS);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [fetchInsights]);
-
-  const refetch = useCallback(() => {
-    fetchInsights();
-  }, [fetchInsights]);
-
-  return { insights, isLoading, error, refetch };
+  return {
+    insights: data?.alerts ?? [],
+    isLoading,
+    error: error ? (error instanceof Error ? error.message : "Failed to fetch insights.") : null,
+    refetch,
+  };
 }
 
 export default useInsights;

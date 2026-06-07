@@ -47,11 +47,11 @@ function SkeletonCard() {
   );
 }
 
-const STARTERS = ["SLA credit penalty clauses", "Contracts expiring this quarter", "NCC compliance obligations", "IHS tower lease fees"];
+const STARTERS = ["CBN lending exposure limits", "AML/CFT quarterly returns", "CBN capital adequacy requirements", "Fintech licence obligations"];
 const MOCK_RESULTS: SearchResult[] = [
-  { content: "In the event that Network Uptime falls below 99.5% in any calendar month, IHS Nigeria shall provide a service credit equal to 10% of the monthly fee for each 0.1% below the threshold.", source: "IHS_Nigeria_Tower_Lease_2024.pdf", score: 0.94, document_id: "doc-1a2b3c4d" },
-  { content: "The Ericsson RAN maintenance agreement requires that all Priority 1 incidents are resolved within 4 hours of initial ticket creation. SLA credits of 15% apply for each hour of breach.", source: "Ericsson_RAN_Maintenance_SLA.pdf", score: 0.88, document_id: "doc-4d5e6f7g" },
-  { content: "Annual lease fees shall be adjusted on the anniversary date in line with the Official Consumer Price Index, subject to a maximum escalation of 12% per annum per Article 4.1.", source: "IHS_Nigeria_Tower_Lease_2024.pdf", score: 0.79, document_id: "doc-7g8h9i1j" },
+  { content: "Single obligor exposure limit for MFB lending shall not exceed 5% of shareholders' funds unimpaired by losses for unsecured lending. Aggregate insider lending capped at 10% of shareholders' funds.", source: "CBN_Microfinance_Directive_Q2_2026.pdf", score: 0.94, document_id: "doc-1a2b3c4d" },
+  { content: "The AML/CFT quarterly return must be submitted by the 15th of the first month following each quarter-end. Entities that fail to submit within the prescribed timeframe are liable to a fine of ₦500,000 per day of delay.", source: "CBN_AML_CFT_Quarterly_Return_Q2_2026.xlsx", score: 0.88, document_id: "doc-4d5e6f7g" },
+  { content: "Minimum Capital Adequacy Ratio (CAR) of 10% shall be maintained at all times. Tier 1 capital must comprise at least 6% of risk-weighted assets. Monthly CAR computation and reporting to CBN via FinA system is mandatory.", source: "CBN_BOFIA_2020_Compliance_Guide.pdf", score: 0.79, document_id: "doc-7g8h9i1j" },
 ];
 
 export default function SearchPage() {

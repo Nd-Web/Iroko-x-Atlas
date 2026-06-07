@@ -10,6 +10,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import SessionExpiredToast from "@/components/ui/SessionExpiredToast";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: {
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s · Iroko AI",
   },
   description:
-    "Enterprise document intelligence for MTN Nigeria — telecom-domain AI platform for workflow management and real-time analytics.",
+    "Financial Regulation Monitor for African Fintechs — AI platform monitoring CBN/SEC compliance across lending, KYC/AML, and capital adequacy.",
   icons: {
     icon: "/icon.png",
   },
@@ -32,6 +33,16 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <QueryProvider>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: "#1a1d2e",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "#E5E7EB",
+              },
+            }}
+          />
           {/* AuthProvider fetches /api/auth/me on mount and makes the user
             object available to every client component via useAuth() */}
           <AuthProvider>

@@ -136,7 +136,7 @@ export default function NetworkMapSVG({ regions }: Props) {
       {/* Title badge */}
       <div className="absolute top-2.5 left-3 z-10 pointer-events-none">
         <span className="text-[11px] font-bold text-zinc-700 bg-white/85 rounded-md px-2 py-0.5 backdrop-blur-sm">
-          MTN Nigeria · Network Status
+          Nigeria Fintech · Regulatory Status
         </span>
       </div>
 

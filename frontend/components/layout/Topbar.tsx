@@ -52,7 +52,7 @@ const NOTIFICATIONS = [
     id: 4,
     type: "info",
     title: "Sync complete",
-    desc: "Lagos Fibre Phase 3 bundle synced. 62 MB ready for offline use.",
+    desc: "AML/CFT Quarterly Return Pack synced. 62 MB ready for offline use.",
     time: "3h ago",
     read: true,
   },

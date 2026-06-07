@@ -20,10 +20,10 @@ import Link from "next/link";
 interface ConvSummary { id: string; title: string; updatedAt: string; pinned?: boolean; }
 
 const MOCK_CONVS: ConvSummary[] = [
-  { id: "c1", title: "IHS tower lease fee breakdown",             updatedAt: new Date(Date.now() - 120000).toISOString() },
-  { id: "c2", title: "NCC QoS quarterly compliance",              updatedAt: new Date(Date.now() - 3600000).toISOString(), pinned: true },
-  { id: "c3", title: "Ericsson RAN maintenance SLA analysis",     updatedAt: new Date(Date.now() - 7200000).toISOString() },
-  { id: "c4", title: "Ikeja cluster network degradation",         updatedAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: "c1", title: "Kuda MFB CAR vs CBN 10% minimum",            updatedAt: new Date(Date.now() - 120000).toISOString() },
+  { id: "c2", title: "CBN AML/CFT Q2 quarterly return guidance",    updatedAt: new Date(Date.now() - 3600000).toISOString(), pinned: true },
+  { id: "c3", title: "CBN lending exposure limit analysis",         updatedAt: new Date(Date.now() - 7200000).toISOString() },
+  { id: "c4", title: "Carbon MFB capital adequacy breach review",   updatedAt: new Date(Date.now() - 86400000).toISOString() },
   { id: "c5", title: "MoMo fraud risk assessment",                updatedAt: new Date(Date.now() - 172800000).toISOString() },
 ];
 
@@ -111,7 +111,7 @@ function ReasoningPanel({ query, open, onClose, recentInsights }: {
               <ReasoningChain query={query} onComplete={() => {}} onError={() => {}} />
             ) : (
               <div className="space-y-2">
-                {["IHS SLA breach detected — severity 8/10", "Contract renewal window opens in 14 days", "NCC QoS threshold exceeded in Abuja zone"].map((insight, i) => (
+                {["Carbon MFB CAR breach — severity 9/10", "CBN AML return due in 14 days", "Kuda lending limit approaching CBN threshold"].map((insight, i) => (
                   <div key={i} className="p-3 rounded-xl border border-white/[0.06]" style={{ background: "#0F1320" }}>
                     <div className="w-2 h-2 rounded-full mb-2" style={{ background: i === 0 ? "#EF4444" : i === 1 ? "#F59E0B" : "#3B7BF6" }} />
                     <p className="text-[11px] text-[#9CA3AF] leading-relaxed">{insight}</p>

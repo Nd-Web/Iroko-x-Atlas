@@ -20,16 +20,16 @@ interface ClauseMatch {
 }
 
 const MOCK_CONTRACTS = [
-  { id: "cx1", vendor: "IHS Nigeria", type: "Tower Lease", value: "₦2.4B/yr", expiry: "2027-06-30", risk: 6, clauses: 148, status: "active" },
-  { id: "cx2", vendor: "Ericsson Nigeria", type: "RAN Maintenance", value: "₦890M/yr", expiry: "2025-12-31", risk: 8, clauses: 94, status: "expiring" },
-  { id: "cx3", vendor: "Huawei Nigeria", type: "Core Network SLA", value: "₦1.2B/yr", expiry: "2026-03-31", risk: 4, clauses: 211, status: "active" },
-  { id: "cx4", vendor: "MTN MoMo PSB", type: "Financial Services", value: "—", expiry: "Ongoing", risk: 5, clauses: 67, status: "active" },
+  { id: "cx1", vendor: "CRC Credit Bureau", type: "Data Agreement", value: "₦890M/yr", expiry: "2025-12-31", risk: 8, clauses: 94, status: "expiring" },
+  { id: "cx2", vendor: "Interswitch Group", type: "Payment Gateway SLA", value: "₦1.2B/yr", expiry: "2026-03-31", risk: 4, clauses: 211, status: "active" },
+  { id: "cx3", vendor: "CBN Microfinance Licence", type: "Regulatory Licence", value: "—", expiry: "Ongoing", risk: 5, clauses: 67, status: "active" },
+  { id: "cx4", vendor: "NDPA Data Protection Audit", type: "Regulatory Engagement", value: "—", expiry: "2026-06-30", risk: 6, clauses: 38, status: "active" },
 ];
 
 const MOCK_CLAUSES: ClauseMatch[] = [
-  { id: "cl1", title: "SLA Credit Mechanism — Uptime breach penalty", document: "IHS Nigeria Tower Lease", clause: "Article 9.3", excerpt: "In the event that Network Uptime falls below 99.5% in any calendar month, IHS Nigeria shall provide a service credit equal to 10% of the monthly fee for each 0.1% below the threshold.", riskScore: 8, category: "SLA" },
-  { id: "cl2", title: "Termination for cause — 72-hour cure period", document: "Ericsson RAN Maintenance", clause: "Section 15.2", excerpt: "Either party may terminate this agreement if the other party fails to cure a material breach within 72 hours of written notice. Force majeure events shall extend this period by 30 days.", riskScore: 6, category: "Termination" },
-  { id: "cl3", title: "Price escalation — CPI adjustment clause", document: "IHS Nigeria Tower Lease", clause: "Article 4.1", excerpt: "Annual lease fees shall be adjusted on the anniversary date in line with the Official Consumer Price Index as published by the NBS, subject to a maximum of 12% per annum.", riskScore: 5, category: "Financial" },
+  { id: "cl1", title: "Single-obligor lending limit — CAR breach trigger", document: "CBN Microfinance Directive Q2 2026", clause: "Section 4.2", excerpt: "Aggregate exposure to a single borrower or group of related borrowers shall not exceed 5% of shareholders' funds unimpaired by losses. Breach triggers immediate escalation to the CBN supervision desk.", riskScore: 8, category: "Compliance" },
+  { id: "cl2", title: "Data processing termination — 30-day cure period", document: "CRC Credit Bureau Data Agreement", clause: "Section 15.2", excerpt: "Either party may terminate this agreement if the other party fails to cure a material breach within 30 days of written notice. Data destruction certificate must be provided within 14 days of termination.", riskScore: 6, category: "Termination" },
+  { id: "cl3", title: "Transaction fee escalation — CPI adjustment clause", document: "Interswitch Group Payment Gateway SLA", clause: "Article 4.1", excerpt: "Annual transaction processing fees shall be adjusted on the anniversary date in line with the Official Consumer Price Index as published by the NBS, subject to a maximum of 10% per annum.", riskScore: 5, category: "Financial" },
 ];
 
 function ClauseCard({ clause }: { clause: ClauseMatch }) {
@@ -133,7 +133,7 @@ export default function ContractsPage() {
               <p className="text-[12px] text-[#6B7280] mb-2">Ask the Contract Agent a question…</p>
             </div>
             <InputBar onSend={handleSearch} isStreaming={streaming}
-              placeholder="What are the SLA penalties in the IHS agreement?" />
+              placeholder="What are the SLA penalties in the Interswitch agreement?" />
           </div>
         </div>
 

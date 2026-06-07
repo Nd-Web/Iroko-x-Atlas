@@ -31,13 +31,13 @@ DOCUMENTS = [
         "tags": ["momo", "complaints", "deductions", "q1-2026", "lagos"],
     },
     {
-        "filename": "NCC_QoS_Quarterly_Return_Q4_2025.txt",
+        "filename": "CBN_Microfinance_Directive_Q2_2026.txt",
         "department": "Legal/Regulatory",
         "doc_type": "policy",
-        "tags": ["ncc", "qos", "regulatory", "quarterly-return", "q4-2025"],
+        "tags": ["cbn", "microfinance", "fintech", "regulatory", "quarterly-return", "q4-2025"],
     },
     {
-        "filename": "MTN_NDPA_Article_24_Processing_Record.txt",
+        "filename": "Kuda_CBN_Compliance_Return_Q2_2026.txt",
         "department": "Legal/Regulatory",
         "doc_type": "policy",
         "tags": ["ndpa", "data-protection", "article-24", "compliance", "dpo"],

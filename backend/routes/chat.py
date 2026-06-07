@@ -56,7 +56,7 @@ class CreateConversationRequest(BaseModel):
 
 class SendMessageRequest(BaseModel):
     content: str = Field(..., min_length=1, max_length=10000)
-    org_id: str = Field(default="MTN Nigeria")
+    org_id: str = Field(default="African Fintech Platform")
 
 
 def _fmt(dt) -> str:

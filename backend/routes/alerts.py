@@ -56,12 +56,12 @@ async def refresh_alerts(
     """
     watchdog = WatchdogAgent()
     result_str = await watchdog.run_all_checks(
-        organisation=current_user.organisation or "MTN Nigeria"
+        organisation=current_user.organisation or "African Fintech Platform"
     )
     result = json.loads(result_str)
 
     # Save new alerts to database, deduplicating by title + org
-    organisation = current_user.organisation or "MTN Nigeria"
+    organisation = current_user.organisation or "African Fintech Platform"
     created = 0
     for alert_data in result.get("alerts", []):
         title = alert_data.get("title", "")

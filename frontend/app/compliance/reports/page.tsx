@@ -4,9 +4,12 @@ import AppShell from "@/components/layout/AppShell";
 import { useState, useEffect } from "react";
 
 const REPORTS = [
-  { title: "NCC Q1 2026 QoS Return",       due: "May 15, 2026", status: "In progress", regulator: "NCC",  progress: 60,  progressColor: "#4A55D4" },
-  { title: "NDPA Annual Audit Return 2026", due: "Jun 30, 2026", status: "Not started", regulator: "NDPC", progress: 0,   progressColor: "#4A55D4" },
-  { title: "NDPA Breach Notification Log",  due: "Ongoing",      status: "Clear",       regulator: "NDPC", progress: 100, progressColor: "#17B26A" },
+  { title: "CBN Q2 2026 Lending Return",          due: "Jul 15, 2026", status: "In progress", regulator: "CBN",  progress: 60,  progressColor: "#4A55D4" },
+  { title: "CBN Microfinance Capital Return Q2",   due: "Jul 15, 2026", status: "Not started", regulator: "CBN",  progress: 0,   progressColor: "#4A55D4" },
+  { title: "NDPA Annual Audit Return 2026",        due: "Jun 30, 2026", status: "Not started", regulator: "NDPA", progress: 0,   progressColor: "#4A55D4" },
+  { title: "SEC Digital Assets Activity Report",   due: "Jul 31, 2026", status: "Clear",       regulator: "SEC",  progress: 100, progressColor: "#17B26A" },
+  { title: "CBN AML/CFT Quarterly Return",         due: "Jul 15, 2026", status: "In progress", regulator: "CBN",  progress: 45,  progressColor: "#4A55D4" },
+  { title: "NDPA Breach Notification Log",         due: "Ongoing",      status: "Clear",       regulator: "NDPA", progress: 100, progressColor: "#17B26A" },
 ];
 
 export default function ComplianceReportsPage() {
@@ -20,7 +23,7 @@ export default function ComplianceReportsPage() {
   }, [modal]);
 
   return (
-    <AppShell title="Compliance reports" subtitle="NCC returns · NDPA audit · DPIA tracker · DSR queue">
+    <AppShell title="Compliance reports" subtitle="CBN returns · SEC filings · NDPA audit · DPIA tracker · DSR queue">
       {/* Report cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[14px]">
         {REPORTS.map((r) => (

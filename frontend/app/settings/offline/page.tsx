@@ -4,9 +4,9 @@ import AppShell from "@/components/layout/AppShell";
 import { useState, useEffect } from "react";
 
 const BUNDLES = [
-  { name: "Kano-Kaduna Rollout Q2", size: "48 MB", docs: 34, synced: "Today 06:11",  status: "ready"    },
-  { name: "Lagos Fibre Phase 3",    size: "62 MB", docs: 51, synced: "Yesterday",    status: "ready"    },
-  { name: "Abuja 5G FWA Sites",     size: "31 MB", docs: 22, synced: "Apr 29",       status: "outdated" },
+  { name: "CBN Lending Compliance Pack Q2",  size: "48 MB", docs: 34, synced: "Today 06:11",  status: "ready"    },
+  { name: "AML/CFT Quarterly Return Pack",   size: "62 MB", docs: 51, synced: "Yesterday",    status: "ready"    },
+  { name: "Capital Adequacy Audit Pack",     size: "31 MB", docs: 22, synced: "Apr 29",       status: "outdated" },
 ];
 
 export default function OfflinePage() {

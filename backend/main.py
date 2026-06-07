@@ -11,6 +11,12 @@ Stack: FastAPI + Semantic Kernel + Azure OpenAI + Azure AI Search
 from dotenv import load_dotenv
 load_dotenv()
 
+import sys
+import asyncio
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 # Load remaining secrets from Azure Key Vault (fills any gaps not covered by .env)
 from services.keyvault import load_secrets_from_keyvault
 load_secrets_from_keyvault()
@@ -53,6 +59,8 @@ from routes.insights import router as insights_router
 from routes.search import router as search_router_v2
 from routes.agents import router as agents_router
 from routes.chat import router as chat_router
+from routes.web_intel import router as web_intel_router
+from routes.pdf import router as pdf_router
 
 # Database
 from models.database import init_db
@@ -88,10 +96,10 @@ async def lifespan(app: FastAPI):
         if user_count == 0:
             default_password = os.getenv("ATLAS_ADMIN_PASSWORD", "AtlasAdmin2026!")
             admin = User(
-                email=os.getenv("ATLAS_ADMIN_EMAIL", "admin@mtn.ng"),
+                email=os.getenv("ATLAS_ADMIN_EMAIL", "admin@iroko.ai"),
                 hashed_password=hash_password(default_password),
                 full_name="Iroko AI Superadmin",
-                organisation="MTN Nigeria",
+                organisation="Iroko AI",
                 department="Technology",
                 role="superadmin",
                 api_key=generate_api_key(),
@@ -108,19 +116,19 @@ async def lifespan(app: FastAPI):
     start_sync_scheduler()
     logger.info("Connector auto-sync scheduler started.")
 
-    # Run initial OMC-R sync, then schedule every 60 seconds
+    # Run initial regulatory data sync, then schedule every 60 seconds
     from services.omcr_sync import run_omcr_sync
     from services.connector_sync import get_scheduler
     try:
         await run_omcr_sync()
-        logger.info("Initial OMC-R sync complete.")
+        logger.info("Initial regulatory data sync complete.")
     except Exception as exc:
-        logger.warning(f"Initial OMC-R sync skipped (omcr-demo unreachable?): {exc}")
+        logger.warning(f"Initial regulatory data sync skipped (service unreachable?): {exc}")
     get_scheduler().add_job(
         run_omcr_sync,
         "interval",
         seconds=60,
-        id="omcr_sync",
+        id="regulatory_sync",
         replace_existing=True,
     )
 
@@ -142,10 +150,11 @@ async def lifespan(app: FastAPI):
 # ─── App ─────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="Iroko AI",
-    description="Iroko AI, powered by Atlas — enterprise document intelligence. "
+    title="Iroko AI - Fintech Regulatory Intelligence",
+    description="Iroko AI, powered by Atlas — enterprise compliance intelligence platform for African fintechs. "
+                "Monitors CBN/SEC regulations across lending, KYC/AML, and capital adequacy. "
                 "Multi-agent system built on Azure OpenAI + Microsoft Semantic Kernel.",
-    version="1.0.0",
+    version="2.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
@@ -186,6 +195,8 @@ app.include_router(search_router_v2)
 app.include_router(agents_router)
 app.include_router(chat_router)
 app.include_router(fraud_router)
+app.include_router(web_intel_router)
+app.include_router(pdf_router, prefix="/api/v1/pdf", tags=["pdf"])
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 
@@ -193,13 +204,13 @@ app.include_router(fraud_router)
 async def health():
     return {
         "status": "healthy",
-        "service": "Iroko AI Backend",
-        "version": "1.0.0",
+        "service": "Iroko AI Fintech Regulatory Intelligence Backend",
+        "version": "2.1.0",
     }
 
 
 @app.get("/api/debug/search")
-async def debug_search(q: str = "IHS Nigeria tower lease", current_user = Depends(get_current_user)):
+async def debug_search(q: str = "CBN capital adequacy microfinance", current_user = Depends(get_current_user)):
     if current_user.role not in ("superadmin", "admin"):
         raise HTTPException(status_code=403, detail="Debug endpoints require admin role")
     import os as _os
@@ -249,12 +260,13 @@ async def debug_llm(current_user = Depends(get_current_user)):
         test1 = {"ok": False, "error": str(e), "type": type(e).__name__, "traceback": tb.format_exc()}
 
     # Test 2: simulate Strategist reason — large prompt with 2000 token budget
-    long_prompt = ("You are Iroko AI, MTN Nigeria's enterprise intelligence assistant.\n"
+    long_prompt = ("You are Iroko AI, a fintech regulatory intelligence assistant for African fintechs.\n"
                    "Answer the user's question grounded ONLY in the evidence below.\n\n"
-                   "Question: \"What is the monthly fee for the IHS Nigeria tower lease?\"\n\n"
-                   "Retrieved Evidence:\nARTICLE 1  SCOPE OF AGREEMENT\nIHS hereby grants to MTN a non-exclusive "
-                   "licence to co-locate telecommunications equipment on 847 tower sites across Nigeria. "
-                   "Monthly tower lease fee: NGN 45,000,000. SLA: 99.5% uptime. Renewal notice due 90 days prior.\n\n"
+                   "Question: \"What is the minimum Capital Adequacy Ratio required by CBN for microfinance banks?\"\n\n"
+                   "Retrieved Evidence:\nCBN REVISED REGULATORY AND SUPERVISORY GUIDELINES FOR MICROFINANCE BANKS\n"
+                   "Section 5.1 — Capital Adequacy: All MFBs shall maintain a minimum Capital Adequacy Ratio (CAR) "
+                   "of 10% of risk-weighted assets at all times. Tier 1 capital must comprise at least 6%. "
+                   "Monthly CAR computation and reporting to CBN via FinA system is mandatory.\n\n"
                    "RULES:\n1. Give a detailed answer\n2. Cite document IDs\n3. Pidgin: False\n\n"
                    "Respond with valid JSON: {\"answer\": \"...\", \"citations\": [], \"suggested_actions\": [], "
                    "\"suggested_followups\": [], \"confidence\": \"high|medium|low\"}")

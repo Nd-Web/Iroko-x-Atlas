@@ -46,12 +46,12 @@ TEST_QUERIES = [
     ("how are you doing",               "small talk — NOT a doc search"),
     ("how body nau",                    "Pidgin small talk"),
     ("What is the weather today?",      "out-of-domain decline"),
-    ("Wetin dey happen for Ikeja cluster?", "canned NOC incident (Pidgin input)"),
-    ("What is our SLA credit exposure?",    "canned SLA exposure"),
-    ("What is our NCC compliance status?",  "canned compliance report"),
-    ("Tell me about IHS Nigeria",           "LLM document query"),
-    ("What is fibre status in Lagos?",      "LLM — Lagos not in docs, should flag"),
-    ("What about IHS?",                     "follow-up using prior context"),
+    ("Wetin dey happen for Carbon MFB?",        "canned CAR incident (Pidgin input)"),
+    ("What is our CAR exposure?",               "canned capital adequacy exposure"),
+    ("What is our CBN compliance status?",      "canned compliance report"),
+    ("Tell me about Kuda MFB lending limits",   "LLM document query"),
+    ("What is AML filing status in Lagos?",     "LLM — coverage check, should flag if gaps"),
+    ("What about the CBN circular?",            "follow-up using prior context"),
 ]
 
 

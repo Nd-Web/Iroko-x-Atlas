@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
           </div>
           <div>
             <div className="text-[17px] font-bold text-gray-900 tracking-[-0.01em] leading-[1.2]">Iroko AI</div>
-            <div className="text-[11px] text-gray-400 leading-none">MTN Nigeria</div>
+            <div className="text-[11px] text-gray-400 leading-none">Fintech RegIntel</div>
           </div>
         </div>
 
@@ -117,7 +117,7 @@ export default function ForgotPasswordPage() {
                 id="reset-email"
                 type="email"
                 className="input-base"
-                placeholder="you@mtn.ng"
+                placeholder="you@iroko.ai"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

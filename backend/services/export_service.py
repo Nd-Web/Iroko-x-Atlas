@@ -1,7 +1,7 @@
 """
 Export Service — one-click PDF and PPTX generation from AI answers.
 
-Design language: MTN Nigeria brand identity
+Design language: Iroko AI brand identity
   Yellow  #FFCB00  — primary accent, headers, highlights
   Black   #1A1A1A  — headings and dark backgrounds
   Dark    #2D2D2D  — body text
@@ -21,7 +21,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# ── MTN Brand palette ─────────────────────────────────────────────────────────
+# ── Iroko AI brand palette (variable names retained for backward compat) ──────
 MTN_YELLOW = "#FFCB00"
 MTN_BLACK  = "#1A1A1A"
 MTN_DARK   = "#2D2D2D"
@@ -41,12 +41,12 @@ FONT_BOLD = "Calibri"
 # ── Asset helpers ─────────────────────────────────────────────────────────────
 
 def _logo_path() -> str | None:
-    """Return the absolute path to the MTN logo, or None if not found."""
+    """Return the absolute path to the Iroko logo, or None if not found."""
     candidates = [
-        Path(__file__).parent.parent / "assets" / "mtn_logo.jpg",
-        Path(__file__).parent.parent / "assets" / "mtn_logo.png",
-        Path("/app/assets/mtn_logo.jpg"),
-        Path("/app/assets/mtn_logo.png"),
+        Path(__file__).parent.parent / "assets" / "iroko_logo.jpg",
+        Path(__file__).parent.parent / "assets" / "iroko_logo.png",
+        Path("/app/assets/iroko_logo.jpg"),
+        Path("/app/assets/iroko_logo.png"),
     ]
     for p in candidates:
         if p.exists():
@@ -92,7 +92,7 @@ def _pdf_font_name(bold: bool = False) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def generate_pdf(title: str, answer: str, citations: list, map_data: list = [], fraud_data: dict | None = None) -> bytes:
-    """Render a branded MTN Nigeria A4 PDF from a markdown answer."""
+    """Render a branded Iroko AI A4 PDF from a markdown answer."""
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import mm
@@ -128,11 +128,11 @@ def generate_pdf(title: str, answer: str, citations: list, map_data: list = [], 
             except Exception:
                 canv.setFillColor(BLACK)
                 canv.setFont(font_bold, 11)
-                canv.drawString(22*mm, H - 11*mm, "MTN Nigeria")
+                canv.drawString(22*mm, H - 11*mm, "Iroko AI")
         else:
             canv.setFillColor(BLACK)
             canv.setFont(font_bold, 11)
-            canv.drawString(22*mm, H - 11*mm, "MTN Nigeria")
+            canv.drawString(22*mm, H - 11*mm, "Iroko AI")
 
         canv.setFillColor(BLACK)
         canv.setFont(font_reg, 8)
@@ -146,7 +146,7 @@ def generate_pdf(title: str, answer: str, citations: list, map_data: list = [], 
         canv.rect(0, 0, W, 11*mm, fill=1, stroke=0)
         canv.setFillColor(YELLOW)
         canv.setFont(font_reg, 7)
-        canv.drawString(12*mm, 3.8*mm, "Confidential  ·  Internal Use Only  ·  MTN Nigeria Communications Plc")
+        canv.drawString(12*mm, 3.8*mm, "Confidential  ·  Internal Use Only  ·  Iroko AI Enterprise Intelligence")
         canv.setFillColor(HexColor("#AAAAAA"))
         canv.drawRightString(W - 12*mm, 3.8*mm, f"Page {doc.page}")
         canv.restoreState()
@@ -192,7 +192,7 @@ def generate_pdf(title: str, answer: str, citations: list, map_data: list = [], 
     story.append(Paragraph(_esc(title), title_st))
     story.append(HRFlowable(width="100%", thickness=3, color=YELLOW, spaceAfter=4))
     story.append(Paragraph(
-        f"MTN Nigeria Communications Plc  ·  Confidential — Internal Use Only  ·  {_today}",
+        f"Iroko AI Enterprise Intelligence  ·  Confidential — Internal Use Only  ·  {_today}",
         meta_st))
     story.append(Spacer(1, 4*mm))
 
@@ -202,7 +202,7 @@ def generate_pdf(title: str, answer: str, citations: list, map_data: list = [], 
         try:
             img_bytes = _generate_map_image(map_data)
             story.append(Spacer(1, 6*mm))
-            story.append(Paragraph("Network Status Map — Nigeria", h2))
+            story.append(Paragraph("Regulatory Status Map — Nigeria", h2))
             story.append(HRFlowable(width="100%", thickness=1, color=YELLOW, spaceAfter=4))
             story.append(Spacer(1, 2*mm))
             story.append(RLImage(io.BytesIO(img_bytes), width=170*mm, height=110*mm))
@@ -526,15 +526,15 @@ async def _generate_dalle_image(prompt: str, size: str = "1792x1024") -> bytes |
 
 async def generate_pptx(title: str, answer: str, citations: list, map_data: list = [], fraud_data: dict | None = None) -> bytes:
     """
-    Generate a 16:9 PowerPoint deck with full MTN Nigeria branding.
+    Generate a 16:9 PowerPoint deck with Iroko AI branding.
 
     Slides:
-      1  Title          — black bg, MTN logo, DALL-E hero image (if configured)
+      1  Title          — black bg, Iroko logo, DALL-E hero image (if configured)
       2  Agenda         — clean white, numbered section index
       3+ Content        — white bg, yellow header strip, Calibri bullets
       N  Key Takeaways  — yellow bg, high-impact closer
       N+1 Fraud         — dark bg (if fraud_data)
-      N+2 Network Map   — dark bg (if map_data)
+      N+2 Regulatory Map — dark bg (if map_data)
       N+3 Sources       — light gray bg
     """
     from pptx import Presentation
@@ -562,7 +562,7 @@ async def generate_pptx(title: str, answer: str, citations: list, map_data: list
     hero_prompt = (
         f"Professional, photorealistic wide-angle illustration for a corporate "
         f"intelligence report titled '{title[:80]}'. "
-        f"Modern Nigerian telecom infrastructure, aerial city view, clean and minimal. "
+        f"Modern African fintech and regulatory compliance theme, aerial Lagos city view, clean and minimal. "
         f"No text. Cinematic lighting."
     )
     hero_bytes = await _generate_dalle_image(hero_prompt)
@@ -598,12 +598,12 @@ async def generate_pptx(title: str, answer: str, citations: list, map_data: list
             ts.shapes.add_picture(logo, Inches(9.4), Inches(0.3), Inches(2.9), Inches(1.5))
         except Exception:
             _tb(ts, Inches(9.4), Inches(0.4), Inches(3.5), Inches(0.8),
-                "MTN", Pt(32), BK, bold=True, align=PP_ALIGN.CENTER)
+                "IROKO", Pt(32), BK, bold=True, align=PP_ALIGN.CENTER)
     else:
         _tb(ts, Inches(9.4), Inches(0.4), Inches(3.5), Inches(0.8),
-            "MTN", Pt(32), BK, bold=True, align=PP_ALIGN.CENTER)
+            "IROKO", Pt(32), BK, bold=True, align=PP_ALIGN.CENTER)
         _tb(ts, Inches(9.4), Inches(1.2), Inches(3.5), Inches(0.4),
-            "NIGERIA", Pt(11), BK, align=PP_ALIGN.CENTER)
+            "AI INTELLIGENCE", Pt(11), BK, align=PP_ALIGN.CENTER)
 
     # Category badge + title text (over hero or dark bg)
     _rect(ts, Inches(0.55), Inches(1.85), Inches(2.4), Inches(0.35), Y)
@@ -615,7 +615,7 @@ async def generate_pptx(title: str, answer: str, citations: list, map_data: list
     from datetime import date as _dt
     _slide_date = _dt.today().strftime("%d %B %Y")
     _tb(ts, Inches(0.55), Inches(5.15), Inches(8.0), Inches(0.45),
-        f"MTN Nigeria  ·  Confidential  ·  {_slide_date}  ·  Powered by Iroko AI", Pt(11), GR)
+        f"Iroko AI  ·  Confidential  ·  {_slide_date}  ·  Enterprise Intelligence", Pt(11), GR)
 
     # Right-panel tagline
     _tb(ts, Inches(9.1), Inches(5.5), Inches(3.9), Inches(0.5),
@@ -664,7 +664,7 @@ async def generate_pptx(title: str, answer: str, citations: list, map_data: list
                 y += Inches(0.72)
             _rect(s, 0, Inches(6.9), Inches(13.33), Inches(0.6), RGBColor(0x11, 0x11, 0x11))
             _tb(s, Inches(0.55), Inches(6.93), Inches(12), Inches(0.45),
-                "MTN Nigeria  ·  Confidential", Pt(9), GR)
+                "Iroko AI  ·  Confidential", Pt(9), GR)
             if logo:
                 try:
                     s.shapes.add_picture(logo, Inches(11.8), Inches(6.85), Inches(1.25), Inches(0.6))
@@ -690,7 +690,7 @@ async def generate_pptx(title: str, answer: str, citations: list, map_data: list
         try:
             ms = prs.slides.add_slide(blank)
             _bg(ms, WH)
-            _header_strip(ms, "Network Status — Nigeria Heatmap", Y, BK, logo)
+            _header_strip(ms, "Regulatory Status — Nigeria Heatmap", Y, BK, logo)
             img_bytes = _generate_map_image(map_data)
             img_buf   = io.BytesIO(img_bytes)
             ms.shapes.add_picture(img_buf, Inches(0.35), Inches(1.38), Inches(12.63), Inches(5.45))
@@ -782,7 +782,7 @@ def _footer(slide, Y, BK, GR, logo=None):
     _rect(slide, 0, Inches(6.9), Inches(13.33), Inches(0.6), BK)
     _rect(slide, 0, Inches(6.9), Inches(0.22), Inches(0.6), Y)
     _tb(slide, Inches(0.45), Inches(6.93), Inches(9), Inches(0.45),
-        "MTN Nigeria  ·  Enterprise Intelligence  ·  Confidential", Pt(8), GR)
+        "Iroko AI  ·  Enterprise Intelligence  ·  Confidential", Pt(8), GR)
     if logo:
         try:
             slide.shapes.add_picture(logo, Inches(11.8), Inches(6.85), Inches(1.3), Inches(0.6))

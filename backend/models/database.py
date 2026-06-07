@@ -308,6 +308,10 @@ def _add_column_if_missing(conn, table: str, column: str, col_def: str):
 def init_db():
     # Import network models so their tables are registered with Base.metadata
     import models.network_models  # noqa: F401
+    # Import audit trail model so its table is registered with Base.metadata
+    import models.audit_trail  # noqa: F401
+    # Import regulatory memory model so its table is registered with Base.metadata
+    from services.regulatory_memory import RegulatoryMemoryEntry  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
     # ── Column-level migrations (add new columns to existing tables) ─────────

@@ -2,18 +2,18 @@ import AppShell from "@/components/layout/AppShell";
 import Link from "next/link";
 
 const STATS = [
-  { label: "Active sites",          value: "4,812", sub: "across 36 states",     accent: "#4A55D4", color: "#4A55D4" },
-  { label: "Rollout in progress",   value: "38",    sub: "fibre + 5G FWA sites", accent: "#0BA5EC", color: "#0BA5EC" },
-  { label: "Vandalism alerts",      value: "9",     sub: "this month",            accent: "#F04438", color: "#F04438" },
-  { label: "Offline bundles",       value: "14",    sub: "engineer downloads",    accent: "#17B26A", color: "#17B26A" },
+  { label: "Monitored fintechs",    value: "5",     sub: "Kuda · Carbon · Moniepoint", accent: "#4A55D4", color: "#4A55D4" },
+  { label: "Audits in progress",    value: "3",     sub: "CAR · AML · Lending",        accent: "#0BA5EC", color: "#0BA5EC" },
+  { label: "Compliance alerts",     value: "9",     sub: "this month",                 accent: "#F04438", color: "#F04438" },
+  { label: "Offline bundles",       value: "14",    sub: "compliance officer downloads",accent: "#17B26A", color: "#17B26A" },
 ];
 
 const SITES = [
-  { id: "KAN-0341", name: "Kano North BTS",      region: "Kano",          lastMaint: "Mar 12, 2025", status: "operational" as const },
-  { id: "LAG-1204", name: "Ikeja Industrial BTS", region: "Lagos",         lastMaint: "Apr 18, 2025", status: "degraded"    as const },
-  { id: "ABJ-0088", name: "Garki Area 11 Tower",  region: "Abuja",         lastMaint: "Feb 28, 2025", status: "operational" as const },
-  { id: "PH-0312",  name: "GRA Phase 2 BTS",      region: "Port Harcourt", lastMaint: "Jan 9, 2025",  status: "operational" as const },
-  { id: "KAD-0201", name: "Kaduna Central BTS",   region: "Kaduna",        lastMaint: "Apr 2, 2025",  status: "maintenance" as const },
+  { id: "KUD-001", name: "Kuda MFB — Lending Audit",       region: "Lagos",         lastMaint: "Mar 12, 2025", status: "operational" as const },
+  { id: "CAR-002", name: "Carbon MFB — CAR Review",         region: "Lagos",         lastMaint: "Apr 18, 2025", status: "degraded"    as const },
+  { id: "MNP-003", name: "Moniepoint — AML/CFT Check",      region: "Abuja",         lastMaint: "Feb 28, 2025", status: "operational" as const },
+  { id: "FMN-004", name: "Fairmoney — KYC Gap Analysis",    region: "Port Harcourt", lastMaint: "Jan 9, 2025",  status: "operational" as const },
+  { id: "OPY-005", name: "Opay PSB — Consumer Complaints",  region: "Kaduna",        lastMaint: "Apr 2, 2025",  status: "maintenance" as const },
 ];
 
 const SITE_STATUS = {
@@ -23,16 +23,16 @@ const SITE_STATUS = {
 };
 
 const BUNDLES = [
-  { name: "Kano-Kaduna Rollout Q2", engineer: "Musa Garba",  size: "48 MB", docs: 34, synced: "Today 06:11" },
-  { name: "Lagos Fibre Phase 3",    engineer: "Emeka Obi",   size: "62 MB", docs: 51, synced: "Yesterday"   },
-  { name: "Abuja 5G FWA Sites",     engineer: "Ngozi Eze",   size: "31 MB", docs: 22, synced: "Apr 29"      },
+  { name: "CBN Lending Compliance Pack Q2", engineer: "Musa Garba",  size: "48 MB", docs: 34, synced: "Today 06:11" },
+  { name: "AML/CFT Quarterly Return Pack",  engineer: "Emeka Obi",   size: "62 MB", docs: 51, synced: "Yesterday"   },
+  { name: "Capital Adequacy Audit Pack",    engineer: "Ngozi Eze",   size: "31 MB", docs: 22, synced: "Apr 29"      },
 ];
 
 export default function FieldAgentPage() {
   return (
     <AppShell
-      title="Field Agent"
-      subtitle="Site cards · BoQs · route maps · offline bundles · rollout"
+      title="Compliance Field Agent"
+      subtitle="Fintech audits · regulatory checks · offline bundles · compliance programmes"
       actions={
         <Link href="/chat?agent=Field" className="btn-primary py-2 px-[14px] text-[13px] no-underline">
           Ask Field Agent →
@@ -56,8 +56,8 @@ export default function FieldAgentPage() {
         <div className="card overflow-hidden">
           <div className="flex justify-between items-center px-5 py-4 border-b border-border-default">
             <div>
-              <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Recent site cards</h2>
-              <p className="text-xs text-gray-400 mt-[2px]">Last accessed or updated by field team</p>
+              <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Recent compliance checks</h2>
+              <p className="text-xs text-gray-400 mt-[2px]">Last accessed or updated by compliance team</p>
             </div>
             <button className="btn-secondary py-[5px] px-3 text-xs">All sites</button>
           </div>
@@ -118,21 +118,21 @@ export default function FieldAgentPage() {
       {/* Rollout tracker */}
       <div className="card overflow-hidden">
         <div className="px-5 py-4 border-b border-border-default">
-          <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Active rollout programmes</h2>
-          <p className="text-xs text-gray-400 mt-[2px]">Sites in commissioning or BoQ review phase</p>
+          <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Active compliance programmes</h2>
+          <p className="text-xs text-gray-400 mt-[2px]">Fintechs in active audit or remediation phase</p>
         </div>
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
             <div className="grid py-[9px] px-5 bg-gray-50 border-b border-border-default gap-3" style={{ gridTemplateColumns: "1fr 110px 90px 120px 110px 100px" }}>
-              {["Programme", "Region", "Sites", "Lead engineer", "Target date", "Status"].map((h) => (
+              {["Programme", "Region", "Entities", "Lead officer", "Target date", "Status"].map((h) => (
                 <span key={h} className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.055em]">{h}</span>
               ))}
             </div>
             {[
-              { name: "Kano-Kaduna Fibre Rollout Q2", region: "North",  sites: 12, lead: "Musa Garba",  target: "Jun 30, 2026", status: "on-track"    },
-              { name: "Lagos 5G FWA Phase 3",         region: "Lagos",  sites: 9,  lead: "Emeka Obi",   target: "Jul 15, 2026", status: "at-risk"     },
-              { name: "Abuja Urban Densification",    region: "Abuja",  sites: 7,  lead: "Ngozi Eze",   target: "May 30, 2026", status: "on-track"    },
-              { name: "Delta Fibre Expansion",        region: "South",  sites: 10, lead: "TBC",          target: "Aug 31, 2026", status: "not-started" },
+              { name: "CBN Q2 Lending Return Submission",  region: "North",  sites: 3, lead: "Musa Garba",  target: "Jul 15, 2026", status: "on-track"    },
+              { name: "Carbon MFB CAR Remediation",        region: "Lagos",  sites: 1, lead: "Emeka Obi",   target: "Jul 15, 2026", status: "at-risk"     },
+              { name: "AML/CFT Quarterly Filing",          region: "Abuja",  sites: 4, lead: "Ngozi Eze",   target: "Jul 15, 2026", status: "on-track"    },
+              { name: "NDPA Annual Data Audit 2026",       region: "South",  sites: 5, lead: "TBC",          target: "Jun 30, 2026", status: "not-started" },
             ].map((r, i, arr) => {
               const st = {
                 "on-track":    { color: "var(--color-success-700)", bg: "var(--color-success-50)", label: "On track"    },
@@ -147,7 +147,7 @@ export default function FieldAgentPage() {
                 >
                   <span className="text-[13px] font-medium text-gray-700 truncate">{r.name}</span>
                   <span className="text-xs text-gray-500">{r.region}</span>
-                  <span className="text-xs font-semibold text-gray-700">{r.sites} sites</span>
+                  <span className="text-xs font-semibold text-gray-700">{r.sites} entities</span>
                   <span className="text-xs text-gray-500">{r.lead}</span>
                   <span className="text-xs text-gray-400">{r.target}</span>
                   <span className="text-[11px] font-semibold px-2 py-[2px] rounded-full w-fit" style={{ color: st.color, background: st.bg }}>{st.label}</span>

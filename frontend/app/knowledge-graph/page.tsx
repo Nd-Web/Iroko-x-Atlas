@@ -10,21 +10,24 @@ interface Node { id: string; label: string; type: string; x: number; y: number; 
 interface Edge { from: string; to: string; label?: string; }
 
 const NODE_COLORS: Record<string, string> = {
-  contract: "#3B7BF6", vendor: "#8B5CF6", sla: "#10B981",
-  alert: "#EF4444", document: "#F59E0B", regulation: "#EC4899",
+  primary: "#F59E0B", competitor: "#F97316", contract: "#3B7BF6",
+  sla: "#10B981", alert: "#EF4444", document: "#6366F1", regulation: "#EC4899",
 };
 
 const NODES: Node[] = [
-  { id: "n1",  label: "IHS Nigeria",              type: "vendor",     x: 220, y: 160, connections: ["n2","n3","n5"] },
-  { id: "n2",  label: "Tower Lease 2024",         type: "contract",   x: 100, y: 90,  connections: ["n1","n4","n6"] },
-  { id: "n3",  label: "SLA — 99.5% Uptime",       type: "sla",        x: 320, y: 80,  connections: ["n1","n7"] },
-  { id: "n4",  label: "Article 9.3 Credit",       type: "document",   x: 60,  y: 200, connections: ["n2","n7"] },
-  { id: "n5",  label: "Ikeja Cluster Alert",      type: "alert",      x: 200, y: 280, connections: ["n1","n3","n8"] },
-  { id: "n6",  label: "NCA 2003 s.73",            type: "regulation", x: 120, y: 320, connections: ["n2","n9"] },
-  { id: "n7",  label: "SLA Breach — 4 events",   type: "alert",      x: 400, y: 180, connections: ["n3","n5"] },
-  { id: "n8",  label: "Ericsson RAN SLA",         type: "sla",        x: 340, y: 300, connections: ["n5","n9"] },
-  { id: "n9",  label: "NCC QoS Report Q4",        type: "document",   x: 480, y: 260, connections: ["n6","n8"] },
-  { id: "n10", label: "Huawei Core Contract",     type: "contract",   x: 460, y: 110, connections: ["n3","n9"] },
+  { id: "n1",  label: "Kuda MFB",                type: "primary",    x: 220, y: 160, connections: ["n2","n3","n5"] },
+  { id: "n2",  label: "CBN MFB Licence 2024",    type: "contract",   x: 100, y: 90,  connections: ["n1","n4","n6"] },
+  { id: "n3",  label: "CAR — 10% Minimum",       type: "sla",        x: 320, y: 80,  connections: ["n1","n7"] },
+  { id: "n4",  label: "Lending Exposure Limit",  type: "document",   x: 60,  y: 200, connections: ["n2","n7"] },
+  { id: "n5",  label: "Carbon MFB CAR Breach",   type: "alert",      x: 200, y: 280, connections: ["n1","n3","n8"] },
+  { id: "n6",  label: "CBN BOFIA 2020 s.35",     type: "regulation", x: 120, y: 320, connections: ["n2","n9"] },
+  { id: "n7",  label: "Capital Shortfall Alert",  type: "alert",      x: 400, y: 180, connections: ["n3","n5"] },
+  { id: "n8",  label: "CBN AML/CFT Guideline",   type: "sla",        x: 340, y: 300, connections: ["n5","n9"] },
+  { id: "n9",  label: "CBN Lending Return Q2",   type: "document",   x: 480, y: 260, connections: ["n6","n8"] },
+  { id: "n10", label: "SEC Digital Assets Rule", type: "contract",   x: 460, y: 110, connections: ["n3","n9"] },
+  { id: "n11", label: "Carbon MFB",              type: "competitor", x: 80,  y: 360, connections: ["n5","n6"] },
+  { id: "n12", label: "Moniepoint MFB",          type: "competitor", x: 300, y: 380, connections: ["n8","n9"] },
+  { id: "n13", label: "Fairmoney MFB",           type: "competitor", x: 500, y: 360, connections: ["n9","n10"] },
 ];
 
 const EDGES: Edge[] = [
@@ -41,6 +44,12 @@ const EDGES: Edge[] = [
   { from: "n8", to: "n9", label: "cited in" },
   { from: "n10", to: "n3", label: "references" },
   { from: "n10", to: "n9", label: "appears in" },
+  { from: "n11", to: "n5", label: "is subject of" },
+  { from: "n11", to: "n6", label: "same regulation" },
+  { from: "n12", to: "n8", label: "under review" },
+  { from: "n12", to: "n9", label: "filing due" },
+  { from: "n13", to: "n9", label: "filing due" },
+  { from: "n13", to: "n10", label: "SEC exposure" },
 ];
 
 function getNode(id: string) { return NODES.find(n => n.id === id); }
@@ -78,7 +87,7 @@ export default function KnowledgeGraphPage() {
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
         {/* Graph canvas */}
         <div className="xl:col-span-3 relative rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: "#080B14", minHeight: 520 }}>
-          <svg viewBox="0 0 560 400" className="w-full h-full" style={{ minHeight: 480 }}>
+          <svg viewBox="0 0 560 440" className="w-full h-full" style={{ minHeight: 480 }}>
             <defs>
               <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                 <path d="M0,0 L0,6 L6,3 Z" fill="rgba(255,255,255,0.15)" />
@@ -95,7 +104,7 @@ export default function KnowledgeGraphPage() {
             <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
               <path d="M30 0L0 0 0 30" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
             </pattern>
-            <rect width="560" height="400" fill="url(#grid)" />
+            <rect width="560" height="440" fill="url(#grid)" />
 
             {/* Edges */}
             {EDGES.map((edge, i) => {

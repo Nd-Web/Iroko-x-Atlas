@@ -2,17 +2,17 @@ import AppShell from "@/components/layout/AppShell";
 import Link from "next/link";
 
 const STATS = [
-  { label: "Open DSRs",           value: "3",  sub: "data subject requests",   accent: "#F79009", color: "#F79009" },
-  { label: "Pending DPIAs",       value: "2",  sub: "awaiting DPO sign-off",   accent: "#4A55D4", color: "#4A55D4" },
-  { label: "Filings due 30d",     value: "1",  sub: "NCC Q1 2026 return",      accent: "#F04438", color: "#F04438" },
-  { label: "Processing records",  value: "48", sub: "NDPA Article 24 records", accent: "#17B26A", color: "#17B26A" },
+  { label: "Open DSRs",           value: "3",  sub: "data subject requests",      accent: "#F79009", color: "#F79009" },
+  { label: "Pending DPIAs",       value: "2",  sub: "awaiting DPO sign-off",      accent: "#4A55D4", color: "#4A55D4" },
+  { label: "CBN Filings due 30d", value: "2",  sub: "Lending & AML returns due",  accent: "#F04438", color: "#F04438" },
+  { label: "Monitored Fintechs",  value: "5",  sub: "Kuda · Carbon · Moniepoint", accent: "#17B26A", color: "#17B26A" },
 ];
 
 export default function ComplianceAgentPage() {
   return (
     <AppShell
-      title="Compliance Agent"
-      subtitle="NDPA · NCC · DPO console · DPIA wizard · filing history"
+      title="Fintech Compliance Agent"
+      subtitle="CBN · SEC · NDPA · DPO console · DPIA wizard · filing history"
       actions={
         <Link href="/chat?agent=Compliance" className="btn-primary py-2 px-[14px] text-[13px] no-underline">
           Ask Compliance Agent →
@@ -43,10 +43,10 @@ export default function ComplianceAgentPage() {
           </div>
           <div className="py-2">
             {[
-              { name: "NCC Q1 2026 QoS Return",          due: "May 15, 2026", status: "in-progress", regulator: "NCC"  },
-              { name: "NDPA Annual Audit Return",          due: "Jun 30, 2026", status: "not-started", regulator: "NDPC" },
-              { name: "NDPA Breach Notification Log",      due: "Ongoing",      status: "clear",       regulator: "NDPC" },
-              { name: "NCC Q4 2025 QoS Return",            due: "Submitted",    status: "submitted",   regulator: "NCC"  },
+              { name: "CBN Q2 2026 Lending Return",         due: "Jul 15, 2026", status: "in-progress", regulator: "CBN"  },
+              { name: "CBN AML/CFT Quarterly Return",       due: "Jul 15, 2026", status: "in-progress", regulator: "CBN"  },
+              { name: "NDPA Annual Audit Return",            due: "Jun 30, 2026", status: "not-started", regulator: "NDPA" },
+              { name: "CBN Q1 2026 Capital Adequacy Return", due: "Submitted",    status: "submitted",   regulator: "CBN"  },
             ].map((f, i, arr) => {
               const st = {
                 "in-progress": { color: "var(--color-brand-700)",   bg: "var(--color-brand-50)",   label: "In progress" },
@@ -78,10 +78,10 @@ export default function ComplianceAgentPage() {
           </div>
           <div className="py-2">
             {[
-              { name: "MoMo Analytics Pipeline v2",   lawful: "Legitimate interest", risk: "Medium", status: "in-review" },
-              { name: "5G FWA Subscriber Profiling",   lawful: "Contract",            risk: "High",   status: "draft"     },
-              { name: "NCC Lawful Intercept System",   lawful: "Legal obligation",    risk: "High",   status: "approved"  },
-              { name: "Customer Churn Model v3",       lawful: "Legitimate interest", risk: "Low",    status: "approved"  },
+              { name: "Credit Scoring ML Pipeline v3",  lawful: "Legitimate interest", risk: "High",   status: "in-review" },
+              { name: "KYC Biometric Verification Flow", lawful: "Legal obligation",    risk: "High",   status: "draft"     },
+              { name: "Loan Repayment Behaviour Model",  lawful: "Contract",            risk: "Medium", status: "approved"  },
+              { name: "Savings Analytics Dashboard v2",  lawful: "Legitimate interest", risk: "Low",    status: "approved"  },
             ].map((d, i, arr) => {
               const st = {
                 "in-review": { color: "var(--color-info-700)",    bg: "var(--color-info-50)",    label: "In review" },

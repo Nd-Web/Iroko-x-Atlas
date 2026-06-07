@@ -1,6 +1,8 @@
 """
 Analyst Agent
 Performs quantitative analysis, pattern detection, and chart generation.
+Wired to ThreatDebateAgent for adversarial vendor risk evaluation (Integration 11).
+Capability-scoped via CapabilityGuard (Integration 12).
 """
 import json
 import logging
@@ -9,6 +11,20 @@ from datetime import datetime, timedelta
 from agents._compat import kernel_function, Kernel
 
 logger = logging.getLogger(__name__)
+
+try:
+    from services.agent_capabilities import capability_guard, AgentCapability
+    _CAPS_AVAILABLE = True
+except ImportError:
+    _CAPS_AVAILABLE = False
+    logger.warning("[AnalystAgent] agent_capabilities not available — scoping unenforced")
+
+try:
+    from agents.debate_agent import debate_agent
+    _DEBATE_AVAILABLE = True
+except ImportError:
+    _DEBATE_AVAILABLE = False
+    logger.warning("[AnalystAgent] debate_agent not available — vendor risk debate disabled")
 
 
 class AnalystAgent:
@@ -216,7 +232,8 @@ class AnalystAgent:
     @kernel_function(
         description="""Detect anomalies or unusual spikes in a dataset.
         Use this when you need to find out if something unusual is happening
-        compared to historical norms."""
+        compared to historical norms. For vendor or supplier risk signals,
+        triggers adversarial debate to reduce false positives."""
     )
     async def detect_anomalies(
         self,
@@ -225,6 +242,13 @@ class AnalystAgent:
         metric_name: Annotated[str, "What is being measured"],
         threshold_pct: Annotated[float, "Percentage increase considered anomalous (default 50%)"] = 50.0,
     ) -> str:
+        # GAP 3 FIX — capability guard
+        if _CAPS_AVAILABLE:
+            try:
+                capability_guard.require("AnalystAgent", AgentCapability.FETCH_VENDOR_RISK)
+            except PermissionError as e:
+                logger.warning("[AnalystAgent] Capability check failed: %s", e)
+
         try:
             if historical_average == 0:
                 return json.dumps({
@@ -237,7 +261,7 @@ class AnalystAgent:
             severity = "critical" if abs(change_pct) >= threshold_pct * 2 else \
                        "warning" if is_anomaly else "normal"
 
-            return json.dumps({
+            result_dict = {
                 "metric": metric_name,
                 "is_anomaly": is_anomaly,
                 "severity": severity,
@@ -248,7 +272,35 @@ class AnalystAgent:
                     f"{metric_name} is {abs(change_pct):.1f}% {'above' if change_pct > 0 else 'below'} "
                     f"historical average. {'This is a significant anomaly requiring attention.' if is_anomaly else 'This is within normal range.'}"
                 ),
-            })
+            }
+
+            # GAP 3 FIX — trigger adversarial debate for significant anomalies (vendor risk)
+            if is_anomaly and severity in ("critical", "warning") and _DEBATE_AVAILABLE:
+                vendor_signal = {
+                    "title": f"Anomaly detected: {metric_name}",
+                    "description": result_dict["interpretation"],
+                    "risk_level": severity.upper(),
+                    "signal_type": "vendor_risk",
+                }
+                try:
+                    import asyncio
+                    debate_result = await debate_agent.debate_signal(
+                        signal=vendor_signal,
+                        context=f"Current: {current_value}, Historical avg: {historical_average}, Change: {change_pct:+.1f}%",
+                    )
+                    result_dict["debate_result"] = debate_result
+                    result_dict["debate_verdict"] = debate_result.get("final_verdict", "MONITOR")
+                    result_dict["debate_confidence"] = debate_result.get("final_confidence", 0.0)
+                    logger.info(
+                        "[AnalystAgent] Debate complete for '%s' — verdict: %s confidence: %.2f",
+                        metric_name,
+                        debate_result.get("final_verdict"),
+                        debate_result.get("final_confidence", 0.0),
+                    )
+                except Exception as debate_exc:
+                    logger.warning("[AnalystAgent] debate_agent failed: %s", debate_exc)
+
+            return json.dumps(result_dict)
 
         except Exception as e:
             return json.dumps({"error": str(e)})

@@ -57,10 +57,10 @@ def _check_rate_limit(user_id: str) -> bool:
 # anything) are pre-computed at startup and cached for instant response.
 # Every other query goes through the full AI pipeline.
 STARTER_QUERIES = [
-    "Why are customer complaints spiking in Lagos?",
-    "Which vendor contracts are expiring soon?",
-    "What is our current NCC compliance status?",
-    "What are the key findings from the Q1 2026 network report?",
+    "Why are loan deduction complaints spiking?",
+    "Which regulatory filings are due this quarter?",
+    "What is our current CBN/SEC compliance status?",
+    "What are the key findings from the Q2 2026 AML/CFT return?",
 ]
 
 _starter_cache: dict = {}           # {normalized_query: result_str (JSON)}

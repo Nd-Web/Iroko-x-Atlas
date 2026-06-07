@@ -55,6 +55,18 @@ class Settings(BaseSettings):
         default="text-embedding-3-large",
         description="Azure OpenAI embedding model deployment name",
     )
+    AZURE_OPENAI_EMBEDDING_ENDPOINT: str = Field(
+        default="",
+        description="Azure OpenAI embedding endpoint (optional)",
+    )
+    AZURE_OPENAI_EMBEDDING_API_KEY: str = Field(
+        default="",
+        description="Azure OpenAI embedding API key (optional)",
+    )
+    AZURE_OPENAI_EMBEDDING_API_VERSION: str = Field(
+        default="",
+        description="Azure OpenAI embedding API version (optional)",
+    )
     AZURE_OPENAI_API_VERSION: str = Field(
         default="2025-01-01-preview",
         description="Azure OpenAI API version",

@@ -34,10 +34,10 @@ export default function DocumentsContent() {
       .catch(() => {
         // Mock data if API is not yet seeded
         setDocs([
-          { id: "d1", name: "IHS_Nigeria_Tower_Lease_2024.pdf", size: 14500000, type: "application/pdf", status: "indexed", connector: "SharePoint", updated_at: new Date().toISOString() },
-          { id: "d2", name: "Ericsson_RAN_Maintenance_SLA.pdf", size: 8200000, type: "application/pdf", status: "indexed", connector: "OneDrive", updated_at: new Date(Date.now()-3600000).toISOString() },
-          { id: "d3", name: "NCC_Quarterly_QoS_Report_Q4.xlsx", size: 4100000, type: "spreadsheet", status: "indexing", connector: "S3", updated_at: new Date(Date.now()-7200000).toISOString() },
-          { id: "d4", name: "Procurement_Policy_v3.2.docx", size: 1200000, type: "word", status: "indexed", connector: "Local", updated_at: new Date(Date.now()-86400000).toISOString() },
+          { id: "d1", name: "CBN_Microfinance_Directive_Q2_2026.pdf", size: 14500000, type: "application/pdf", status: "indexed", connector: "SharePoint", updated_at: new Date().toISOString() },
+          { id: "d2", name: "CBN_BOFIA_2020_Compliance_Guide.pdf", size: 8200000, type: "application/pdf", status: "indexed", connector: "OneDrive", updated_at: new Date(Date.now()-3600000).toISOString() },
+          { id: "d3", name: "CBN_AML_CFT_Quarterly_Return_Q2_2026.xlsx", size: 4100000, type: "spreadsheet", status: "indexing", connector: "S3", updated_at: new Date(Date.now()-7200000).toISOString() },
+          { id: "d4", name: "CBN_Lending_Exposure_Policy_v3.2.docx", size: 1200000, type: "word", status: "indexed", connector: "Local", updated_at: new Date(Date.now()-86400000).toISOString() },
         ]);
       })
       .finally(() => setLoading(false));

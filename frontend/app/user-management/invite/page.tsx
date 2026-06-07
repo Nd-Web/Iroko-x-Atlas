@@ -72,12 +72,12 @@ export default function InviteUserPage() {
                 id="inv-email"
                 type="email"
                 className="input-base"
-                placeholder="firstname.lastname@mtn.ng"
+                placeholder="firstname.lastname@iroko.ai"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={sendInvite.isPending}
               />
-              <p className="text-xs text-gray-300 mt-1.5">Must be an mtn.ng email address.</p>
+              <p className="text-xs text-gray-300 mt-1.5">Must be a valid work email address.</p>
             </div>
 
             <div>
