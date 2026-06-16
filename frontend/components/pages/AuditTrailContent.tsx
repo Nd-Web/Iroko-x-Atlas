@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { getAuthToken } from "@/lib/auth";
+import { API_BASE } from "@/lib/config";
 
 const ENTRIES = [
   { id: "AUD-29041", user: "Adaeze Okonkwo",  query: "What is Kuda MFB's current CAR vs CBN minimum?",          agent: "Strategist", chunks: 5, latency: "1.84s", time: "09:41:22" },
@@ -42,6 +44,42 @@ type Entry = typeof ENTRIES[0];
 export default function AuditTrailContent() {
   const [selected, setSelected] = useState<Entry | null>(null);
   const [exported, setExported] = useState(false);
+  const [entries, setEntries] = useState<Entry[]>(ENTRIES);
+  const [isLive, setIsLive] = useState(false);
+  const fetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    const token = getAuthToken();
+    if (!token) return;
+    fetch(`${API_BASE}/api/v1/audit/entries`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((data: unknown) => {
+        const rows: Entry[] = (Array.isArray(data) ? data : (data as { entries?: unknown[] })?.entries ?? [])
+          .filter(Boolean)
+          .map((item: unknown) => {
+            const r = item as Record<string, unknown>;
+            return {
+              id:      String(r.id ?? r.entry_id ?? ""),
+              user:    String(r.user ?? r.user_name ?? r.agent_name ?? "System"),
+              query:   String(r.query ?? r.action_type ?? r.decision_summary ?? ""),
+              agent:   String(r.agent ?? r.agent_name ?? "Analyst"),
+              chunks:  Number(r.chunks ?? r.sources ?? 0),
+              latency: String(r.latency ?? "—"),
+              time:    String(r.time ?? r.created_at ?? ""),
+            };
+          })
+          .filter(e => e.id && e.query);
+        if (rows.length > 0) {
+          setEntries(rows);
+          setIsLive(true);
+        }
+      })
+      .catch(() => { /* silently fall back to hardcoded entries */ });
+  }, []);
 
   useEffect(() => {
     if (!selected) return;
@@ -80,7 +118,20 @@ export default function AuditTrailContent() {
       <div className="card overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between px-4 md:px-5 py-[14px] border-b border-border-default gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Query log</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Query log</h2>
+              {isLive ? (
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-success-700 bg-success-50 border border-success-100 px-[7px] py-[2px] rounded-full">
+                  <span className="w-[6px] h-[6px] rounded-full bg-success-500 inline-block" />
+                  Live
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-gray-400 bg-gray-100 border border-gray-200 px-[7px] py-[2px] rounded-full">
+                  <span className="w-[6px] h-[6px] rounded-full bg-gray-300 inline-block" />
+                  Demo
+                </span>
+              )}
+            </div>
             <p className="text-xs text-gray-400 mt-[2px]">NDPA-grade · cryptographically chained</p>
           </div>
           <div className="flex gap-2">
@@ -102,7 +153,7 @@ export default function AuditTrailContent() {
               ))}
             </div>
 
-            {ENTRIES.map((e) => (
+            {entries.map((e) => (
               <div
                 key={e.id}
                 onClick={() => setSelected(e)}

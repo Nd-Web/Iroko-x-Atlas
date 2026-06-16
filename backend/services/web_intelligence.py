@@ -36,6 +36,187 @@ from services.brightdata import BrightDataClient, bright_data_client
 
 logger = logging.getLogger(__name__)
 
+
+# ── Mock fallback data (used when Bright Data is unavailable) ─────────────────
+
+def _mock_signals() -> dict[str, Any]:
+    """
+    Return realistic Kuda MFB-context signals for use when Bright Data is
+    unreachable (e.g. carrier IP blacklisted, no connectivity, quota exhausted).
+    Marked with mock=True so the frontend can show an indicator.
+    """
+    ts = _now_iso()
+    return {
+        "mock": True,
+        "regulatory": [
+            {
+                "source": "cbn.gov.ng",
+                "title": "CBN Circular: Revised KYC/AML Requirements for Microfinance Banks (2026)",
+                "summary": "The Central Bank of Nigeria has issued updated KYC and AML guidelines requiring all MFBs to implement real-time BVN verification at onboarding. Effective date: Q3 2026.",
+                "url": "https://www.cbn.gov.ng/Out/2026/FPRD/CBN%20Circular%20KYC%20MFB%202026.pdf",
+                "fetched_at": ts,
+                "signal_type": "regulatory",
+                "risk_level": "HIGH",
+            },
+            {
+                "source": "sec.gov.ng",
+                "title": "SEC Nigeria: New Capital Adequacy Rules for Digital Lenders",
+                "summary": "SEC released new minimum capital requirements for digital-only lenders. MFBs with deposit liabilities above ₦5bn must maintain a 12% capital adequacy ratio.",
+                "url": "https://www.sec.gov.ng/news/capital-adequacy-digital-lenders-2026",
+                "fetched_at": ts,
+                "signal_type": "regulatory",
+                "risk_level": "HIGH",
+            },
+            {
+                "source": "cbn.gov.ng",
+                "title": "CBN PSSP Licence Renewal: Compliance Checklist Published",
+                "summary": "CBN has published the 2026 Payment Service Solution Provider renewal checklist. Institutions must resubmit cybersecurity audit reports and data residency attestations by 31 August 2026.",
+                "url": "https://www.cbn.gov.ng/supervisory/pssp-renewal-2026",
+                "fetched_at": ts,
+                "signal_type": "regulatory",
+                "risk_level": "MEDIUM",
+            },
+            {
+                "source": "nfiu.gov.ng",
+                "title": "NFIU: Suspicious Transaction Reporting Threshold Lowered to ₦1m",
+                "summary": "The Nigerian Financial Intelligence Unit has lowered the STR threshold for digital wallets from ₦5m to ₦1m effective immediately, citing increased smurfing activity.",
+                "url": "https://www.nfiu.gov.ng/index.php/news/str-threshold-update-2026",
+                "fetched_at": ts,
+                "signal_type": "regulatory",
+                "risk_level": "HIGH",
+            },
+            {
+                "source": "cbn.gov.ng",
+                "title": "CBN Open Banking Framework Phase 2 — API Standards Released",
+                "summary": "Phase 2 of the CBN Open Banking Framework mandates that all Tier-1 and Tier-2 banks expose read APIs for account data by December 2026. MFBs must comply by March 2027.",
+                "url": "https://www.cbn.gov.ng/open-banking/phase2-standards",
+                "fetched_at": ts,
+                "signal_type": "regulatory",
+                "risk_level": "MEDIUM",
+            },
+        ],
+        "competitor": [
+            {
+                "competitor": "Moniepoint MFB",
+                "title": "Moniepoint Cuts POS Transaction Fees to 0.3% — Below Industry Floor",
+                "snippet": "Moniepoint has slashed its POS transaction fee to 0.3%, undercutting rivals by 40%. The move follows its latest Series C raise and targets SME merchants currently on Kuda Business.",
+                "url": "https://techcabal.com/2026/05/moniepoint-fee-cut",
+                "fetched_at": ts,
+                "signal_type": "competitor",
+            },
+            {
+                "competitor": "Carbon MFB",
+                "title": "Carbon Launches Salary Advance Product Targeting Kuda's Core Demographic",
+                "snippet": "Carbon's new SalaryNow product offers same-day salary advances to salaried employees at 2% flat fee, directly competing with Kuda's overdraft feature.",
+                "url": "https://techcabal.com/2026/06/carbon-salarynow-launch",
+                "fetched_at": ts,
+                "signal_type": "competitor",
+            },
+            {
+                "competitor": "OPay Nigeria",
+                "title": "OPay Acquires MFB Licence — Set to Launch Savings Products",
+                "snippet": "OPay has received full MFB approval from CBN. The move signals direct entry into the savings and fixed-deposit space, encroaching on Kuda's primary value proposition.",
+                "url": "https://businessday.ng/fintech/article/opay-mfb-licence-2026",
+                "fetched_at": ts,
+                "signal_type": "competitor",
+            },
+            {
+                "competitor": "Fairmoney MFB",
+                "title": "FairMoney Raises $42m Series C, Plans to Triple Loan Book",
+                "snippet": "FairMoney's new raise will fund aggressive loan origination targeting employed Nigerians earning ₦100k–₦500k/month — the same segment Kuda targets with its overdraft and bill payment features.",
+                "url": "https://disrupt-africa.com/2026/05/fairmoney-series-c",
+                "fetched_at": ts,
+                "signal_type": "competitor",
+            },
+        ],
+        "vendor_risk": [
+            {
+                "vendor": "Interswitch Nigeria",
+                "risk_type": "MEDIUM",
+                "title": "Interswitch NIBSS Gateway Intermittent Outage — 4-Hour Disruption",
+                "snippet": "Interswitch's NIBSS gateway experienced a 4-hour outage on June 10th, impacting settlement for 23 MFBs. Post-incident report cites configuration drift after a routine patch.",
+                "url": "https://techpoint.africa/2026/06/interswitch-outage-mfbs",
+                "fetched_at": ts,
+                "signal_type": "vendor_risk",
+            },
+            {
+                "vendor": "Flutterwave Nigeria",
+                "risk_type": "HIGH",
+                "title": "Flutterwave Under CBN Investigation for FX Compliance Breach",
+                "snippet": "CBN has opened a formal investigation into Flutterwave's FX practices following a whistleblower complaint. Institutions using Flutterwave for FX settlement should review exposure.",
+                "url": "https://businessday.ng/financial-services/article/flutterwave-cbn-probe-2026",
+                "fetched_at": ts,
+                "signal_type": "vendor_risk",
+            },
+            {
+                "vendor": "CRC Credit Bureau",
+                "risk_type": "MEDIUM",
+                "title": "CRC Credit Bureau Data Quality Audit Finds 12% Error Rate",
+                "snippet": "An independent audit commissioned by CBN found a 12% error rate in CRC Credit Bureau consumer records, predominantly affecting low-income borrowers. Institutions relying on CRC scores for loan decisioning should apply additional verification.",
+                "url": "https://www.cbn.gov.ng/Out/2026/CRC-audit-findings.pdf",
+                "fetched_at": ts,
+                "signal_type": "vendor_risk",
+            },
+        ],
+        "fraud": [
+            {
+                "title": "EFCC Arrests 47 in Coordinated Account Takeover Ring Targeting MFBs",
+                "snippet": "The EFCC dismantled a syndicate that used BVN spoofing and social engineering to take over 1,200+ MFB accounts across Lagos and Abuja. Kuda was among the five MFBs named in the incident report.",
+                "url": "https://efcc.gov.ng/news/account-takeover-ring-2026",
+                "risk_level": "HIGH",
+                "fetched_at": ts,
+                "signal_type": "fraud",
+            },
+            {
+                "title": "CBN Issues Alert: New SIM-Swap Fraud Variant Bypassing OTP",
+                "snippet": "A new SIM-swap technique using insider telco access has been observed bypassing standard OTP verification. CBN recommends MFBs implement device binding and biometric step-up for high-value transfers.",
+                "url": "https://www.cbn.gov.ng/Out/2026/FPRD/SIM-swap-fraud-alert.pdf",
+                "risk_level": "HIGH",
+                "fetched_at": ts,
+                "signal_type": "fraud",
+            },
+            {
+                "title": "Ponzi Operators Exploiting MFB Account Opening Loopholes — NDIC Warning",
+                "snippet": "The NDIC has warned that unlicensed investment schemes are using anonymous MFB accounts to receive and funnel funds. Affected MFBs face regulatory sanctions if KYC gaps are not closed within 60 days.",
+                "url": "https://www.ndic.org.ng/news/ponzi-mfb-warning-2026",
+                "risk_level": "HIGH",
+                "fetched_at": ts,
+                "signal_type": "fraud",
+            },
+        ],
+        "market": [
+            {
+                "title": "Nigeria Digital Banking Users to Reach 48m by End of 2026 — EFInA Report",
+                "snippet": "EFInA projects Nigeria's digital banking user base will hit 48 million by December 2026, with MFBs capturing 60% of net-new accounts as traditional banks struggle with branch costs.",
+                "url": "https://efina.org.ng/publication/digital-banking-report-2026",
+                "fetched_at": ts,
+                "signal_type": "market",
+            },
+            {
+                "title": "CBN Open Banking API Sandbox Now Live — 14 MFBs Onboarded",
+                "snippet": "CBN's Open Banking sandbox has gone live with 14 MFBs including Kuda, Moniepoint, and Carbon. Third-party developers can now test account-information and payment-initiation APIs.",
+                "url": "https://www.cbn.gov.ng/open-banking/sandbox-launch-2026",
+                "fetched_at": ts,
+                "signal_type": "market",
+            },
+            {
+                "title": "Interswitch NQRP QR Standard Adopted by CBN — All MFBs Must Comply by Q4",
+                "snippet": "CBN has mandated adoption of the Nigeria Quick Response Payment (NQRP) standard across all licensed MFBs by Q4 2026. Non-compliant institutions face licence suspension.",
+                "url": "https://techcabal.com/2026/06/nqrp-mandate-mfbs",
+                "fetched_at": ts,
+                "signal_type": "market",
+            },
+            {
+                "title": "Inflation Impact: MFB Loan Default Rate Rises to 8.4% — CBN Stability Report",
+                "snippet": "CBN's mid-year financial stability report shows MFB NPL ratio climbed from 6.1% to 8.4% in H1 2026, driven by consumer loan stress in the ₦50k–₦200k bracket.",
+                "url": "https://www.cbn.gov.ng/Out/2026/stability-report-h1.pdf",
+                "fetched_at": ts,
+                "signal_type": "market",
+            },
+        ],
+        "collected_at": ts,
+    }
+
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 MAX_SIGNALS_PER_TYPE = 68
@@ -535,6 +716,19 @@ async def run_all_signals(
     bd = client or bright_data_client
     collected_at = _now_iso()
 
+    # Quick connectivity probe — if Bright Data is unreachable (e.g. carrier IP
+    # blacklisted) skip the full gather and return mock data immediately so the
+    # UI always shows signals instead of an empty/error state.
+    try:
+        await bd.health_check()
+    except Exception as probe_exc:
+        logger.warning(
+            "[WebIntel] Bright Data health check failed (%s). "
+            "Returning mock signal data.",
+            probe_exc,
+        )
+        return _mock_signals()
+
     logger.info("[WebIntel] run_all_signals: launching 5 collectors in parallel")
 
     (
@@ -564,6 +758,13 @@ async def run_all_signals(
     regulatory, competitor, vendor_risk, fraud, market = cleaned
 
     total = len(regulatory) + len(competitor) + len(vendor_risk) + len(fraud) + len(market)
+
+    # If every collector came back empty (all failed), fall back to mock data
+    # rather than showing a blank dashboard.
+    if total == 0:
+        logger.warning("[WebIntel] All collectors returned empty. Falling back to mock data.")
+        return _mock_signals()
+
     logger.info(
         "[WebIntel] run_all_signals complete — %d total signals "
         "(regulatory=%d, competitor=%d, vendor_risk=%d, fraud=%d, market=%d)",

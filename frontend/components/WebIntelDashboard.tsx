@@ -21,6 +21,10 @@ import React, {
   type ReactNode,
 } from "react";
 import Link from "next/link";
+import { useVoiceCompliance } from "@/hooks/useVoiceCompliance";
+import VoiceMicButton from "@/components/ui/VoiceMicButton";
+import { useAethexAgent } from "@/hooks/useAethexAgent";
+import AgentCallButton from "@/components/ui/AgentCallButton";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API Base
@@ -85,6 +89,7 @@ export interface SignalsResponse {
   vendor_risk: Signal[];
   fraud: Signal[];
   market: Signal[];
+  mock?: boolean;
 }
 
 export interface VerdictViolation {
@@ -614,16 +619,35 @@ const LiveSignalsTab: FC<{
         0
       )
     : 0;
+  const isMock = signals?.mock === true;
 
   return (
     <div className="flex flex-col gap-5">
       {/* Sub-header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <LiveBadge />
+          {isMock ? (
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-bold uppercase tracking-wide"
+              style={{
+                background: "rgba(245,158,11,0.12)",
+                border:     "1px solid rgba(245,158,11,0.35)",
+                color:      "#F59E0B",
+              }}
+            >
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
+                <circle cx="4" cy="4" r="4"/>
+              </svg>
+              Demo data
+            </span>
+          ) : (
+            <LiveBadge />
+          )}
           <p className="text-[13px]" style={{ color: "#6B7280" }}>
             {loading
               ? "Fetching signals across 5 intelligence domains…"
+              : isMock
+              ? `${totalSignals} signals — live feed unavailable, showing representative data`
               : `${totalSignals} signals across 5 domains`}
           </p>
         </div>
@@ -877,6 +901,116 @@ const ComplianceTab: FC = () => {
   const [error,       setError]       = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // ── Voice compliance ───────────────────────────────────────────────────────
+  const voiceEnabled = process.env.NEXT_PUBLIC_VOICE_ENABLED !== "false";
+  // apiKeyRef lets the hook always read the latest key without re-mounting
+  const apiKeyRef = useRef<string>("");
+
+  const handleVoiceVerdict = useCallback((v: import("@/hooks/useVoiceCompliance").VerdictResponse) => {
+    const asVerdictOutput = {
+      verdict:             v.verdict,
+      compliant:           v.verdict === "GO",
+      confidence_score:    v.confidence,
+      violations:          v.flags.map((f) => ({ regulation_id: "", section: "", reason: f })),
+      recommended_actions: [],
+      ncc_refs:            v.regulation ? [v.regulation] : [],
+      finding:             { summary: v.reasoning },
+    };
+    setVerdict(asVerdictOutput);
+    localStorage.setItem(LAST_VERDICT_KEY, JSON.stringify(asVerdictOutput));
+  }, []);
+
+  const {
+    isListening,
+    isProcessing: voiceProcessing,
+    transcript,
+    error: voiceError,
+    startListening,
+    stopListening,
+  } = useVoiceCompliance({
+    userApiKey: apiKeyRef.current,
+    onVerdict:  handleVoiceVerdict,
+  });
+
+  // Populate textarea when transcript arrives
+  useEffect(() => {
+    if (transcript) {
+      setDecisionText(transcript);
+      localStorage.setItem(LAST_DECISION_KEY, transcript);
+    }
+  }, [transcript]);
+
+  // ── AethexAI live voice agent ──────────────────────────────────────────────
+  const [agentError, setAgentError] = useState<string | null>(null);
+  const { status: agentStatus, startCall, endCall } = useAethexAgent({
+    agentId: process.env.NEXT_PUBLIC_AETHEX_AGENT_ID ?? "6ddb96c3-b61d-4c68-8234-8da69db4616f",
+    onError: (msg) => setAgentError(msg),
+  });
+
+  // ── API key state ──────────────────────────────────────────────────────────
+  const [apiKey,     setApiKey]     = useState<string | null>(null);
+  const [keyVisible, setKeyVisible] = useState(false);
+  const [keyCopied,  setKeyCopied]  = useState(false);
+  const [keyLoading, setKeyLoading] = useState(false);
+  const [keyError,   setKeyError]   = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("atlas_user");
+      if (raw) {
+        const user = JSON.parse(raw) as Record<string, unknown>;
+        const k = user?.api_key;
+        if (typeof k === "string" && k) { setApiKey(k); apiKeyRef.current = k; }
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleGenerateKey = async () => {
+    setKeyLoading(true);
+    setKeyError(null);
+    try {
+      const res = await fetch("/api/auth/generate-key", {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => res.statusText);
+        throw new Error(`${res.status}: ${text}`);
+      }
+      const data = await res.json() as { key?: unknown; api_key?: string };
+      // Proxy wraps backend response as { key: { api_key, message, ... } }
+      const newKey: string =
+        typeof data.key === "string"
+          ? data.key
+          : (data.key as Record<string, string> | null)?.api_key
+            ?? data.api_key
+            ?? "";
+      setApiKey(newKey);
+      apiKeyRef.current = newKey;
+      setKeyVisible(true);
+      try {
+        const raw  = localStorage.getItem("atlas_user");
+        const user = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+        localStorage.setItem("atlas_user", JSON.stringify({ ...user, api_key: newKey }));
+      } catch { /* ignore */ }
+    } catch (e) {
+      setKeyError((e as Error).message ?? "Failed to generate key");
+    } finally {
+      setKeyLoading(false);
+    }
+  };
+
+  const handleCopyKey = async () => {
+    if (!apiKey) return;
+    await navigator.clipboard.writeText(apiKey);
+    setKeyCopied(true);
+    setTimeout(() => setKeyCopied(false), 2000);
+  };
+
+  const maskedKey = apiKey
+    ? `${apiKey.slice(0, 12)}${"•".repeat(Math.max(0, apiKey.length - 16))}${apiKey.slice(-4)}`
+    : null;
+
   const handleCheck = async () => {
     if (!decisionText.trim()) return;
     setChecking(true);
@@ -935,7 +1069,7 @@ const ComplianceTab: FC = () => {
             recommended_actions: activeVerdict.recommended_actions ?? [],
             ncc_refs:            activeVerdict.ncc_refs ?? [],
             decision_text:       activeDecision,
-            summary:             activeVerdict.finding?.summary ?? activeVerdict.summary ?? "",
+            summary:             activeVerdict.finding?.summary ?? "",
             workspace_name:      "African Fintech Platform",
           }),
         });
@@ -978,6 +1112,7 @@ const ComplianceTab: FC = () => {
   };
 
   return (
+    <div className="flex flex-col gap-6">
     <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 1fr" }}>
       {/* Left: input panel */}
       <div className="flex flex-col gap-5">
@@ -1009,6 +1144,27 @@ const ComplianceTab: FC = () => {
               </p>
             </div>
           </div>
+
+          {voiceEnabled && (
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <VoiceMicButton
+                isListening={isListening}
+                isProcessing={voiceProcessing}
+                onStart={startListening}
+                onStop={stopListening}
+              />
+              <AgentCallButton
+                status={agentStatus}
+                onStart={startCall}
+                onEnd={endCall}
+              />
+              {(voiceError ?? agentError) && (
+                <span className="text-[11.5px]" style={{ color: "#EF4444" }}>
+                  {voiceError ?? agentError}
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="relative">
             <textarea
@@ -1186,8 +1342,131 @@ const ComplianceTab: FC = () => {
         )}
       </div>
     </div>
+
+    {/* API key panel — full width below the 2-column grid */}
+    <div
+      className="rounded-2xl p-6"
+      style={{ background: SURFACE.card, border: `1px solid ${SURFACE.border}` }}
+    >
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <div>
+          <h3 className="text-[14px] font-bold" style={{ color: "#E5E7EB" }}>
+            Compliance API Key
+          </h3>
+          <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>
+            Use with{" "}
+            <code
+              className="px-1.5 py-0.5 rounded-md text-[10.5px] font-mono"
+              style={{ background: SURFACE.elevated, color: BRAND.blue }}
+            >
+              POST /api/v1/compliance/check
+            </code>
+          </p>
+        </div>
+        <button
+          onClick={handleGenerateKey}
+          disabled={keyLoading}
+          className="shrink-0 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: "rgba(59,123,246,0.1)",
+            border:     "1px solid rgba(59,123,246,0.25)",
+            color:      BRAND.blue,
+          }}
+        >
+          {keyLoading ? "Generating…" : apiKey ? "Regenerate" : "Generate key"}
+        </button>
+      </div>
+
+      {keyError && (
+        <div className="mb-3">
+          <ErrorBanner message={keyError} onDismiss={() => setKeyError(null)} />
+        </div>
+      )}
+
+      {apiKey ? (
+        <>
+          <div className="flex items-center gap-2">
+            <code
+              className="flex-1 px-3 py-2.5 rounded-xl text-[12.5px] font-mono truncate select-all"
+              style={{
+                background: SURFACE.elevated,
+                border:     `1px solid ${SURFACE.border}`,
+                color:      "#D1D5DB",
+              }}
+            >
+              {keyVisible ? apiKey : maskedKey}
+            </code>
+            <button
+              onClick={() => setKeyVisible((v) => !v)}
+              title={keyVisible ? "Hide" : "Show"}
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+              style={{ background: SURFACE.elevated, border: `1px solid ${SURFACE.border}`, color: "#6B7280" }}
+            >
+              {keyVisible ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              )}
+            </button>
+            <button
+              onClick={handleCopyKey}
+              title="Copy"
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+              style={{
+                background: keyCopied ? "rgba(16,185,129,0.1)" : SURFACE.elevated,
+                border:     `1px solid ${keyCopied ? "rgba(16,185,129,0.3)" : SURFACE.border}`,
+                color:      keyCopied ? "#10B981" : "#6B7280",
+              }}
+            >
+              {keyCopied ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              )}
+            </button>
+          </div>
+          <p className="text-[11px] mt-3" style={{ color: "#4B5563" }}>
+            Pass as{" "}
+            <code
+              className="px-1 py-0.5 rounded text-[10.5px] font-mono"
+              style={{ background: SURFACE.elevated, color: BRAND.blue }}
+            >
+              Authorization: Bearer &lt;key&gt;
+            </code>
+            . Regenerating immediately invalidates the old key.
+          </p>
+        </>
+      ) : (
+        <p className="text-[12px]" style={{ color: "#9CA3AF" }}>
+          No API key yet.{" "}
+          <button
+            onClick={handleGenerateKey}
+            className="underline"
+            style={{ color: BRAND.blue, background: "none", border: "none", cursor: "pointer" }}
+          >
+            Generate one
+          </button>{" "}
+          to call the compliance API directly.
+        </p>
+      )}
+    </div>
+    </div>
   );
 };
+
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tab 3 — Audit Trail Table Row

@@ -3,7 +3,7 @@
  * components/chat/ChatWindow.tsx
  * Full chat window with auto-scroll, typing indicator, and message list.
  */
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import MessageBubble from "./MessageBubble";
 import type { ChatMessage } from "@/types/chat";
 
@@ -59,12 +59,6 @@ function EmptyState() {
 }
 
 export default function ChatWindow({ conversationId, messages, isStreaming }: Props) {
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, isStreaming]);
-
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
       {messages.length === 0 && !isStreaming ? (
@@ -77,7 +71,6 @@ export default function ChatWindow({ conversationId, messages, isStreaming }: Pr
           {isStreaming && <TypingIndicator />}
         </>
       )}
-      <div ref={bottomRef} />
     </div>
   );
 }

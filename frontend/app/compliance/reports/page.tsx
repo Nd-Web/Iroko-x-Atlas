@@ -2,6 +2,8 @@
 
 import AppShell from "@/components/layout/AppShell";
 import { useState, useEffect } from "react";
+import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
+import ComplianceChecker from "@/components/compliance/ComplianceChecker";
 
 const REPORTS = [
   { title: "CBN Q2 2026 Lending Return",          due: "Jul 15, 2026", status: "In progress", regulator: "CBN",  progress: 60,  progressColor: "#4A55D4" },
@@ -24,6 +26,17 @@ export default function ComplianceReportsPage() {
 
   return (
     <AppShell title="Compliance reports" subtitle="CBN returns · SEC filings · NDPA audit · DPIA tracker · DSR queue">
+      {/* Live compliance checker */}
+      <div className="mb-8">
+        <div className="mb-4">
+          <h2 className="text-[15px] font-semibold text-gray-900 tracking-[-0.01em]">Live Compliance Check</h2>
+          <p className="text-[13px] text-gray-400 mt-[3px]">
+            Check any action, product, or policy against CBN · NCC · SEC · NDPA regulations in real time
+          </p>
+        </div>
+        <ComplianceChecker />
+      </div>
+
       {/* Report cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[14px]">
         {REPORTS.map((r) => (
@@ -131,6 +144,9 @@ export default function ComplianceReportsPage() {
           </div>
         </div>
       </div>
+
+      {/* API key */}
+      <ApiKeyPanel />
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" onClick={() => setModal(null)}>

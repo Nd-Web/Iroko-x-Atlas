@@ -195,7 +195,6 @@ export default function ReasoningChain({ query, onComplete, onError }: Props) {
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [steps.length]);
 
   const startStream = useCallback(async () => {
     setSteps([]); setFinalResult(null); setHasError(false); setIsStreaming(true);

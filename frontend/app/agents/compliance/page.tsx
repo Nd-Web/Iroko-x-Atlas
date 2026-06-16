@@ -1,5 +1,6 @@
 import AppShell from "@/components/layout/AppShell";
 import Link from "next/link";
+import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
 
 const STATS = [
   { label: "Open DSRs",           value: "3",  sub: "data subject requests",      accent: "#F79009", color: "#F79009" },
@@ -106,6 +107,9 @@ export default function ComplianceAgentPage() {
           </div>
         </div>
       </div>
+
+      {/* API key */}
+      <ApiKeyPanel />
 
       {/* DSR queue */}
       <div className="card overflow-hidden">
