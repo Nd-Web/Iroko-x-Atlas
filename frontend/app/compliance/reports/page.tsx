@@ -4,15 +4,7 @@ import AppShell from "@/components/layout/AppShell";
 import { useState, useEffect } from "react";
 import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
 import ComplianceChecker from "@/components/compliance/ComplianceChecker";
-
-const REPORTS = [
-  { title: "CBN Q2 2026 Lending Return",          due: "Jul 15, 2026", status: "In progress", regulator: "CBN",  progress: 60,  progressColor: "#4A55D4" },
-  { title: "CBN Microfinance Capital Return Q2",   due: "Jul 15, 2026", status: "Not started", regulator: "CBN",  progress: 0,   progressColor: "#4A55D4" },
-  { title: "NDPA Annual Audit Return 2026",        due: "Jun 30, 2026", status: "Not started", regulator: "NDPA", progress: 0,   progressColor: "#4A55D4" },
-  { title: "SEC Digital Assets Activity Report",   due: "Jul 31, 2026", status: "Clear",       regulator: "SEC",  progress: 100, progressColor: "#17B26A" },
-  { title: "CBN AML/CFT Quarterly Return",         due: "Jul 15, 2026", status: "In progress", regulator: "CBN",  progress: 45,  progressColor: "#4A55D4" },
-  { title: "NDPA Breach Notification Log",         due: "Ongoing",      status: "Clear",       regulator: "NDPA", progress: 100, progressColor: "#17B26A" },
-];
+import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
 
 export default function ComplianceReportsPage() {
   const [modal, setModal] = useState<{type: "report" | "dpia" | "dsr", title?: string} | null>(null);
@@ -39,8 +31,8 @@ export default function ComplianceReportsPage() {
 
       {/* Report cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[14px]">
-        {REPORTS.map((r) => (
-          <div key={r.title} className="card flex flex-col gap-3 px-[22px] py-5">
+        {REGULATORY_FILINGS.map((r) => (
+          <div key={r.name} className="card flex flex-col gap-3 px-[22px] py-5">
             <div className="flex justify-between items-start">
               <span className="text-[11px] font-bold text-brand-700 bg-brand-50 px-2 py-[2px] rounded-full">
                 {r.regulator}
@@ -48,12 +40,12 @@ export default function ComplianceReportsPage() {
               <span className="text-[11.5px] text-gray-400">Due {r.due}</span>
             </div>
 
-            <h3 className="text-sm font-semibold text-gray-800 leading-[1.4] m-0">{r.title}</h3>
+            <h3 className="text-sm font-semibold text-gray-800 leading-[1.4] m-0">{r.name}</h3>
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <span className={`text-xs font-semibold ${r.progress === 100 ? "text-success-700" : r.progress === 0 ? "text-gray-400" : "text-brand-700"}`}>
-                  {r.status}
+                  {STATUS_LABELS[r.status]}
                 </span>
                 <span className="text-xs text-gray-400">{r.progress}%</span>
               </div>
@@ -62,10 +54,10 @@ export default function ComplianceReportsPage() {
               </div>
             </div>
 
-            <button 
-              className="btn-secondary mt-auto" 
+            <button
+              className="btn-secondary mt-auto"
               style={{ padding: "6px 14px", fontSize: "12.5px" }}
-              onClick={() => setModal({ type: "report", title: r.title })}
+              onClick={() => setModal({ type: "report", title: r.name })}
             >
               Open report
             </button>

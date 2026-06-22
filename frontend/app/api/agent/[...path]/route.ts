@@ -1,40 +1,46 @@
 /**
- * app/api/aethex/[...path]/route.ts
+ * app/api/agent/[...path]/route.ts
  *
- * Server-side proxy for AethexAI API calls.
- * Keeps the secret API key off the browser.
- *
- * Forwards GET / POST / PATCH to https://api.aethexai.com/api/v1/<path>
- * and returns the response (JSON or binary audio).
+ * Server-side proxy for the Iroko AI voice agent API calls.
+ * Keeps the API key off the browser.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 
-const AETHEX_BASE  = "https://api.aethexai.com/api/v1";
-const AETHEX_KEY   = process.env.AETHEX_API_KEY ?? "";
+const AGENT_BASE = "https://api.aethexai.com/api/v1";
+
+const API_KEY = process.env.IROKO_AGENT_API_KEY ?? "";
+
+async function callUpstream(
+  url: string,
+  method: string,
+  headers: Record<string, string>,
+  body: BodyInit | undefined,
+): Promise<Response> {
+  return fetch(url, {
+    method,
+    headers: { ...headers, "X-API-Key": API_KEY },
+    body,
+    cache: "no-store",
+  });
+}
 
 async function proxy(
   request: NextRequest,
   params: { path: string[] }
 ): Promise<NextResponse> {
-  if (!AETHEX_KEY) {
-    return NextResponse.json({ error: "AETHEX_API_KEY not configured" }, { status: 500 });
+  if (!API_KEY) {
+    return NextResponse.json({ error: "IROKO_AGENT_API_KEY not configured" }, { status: 500 });
   }
 
   const subPath = params.path.join("/");
   const search  = request.nextUrl.search ?? "";
-  const url     = `${AETHEX_BASE}/${subPath}${search}`;
-
-  const forwardHeaders: Record<string, string> = {
-    "X-API-Key": AETHEX_KEY,
-  };
+  const url     = `${AGENT_BASE}/${subPath}${search}`;
 
   const contentType = request.headers.get("content-type") ?? "";
-  // Forward Content-Type for non-multipart bodies (JSON, etc.).
-  // For multipart/form-data we must NOT set Content-Type here — the browser
-  // already included the correct boundary in the header, and fetch() will
-  // re-attach it automatically when we pass a FormData or raw blob body.
   const isMultipart = contentType.includes("multipart/form-data");
+
+  const forwardHeaders: Record<string, string> = {};
   if (contentType && !isMultipart) {
     forwardHeaders["Content-Type"] = contentType;
   }
@@ -43,9 +49,6 @@ async function proxy(
   let body: BodyInit | undefined;
   if (!["GET", "HEAD"].includes(method)) {
     if (isMultipart) {
-      // Read as ArrayBuffer to preserve binary integrity of the audio data.
-      // Passing the buffer + the original Content-Type (with boundary) lets
-      // fetch forward the multipart body byte-for-byte to AethexAI.
       forwardHeaders["Content-Type"] = contentType;
       body = await request.arrayBuffer();
     } else {
@@ -55,14 +58,13 @@ async function proxy(
 
   let upstream: Response;
   try {
-    upstream = await fetch(url, { method, headers: forwardHeaders, body, cache: "no-store" });
+    upstream = await callUpstream(url, method, forwardHeaders, body);
   } catch (err) {
-    return NextResponse.json({ error: "AethexAI unreachable", detail: String(err) }, { status: 502 });
+    return NextResponse.json({ error: "Agent API unreachable", detail: String(err) }, { status: 502 });
   }
 
   const ct = upstream.headers.get("content-type") ?? "";
 
-  // Audio blobs (WAV / PCM)
   if (ct.includes("audio/")) {
     const buf = await upstream.arrayBuffer();
     return new NextResponse(buf, {
@@ -71,7 +73,6 @@ async function proxy(
     });
   }
 
-  // JSON
   const text = await upstream.text();
   try {
     const json = JSON.parse(text);

@@ -19,8 +19,11 @@ interface ClauseMatch {
   category: string;
 }
 
+// CRC renewal is ~30 days out; compute at module load so it never goes stale.
+const CRC_RENEWAL_DATE = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+
 const MOCK_CONTRACTS = [
-  { id: "cx1", vendor: "CRC Credit Bureau", type: "Data Agreement", value: "₦890M/yr", expiry: "2025-12-31", risk: 8, clauses: 94, status: "expiring" },
+  { id: "cx1", vendor: "CRC Credit Bureau", type: "Data Agreement", value: "₦890M/yr", expiry: CRC_RENEWAL_DATE, risk: 8, clauses: 94, status: "expiring" },
   { id: "cx2", vendor: "Interswitch Group", type: "Payment Gateway SLA", value: "₦1.2B/yr", expiry: "2026-03-31", risk: 4, clauses: 211, status: "active" },
   { id: "cx3", vendor: "CBN Microfinance Licence", type: "Regulatory Licence", value: "—", expiry: "Ongoing", risk: 5, clauses: 67, status: "active" },
   { id: "cx4", vendor: "NDPA Data Protection Audit", type: "Regulatory Engagement", value: "—", expiry: "2026-06-30", risk: 6, clauses: 38, status: "active" },

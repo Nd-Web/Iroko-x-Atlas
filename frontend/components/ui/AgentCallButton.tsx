@@ -1,6 +1,6 @@
 "use client";
 
-import { type AgentCallStatus } from "@/hooks/useAethexAgent";
+import { type AgentCallStatus } from "@/hooks/useAgent";
 
 interface AgentCallButtonProps {
   status:    AgentCallStatus;

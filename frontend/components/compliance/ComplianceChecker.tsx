@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { getAuthToken } from "@/lib/auth";
-import { API_BASE } from "@/lib/config";
+import { useAuth } from "@/context/AuthContext";
 
 interface ComplianceResult {
   verdict: "GO" | "NO-GO" | "MONITOR";
@@ -72,13 +71,12 @@ function formatCheckedAt(iso: string): string {
 }
 
 export default function ComplianceChecker() {
+  const { user, userLoading } = useAuth();
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ComplianceResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sealed, setSealed] = useState(false);
-
-  const token = getAuthToken();
 
   async function handleCheck() {
     if (!inputText.trim()) return;
@@ -88,12 +86,10 @@ export default function ComplianceChecker() {
     setSealed(false);
 
     try {
-      const res = await fetch(`${API_BASE}/api/v1/compliance/check`, {
+      // Call through the Next.js proxy — it reads the httpOnly cookie server-side
+      const res = await fetch("/api/v1/compliance/check", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: inputText.trim(), context: "Nigerian MFB compliance check" }),
       });
 
@@ -116,7 +112,16 @@ export default function ComplianceChecker() {
     toast.success("Decision logged · SHA-256 hash sealed");
   }
 
-  if (!token) {
+  // Still hydrating — show nothing rather than a false "please log in"
+  if (userLoading) {
+    return (
+      <div className="rounded-xl border border-border-default bg-white shadow-sm px-6 py-8">
+        <div className="h-4 w-48 rounded bg-gray-100 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!user) {
     return (
       <div className="rounded-xl border border-border-default bg-white shadow-sm px-6 py-8 text-center">
         <p className="text-sm text-gray-500">Please log in to run compliance checks.</p>

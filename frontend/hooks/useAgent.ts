@@ -6,31 +6,31 @@ import {
   sendOffer,
   sendIceCandidates,
   endAgentSession,
-} from "@/lib/aethex";
+} from "@/lib/agent";
 
 export type AgentCallStatus = "idle" | "connecting" | "active" | "ending";
 
-interface UseAethexAgentOptions {
+interface UseAgentOptions {
   agentId: string;
   onError?: (msg: string) => void;
 }
 
-interface UseAethexAgentReturn {
+interface UseAgentReturn {
   status:    AgentCallStatus;
   startCall: () => Promise<void>;
   endCall:   () => Promise<void>;
 }
 
-export function useAethexAgent({
+export function useAgent({
   agentId,
   onError,
-}: UseAethexAgentOptions): UseAethexAgentReturn {
+}: UseAgentOptions): UseAgentReturn {
   const [status, setStatus] = useState<AgentCallStatus>("idle");
 
-  const pcRef        = useRef<RTCPeerConnection | null>(null);
-  const sessionIdRef = useRef<string>("");
-  const pcIdRef      = useRef<string>("");
-  const pendingRef   = useRef<RTCIceCandidateInit[]>([]);
+  const pcRef         = useRef<RTCPeerConnection | null>(null);
+  const sessionIdRef  = useRef<string>("");
+  const pcIdRef       = useRef<string>("");
+  const pendingRef    = useRef<RTCIceCandidateInit[]>([]);
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flushCandidates = useCallback(async () => {
@@ -63,31 +63,26 @@ export function useAethexAgent({
     setStatus("connecting");
 
     try {
-      // 1. Create server-side session
       const { session_id, ice_config } = await createAgentSession(agentId);
       sessionIdRef.current = session_id;
 
-      // 2. Build RTCPeerConnection with ICE servers from AethexAI
       const pc = new RTCPeerConnection({ iceServers: ice_config.iceServers });
       pcRef.current = pc;
 
-      // Add local audio track so the peer connection has a send direction
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getAudioTracks().forEach((t) => pc.addTrack(t, stream));
 
-      // Play remote audio from AethexAI agent
       pc.ontrack = (evt) => {
         const audio = new Audio();
         audio.srcObject = evt.streams[0];
         audio.play().catch(() => {});
       };
 
-      // Trickle ICE: batch-send candidates with a short debounce
       pc.onicecandidate = (evt) => {
         if (!evt.candidate) return;
         pendingRef.current.push({
           candidate:     evt.candidate.candidate,
-          sdpMid:        evt.candidate.sdpMid ?? "0",
+          sdpMid:        evt.candidate.sdpMid        ?? "0",
           sdpMLineIndex: evt.candidate.sdpMLineIndex ?? 0,
         });
         if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
@@ -96,25 +91,17 @@ export function useAethexAgent({
 
       pc.onconnectionstatechange = () => {
         const s = pc.connectionState;
-        if (s === "connected")    setStatus("active");
-        if (s === "disconnected" || s === "failed" || s === "closed") {
-          setStatus("idle");
-        }
+        if (s === "connected")                                         setStatus("active");
+        if (s === "disconnected" || s === "failed" || s === "closed") setStatus("idle");
       };
 
-      // 3. Create SDP offer and exchange with AethexAI
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
       const answer = await sendOffer(session_id, offer.sdp!);
       pcIdRef.current = answer.pc_id;
 
-      await pc.setRemoteDescription({
-        type: answer.type,
-        sdp:  answer.sdp,
-      });
-
-      // Flush any queued candidates that arrived before the answer
+      await pc.setRemoteDescription({ type: answer.type, sdp: answer.sdp });
       await flushCandidates();
 
     } catch (err) {

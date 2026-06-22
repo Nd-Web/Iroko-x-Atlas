@@ -1,26 +1,22 @@
 /**
- * AethexAI client helpers.
- * All calls go through /api/aethex/* (server-side proxy) so the API key
+ * Iroko AI agent client helpers.
+ * All calls go through /api/agent/* (server-side proxy) so the API key
  * never leaves the server.
  */
 
-const PROXY = "/api/aethex";
+const PROXY = "/api/agent";
 
 // ─── Transcription ────────────────────────────────────────────────────────────
-
-// ── WAV encoding helpers ──────────────────────────────────────────────────────
-// AethexAI transcribe rejects audio/webm (MediaRecorder default). We decode the
-// webm blob with AudioContext then re-encode to WAV (16-bit PCM mono).
 
 function writeStr(view: DataView, offset: number, str: string): void {
   for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
 }
 
 function encodeWav(decoded: AudioBuffer): Blob {
-  const pcm        = decoded.getChannelData(0); // mix to mono via first channel
+  const pcm        = decoded.getChannelData(0);
   const sampleRate = decoded.sampleRate;
   const numSamples = pcm.length;
-  const dataSize   = numSamples * 2;            // 16-bit = 2 bytes/sample
+  const dataSize   = numSamples * 2;
   const buf        = new ArrayBuffer(44 + dataSize);
   const v          = new DataView(buf);
 
@@ -28,15 +24,15 @@ function encodeWav(decoded: AudioBuffer): Blob {
   v.setUint32( 4, 36 + dataSize, true);
   writeStr(v,  8, "WAVE");
   writeStr(v, 12, "fmt ");
-  v.setUint32(16, 16,         true);  // chunk size
-  v.setUint16(20,  1,         true);  // PCM
-  v.setUint16(22,  1,         true);  // mono
-  v.setUint32(24, sampleRate, true);
-  v.setUint32(28, sampleRate * 2, true); // byte rate
-  v.setUint16(32,  2,         true);  // block align
-  v.setUint16(34, 16,         true);  // bits per sample
+  v.setUint32(16, 16,              true);
+  v.setUint16(20,  1,              true);
+  v.setUint16(22,  1,              true);
+  v.setUint32(24, sampleRate,      true);
+  v.setUint32(28, sampleRate * 2,  true);
+  v.setUint16(32,  2,              true);
+  v.setUint16(34, 16,              true);
   writeStr(v, 36, "data");
-  v.setUint32(40, dataSize,   true);
+  v.setUint32(40, dataSize,        true);
 
   let off = 44;
   for (let i = 0; i < numSamples; i++) {
@@ -60,7 +56,6 @@ async function toWav(blob: Blob): Promise<Blob> {
 }
 
 export async function transcribeAudio(audioBlob: Blob): Promise<string> {
-  // Convert webm/opus → wav so AethexAI accepts it
   const wavBlob = await toWav(audioBlob);
 
   const form = new FormData();
@@ -82,11 +77,18 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
   return text;
 }
 
-// ─── TTS ──────────────────────────────────────────────────────────────────────
+// ─── TTS — neural voice ───────────────────────────────────────────────────────
 
-const TAREK_VOICE = "29f3ade2-b500-543c-a7a7-827642ac09e7";
+const DEFAULT_VOICE = "354d8730-388b-5d94-a7e8-9f8bc87dc4fc"; // Ada — Nigerian English, dialect-style
 
-export async function speakText(text: string, voiceId = TAREK_VOICE): Promise<void> {
+let _currentAudio: HTMLAudioElement | null = null;
+
+export async function speakText(text: string, voiceId = DEFAULT_VOICE): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  _currentAudio?.pause();
+  _currentAudio = null;
+
   try {
     const res = await fetch(`${PROXY}/tts`, {
       method: "POST",
@@ -94,20 +96,20 @@ export async function speakText(text: string, voiceId = TAREK_VOICE): Promise<vo
       body: JSON.stringify({ text, voice_id: voiceId, streaming: false }),
     });
 
-    if (!res.ok) return;
+    if (!res.ok) throw new Error(`TTS ${res.status}`);
 
     const arrayBuffer = await res.arrayBuffer();
     if (!arrayBuffer.byteLength) return;
 
-    const audioCtx = new AudioContext();
-    const decoded  = await audioCtx.decodeAudioData(arrayBuffer);
-    const source   = audioCtx.createBufferSource();
-    source.buffer  = decoded;
-    source.connect(audioCtx.destination);
+    const blob  = new Blob([arrayBuffer], { type: "audio/mpeg" });
+    const url   = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    _currentAudio = audio;
 
     await new Promise<void>((resolve) => {
-      source.onended = () => resolve();
-      source.start(0);
+      audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+      audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+      audio.play().catch(() => resolve());
     });
   } catch {
     // TTS is enhancement-only — never throw
@@ -116,22 +118,22 @@ export async function speakText(text: string, voiceId = TAREK_VOICE): Promise<vo
 
 // ─── Agent WebRTC session helpers ─────────────────────────────────────────────
 
-export interface AethexIceConfig {
+export interface AgentIceConfig {
   iceServers: RTCIceServer[];
 }
 
-export interface AethexSessionResponse {
+export interface AgentSessionResponse {
   session_id: string;
-  ice_config: AethexIceConfig;
+  ice_config: AgentIceConfig;
 }
 
-export interface AethexOfferResponse {
+export interface AgentOfferResponse {
   sdp:   string;
   type:  RTCSdpType;
   pc_id: string;
 }
 
-export async function createAgentSession(agentId: string): Promise<AethexSessionResponse> {
+export async function createAgentSession(agentId: string): Promise<AgentSessionResponse> {
   const res = await fetch(`${PROXY}/conversation/connect`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -141,13 +143,13 @@ export async function createAgentSession(agentId: string): Promise<AethexSession
     const err = await res.json().catch(() => ({})) as { error?: string };
     throw new Error(err.error ?? `Session create failed (${res.status})`);
   }
-  return res.json() as Promise<AethexSessionResponse>;
+  return res.json() as Promise<AgentSessionResponse>;
 }
 
 export async function sendOffer(
   sessionId: string,
   sdp: string
-): Promise<AethexOfferResponse> {
+): Promise<AgentOfferResponse> {
   const res = await fetch(`${PROXY}/conversation/${sessionId}/offer`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -157,7 +159,7 @@ export async function sendOffer(
     const err = await res.json().catch(() => ({})) as { error?: string };
     throw new Error(err.error ?? `SDP offer failed (${res.status})`);
   }
-  return res.json() as Promise<AethexOfferResponse>;
+  return res.json() as Promise<AgentOfferResponse>;
 }
 
 export async function sendIceCandidates(
@@ -165,7 +167,6 @@ export async function sendIceCandidates(
   pcId: string,
   candidates: RTCIceCandidateInit[]
 ): Promise<void> {
-  // AethexAI expects snake_case keys, not the camelCase RTCIceCandidateInit shape
   const apiCandidates = candidates.map((c) => ({
     candidate:       c.candidate,
     sdp_mid:         c.sdpMid         ?? "0",
@@ -182,5 +183,5 @@ export async function endAgentSession(sessionId: string): Promise<void> {
   await fetch(`${PROXY}/conversation/${sessionId}/end`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-  }).catch(() => { /* best-effort */ });
+  }).catch(() => {});
 }

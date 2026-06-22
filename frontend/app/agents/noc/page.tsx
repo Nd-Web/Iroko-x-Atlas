@@ -10,11 +10,21 @@ import { useChat } from "@/hooks/useChat";
 import InputBar from "@/components/chat/InputBar";
 import ChatWindow from "@/components/chat/ChatWindow";
 
+function daysUntil(isoDate: string): number {
+  const due = new Date(isoDate);
+  const now = new Date();
+  due.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.round((due.getTime() - now.getTime()) / 86400000));
+}
+
+const amlDaysNoc = daysUntil("2026-07-15");
+
 const KUDA_ALERTS = [
-  { id: "a1", title: "Kuda MFB — lending exposure limit approaching CBN threshold", region: "Lagos",    severity: "critical", age: "4m ago",  slaImpact: true,  status: "active" },
-  { id: "a2", title: "Kuda MFB — AML/CFT quarterly return due in 12 days",          region: "National", severity: "warning",  age: "1h ago",  slaImpact: false, status: "active" },
-  { id: "a3", title: "Kuda MFB — 3 incomplete SAR filings flagged by CBN",           region: "Abuja",    severity: "warning",  age: "2h ago",  slaImpact: false, status: "active" },
-  { id: "a4", title: "Kuda MFB — KYC gap in Q2 onboarding batch (187 accounts)",    region: "Lagos",    severity: "info",     age: "3h ago",  slaImpact: false, status: "acknowledged" },
+  { id: "a1", title: "Kuda MFB — lending exposure limit approaching CBN threshold",                       region: "Lagos",    severity: "critical", age: "4m ago", slaImpact: true,  status: "active" },
+  { id: "a2", title: `Kuda MFB — AML/CFT quarterly return due in ${amlDaysNoc} day${amlDaysNoc !== 1 ? "s" : ""}`, region: "National", severity: "warning",  age: "1h ago", slaImpact: false, status: "active" },
+  { id: "a3", title: "Kuda MFB — 3 incomplete SAR filings flagged by CBN",                                region: "Abuja",    severity: "warning",  age: "2h ago", slaImpact: false, status: "active" },
+  { id: "a4", title: "Kuda MFB — KYC gap in Q2 onboarding batch (187 accounts)",                         region: "Lagos",    severity: "info",     age: "3h ago", slaImpact: false, status: "acknowledged" },
 ];
 
 const COMPETITOR_ALERTS = [
@@ -38,9 +48,7 @@ const SEV_COLOR: Record<string, string> = { critical: "#EF4444", warning: "#F59E
 function SLAGauge({ sla }: { sla: typeof SLA_INDICATORS[0] }) {
   const passing = sla.value >= sla.threshold;
   const pct = Math.min(100, (sla.value / (sla.threshold * 1.5)) * 100);
-  const color = passing
-    ? sla.value >= sla.threshold * 1.1 ? "#10B981" : "#F59E0B"
-    : "#EF4444";
+  const color = passing ? "#10B981" : "#EF4444";
   return (
     <div className="rounded-xl p-4 border border-white/[0.06]" style={{ background: "#0F1320" }}>
       <div className="flex items-center justify-between mb-3">

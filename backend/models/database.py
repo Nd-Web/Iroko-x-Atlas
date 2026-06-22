@@ -312,6 +312,8 @@ def init_db():
     import models.audit_trail  # noqa: F401
     # Import regulatory memory model so its table is registered with Base.metadata
     from services.regulatory_memory import RegulatoryMemoryEntry  # noqa: F401
+    # Import signal node model for persistent knowledge graph
+    import models.signal_node  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
     # ── Column-level migrations (add new columns to existing tables) ─────────

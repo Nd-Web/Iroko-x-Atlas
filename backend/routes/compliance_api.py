@@ -19,8 +19,24 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from agents.watchdog import WatchdogAgent
-from models.database import get_db
-from services.auth_utils import get_user_from_api_key
+from models.database import get_db, User
+from services.auth_utils import get_current_user, get_user_from_api_key
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+_bearer = HTTPBearer(auto_error=False)
+
+
+async def _optional_jwt_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """Return the JWT-authenticated user, or None if the token is absent/invalid."""
+    if not credentials:
+        return None
+    try:
+        return get_current_user(credentials=credentials, db=db)
+    except HTTPException:
+        return None
 
 logger = logging.getLogger(__name__)
 
@@ -90,18 +106,27 @@ async def compliance_check(
     body: ComplianceCheckRequest,
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db),
+    jwt_user: Optional[User] = Depends(_optional_jwt_user),
 ):
-    # ── Auth ──────────────────────────────────────────────────────────────────
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+    # ── Auth: accept either a login JWT (dashboard) or an API key (external) ──
+    user = jwt_user
+    rate_key: str
 
-    api_key = authorization[len("Bearer "):].strip()
-    user = get_user_from_api_key(api_key, db)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+    if user:
+        # Standard dashboard login — JWT already validated by get_current_user
+        rate_key = str(user.id)
+    else:
+        # Fallback: API key path for external/programmatic callers
+        if not authorization or not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+        api_key = authorization[len("Bearer "):].strip()
+        user = get_user_from_api_key(api_key, db)
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+        rate_key = api_key
 
     # ── Rate limit ────────────────────────────────────────────────────────────
-    _check_rate_limit(api_key)
+    _check_rate_limit(rate_key)
 
     # ── Compliance engine ─────────────────────────────────────────────────────
     try:

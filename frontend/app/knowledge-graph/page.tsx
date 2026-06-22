@@ -10,8 +10,13 @@ interface Node { id: string; label: string; type: string; x: number; y: number; 
 interface Edge { from: string; to: string; label?: string; }
 
 const NODE_COLORS: Record<string, string> = {
-  primary: "#F59E0B", competitor: "#F97316", contract: "#3B7BF6",
+  primary: "#FACC15", competitor: "#F97316", contract: "#3B7BF6",
   sla: "#10B981", alert: "#EF4444", document: "#6366F1", regulation: "#EC4899",
+};
+
+const NODE_LABELS: Record<string, string> = {
+  primary: "Primary", competitor: "Competitor", contract: "Contract",
+  sla: "SLA", alert: "Alert", document: "Document", regulation: "Regulation",
 };
 
 const NODES: Node[] = [
@@ -61,7 +66,7 @@ function GraphLegend() {
       {Object.entries(NODE_COLORS).map(([type, color]) => (
         <div key={type} className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ background: color }} />
-          <span className="text-[10px] text-[#9CA3AF] capitalize">{type}</span>
+          <span className="text-[10px] text-[#9CA3AF]">{NODE_LABELS[type] ?? type}</span>
         </div>
       ))}
     </div>
@@ -172,7 +177,7 @@ export default function KnowledgeGraphPage() {
                 <div className="w-10 h-10 rounded-xl mb-3 flex items-center justify-center" style={{ background: `${NODE_COLORS[selected.type]}20` }}>
                   <div className="w-4 h-4 rounded-full" style={{ background: NODE_COLORS[selected.type] }} />
                 </div>
-                <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: NODE_COLORS[selected.type] }}>{selected.type}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: NODE_COLORS[selected.type] }}>{NODE_LABELS[selected.type] ?? selected.type}</div>
                 <h3 className="text-[14px] font-bold text-[#E5E7EB] leading-snug">{selected.label}</h3>
               </div>
 
@@ -188,7 +193,7 @@ export default function KnowledgeGraphPage() {
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left hover:bg-white/[0.04] transition-colors">
                         <div className="w-3 h-3 rounded-full shrink-0" style={{ background: c }} />
                         <span className="text-[11px] text-[#D1D5DB] truncate">{n.label}</span>
-                        <span className="text-[9px] capitalize text-[#6B7280] ml-auto">{n.type}</span>
+                        <span className="text-[9px] text-[#6B7280] ml-auto">{NODE_LABELS[n.type] ?? n.type}</span>
                       </button>
                     );
                   })}

@@ -418,8 +418,8 @@ class FraudIntelligenceService:
             from services.signal_graph import signal_graph_service
             # Wrap fraud signals in the expected run_all_signals dict shape
             fraud_only_signals = {"fraud": triaged}
-            graph = signal_graph_service.build_signal_graph(fraud_only_signals)
-            compound_risks = signal_graph_service.find_compound_risks(graph, min_signals=2)
+            graph = await signal_graph_service.build_signal_graph(fraud_only_signals)
+            compound_risks = await signal_graph_service.find_compound_risks(graph, min_signals=2)
         except Exception as exc:
             logger.warning("[FraudIntel] Signal graph correlation failed: %s", exc)
 

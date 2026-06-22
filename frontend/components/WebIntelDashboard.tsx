@@ -23,7 +23,7 @@ import React, {
 import Link from "next/link";
 import { useVoiceCompliance } from "@/hooks/useVoiceCompliance";
 import VoiceMicButton from "@/components/ui/VoiceMicButton";
-import { useAethexAgent } from "@/hooks/useAethexAgent";
+import { useAgent } from "@/hooks/useAgent";
 import AgentCallButton from "@/components/ui/AgentCallButton";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -942,8 +942,8 @@ const ComplianceTab: FC = () => {
 
   // ── AethexAI live voice agent ──────────────────────────────────────────────
   const [agentError, setAgentError] = useState<string | null>(null);
-  const { status: agentStatus, startCall, endCall } = useAethexAgent({
-    agentId: process.env.NEXT_PUBLIC_AETHEX_AGENT_ID ?? "6ddb96c3-b61d-4c68-8234-8da69db4616f",
+  const { status: agentStatus, startCall, endCall } = useAgent({
+    agentId: process.env.NEXT_PUBLIC_IROKO_AGENT_ID ?? "9aad19b0-5d6e-4306-ac66-cbc8e2486cae",
     onError: (msg) => setAgentError(msg),
   });
 

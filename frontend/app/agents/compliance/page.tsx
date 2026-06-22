@@ -1,6 +1,7 @@
 import AppShell from "@/components/layout/AppShell";
 import Link from "next/link";
 import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
+import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
 
 const STATS = [
   { label: "Open DSRs",           value: "3",  sub: "data subject requests",      accent: "#F79009", color: "#F79009" },
@@ -43,28 +44,26 @@ export default function ComplianceAgentPage() {
             </Link>
           </div>
           <div className="py-2">
-            {[
-              { name: "CBN Q2 2026 Lending Return",         due: "Jul 15, 2026", status: "in-progress", regulator: "CBN"  },
-              { name: "CBN AML/CFT Quarterly Return",       due: "Jul 15, 2026", status: "in-progress", regulator: "CBN"  },
-              { name: "NDPA Annual Audit Return",            due: "Jun 30, 2026", status: "not-started", regulator: "NDPA" },
-              { name: "CBN Q1 2026 Capital Adequacy Return", due: "Submitted",    status: "submitted",   regulator: "CBN"  },
-            ].map((f, i, arr) => {
+            {REGULATORY_FILINGS.map((f, i, arr) => {
               const st = {
-                "in-progress": { color: "var(--color-brand-700)",   bg: "var(--color-brand-50)",   label: "In progress" },
-                "not-started": { color: "var(--color-gray-400)",    bg: "var(--color-gray-100)",   label: "Not started" },
-                clear:         { color: "var(--color-success-700)", bg: "var(--color-success-50)", label: "Clear"       },
-                submitted:     { color: "var(--color-success-700)", bg: "var(--color-success-50)", label: "Submitted"   },
+                "in-progress": { color: "var(--color-brand-700)",   bg: "var(--color-brand-50)"   },
+                "not-started": { color: "var(--color-gray-400)",    bg: "var(--color-gray-100)"   },
+                clear:         { color: "var(--color-success-700)", bg: "var(--color-success-50)" },
+                submitted:     { color: "var(--color-success-700)", bg: "var(--color-success-50)" },
               }[f.status]!;
+              const dueLabel = f.status === "submitted"
+                ? `Submitted: ${f.due}`
+                : `Due: ${f.due}`;
               return (
                 <div key={f.name} className={`flex justify-between items-center gap-3 py-[11px] px-5${i < arr.length - 1 ? " border-b border-border-default" : ""}`}>
                   <div className="min-w-0">
                     <div className="text-[13px] font-medium text-gray-700 mb-[3px] truncate">{f.name}</div>
                     <div className="flex items-center gap-1.5">
                       <span className="bg-gray-100 px-1.5 rounded text-[10.5px] font-bold text-gray-500">{f.regulator}</span>
-                      <span className="text-[11.5px] text-gray-400">Due: {f.due}</span>
+                      <span className="text-[11.5px] text-gray-400">{dueLabel}</span>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold px-2 py-[2px] rounded-full shrink-0" style={{ color: st.color, background: st.bg }}>{st.label}</span>
+                  <span className="text-[11px] font-semibold px-2 py-[2px] rounded-full shrink-0" style={{ color: st.color, background: st.bg }}>{STATUS_LABELS[f.status]}</span>
                 </div>
               );
             })}

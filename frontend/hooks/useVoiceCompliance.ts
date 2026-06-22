@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
-import { transcribeAudio, speakText } from "@/lib/aethex";
+import { transcribeAudio, speakText } from "@/lib/agent";
+import { API_BASE } from "@/lib/config";
 
 export interface VerdictResponse {
   verdict: "GO" | "NO-GO" | "MONITOR" | string;
@@ -18,10 +19,10 @@ interface UseVoiceComplianceOptions {
 }
 
 interface UseVoiceComplianceReturn {
-  isListening:   boolean;
-  isProcessing:  boolean;
-  transcript:    string;
-  error:         string | null;
+  isListening:    boolean;
+  isProcessing:   boolean;
+  transcript:     string;
+  error:          string | null;
   startListening: () => Promise<void>;
   stopListening:  () => void;
 }
@@ -43,13 +44,13 @@ export function useVoiceCompliance({
     setIsProcessing(true);
     setError(null);
     try {
-      const res = await fetch("/api/v1/compliance/check", {
+      const res = await fetch(`${API_BASE}/api/v1/compliance/check`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${userApiKey}`,
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, context: "Nigerian MFB compliance check" }),
       });
 
       if (!res.ok) {
@@ -60,7 +61,6 @@ export function useVoiceCompliance({
       const result = await res.json() as VerdictResponse;
       onVerdict(result);
 
-      // Read verdict aloud
       const { verdict, reasoning, regulation } = result;
       let speech: string;
       if (verdict === "GO") {
@@ -120,7 +120,7 @@ export function useVoiceCompliance({
       }
     };
 
-    recorder.start(250); // collect in 250ms chunks
+    recorder.start(250);
     setIsListening(true);
   }, [runComplianceCheck]);
 
@@ -131,12 +131,5 @@ export function useVoiceCompliance({
     setIsListening(false);
   }, []);
 
-  return {
-    isListening,
-    isProcessing,
-    transcript,
-    error,
-    startListening,
-    stopListening,
-  };
+  return { isListening, isProcessing, transcript, error, startListening, stopListening };
 }

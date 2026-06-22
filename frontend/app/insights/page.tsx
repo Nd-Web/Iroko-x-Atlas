@@ -85,13 +85,28 @@ function SkeletonCard() {
   );
 }
 
+// Compute days remaining from a fixed due date to today, clamped ≥ 0.
+function daysUntil(isoDate: string): number {
+  const due = new Date(isoDate);
+  const now = new Date();
+  // Zero out time portion to count full calendar days
+  due.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.round((due.getTime() - now.getTime()) / 86400000));
+}
+
+// CRC renewal: ~30 days out from today
+const CRC_EXPIRY = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+const AML_DUE_DATE = "2026-07-15";
+const amlDays = daysUntil(AML_DUE_DATE);
+
 const MOCK_INSIGHTS: Insight[] = [
   { id: "i1", org_id: null, document_id: null, title: "Carbon MFB CAR breach — capital adequacy ratio below 10% CBN minimum", summary: "Carbon MFB's CAR has dropped to 8.4%, breaching the CBN 10% minimum under BOFIA 2020. Immediate capital injection or loan book reduction required to avoid sanctions.", category: "compliance", severity: 9, agent_source: "WatchdogAgent", status: "new", created_at: new Date(Date.now()-120000).toISOString() },
-  { id: "i2", org_id: null, document_id: null, title: "CBN AML/CFT return submission deadline in 14 days", summary: "Q2 2026 AML/CFT quarterly return is due July 15, 2026. 14-day window for final data reconciliation and FinA submission. Risk of ₦500K/day late penalty under CBN ENF-001.", category: "regulatory", severity: 6, agent_source: "WatchdogAgent", status: "new", created_at: new Date(Date.now()-3600000).toISOString() },
+  { id: "i2", org_id: null, document_id: null, title: `CBN AML/CFT return submission deadline in ${amlDays} day${amlDays !== 1 ? "s" : ""}`, summary: `Q2 2026 AML/CFT quarterly return is due July 15, 2026. ${amlDays}-day window for final data reconciliation and FinA submission. Risk of ₦500K/day late penalty under CBN ENF-001.`, category: "regulatory", severity: 6, agent_source: "WatchdogAgent", status: "new", created_at: new Date(Date.now()-3600000).toISOString() },
   { id: "i3", org_id: null, document_id: null, title: "CBN lending limit data discrepancy detected in Q2 2026 submission", summary: "Internal lending data shows single-borrower exposure at ₦52M while submitted return shows ₦48M. This discrepancy could trigger a regulatory inquiry under CBN BOFIA 2020 Section 35.", category: "compliance", severity: 9, agent_source: "AnalystAgent", status: "new", created_at: new Date(Date.now()-7200000).toISOString() },
   { id: "i4", org_id: null, document_id: null, title: "Loan disbursement anomaly — Duplicate batch #7 entries detected", summary: "Three disbursement entries for the same borrower in batch #7 total ₦47.3M. Pattern may indicate duplicate-processing error or internal fraud. Recommend immediate payment suspension.", category: "fraud", severity: 9, agent_source: "WatchdogAgent", status: "reviewed", created_at: new Date(Date.now()-86400000).toISOString() },
   { id: "i5", org_id: null, document_id: null, title: "Transaction velocity anomaly — 3 Kuda agent wallets flagged", summary: "3 Kuda agent wallets show 340% above-average transaction velocity in the last 48 hours. Total flagged exposure: ₦31.4M. STR filing recommended per CBN AML/CFT guidelines.", category: "fraud", severity: 7, agent_source: "AnalystAgent", status: "new", created_at: new Date(Date.now()-172800000).toISOString() },
-  { id: "i6", org_id: null, document_id: null, title: "CRC Credit Bureau data agreement — renewal due in 30 days", summary: "The CRC Credit Bureau data processing agreement expires 2025-12-31. Non-renewal would prevent credit bureau checks on new loan applicants, breaching CBN MFB lending guidelines. Renewal negotiation should commence immediately.", category: "contract", severity: 5, agent_source: "ResearcherAgent", status: "dismissed", created_at: new Date(Date.now()-259200000).toISOString() },
+  { id: "i6", org_id: null, document_id: null, title: "CRC Credit Bureau data agreement — renewal due in 30 days", summary: `The CRC Credit Bureau data processing agreement expires ${CRC_EXPIRY}. Non-renewal would prevent credit bureau checks on new loan applicants, breaching CBN MFB lending guidelines. Renewal negotiation should commence immediately.`, category: "contract", severity: 5, agent_source: "ResearcherAgent", status: "dismissed", created_at: new Date(Date.now()-259200000).toISOString() },
 ];
 
 export default function InsightsPage() {

@@ -1,7 +1,7 @@
 import os
 import requests
 
-API_KEY = os.environ["AETHEX_API_KEY"]
+API_KEY = os.environ["IROKO_AGENT_API_KEY"]
 BASE_URL = "https://api.aethexai.com/api/v1"
 headers = {"X-API-Key": API_KEY, "Content-Type": "application/json"}
 
@@ -33,5 +33,5 @@ agent.raise_for_status()
 agent_data = agent.json()
 
 print(f"\nAgent created successfully.")
-print(f"AETHEX_AGENT_ID={agent_data['id']}")
-print(f"\nAdd this to your .env.local file.")
+print(f"NEXT_PUBLIC_IROKO_AGENT_ID={agent_data['id']}")
+print(f"\nAdd this to your frontend/.env.local file.")

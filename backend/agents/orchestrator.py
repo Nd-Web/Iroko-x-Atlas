@@ -599,8 +599,8 @@ async def web_intel_pipeline(
     try:
         from services.signal_graph import signal_graph_service
 
-        graph = signal_graph_service.build_signal_graph(all_signals)
-        compound_risks = signal_graph_service.get_high_risk_entities(graph, threshold=0.5)
+        graph = await signal_graph_service.build_signal_graph(all_signals, db=db)
+        compound_risks = await signal_graph_service.get_high_risk_entities(graph, threshold=0.5, db=db)
 
         node_count = graph.number_of_nodes() if graph else 0
         edge_count = graph.number_of_edges() if graph else 0
