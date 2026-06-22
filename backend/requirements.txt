@@ -35,3 +35,5 @@ networkx>=3.3
 markdown>=3.6
 playwright>=1.44.0
 tenacity>=8.2.0
+aiosqlite>=0.19.0
+asyncpg>=0.29.0

@@ -43,12 +43,17 @@ else:
 
 # ── Engine & session factory ──────────────────────────────────────────────────
 
+_pool_kwargs = (
+    {"pool_size": 10, "max_overflow": 20}
+    if not _async_url.startswith("sqlite")
+    else {}
+)
+
 engine = create_async_engine(
     _async_url,
     echo=False,
     pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
+    **_pool_kwargs,
 )
 
 AsyncSessionLocal = async_sessionmaker(

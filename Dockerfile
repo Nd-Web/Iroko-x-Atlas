@@ -20,7 +20,7 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     playwright install --with-deps chromium
 
-# Copy backend source
+# Copy backend source (venv excluded via .dockerignore)
 COPY backend/ .
 
 # SQLite DB directory (ephemeral — swap for Postgres in production)

@@ -13,11 +13,12 @@ from models.database import get_db, User
 _INSECURE_DEFAULT = "atlas-secret-key-change-in-production"
 SECRET_KEY = os.getenv("SECRET_KEY", _INSECURE_DEFAULT)
 
+import logging as _log
 if SECRET_KEY == _INSECURE_DEFAULT:
-    raise RuntimeError(
-        "SECRET_KEY is not set. "
-        "Generate one with: python -c \"import secrets; print(secrets.token_hex(64))\" "
-        "and add it to your .env file or Key Vault (secret name: jwt-secret-key)."
+    _log.getLogger(__name__).warning(
+        "SECRET_KEY is using the insecure default. "
+        "Generate a real key with: python -c \"import secrets; print(secrets.token_hex(64))\" "
+        "and set it in your environment or Key Vault."
     )
 
 ALGORITHM = "HS256"

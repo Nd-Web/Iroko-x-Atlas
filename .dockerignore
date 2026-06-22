@@ -1,0 +1,19 @@
+# Exclude Windows virtualenv — Windows-compiled binaries break Linux builds
+backend/venv
+frontend/node_modules
+frontend/.next
+
+# Build artifacts and caches
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Local databases and test artifacts
+backend/atlas.db
+backend/tmp_sync_downloads
+backend/test_*.pdf
+
+# Local env files — secrets must be set as env vars in the deployment platform
+backend/.env
+.env

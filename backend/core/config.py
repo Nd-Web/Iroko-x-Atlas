@@ -51,6 +51,10 @@ class Settings(BaseSettings):
         default="gpt-4o",
         description="Azure OpenAI GPT-4o deployment name",
     )
+    AZURE_OPENAI_GPT4O_DEPLOYMENT: str = Field(
+        default="gpt-4o",
+        description="Azure OpenAI GPT-4o deployment name (alias)",
+    )
     AZURE_OPENAI_EMBEDDING_DEPLOYMENT: str = Field(
         default="text-embedding-3-large",
         description="Azure OpenAI embedding model deployment name",
@@ -81,6 +85,10 @@ class Settings(BaseSettings):
     AZURE_SEARCH_KEY: str = Field(
         default="",
         description="Azure AI Search admin API key",
+    )
+    AZURE_SEARCH_API_KEY: str = Field(
+        default="",
+        description="Azure AI Search admin API key (alias)",
     )
     AZURE_SEARCH_INDEX: str = Field(
         default="iroko-chunks",

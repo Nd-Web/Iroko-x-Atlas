@@ -19,7 +19,6 @@ from apscheduler.triggers.interval import IntervalTrigger
 logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "tmp_sync_downloads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Supported file extensions for auto-import
 SYNCABLE_EXTENSIONS = {"pdf", "docx", "xlsx", "txt", "md", "csv"}
@@ -225,6 +224,7 @@ async def _ingest_text_content(
     """Shared: create a .txt file from text content and ingest it."""
     from models.database import generate_id
 
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
     doc_id = generate_id()
     filename = re.sub(r'[^\w\s\-]', '', title)[:80].strip() + ".txt"
     dest_path = os.path.join(UPLOAD_DIR, f"{doc_id}.txt")
