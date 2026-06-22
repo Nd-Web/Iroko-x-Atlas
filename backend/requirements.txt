@@ -32,3 +32,4 @@ reportlab>=4.0.0
 staticmap>=0.5.4
 Pillow>=10.0.0
 networkx>=3.3
+markdown>=3.6
