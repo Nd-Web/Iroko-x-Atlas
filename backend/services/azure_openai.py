@@ -32,6 +32,8 @@ from core.config import settings
 
 logger = logging.getLogger(__name__)
 
+_RETRY_DELAY_SECONDS = 2
+
 # ── Tenacity retry policy ─────────────────────────────────────────────────────
 
 _RETRYABLE_ERRORS = (RateLimitError, APITimeoutError, APIConnectionError)
