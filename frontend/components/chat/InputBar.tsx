@@ -4,7 +4,6 @@
  * Chat input bar with auto-grow textarea, Ctrl+Enter send, character count.
  */
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Spinner from "@/components/ui/Spinner";
 
@@ -21,7 +20,6 @@ export default function InputBar({ onSend, isStreaming, placeholder = "Ask Atlas
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
-  const searchParams = useSearchParams();
 
   // Auto-grow textarea (max 5 lines ≈ 120px)
   useEffect(() => {
@@ -33,19 +31,12 @@ export default function InputBar({ onSend, isStreaming, placeholder = "Ask Atlas
 
   // Prepopulate from query string if available
   useEffect(() => {
-    // Read from window.location directly to ensure we get the fresh soft-navigated URL
-    const rawParams = new URLSearchParams(window.location.search);
-    const qRaw = rawParams.get("q");
-    const qNext = searchParams?.get("q");
-    
-    const q = qRaw || qNext;
-    
+    const q = new URLSearchParams(window.location.search).get("q");
     if (q) {
       setValue((prev) => prev || q);
-      // Clean up the URL so refreshing doesn't keep pasting the query
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [searchParams]);
+  }, []);
 
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
