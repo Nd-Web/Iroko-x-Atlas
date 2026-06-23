@@ -5,8 +5,9 @@
  */
 
 /** Base URL for the Iroko AtlasCore REST API */
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "https://iroko-x-atlas.onrender.com";
+export const API_BASE = (
+  process.env.NEXT_PUBLIC_API_URL ?? "https://iroko-x-atlas.onrender.com"
+).replace(/\/+$/, "");
 
 /**
  * Name of the httpOnly cookie that stores the JWT access token.
