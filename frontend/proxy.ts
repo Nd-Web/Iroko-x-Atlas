@@ -30,10 +30,11 @@ export function proxy(request: NextRequest) {
   const isInviteRoute         = pathname.startsWith("/invite");
 
   const isHomePage        = pathname === "/";
-  const isPublicAuthRoute = isLoginRoute || isForgotPasswordRoute || isResetPasswordRoute || isHomePage;
+  const isRequestDemo     = pathname === "/request-demo";
+  const isPublicAuthRoute = isLoginRoute || isForgotPasswordRoute || isResetPasswordRoute || isHomePage || isRequestDemo;
 
   // Authenticated users should not see the login/forgot-password pages (but can still view the homepage)
-  if (token && isPublicAuthRoute && !isHomePage) {
+  if (token && isPublicAuthRoute && !isHomePage && !isRequestDemo) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
