@@ -29,10 +29,11 @@ export function proxy(request: NextRequest) {
   const isResetPasswordRoute  = pathname.startsWith("/reset-password");
   const isInviteRoute         = pathname.startsWith("/invite");
 
-  const isPublicAuthRoute = isLoginRoute || isForgotPasswordRoute || isResetPasswordRoute;
+  const isHomePage        = pathname === "/";
+  const isPublicAuthRoute = isLoginRoute || isForgotPasswordRoute || isResetPasswordRoute || isHomePage;
 
-  // Authenticated users should not see the login/forgot-password pages
-  if (token && isPublicAuthRoute) {
+  // Authenticated users should not see the login/forgot-password pages (but can still view the homepage)
+  if (token && isPublicAuthRoute && !isHomePage) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

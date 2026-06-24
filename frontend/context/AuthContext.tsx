@@ -82,8 +82,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Silently sets sessionExpired if the token has expired mid-session.
    */
   const refreshUser = useCallback(async () => {
+    // Never redirect away from public pages — just resolve silently
+    const p = typeof window !== "undefined" ? window.location.pathname : "";
+    const isPublicPage =
+      p === "/" ||
+      p === "/login" ||
+      p.startsWith("/forgot-password") ||
+      p.startsWith("/reset-password") ||
+      p.startsWith("/invite");
+
     try {
       const res = await fetch("/api/auth/me", { cache: "no-store" });
+      if (!res.ok && isPublicPage) { setUserLoading(false); return; }
       if (res.ok) {
         const data: User = await res.json();
         setUser(data);
@@ -92,17 +102,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         wasAuthenticated.current = false;
 
-        // Public auth routes never need a redirect on 401 — the user
-        // is supposed to be unauthenticated there.
-        const publicRoutes = ["/login", "/forgot-password", "/reset-password", "/invite"];
-        const isPublic = publicRoutes.some((r) =>
-          window.location.pathname.startsWith(r)
-        );
+        const p = window.location.pathname;
+        const isPublic =
+          p === "/" ||
+          p === "/login" ||
+          p.startsWith("/forgot-password") ||
+          p.startsWith("/reset-password") ||
+          p.startsWith("/invite");
 
-        // On any protected page, a 401 means the cookie is present but the
-        // JWT is invalid or expired on the backend. We must DELETE the cookie
-        // first — otherwise proxy.ts sees the cookie and redirects /login back
-        // to /dashboard, creating an infinite loop.
         if (!isPublic) {
           try { await fetch("/api/auth/logout", { method: "DELETE" }); } catch { /* noop */ }
           window.location.href = "/login";
