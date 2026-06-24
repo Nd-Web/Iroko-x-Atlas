@@ -87,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isPublicPage =
       p === "/" ||
       p === "/login" ||
+      p === "/request-demo" ||
       p.startsWith("/forgot-password") ||
       p.startsWith("/reset-password") ||
       p.startsWith("/invite");
@@ -106,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const isPublic =
           p === "/" ||
           p === "/login" ||
+          p === "/request-demo" ||
           p.startsWith("/forgot-password") ||
           p.startsWith("/reset-password") ||
           p.startsWith("/invite");
