@@ -160,13 +160,13 @@ export default function HomePage() {
                 <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </Link>
-            <Link href="/dashboard" style={{
+            <Link href="/request-demo" style={{
               display: "inline-flex", alignItems: "center",
               fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.55)", textDecoration: "none",
               padding: "11px 22px", borderRadius: 10,
               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)",
             }}>
-              View live demo
+              Request live demo
             </Link>
           </div>
 
