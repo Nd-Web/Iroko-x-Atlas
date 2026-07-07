@@ -61,12 +61,13 @@ export default function DocumentsContent({
           setDocs(
             d.documents.map((doc) => ({
               id: doc.id,
-              name: doc.filename,
+              name: doc.filename ?? doc.title ?? "Untitled document",
               size: doc.file_size ?? 0,
               type: doc.file_type ?? "",
-              status: normaliseStatus(doc.status),
+              status: normaliseStatus(doc.status ?? "indexing"),
               connector: doc.source ?? doc.department ?? "Local",
-              updated_at: doc.updated_at,
+              // The backend list response has created_at only — updated_at may be absent.
+              updated_at: doc.updated_at ?? doc.created_at ?? new Date().toISOString(),
             }))
           );
           onCountChange?.(d.total ?? d.documents.length, true);
@@ -163,7 +164,7 @@ export default function DocumentsContent({
               </div>
               <h4 className="text-[13px] font-semibold text-[#E5E7EB] truncate mb-1" title={doc.name}>{doc.name}</h4>
               <div className="text-[11px] text-[#4B5563] flex justify-between">
-                <span>{formatBytes(doc.size)}</span>
+                <span>{doc.size ? formatBytes(doc.size) : "—"}</span>
                 <span>{doc.connector}</span>
               </div>
               <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
@@ -203,7 +204,7 @@ export default function DocumentsContent({
                     </span>
                   </td>
                   <td className="px-5 py-3.5 text-[12px] text-[#6B7280]">{doc.connector}</td>
-                  <td className="px-5 py-3.5 text-[12px] text-[#6B7280] text-right font-mono">{formatBytes(doc.size)}</td>
+                  <td className="px-5 py-3.5 text-[12px] text-[#6B7280] text-right font-mono">{doc.size ? formatBytes(doc.size) : "—"}</td>
                 </tr>
               ))}
             </tbody>

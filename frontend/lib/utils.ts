@@ -33,7 +33,8 @@ export function formatDate(date: string | Date): string {
  * Return a human-readable relative time string such as "2 hours ago",
  * "just now", or "3 days ago".
  */
-export function formatRelativeTime(date: string | Date): string {
+export function formatRelativeTime(date: string | Date | null | undefined): string {
+  if (!date) return "unknown";
   const d = typeof date === "string" ? new Date(date) : date;
   if (isNaN(d.getTime())) return "unknown";
 

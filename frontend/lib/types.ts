@@ -172,19 +172,21 @@ export interface ConversationsResponse {
 /** A single document record as returned by /api/documents and /api/documents/{id} */
 export interface DocumentResponse {
   id: string;
+  title?: string | null;
   filename: string;
   file_type: string | null;
-  doc_type: string | null;
+  doc_type?: string | null;
   department: string | null;
   status: string;
-  language: string | null;
-  classification: string | null;
+  language?: string | null;
+  classification?: string | null;
   file_size: number | null;
-  page_count: number | null;
-  source: string | null;
+  page_count?: number | null;
+  source?: string | null;
   blob_url: string | null;
   created_at: string;
-  updated_at: string;
+  /** Not returned by the list endpoint — fall back to created_at. */
+  updated_at?: string;
 }
 
 /** Response body for GET /api/documents */
