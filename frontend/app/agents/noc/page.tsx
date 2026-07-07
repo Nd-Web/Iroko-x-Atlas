@@ -4,6 +4,7 @@
  * Live alerts (via /api/alerts), SLA indicators, and an embedded query interface.
  */
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useChat } from "@/hooks/useChat";
@@ -75,6 +76,7 @@ function SLAGauge({ sla }: { sla: typeof SLA_INDICATORS[0] }) {
 }
 
 export default function NOCPage() {
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
   const [alerts, setAlerts] = useState<NocAlert[]>(FALLBACK_ALERTS);
   const [isLive, setIsLive] = useState(false);
@@ -135,6 +137,15 @@ export default function NOCPage() {
   const chatMessages = messages.map(m => ({
     id: m.id, role: m.role, content: m.content,
     reasoning_steps: m.trace?.map(t => ({ agent: t.agent, status: "done" as const, message: t.description, timestamp: t.timestamp })),
+    // The backend emits either {document_id, document_title} or {source, excerpt} — accept both.
+    citations: m.citations?.map(c => {
+      const cc = c as { document_id?: string; document_title?: string; source?: string; excerpt?: string };
+      return {
+        document_id: cc.document_id ?? cc.source ?? "unknown",
+        document_title: cc.document_title ?? cc.source ?? cc.document_id ?? "Source document",
+        excerpt: cc.excerpt,
+      };
+    }),
     timestamp: m.timestamp,
   }));
 
@@ -191,7 +202,12 @@ export default function NOCPage() {
                 const col = SEV_COLOR[alert.severity] ?? "#6B7280";
                 return (
                   <div key={alert.id} className="flex items-start gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors" style={{ borderLeft: `3px solid ${col}` }}>
-                    <div className="flex-1 min-w-0">
+                    {/* Clicking the alert asks Iroko about it — see insight → ask why → cited answer */}
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      title="Ask Iroko about this alert"
+                      onClick={() => router.push(`/chat?q=${encodeURIComponent(`Tell me more about this alert and what we should do: ${alert.title}`)}`)}
+                    >
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ color: col, background: `${col}15` }}>{alert.severity}</span>
                         <span className="text-[9.5px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full border border-blue-400/20">Internal</span>

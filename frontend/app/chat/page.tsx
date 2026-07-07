@@ -203,6 +203,15 @@ export default function ChatPage() {
     role: m.role,
     content: m.content,
     reasoning_steps: m.trace?.map(t => ({ agent: t.agent, status: "done" as const, message: t.description, timestamp: t.timestamp })),
+    // The backend emits either {document_id, document_title} or {source, excerpt} — accept both.
+    citations: m.citations?.map(c => {
+      const cc = c as { document_id?: string; document_title?: string; source?: string; excerpt?: string };
+      return {
+        document_id: cc.document_id ?? cc.source ?? "unknown",
+        document_title: cc.document_title ?? cc.source ?? cc.document_id ?? "Source document",
+        excerpt: cc.excerpt,
+      };
+    }),
     timestamp: m.timestamp,
   }));
 

@@ -8,11 +8,18 @@ import type { AgentStep } from "./api";
 
 // ── Core chat types ───────────────────────────────────────────────────────────
 
+export interface ChatCitation {
+  document_id: string;
+  document_title: string;
+  excerpt?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   reasoning_steps?: AgentStep[];
+  citations?: ChatCitation[];
   risk_score?: number;
   timestamp: string;
 }
@@ -82,25 +89,27 @@ export interface SuggestedPrompt {
   icon?: string;
 }
 
+// The four canonical demo questions — each is guaranteed to hit rich seeded
+// data (Ikeja RCA, vendor contracts, MoMo complaints, NCC QoS return).
 export const DEFAULT_SUGGESTED_PROMPTS: SuggestedPrompt[] = [
   {
-    label: "Summarise today's alerts",
-    query: "Give me a summary of all active alerts generated today",
-    icon: "🔔",
+    label: "What caused the Ikeja outage?",
+    query: "What caused the Ikeja cluster power outage and what did it cost us?",
+    icon: "⚡",
   },
   {
-    label: "Any SLA breaches this week?",
-    query: "Are there any SLA breaches or violations reported this week?",
-    icon: "📋",
-  },
-  {
-    label: "Show high-risk contracts",
-    query: "Which contracts have a high risk score or are expiring soon?",
+    label: "Contracts expiring soon",
+    query: "Which vendor contracts expire in the next 90 days?",
     icon: "📄",
   },
   {
-    label: "Network incidents today",
-    query: "What network incidents or outages have been reported today?",
-    icon: "📡",
+    label: "MoMo complaints trend",
+    query: "Summarise the MoMo deduction complaints trend in Lagos this quarter",
+    icon: "📈",
+  },
+  {
+    label: "NCC QoS return readiness",
+    query: "Are we ready to submit the NCC QoS return for Q1 2026?",
+    icon: "📋",
   },
 ];

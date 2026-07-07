@@ -5,6 +5,7 @@
  * Uses react-markdown + remark-gfm for proper rendering.
  */
 import React, { useState } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn, formatRelativeTime, getRiskHex, getRiskLabel } from "@/lib/utils";
@@ -234,6 +235,26 @@ export default function MessageBubble({ message }: Props) {
             </div>
           )}
         </div>
+
+        {/* Cited sources — chips linking into the document library */}
+        {!isUser && message.citations && message.citations.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 mt-1 max-w-full">
+            <span className="text-[10px] font-bold text-[#4B5563] uppercase tracking-wider mr-0.5">Sources</span>
+            {message.citations.map((c) => (
+              <Link
+                key={c.document_id + c.document_title}
+                href="/documents"
+                title={c.excerpt ?? c.document_title}
+                className="inline-flex items-center gap-1 max-w-[220px] px-2 py-1 rounded-lg text-[10.5px] font-semibold text-[#93C5FD] bg-[#3B7BF6]/10 border border-[#3B7BF6]/20 hover:bg-[#3B7BF6]/20 transition-colors"
+              >
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="shrink-0">
+                  <path d="M7.5 1H3A1.5 1.5 0 0 0 1.5 2.5v7A1.5 1.5 0 0 0 3 11h6A1.5 1.5 0 0 0 10.5 9.5V4l-3-3Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                </svg>
+                <span className="truncate">{c.document_title}</span>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* Actions row: Reasoning + PDF Export */}
         <div className="flex items-center gap-4 mt-1">

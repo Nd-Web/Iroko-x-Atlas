@@ -1777,6 +1777,9 @@ const WebIntelDashboard: FC = () => {
   const [auditLoading, setAuditLoading] = useState(true);
   const [auditError,   setAuditError]   = useState<string | null>(null);
 
+  // Operation-level stats — "what does Iroko know about my operation right now"
+  const [opsStats, setOpsStats] = useState<{ alerts: number | null; docs: number | null }>({ alerts: null, docs: null });
+
   // Fetch signals
   const fetchSignals = useCallback(async () => {
     setSignalsLoading(true);
@@ -1811,6 +1814,19 @@ const WebIntelDashboard: FC = () => {
     fetchSignals();
     fetchAudit();
   }, [fetchSignals, fetchAudit]);
+
+  // Fetch live operation counts (same-origin proxies, cookie auth) — non-critical.
+  useEffect(() => {
+    fetch("/api/alerts?status=new&limit=1")
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((d: { total?: number }) => setOpsStats(s => ({ ...s, alerts: d.total ?? null })))
+      .catch(() => {});
+    fetch("/api/documents?page_size=1")
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((d: { total?: number; documents?: unknown[] }) =>
+        setOpsStats(s => ({ ...s, docs: d.total ?? d.documents?.length ?? null })))
+      .catch(() => {});
+  }, []);
 
   // Derived counts for tab badges
   const totalSignals = signals
@@ -1870,6 +1886,12 @@ const WebIntelDashboard: FC = () => {
 
           {/* Stats pills */}
           <div className="flex items-center gap-2 flex-wrap justify-end">
+            {opsStats.docs !== null && (
+              <StatPill label="Documents Indexed" value={opsStats.docs} color="#10B981" loading={false} />
+            )}
+            {opsStats.alerts !== null && (
+              <StatPill label="Open Alerts" value={opsStats.alerts} color="#F59E0B" loading={false} />
+            )}
             <StatPill label="Total Signals"  value={totalSignals} color={BRAND.blue}   loading={signalsLoading} />
             <StatPill label="Fraud Alerts"   value={fraudCount}   color="#EF4444"      loading={signalsLoading} />
             <StatPill label="Audit Entries"  value={auditCount}   color={BRAND.purple} loading={auditLoading}  />

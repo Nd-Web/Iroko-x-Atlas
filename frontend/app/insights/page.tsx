@@ -119,7 +119,19 @@ export default function InsightsPage() {
   useEffect(() => {
     setLoading(true);
     apiFetch<{ insights: Insight[] }>("/api/insights")
-      .then(d => { if (d.insights?.length) setInsights(d.insights); })
+      .then(d => {
+        if (d.insights?.length) {
+          // The backend reuses Alert rows, whose statuses are new/acknowledged/
+          // resolved/dismissed — normalise onto the insight vocabulary so the
+          // status filter and card actions always match.
+          const normaliseInsightStatus = (s: string): Insight["status"] => {
+            if (s === "acknowledged" || s === "resolved" || s === "reviewed") return "reviewed";
+            if (s === "dismissed") return "dismissed";
+            return "new";
+          };
+          setInsights(d.insights.map(i => ({ ...i, status: normaliseInsightStatus(String(i.status)) })));
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

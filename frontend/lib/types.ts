@@ -184,6 +184,8 @@ export interface DocumentResponse {
   page_count?: number | null;
   source?: string | null;
   blob_url: string | null;
+  tags?: string[] | null;
+  chunk_count?: number | null;
   created_at: string;
   /** Not returned by the list endpoint — fall back to created_at. */
   updated_at?: string;

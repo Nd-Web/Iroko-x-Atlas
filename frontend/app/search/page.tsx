@@ -2,14 +2,13 @@
 /**
  * app/search/page.tsx — Semantic document search.
  */
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
+import Link from "next/link";
 import AppShell from "@/components/layout/AppShell";
 import { apiFetch } from "@/lib/api";
-import { cn, truncate } from "@/lib/utils";
+import { truncate } from "@/lib/utils";
 
 interface SearchResult { content: string; source: string; score: number; document_id: string; }
-
-const CATEGORIES = ["All", "SLA", "Compliance", "Contracts", "Network", "Fraud"];
 
 function ResultCard({ result, query }: { result: SearchResult; query: string }) {
   const pct = Math.round(result.score * 100);
@@ -32,7 +31,7 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
       </p>
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
         <span className="text-[10px] text-[#4B5563] font-mono">id:{result.document_id.slice(0, 10)}…</span>
-        <button className="text-[11px] font-semibold text-[#3B7BF6] hover:text-[#60A5FA] transition-colors">Open →</button>
+        <Link href="/documents" className="text-[11px] font-semibold text-[#3B7BF6] hover:text-[#60A5FA] transition-colors">Open →</Link>
       </div>
     </div>
   );
@@ -56,13 +55,12 @@ const MOCK_RESULTS: SearchResult[] = [
 
 export default function SearchPage() {
   const [q, setQ] = useState("");
-  const [cat, setCat] = useState("All");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [took, setTook] = useState(0);
 
-  const run = useCallback(async (query: string, category: string) => {
+  const run = useCallback(async (query: string) => {
     const trimmed = query.trim();
     if (!trimmed) return;
     setLoading(true); setSearched(true);
@@ -70,7 +68,7 @@ export default function SearchPage() {
     try {
       const d = await apiFetch<{ results: SearchResult[] }>("/api/search", {
         method: "POST",
-        body: JSON.stringify({ query: trimmed, category: category === "All" ? undefined : category, top_k: 10 }),
+        body: JSON.stringify({ query: trimmed, top_k: 10 }),
       });
       setResults(d.results ?? []); setTook(Date.now() - t0);
     } catch {
@@ -81,7 +79,7 @@ export default function SearchPage() {
   return (
     <AppShell title="Search" subtitle="Semantic search across your document corpus">
       {/* Search bar */}
-      <form onSubmit={e => { e.preventDefault(); run(q, cat); }}>
+      <form onSubmit={e => { e.preventDefault(); run(q); }}>
         <div className="relative flex items-center rounded-2xl border transition-all duration-200 focus-within:border-[#3B7BF6]/50 focus-within:shadow-[0_0_28px_rgba(59,123,246,0.12)]"
           style={{ background: "#0F1320", borderColor: "rgba(255,255,255,0.08)" }}>
           <svg className="absolute left-5 text-[#6B7280]" width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -99,21 +97,12 @@ export default function SearchPage() {
         </div>
       </form>
 
-      {/* Category chips + stats */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {CATEGORIES.map(c => (
-          <button key={c} onClick={() => { setCat(c); if (searched) run(q, c); }}
-            className={cn("px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all border",
-              cat === c
-                ? "bg-[#3B7BF6] text-white border-[#3B7BF6]"
-                : "text-[#9CA3AF] border-white/[0.08] bg-white/[0.02] hover:text-white hover:border-white/20")}>
-            {c}
-          </button>
-        ))}
-        {searched && !loading && (
-          <span className="ml-auto text-[11px] text-[#6B7280]">{results.length} result{results.length !== 1 ? "s" : ""} · {took}ms</span>
-        )}
-      </div>
+      {/* Result stats */}
+      {searched && !loading && (
+        <div className="flex items-center justify-end">
+          <span className="text-[11px] text-[#6B7280]">{results.length} result{results.length !== 1 ? "s" : ""} · {took}ms</span>
+        </div>
+      )}
 
       {/* Content */}
       {loading ? (
@@ -141,7 +130,7 @@ export default function SearchPage() {
           </div>
           <div className="grid grid-cols-2 gap-2 w-full max-w-lg">
             {STARTERS.map(s => (
-              <button key={s} onClick={() => { setQ(s); run(s, cat); }}
+              <button key={s} onClick={() => { setQ(s); run(s); }}
                 className="text-left px-4 py-3 rounded-xl text-[12px] text-[#9CA3AF] hover:text-[#E5E7EB] border border-white/[0.06] hover:border-white/15 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
                 🔍 {s}
               </button>
