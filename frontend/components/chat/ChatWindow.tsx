@@ -65,9 +65,17 @@ export default function ChatWindow({ conversationId, messages, isStreaming }: Pr
         <EmptyState />
       ) : (
         <>
-          {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
-          ))}
+          {messages.map((msg, i) => {
+            // The most recent user message before this one — gives PDF exports
+            // the real question that was asked.
+            const prevUser = messages
+              .slice(0, i)
+              .reverse()
+              .find((m) => m.role === "user");
+            return (
+              <MessageBubble key={msg.id} message={msg} contextQuery={prevUser?.content} />
+            );
+          })}
           {isStreaming && <TypingIndicator />}
         </>
       )}

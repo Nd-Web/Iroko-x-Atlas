@@ -14,6 +14,8 @@ import type { ChatMessage } from "@/types/chat";
 
 interface Props {
   message: ChatMessage;
+  /** The user question this assistant message answered — included in PDF exports. */
+  contextQuery?: string;
 }
 
 function RiskBadge({ score }: { score: number }) {
@@ -145,7 +147,7 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components
   ),
 };
 
-export default function MessageBubble({ message }: Props) {
+export default function MessageBubble({ message, contextQuery }: Props) {
   const isUser = message.role === "user";
   const [reasoningOpen, setReasoningOpen] = useState(false);
   const hasSteps = message.reasoning_steps && message.reasoning_steps.length > 0;
@@ -165,9 +167,10 @@ export default function MessageBubble({ message }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: "Context derived from chat",
+          query: contextQuery ?? "Context derived from chat",
           original_response: message.content,
-          trace_id: message.id
+          trace_id: message.id,
+          citations: message.citations ?? [],
         })
       });
 
