@@ -13,25 +13,17 @@ import { useChat } from "@/hooks/useChat";
 import { formatRelativeTime, cn } from "@/lib/utils";
 import { DEFAULT_SUGGESTED_PROMPTS } from "@/types/chat";
 import type { ChatMessage } from "@/hooks/useChat";
-import Link from "next/link";
 
 // ── Conversation list sidebar ─────────────────────────────────────────────────
 
 interface ConvSummary { id: string; title: string; updatedAt: string; pinned?: boolean; }
 
-const MOCK_CONVS: ConvSummary[] = [
-  { id: "c1", title: "Kuda MFB CAR vs CBN 10% minimum",            updatedAt: new Date(Date.now() - 120000).toISOString() },
-  { id: "c2", title: "CBN AML/CFT Q2 quarterly return guidance",    updatedAt: new Date(Date.now() - 3600000).toISOString(), pinned: true },
-  { id: "c3", title: "CBN lending exposure limit analysis",         updatedAt: new Date(Date.now() - 7200000).toISOString() },
-  { id: "c4", title: "Carbon MFB capital adequacy breach review",   updatedAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: "c5", title: "MoMo fraud risk assessment",                updatedAt: new Date(Date.now() - 172800000).toISOString() },
-];
-
-function ConvSidebar({ activeId, onSelect, onNew }: {
+function ConvSidebar({ convs, convsLoading, activeId, onSelect, onNew }: {
+  convs: ConvSummary[]; convsLoading: boolean;
   activeId: string | null; onSelect: (id: string) => void; onNew: () => void;
 }) {
   const [search, setSearch] = useState("");
-  const filtered = MOCK_CONVS.filter(c => c.title.toLowerCase().includes(search.toLowerCase()));
+  const filtered = convs.filter(c => c.title.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="w-[280px] shrink-0 flex flex-col border-r border-white/[0.06] h-full" style={{ background: "#08090F" }}>
@@ -65,7 +57,9 @@ function ConvSidebar({ activeId, onSelect, onNew }: {
           <ConvItem key={c.id} conv={c} active={activeId === c.id} onClick={() => onSelect(c.id)} />
         ))}
         {filtered.length === 0 && (
-          <p className="text-[11px] text-[#4B5563] text-center py-6">No conversations found</p>
+          <p className="text-[11px] text-[#4B5563] text-center py-6">
+            {convsLoading ? "Loading conversations…" : "No conversations yet — ask your first question"}
+          </p>
         )}
       </div>
     </div>
@@ -111,7 +105,7 @@ function ReasoningPanel({ query, open, onClose, recentInsights }: {
               <ReasoningChain query={query} onComplete={() => {}} onError={() => {}} />
             ) : (
               <div className="space-y-2">
-                {["Carbon MFB CAR breach — severity 9/10", "CBN AML return due in 14 days", "Kuda lending limit approaching CBN threshold"].map((insight, i) => (
+                {["IHS Ikeja Cluster SLA breach — ₦2.66M exposure", "NCC QoS return Q1 2026 due in 12 days", "ATC Lagos Zone 2 contract expires in 28 days"].map((insight, i) => (
                   <div key={i} className="p-3 rounded-xl border border-white/[0.06]" style={{ background: "#0F1320" }}>
                     <div className="w-2 h-2 rounded-full mb-2" style={{ background: i === 0 ? "#EF4444" : i === 1 ? "#F59E0B" : "#3B7BF6" }} />
                     <p className="text-[11px] text-[#9CA3AF] leading-relaxed">{insight}</p>
@@ -128,11 +122,62 @@ function ReasoningPanel({ query, open, onClose, recentInsights }: {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+// Canonical starter question per agent for "/chat?agent=…" deep links.
+const AGENT_PROMPTS: Record<string, string> = {
+  compliance: "Are we ready to submit the NCC QoS return for Q1 2026?",
+  watchdog: "Give me a summary of all active alerts generated today",
+  noc: "What network incidents or outages have been reported today?",
+  contracts: "Which vendor contracts expire in the next 90 days?",
+  care: "Summarise the MoMo deduction complaints trend in Lagos this quarter",
+  field: "Which site visits are outstanding for the Ikeja cluster?",
+};
+
 export default function ChatPage() {
-  const { messages, isLoading, sendMessage, clearChat } = useChat();
-  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+  const { messages, isLoading, error, sendMessage, clearChat, loadConversation, conversationId } = useChat();
   const [reasoningOpen, setReasoningOpen] = useState(false);
   const [lastQuery, setLastQuery] = useState<string | null>(null);
+  const [convs, setConvs] = useState<ConvSummary[]>([]);
+  const [convsLoading, setConvsLoading] = useState(true);
+
+  // Load the conversation list from the backend (same-origin proxy, cookie auth).
+  const refreshConvs = useCallback(async () => {
+    try {
+      const res = await fetch("/api/atlas/conversations");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const items: ConvSummary[] = (data.conversations ?? []).map(
+        (c: { id: string; title: string; updated_at?: string; created_at?: string }) => ({
+          id: String(c.id),
+          title: c.title || "Untitled conversation",
+          updatedAt: c.updated_at ?? c.created_at ?? new Date().toISOString(),
+        }),
+      );
+      setConvs(items);
+    } catch {
+      // Sidebar list is non-critical — leave whatever we have.
+    } finally {
+      setConvsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { refreshConvs(); }, [refreshConvs]);
+
+  // Deep link: /chat?conv=<id> (via /chat/[id]) loads that conversation.
+  useEffect(() => {
+    const conv = new URLSearchParams(window.location.search).get("conv");
+    if (conv) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      loadConversation(conv);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // After a send completes (a new conversation may have been created), refresh the list.
+  const prevLoadingRef = useRef(false);
+  useEffect(() => {
+    if (prevLoadingRef.current && !isLoading) refreshConvs();
+    prevLoadingRef.current = isLoading;
+  }, [isLoading, refreshConvs]);
 
   const handleSend = useCallback(async (content: string) => {
     setLastQuery(content);
@@ -140,9 +185,14 @@ export default function ChatPage() {
     await sendMessage(content);
   }, [sendMessage]);
 
+  const handleSelectConv = useCallback((id: string) => {
+    setLastQuery(null);
+    setReasoningOpen(false);
+    loadConversation(id);
+  }, [loadConversation]);
+
   const handleNew = useCallback(() => {
     clearChat();
-    setActiveConvId(null);
     setLastQuery(null);
     setReasoningOpen(false);
   }, [clearChat]);
@@ -157,15 +207,31 @@ export default function ChatPage() {
   }));
 
   return (
-    <AppShell title="Atlas Chat" subtitle="Multi-agent enterprise intelligence">
+    <AppShell title="Iroko Chat" subtitle="Multi-agent enterprise intelligence">
       <div className="flex h-full -m-4 md:-m-6 lg:-m-7 overflow-hidden" style={{ height: "calc(100vh - 64px)" }}>
         {/* Conversation sidebar */}
-        <ConvSidebar activeId={activeConvId} onSelect={setActiveConvId} onNew={handleNew} />
+        <ConvSidebar convs={convs} convsLoading={convsLoading} activeId={conversationId} onSelect={handleSelectConv} onNew={handleNew} />
 
         {/* Main chat area */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <AgentStatusBar />
-          <ChatWindow conversationId={activeConvId ?? "new"} messages={chatMessages} isStreaming={isLoading} />
+          <ChatWindow conversationId={conversationId ?? "new"} messages={chatMessages} isStreaming={isLoading} />
+
+          {/* Error banner — a failed request must never look like a silent freeze */}
+          {error && !isLoading && (
+            <div className="mx-4 mb-2 flex items-center justify-between gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-[12.5px] font-semibold text-red-300">Iroko couldn&apos;t complete that request</p>
+                <p className="text-[11px] text-red-400/80 truncate">{error}</p>
+              </div>
+              {lastQuery && (
+                <button onClick={() => handleSend(lastQuery)}
+                  className="shrink-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold text-white bg-red-500/80 hover:bg-red-500 transition-colors">
+                  Retry
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Suggested prompts when empty */}
           {messages.length === 0 && !isLoading && (
@@ -180,7 +246,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          <InputBar onSend={handleSend} isStreaming={isLoading} />
+          <InputBar onSend={handleSend} isStreaming={isLoading} autoSendQuery agentPrompts={AGENT_PROMPTS} />
         </div>
 
         {/* Reasoning panel */}

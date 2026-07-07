@@ -52,7 +52,7 @@ const BrandPanel = () => (
           Iroko AI
         </div>
         <div className="text-[11px] text-white/40 leading-none">
-          Fintech RegIntel
+          Document Intelligence
         </div>
       </div>
     </div>
@@ -64,9 +64,9 @@ const BrandPanel = () => (
         <span className="text-[#818CF8]">Cite-first answers.</span>
       </h2>
       <p className="text-sm text-white/50 leading-[1.7] mb-11 max-w-[330px]">
-        Purpose-built for African fintechs — multilingual AI that grounds every
-        answer in your verified regulatory corpus and logs every interaction for
-        CBN/SEC audit.
+        Built for large organisations — multilingual AI that grounds every
+        answer in your organisation&apos;s verified documents and logs every
+        interaction to an audit-grade trail.
       </p>
 
       <div className="flex flex-col gap-[22px]">
@@ -76,8 +76,8 @@ const BrandPanel = () => (
             desc: "Every response backed by verifiable document evidence",
           },
           {
-            title: "Audit-grade compliance logging",
-            desc: "Cryptographically chained records for CBN, SEC and NDPA",
+            title: "Audit-grade logging",
+            desc: "Cryptographically chained records — regulator-ready (NDPA, CBN/SEC)",
           },
           {
             title: "Multilingual by design",
@@ -193,7 +193,7 @@ export default function LoginPage() {
                   Iroko AI
                 </div>
                 <div className="text-[10px] text-gray-400 mt-0.5">
-                  Fintech RegIntel
+                  Document Intelligence
                 </div>
               </div>
             </div>

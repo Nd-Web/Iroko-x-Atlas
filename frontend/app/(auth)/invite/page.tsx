@@ -4,7 +4,7 @@
  * Redirect handler for the legacy query-string invite URL format:
  *   /invite?token=<token>
  *
- * AtlasCore sends email links as /invite/<token> (path parameter), which is
+ * the backend sends email links as /invite/<token> (path parameter), which is
  * handled by app/(auth)/invite/[token]/page.tsx.
  *
  * This page exists as a fallback — if someone arrives with ?token=xxx in the

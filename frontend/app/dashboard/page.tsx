@@ -37,7 +37,7 @@ export default function DashboardPage() {
       <div className="flex flex-col flex-1 min-w-0 lg:pl-[240px] overflow-hidden">
         <Topbar
           title="Web Intelligence"
-          subtitle="Live signals · CBN/SEC compliance · Audit trail"
+          subtitle="Live signals · Document &amp; ops intelligence · Audit trail"
           onMenuClick={() => setSidebarOpen(true)}
         />
 

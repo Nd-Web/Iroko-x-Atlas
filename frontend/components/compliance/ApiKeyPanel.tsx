@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiPost, getUser, setUser } from "@/lib/api";
 
 export default function ApiKeyPanel() {
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -10,21 +9,33 @@ export default function ApiKeyPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load any existing key from the session user (same-origin proxy, cookie auth).
   useEffect(() => {
-    const user = getUser();
-    if (user?.api_key) setApiKey(user.api_key as string);
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) return;
+        const user = await res.json();
+        if (user?.api_key) setApiKey(user.api_key as string);
+      } catch {
+        // Non-critical — the user can still generate a key.
+      }
+    })();
   }, []);
 
   async function handleGenerate() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiPost<{ api_key: string }>("/api/auth/generate-key");
-      setApiKey(res.api_key);
+      // Same-origin Next.js proxy forwards the httpOnly cookie as a Bearer token.
+      const res = await fetch("/api/auth/generate-key", { method: "POST" });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      const data: { api_key: string } = await res.json();
+      setApiKey(data.api_key);
       setVisible(true);
-      // keep localStorage in sync
-      const user = getUser() ?? {};
-      setUser({ ...user, api_key: res.api_key });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to generate key");
     } finally {

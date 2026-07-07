@@ -5,6 +5,13 @@ import { useState, useEffect } from "react";
 import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
 import ComplianceChecker from "@/components/compliance/ComplianceChecker";
 import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
+import { toast } from "sonner";
+
+const DSR_QUEUE = [
+  { id: "DSR-0041", type: "Right to access",        daysLeft: 1, status: "urgent"  },
+  { id: "DSR-0040", type: "Right to erasure",       daysLeft: 3, status: "pending" },
+  { id: "DSR-0039", type: "Right to rectification", daysLeft: 4, status: "pending" },
+];
 
 export default function ComplianceReportsPage() {
   const [modal, setModal] = useState<{type: "report" | "dpia" | "dsr", title?: string} | null>(null);
@@ -17,13 +24,13 @@ export default function ComplianceReportsPage() {
   }, [modal]);
 
   return (
-    <AppShell title="Compliance reports" subtitle="CBN returns · SEC filings · NDPA audit · DPIA tracker · DSR queue">
+    <AppShell title="Compliance reports" subtitle="NCC returns · NDPA audit · FCCPC reports · DPIA tracker · DSR queue">
       {/* Live compliance checker */}
       <div className="mb-8">
         <div className="mb-4">
           <h2 className="text-[15px] font-semibold text-gray-900 tracking-[-0.01em]">Live Compliance Check</h2>
           <p className="text-[13px] text-gray-400 mt-[3px]">
-            Check any action, product, or policy against CBN · NCC · SEC · NDPA regulations in real time
+            Check any action, product, or policy against NCC · NDPA · FCCPC regulations in real time
           </p>
         </div>
         <ComplianceChecker />
@@ -79,7 +86,7 @@ export default function ComplianceReportsPage() {
               DPIA Wizard
             </h2>
             <p className="text-[13px] text-gray-400 leading-relaxed max-w-[500px] m-0">
-              Start a new Data Protection Impact Assessment. Field mapping is automated via the Atlas Scribe agent.
+              Start a new Data Protection Impact Assessment. Field mapping is automated via the Iroko Scribe agent.
             </p>
           </div>
         </div>
@@ -103,11 +110,7 @@ export default function ComplianceReportsPage() {
         </div>
         <div className="overflow-x-auto">
           <div className="min-w-[600px] md:min-w-0">
-            {[
-              { id: "DSR-0041", type: "Right to access",        daysLeft: 1, status: "urgent"  },
-              { id: "DSR-0040", type: "Right to erasure",       daysLeft: 3, status: "pending" },
-              { id: "DSR-0039", type: "Right to rectification", daysLeft: 4, status: "pending" },
-            ].map((dsr, i, arr) => (
+            {DSR_QUEUE.map((dsr, i, arr) => (
               <div
                 key={dsr.id}
                 className={`flex items-center justify-between px-5 py-[13px] gap-4${i < arr.length - 1 ? " border-b border-border-default" : ""}`}
@@ -157,20 +160,120 @@ export default function ComplianceReportsPage() {
               </button>
             </div>
             
-            <div className="px-5 py-6">
-              <p className="text-[13px] text-gray-600 leading-[1.6]">
-                This is a placeholder for the {modal.type === "report" ? "Report viewer" : modal.type === "dpia" ? "DPIA initiation process" : "DSR response editor"}.
-              </p>
+            <div className="px-5 py-6 overflow-y-auto">
+              {modal.type === "report" && (() => {
+                const filing = REGULATORY_FILINGS.find(f => f.name === modal.title);
+                if (!filing) return <p className="text-[13px] text-gray-600">Report not found.</p>;
+                return (
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <div>
+                        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-[3px]">Regulator</div>
+                        <div className="text-[13px] font-medium text-gray-800">{filing.regulator}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-[3px]">Due</div>
+                        <div className="text-[13px] font-medium text-gray-800">{filing.due}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-[3px]">Status</div>
+                        <div className="text-[13px] font-medium text-gray-800">{STATUS_LABELS[filing.status]}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-[3px]">Owner</div>
+                        <div className="text-[13px] font-medium text-gray-800">{filing.owner ?? "Unassigned"}</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Completion</span>
+                        <span className="text-xs text-gray-400">{filing.progress}%</span>
+                      </div>
+                      <div className="h-[5px] bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${filing.progress}%`, background: filing.progressColor }} />
+                      </div>
+                    </div>
+                    {filing.summary && (
+                      <p className="text-[13px] text-gray-600 leading-[1.6] m-0">{filing.summary}</p>
+                    )}
+                    {filing.nextStep && (
+                      <div className="px-[14px] py-[10px] bg-brand-50 border border-brand-100 rounded-lg">
+                        <div className="text-[11px] font-semibold text-brand-700 uppercase tracking-wide mb-[3px]">Next step</div>
+                        <p className="text-[13px] text-brand-800 leading-[1.5] m-0">{filing.nextStep}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {modal.type === "dpia" && (
+                <div className="flex flex-col gap-4">
+                  <p className="text-[13px] text-gray-600 leading-[1.6] m-0">
+                    Describe the processing activity. The Iroko Scribe agent maps NDPA Article 24 fields
+                    from your document corpus automatically.
+                  </p>
+                  <div>
+                    <label className="label-base block mb-1.5">Processing activity</label>
+                    <input type="text" className="input-base w-full" placeholder="e.g. MoMo Analytics Pipeline v2" />
+                  </div>
+                  <div>
+                    <label className="label-base block mb-1.5">Owning department</label>
+                    <input type="text" className="input-base w-full" placeholder="e.g. Customer Experience" />
+                  </div>
+                </div>
+              )}
+
+              {modal.type === "dsr" && (() => {
+                const dsr = DSR_QUEUE.find(d => d.id === modal.title);
+                if (!dsr) return <p className="text-[13px] text-gray-600">Request not found.</p>;
+                return (
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <div>
+                        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-[3px]">Request</div>
+                        <div className="text-[13px] font-mono font-medium text-brand-700">{dsr.id}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-[3px]">Type</div>
+                        <div className="text-[13px] font-medium text-gray-800">{dsr.type}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-[3px]">Deadline</div>
+                        <div className={`text-[13px] font-medium ${dsr.daysLeft <= 1 ? "text-danger-700" : "text-gray-800"}`}>
+                          {dsr.daysLeft} day{dsr.daysLeft !== 1 ? "s" : ""} left (NDPA 30-day window)
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-[3px]">Status</div>
+                        <div className="text-[13px] font-medium text-gray-800">{dsr.status === "urgent" ? "Urgent" : "Pending"}</div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="label-base block mb-1.5">Response</label>
+                      <textarea
+                        className="input-base w-full"
+                        rows={4}
+                        defaultValue={`Dear data subject,\n\nWe have processed your ${dsr.type.toLowerCase()} request (${dsr.id}) in line with the Nigeria Data Protection Act 2023.`}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="flex justify-end gap-2 px-5 py-4 border-t border-border-default shrink-0">
               <button className="btn-secondary" onClick={() => setModal(null)}>Close</button>
-              <button 
-                className="btn-primary"
-                onClick={() => setModal(null)}
-              >
-                {modal.type === "dsr" ? "Submit Response" : "Continue"}
-              </button>
+              {modal.type !== "report" && (
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    toast.success(modal.type === "dsr" ? `${modal.title} response queued for DPO review` : "DPIA draft created — assigned to the DPO queue");
+                    setModal(null);
+                  }}
+                >
+                  {modal.type === "dsr" ? "Submit Response" : "Create DPIA draft"}
+                </button>
+              )}
             </div>
           </div>
         </div>

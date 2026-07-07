@@ -5,7 +5,7 @@
  * Boardroom-ready Web Intelligence panel for Iroko AI.
  * Three tabs:
  *   1. Live Signals     — 5-category signal feed from Bright Data
- *   2. Verdict & Compliance — CBN/SEC compliance checker + PDF brief download
+ *   2. Verdict & Compliance — NCC/NDPA compliance checker + PDF brief download
  *   3. Audit Trail      — Hash-chained audit log with integrity verification
  *
  * Auth: reads Bearer token from localStorage["iroko_token"].
@@ -766,14 +766,14 @@ const VerdictCard: FC<{ output: VerdictOutput }> = ({ output }) => {
           </div>
         )}
 
-        {/* CBN/SEC References */}
+        {/* NCC/NDPA References */}
         {nccRefs.length > 0 && (
           <div>
             <p
               className="text-[11px] font-bold uppercase tracking-wider mb-2"
               style={{ color: "#4B5563" }}
             >
-              CBN/SEC Regulation References
+              NCC/NDPA Regulation References
             </p>
             <div className="flex flex-wrap gap-2">
               {nccRefs.map((ref, i) => (
@@ -1070,7 +1070,7 @@ const ComplianceTab: FC = () => {
             ncc_refs:            activeVerdict.ncc_refs ?? [],
             decision_text:       activeDecision,
             summary:             activeVerdict.finding?.summary ?? "",
-            workspace_name:      "African Fintech Platform",
+            workspace_name:      "Enterprise Telecom Operations",
           }),
         });
         if (!res.ok) {
@@ -1092,8 +1092,8 @@ const ComplianceTab: FC = () => {
       const a   = document.createElement("a");
       a.href     = url;
       a.download = downloadVerdict
-        ? `iroko-cbn-compliance-${downloadVerdict.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.pdf`
-        : `iroko-fintech-regulatory-brief-${new Date().toISOString().slice(0, 10)}.pdf`;
+        ? `iroko-compliance-${downloadVerdict.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.pdf`
+        : `iroko-document-intelligence-brief-${new Date().toISOString().slice(0, 10)}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -1137,10 +1137,10 @@ const ComplianceTab: FC = () => {
             </div>
             <div>
               <h3 className="text-[14px] font-bold" style={{ color: "#E5E7EB" }}>
-                CBN/SEC Compliance Check
+                NCC/NDPA Compliance Check
               </h3>
               <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>
-                Evaluate a decision against the live CBN/SEC regulatory corpus
+                Evaluate a decision against the live NCC/NDPA regulatory corpus
               </p>
             </div>
           </div>
@@ -1171,7 +1171,7 @@ const ComplianceTab: FC = () => {
               ref={textareaRef}
               value={decisionText}
               onChange={handleInput}
-              placeholder="Describe a decision or planned action for compliance review…&#10;&#10;e.g. &quot;We plan to increase our single-borrower lending limit to ₦50M for SME customers in Q3 2026 under CBN Microfinance Policy Section 5.&quot;"
+              placeholder="Describe a decision or planned action for compliance review…&#10;&#10;e.g. &quot;We plan to launch a new analytics pipeline on MoMo transaction data next quarter — what NDPA obligations apply?&quot;"
               className="w-full resize-none rounded-xl text-[13px] leading-relaxed transition-all duration-200 placeholder:text-[#374151] focus:outline-none"
               style={{
                 minHeight:    "140px",
@@ -1226,7 +1226,7 @@ const ComplianceTab: FC = () => {
                     <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.3)" strokeWidth="2"/>
                     <path d="M7 1.5a5.5 5.5 0 0 1 5.5 5.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
-                  Analysing against CBN/SEC corpus…
+                  Analysing against NCC/NDPA corpus…
                 </>
               ) : (
                 <>
@@ -1863,7 +1863,7 @@ const WebIntelDashboard: FC = () => {
                 Web Intelligence
               </h1>
               <p className="text-[13px] mt-0.5" style={{ color: "#6B7280" }}>
-                Boardroom-ready regulatory intelligence for African fintechs — powered by Bright Data
+                Boardroom-ready document &amp; operations intelligence for enterprise telecoms — powered by Bright Data
               </p>
             </div>
           </div>

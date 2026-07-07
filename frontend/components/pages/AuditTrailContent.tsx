@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getAuthToken } from "@/lib/auth";
-import { API_BASE } from "@/lib/config";
 
 const ENTRIES = [
-  { id: "AUD-29041", user: "Adaeze Okonkwo",  query: "What is Kuda MFB's current CAR vs CBN minimum?",          agent: "Strategist", chunks: 5, latency: "1.84s", time: "09:41:22" },
-  { id: "AUD-29040", user: "Adaeze Okonkwo",  query: "Fine exposure if lending limit breached for 48h?",         agent: "Analyst",    chunks: 3, latency: "2.31s", time: "09:43:07" },
-  { id: "AUD-29039", user: "Tunde Adeyemi",   query: "List DPIAs without DPO approval",                          agent: "Researcher", chunks: 4, latency: "1.62s", time: "09:10:55" },
-  { id: "AUD-29038", user: "Ifeoma Chukwu",   query: "Generate draft CBN AML/CFT quarterly return Q2 2026",      agent: "Scribe",     chunks: 9, latency: "4.12s", time: "08:54:31" },
-  { id: "AUD-29037", user: "Bukola Adesanya", query: "Current CBN lending rate cap for microfinance banks",       agent: "Researcher", chunks: 2, latency: "0.94s", time: "08:32:14" },
-  { id: "AUD-29036", user: "Musa Garba",      query: "KYC coverage report for Moniepoint Q2 onboarding cohort",  agent: "Researcher", chunks: 1, latency: "0.71s", time: "07:18:40" },
+  { id: "AUD-29041", user: "Chukwuemeka Obi",   query: "What caused the Ikeja cluster power outage and what did it cost us?", agent: "Strategist", chunks: 5, latency: "1.84s", time: "09:41:22" },
+  { id: "AUD-29040", user: "Babatunde Afolabi", query: "Penalty exposure if IHS misses the diesel backup SLA again?",         agent: "Analyst",    chunks: 3, latency: "2.31s", time: "09:43:07" },
+  { id: "AUD-29039", user: "Adaeze Nwosu",      query: "List DPIAs without DPO approval",                                     agent: "Researcher", chunks: 4, latency: "1.62s", time: "09:10:55" },
+  { id: "AUD-29038", user: "Adaeze Nwosu",      query: "Generate draft NCC QoS quarterly return Q1 2026",                     agent: "Scribe",     chunks: 9, latency: "4.12s", time: "08:54:31" },
+  { id: "AUD-29037", user: "Ngozi Eze",         query: "Summarise the MoMo deduction complaints trend in Lagos this quarter", agent: "Researcher", chunks: 2, latency: "0.94s", time: "08:32:14" },
+  { id: "AUD-29036", user: "Chukwuemeka Obi",   query: "Which vendor contracts expire in the next 90 days?",                  agent: "Researcher", chunks: 1, latency: "0.71s", time: "07:18:40" },
 ];
 
 const AGENT_COLORS: Record<string, string> = {
@@ -22,12 +20,12 @@ const AGENT_COLORS: Record<string, string> = {
 };
 
 const SOURCES: Record<string, string[]> = {
-  "AUD-29041": ["Kuda MFB CAR Report Q2-2026", "CBN Microfinance Capital Guidelines 2022", "Monthly CAR computation sheet", "CBN FinA submission log"],
-  "AUD-29040": ["CBN MFB-001 Exposure Limits", "Lending batch #7 exposure summary", "CBN fine schedule 2024"],
-  "AUD-29039": ["DPIA register 2026", "Credit Scoring ML Pipeline DPIA v3", "NDPA Art. 34 checklist", "DPO approval log"],
-  "AUD-29038": ["CBN AML/CFT template Q2-2026", "Transaction monitoring reports", "STR log Q2-2026", "Data transfer agreements", "Q1-2026 AML return", "DPIAs (×3)", "CBN Lending Return Q1-2026", "NDPA correspondence log", "Legal opinions archive"],
-  "AUD-29037": ["CBN lending rate circular Apr-2026", "MFB lending rate tracker"],
-  "AUD-29036": ["Moniepoint KYC coverage report", "Onboarding cohort analysis Q2-2026"],
+  "AUD-29041": ["Ikeja Cluster RCA Power Outage Q1 2026", "TowerCo IHS Nigeria Tower Lease Agreement", "NCC QoS Quarterly Return Q4 2025", "Incident register INC-2026-IKJ-0147", "Cluster KPI snapshot Feb 2026"],
+  "AUD-29040": ["TowerCo IHS Nigeria Tower Lease Agreement", "Ikeja Cluster RCA Power Outage Q1 2026", "SLA penalty computation sheet"],
+  "AUD-29039": ["DPIA register 2026", "MoMo Analytics Pipeline DPIA v2", "NDPA Article 24 Processing Record", "DPO approval log"],
+  "AUD-29038": ["NCC QoS Quarterly Return Q4 2025", "Cluster availability logs Q1-2026", "Ikeja Cluster RCA Power Outage Q1 2026", "Drop-call rate reports", "Regional KPI summaries", "Complaint correlation extract", "NCC submission template", "Legal review notes", "Prior-quarter return archive"],
+  "AUD-29037": ["Customer Complaints MoMo Deductions Q1 2026", "CX resolution-rate tracker"],
+  "AUD-29036": ["Enterprise Customer SLA Register EBU"],
 };
 
 const STATS = [
@@ -46,16 +44,14 @@ export default function AuditTrailContent() {
   const [exported, setExported] = useState(false);
   const [entries, setEntries] = useState<Entry[]>(ENTRIES);
   const [isLive, setIsLive] = useState(false);
+  const [search, setSearch] = useState("");
   const fetchedRef = useRef(false);
 
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    const token = getAuthToken();
-    if (!token) return;
-    fetch(`${API_BASE}/api/v1/audit/entries`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    // Same-origin Next.js proxy — forwards the httpOnly cookie as a Bearer token.
+    fetch(`/api/v1/intel/audit-trail`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then((data: unknown) => {
         const rows: Entry[] = (Array.isArray(data) ? data : (data as { entries?: unknown[] })?.entries ?? [])
@@ -87,6 +83,35 @@ export default function AuditTrailContent() {
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [selected]);
+
+  const filteredEntries = entries.filter((e) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return [e.id, e.user, e.query, e.agent].some(v => v.toLowerCase().includes(q));
+  });
+
+  /** Short display name, tolerant of single-word users (e.g. "System"). */
+  const shortName = (user: string) => {
+    const [first, second] = user.split(" ");
+    return second ? `${first} ${second[0]}.` : first;
+  };
+
+  /** Real CSV export of the currently displayed rows. */
+  const handleExport = () => {
+    const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const header = ["Entry ID", "User", "Query", "Agent", "Sources", "Latency", "Time"];
+    const rows = filteredEntries.map(e => [e.id, e.user, e.query, e.agent, e.chunks, e.latency, e.time]);
+    const csv = [header, ...rows].map(r => r.map(esc).join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "iroko-audit-trail.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    setExported(true);
+    setTimeout(() => setExported(false), 2500);
+  };
 
   return (
     <>
@@ -135,10 +160,16 @@ export default function AuditTrailContent() {
             <p className="text-xs text-gray-400 mt-[2px]">NDPA-grade · cryptographically chained</p>
           </div>
           <div className="flex gap-2">
-            <input type="text" placeholder="Search log…" className="input-base flex-1 md:w-[190px] py-[7px] px-3" />
+            <input
+              type="text"
+              placeholder="Search log…"
+              className="input-base flex-1 md:w-[190px] py-[7px] px-3"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
             <button
               className={`btn-secondary py-[7px] px-3 text-[12.5px] shrink-0 ${exported ? "text-success-700" : ""}`}
-              onClick={() => { setExported(true); setTimeout(() => setExported(false), 2500); }}
+              onClick={handleExport}
             >
               {exported ? "Exported ✓" : "Export CSV"}
             </button>
@@ -153,7 +184,10 @@ export default function AuditTrailContent() {
               ))}
             </div>
 
-            {entries.map((e) => (
+            {filteredEntries.length === 0 && (
+              <p className="text-[12.5px] text-gray-400 text-center py-8">No log entries match &quot;{search}&quot;</p>
+            )}
+            {filteredEntries.map((e) => (
               <div
                 key={e.id}
                 onClick={() => setSelected(e)}
@@ -161,7 +195,7 @@ export default function AuditTrailContent() {
                 style={{ gridTemplateColumns: COL }}
               >
                 <span className="font-mono text-[11px] text-brand-700 font-semibold">{e.id}</span>
-                <span className="text-xs text-gray-600">{e.user.split(" ")[0]} {e.user.split(" ")[1][0]}.</span>
+                <span className="text-xs text-gray-600">{shortName(e.user)}</span>
                 <span className="text-[13px] text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">{e.query}</span>
                 <span className="text-[11px] font-semibold px-2 py-[2px] rounded-full w-fit" style={{ color: AGENT_COLORS[e.agent], background: `${AGENT_COLORS[e.agent]}14` }}>{e.agent}</span>
                 <span className="text-[13px] text-gray-500 text-center">{e.chunks}</span>

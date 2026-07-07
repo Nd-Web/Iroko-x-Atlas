@@ -2,7 +2,7 @@
  * app/(auth)/invite/[token]/page.tsx
  *
  * Invite acceptance page — handles the path-parameter URL format that
- * AtlasCore includes in invitation emails:
+ * the backend includes in invitation emails:
  *
  *   https://iroko-frontend.azurewebsites.net/invite/<token>
  *

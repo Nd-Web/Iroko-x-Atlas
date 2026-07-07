@@ -3,8 +3,9 @@
  * components/pages/DocumentsContent.tsx — Enterprise document library.
  * File grid/list, upload zone, status tracking, and connector filtering.
  */
-import { useState, useEffect } from "react";
-import { apiFetch } from "@/lib/api";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { toast } from "sonner";
+import { documentsService } from "@/services/documents.service";
 import { cn, formatBytes, formatRelativeTime } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -21,27 +22,92 @@ interface Doc {
 
 const CONNECTORS = ["All", "SharePoint", "OneDrive", "S3", "Local", "Google Drive"];
 
-export default function DocumentsContent() {
+// The 8 canonical indexed documents — shown when the API is not yet seeded
+const MOCK_DOCS: Doc[] = [
+  { id: "d1", name: "Ikeja_Cluster_RCA_Power_Outage_Q1_2026.pdf",      size: 4200000,  type: "application/pdf", status: "indexed", connector: "SharePoint", updated_at: new Date().toISOString() },
+  { id: "d2", name: "TowerCo_IHS_Nigeria_Tower_Lease_Agreement.pdf",   size: 11800000, type: "application/pdf", status: "indexed", connector: "SharePoint", updated_at: new Date(Date.now() - 3600000).toISOString() },
+  { id: "d3", name: "Customer_Complaints_MoMo_Deductions_Q1_2026.xlsx", size: 3600000, type: "spreadsheet",     status: "indexed", connector: "S3",         updated_at: new Date(Date.now() - 7200000).toISOString() },
+  { id: "d4", name: "NCC_QoS_Quarterly_Return_Q4_2025.pdf",            size: 2900000,  type: "application/pdf", status: "indexed", connector: "OneDrive",   updated_at: new Date(Date.now() - 10800000).toISOString() },
+  { id: "d5", name: "NDPA_Article_24_Processing_Record.pdf",           size: 1700000,  type: "application/pdf", status: "indexed", connector: "OneDrive",   updated_at: new Date(Date.now() - 21600000).toISOString() },
+  { id: "d6", name: "Ericsson_RAN_Maintenance_SLA_2026.pdf",           size: 8400000,  type: "application/pdf", status: "indexed", connector: "SharePoint", updated_at: new Date(Date.now() - 43200000).toISOString() },
+  { id: "d7", name: "Kano_Kaduna_Fibre_Route_BoQ.xlsx",                size: 5200000,  type: "spreadsheet",     status: "indexed", connector: "Local",      updated_at: new Date(Date.now() - 86400000).toISOString() },
+  { id: "d8", name: "Enterprise_Customer_SLA_Register_EBU.xlsx",       size: 2300000,  type: "spreadsheet",     status: "indexed", connector: "S3",         updated_at: new Date(Date.now() - 172800000).toISOString() },
+];
+
+function normaliseStatus(status: string): Doc["status"] {
+  if (status === "indexed" || status === "completed") return "indexed";
+  if (status === "error" || status === "failed") return "error";
+  return "indexing";
+}
+
+export default function DocumentsContent({
+  onCountChange,
+}: {
+  onCountChange?: (count: number, live: boolean) => void;
+}) {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    setLoading(true);
-    apiFetch<{ documents: Doc[] }>("/api/documents")
-      .then(d => { if (d.documents) setDocs(d.documents); })
+  const loadDocs = useCallback((showSpinner = true) => {
+    if (showSpinner) setLoading(true);
+    documentsService
+      .listDocuments({ page_size: 100 })
+      .then((d) => {
+        if (d.documents && d.documents.length > 0) {
+          setDocs(
+            d.documents.map((doc) => ({
+              id: doc.id,
+              name: doc.filename,
+              size: doc.file_size ?? 0,
+              type: doc.file_type ?? "",
+              status: normaliseStatus(doc.status),
+              connector: doc.source ?? doc.department ?? "Local",
+              updated_at: doc.updated_at,
+            }))
+          );
+          onCountChange?.(d.total ?? d.documents.length, true);
+        } else {
+          setDocs(MOCK_DOCS);
+          onCountChange?.(MOCK_DOCS.length, false);
+        }
+      })
       .catch(() => {
         // Mock data if API is not yet seeded
-        setDocs([
-          { id: "d1", name: "CBN_Microfinance_Directive_Q2_2026.pdf", size: 14500000, type: "application/pdf", status: "indexed", connector: "SharePoint", updated_at: new Date().toISOString() },
-          { id: "d2", name: "CBN_BOFIA_2020_Compliance_Guide.pdf", size: 8200000, type: "application/pdf", status: "indexed", connector: "OneDrive", updated_at: new Date(Date.now()-3600000).toISOString() },
-          { id: "d3", name: "CBN_AML_CFT_Quarterly_Return_Q2_2026.xlsx", size: 4100000, type: "spreadsheet", status: "indexing", connector: "S3", updated_at: new Date(Date.now()-7200000).toISOString() },
-          { id: "d4", name: "CBN_Lending_Exposure_Policy_v3.2.docx", size: 1200000, type: "word", status: "indexed", connector: "Local", updated_at: new Date(Date.now()-86400000).toISOString() },
-        ]);
+        setDocs(MOCK_DOCS);
+        onCountChange?.(MOCK_DOCS.length, false);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (showSpinner) setLoading(false);
+      });
+  }, [onCountChange]);
+
+  useEffect(() => {
+    loadDocs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    const toastId = toast.loading(`Uploading ${file.name}…`);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      await documentsService.uploadDocument(formData);
+      toast.success(`${file.name} uploaded — indexing started`, { id: toastId });
+      loadDocs(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed. Please try again.", { id: toastId });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const filtered = docs.filter(d => filter === "All" || d.connector === filter);
 
@@ -67,9 +133,16 @@ export default function DocumentsContent() {
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
             </button>
           </div>
-          <Button variant="primary" className="gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.docx,.xlsx,.txt,.csv"
+            className="hidden"
+            onChange={handleFileSelected}
+          />
+          <Button variant="primary" className="gap-2" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
-            Upload
+            {uploading ? "Uploading…" : "Upload"}
           </Button>
         </div>
       </div>

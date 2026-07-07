@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { apiFetch } from "@/lib/api";
 import { formatRelativeTime, cn } from "@/lib/utils";
-import { getSeverityColor, getSeverityLabel, INSIGHT_CATEGORIES } from "@/types/insight";
+import { getSeverityColor, getSeverityLabel } from "@/types/insight";
 import type { Insight } from "@/types/insight";
 
 function SeverityBadge({ severity }: { severity: number }) {
@@ -95,18 +95,18 @@ function daysUntil(isoDate: string): number {
   return Math.max(0, Math.round((due.getTime() - now.getTime()) / 86400000));
 }
 
-// CRC renewal: ~30 days out from today
-const CRC_EXPIRY = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-const AML_DUE_DATE = "2026-07-15";
-const amlDays = daysUntil(AML_DUE_DATE);
+// ATC renewal: ~28 days out from today
+const ATC_EXPIRY = new Date(Date.now() + 28 * 86400000).toISOString().slice(0, 10);
+const NCC_DUE_DATE = "2026-07-15";
+const nccDays = daysUntil(NCC_DUE_DATE);
 
 const MOCK_INSIGHTS: Insight[] = [
-  { id: "i1", org_id: null, document_id: null, title: "Carbon MFB CAR breach — capital adequacy ratio below 10% CBN minimum", summary: "Carbon MFB's CAR has dropped to 8.4%, breaching the CBN 10% minimum under BOFIA 2020. Immediate capital injection or loan book reduction required to avoid sanctions.", category: "compliance", severity: 9, agent_source: "WatchdogAgent", status: "new", created_at: new Date(Date.now()-120000).toISOString() },
-  { id: "i2", org_id: null, document_id: null, title: `CBN AML/CFT return submission deadline in ${amlDays} day${amlDays !== 1 ? "s" : ""}`, summary: `Q2 2026 AML/CFT quarterly return is due July 15, 2026. ${amlDays}-day window for final data reconciliation and FinA submission. Risk of ₦500K/day late penalty under CBN ENF-001.`, category: "regulatory", severity: 6, agent_source: "WatchdogAgent", status: "new", created_at: new Date(Date.now()-3600000).toISOString() },
-  { id: "i3", org_id: null, document_id: null, title: "CBN lending limit data discrepancy detected in Q2 2026 submission", summary: "Internal lending data shows single-borrower exposure at ₦52M while submitted return shows ₦48M. This discrepancy could trigger a regulatory inquiry under CBN BOFIA 2020 Section 35.", category: "compliance", severity: 9, agent_source: "AnalystAgent", status: "new", created_at: new Date(Date.now()-7200000).toISOString() },
-  { id: "i4", org_id: null, document_id: null, title: "Loan disbursement anomaly — Duplicate batch #7 entries detected", summary: "Three disbursement entries for the same borrower in batch #7 total ₦47.3M. Pattern may indicate duplicate-processing error or internal fraud. Recommend immediate payment suspension.", category: "fraud", severity: 9, agent_source: "WatchdogAgent", status: "reviewed", created_at: new Date(Date.now()-86400000).toISOString() },
-  { id: "i5", org_id: null, document_id: null, title: "Transaction velocity anomaly — 3 Kuda agent wallets flagged", summary: "3 Kuda agent wallets show 340% above-average transaction velocity in the last 48 hours. Total flagged exposure: ₦31.4M. STR filing recommended per CBN AML/CFT guidelines.", category: "fraud", severity: 7, agent_source: "AnalystAgent", status: "new", created_at: new Date(Date.now()-172800000).toISOString() },
-  { id: "i6", org_id: null, document_id: null, title: "CRC Credit Bureau data agreement — renewal due in 30 days", summary: `The CRC Credit Bureau data processing agreement expires ${CRC_EXPIRY}. Non-renewal would prevent credit bureau checks on new loan applicants, breaching CBN MFB lending guidelines. Renewal negotiation should commence immediately.`, category: "contract", severity: 5, agent_source: "ResearcherAgent", status: "dismissed", created_at: new Date(Date.now()-259200000).toISOString() },
+  { id: "i1", org_id: null, document_id: null, title: "IHS Ikeja Cluster SLA breach — ₦2.66M penalty exposure", summary: "The February feeder outage took Ikeja availability to 82.7%, breaching the IHS diesel backup SLA. Penalty formula: 2% fee reduction per 0.1% below the committed level. Credit claim should be filed with Procurement.", category: "sla", severity: 9, agent_source: "WatchdogAgent", status: "new", created_at: new Date(Date.now()-120000).toISOString() },
+  { id: "i2", org_id: null, document_id: null, title: `NCC QoS return submission deadline in ${nccDays} day${nccDays !== 1 ? "s" : ""}`, summary: `The NCC quality-of-service quarterly return is due ${NCC_DUE_DATE}. Ikeja cluster availability (82.7%) is below the NCC minimum of 95% and must be disclosed with the RCA. Late submission attracts ₦5M per day.`, category: "regulatory", severity: 6, agent_source: "WatchdogAgent", status: "new", created_at: new Date(Date.now()-3600000).toISOString() },
+  { id: "i3", org_id: null, document_id: null, title: "MoMo deduction complaints spike — Lagos +312% vs Q4 2025", summary: "850 MoMo deduction complaints logged in Q1 2026 versus 204 in Q4 2025; disputed amount ₦28.4M. Correlates with the agent reversal pattern flagged by fraud intelligence. FCCPC reporting impact should be assessed.", category: "complaints", severity: 8, agent_source: "AnalystAgent", status: "new", created_at: new Date(Date.now()-7200000).toISOString() },
+  { id: "i4", org_id: null, document_id: null, title: "MoMo agent reversal anomaly — 3 Lagos agent codes flagged", summary: "847 transaction reversals in a 24-hour window traced to 3 agent codes with a 94% reversal rate vs a 0.3% network average. Total value reversed: ₦31.4M. Recommend immediate agent code suspension.", category: "fraud", severity: 9, agent_source: "WatchdogAgent", status: "reviewed", created_at: new Date(Date.now()-86400000).toISOString() },
+  { id: "i5", org_id: null, document_id: null, title: "SIM-swap velocity anomaly — Kano dealer codes +340%", summary: "SIM-swap requests in Kano are running 340% above the 30-day average, concentrated in 4 dealer codes. Pattern precedes MoMo wallet takeover. NDPA breach-notification assessment recommended.", category: "fraud", severity: 7, agent_source: "AnalystAgent", status: "new", created_at: new Date(Date.now()-172800000).toISOString() },
+  { id: "i6", org_id: null, document_id: null, title: "ATC Lagos Zone 2 contract — renewal due in 28 days", summary: `The American Tower Corporation lease (ATC/MTN/LAG/2023-007) expires ${ATC_EXPIRY}, covering 12 sites at ₦19.5M/month. Non-renewal risks service continuity across Lagos Zone 2. Renewal negotiation should commence immediately.`, category: "contract", severity: 5, agent_source: "ResearcherAgent", status: "dismissed", created_at: new Date(Date.now()-259200000).toISOString() },
 ];
 
 export default function InsightsPage() {
@@ -146,9 +146,9 @@ export default function InsightsPage() {
     <AppShell title="Insights" subtitle={`${newCount} new insight${newCount !== 1 ? "s" : ""} from your agents`}>
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Category chips */}
+        {/* Category chips — derived from the loaded data so live categories always match */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {["All", "SLA", "compliance", "contract", "network", "fraud"].map(cat => (
+          {["All", ...Array.from(new Set(insights.map(i => i.category)))].map(cat => (
             <button key={cat} onClick={() => setCategory(cat)}
               className={cn("px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all border",
                 category === cat

@@ -11,15 +11,27 @@ interface Props {
   onSend: (content: string) => void;
   isStreaming: boolean;
   placeholder?: string;
+  /** When true, a `?q=` query param is sent immediately instead of prefilled. */
+  autoSendQuery?: boolean;
+  /** Maps `?agent=<name>` deep links to a canonical starter question (prefilled). */
+  agentPrompts?: Record<string, string>;
 }
 
 const MAX_CHARS = 4000;
 const CHAR_WARN_THRESHOLD = 500;
 
-export default function InputBar({ onSend, isStreaming, placeholder = "Ask Atlas a question…" }: Props) {
+export default function InputBar({
+  onSend,
+  isStreaming,
+  placeholder = "Ask Iroko a question…",
+  autoSendQuery = false,
+  agentPrompts,
+}: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
+  const onSendRef = useRef(onSend);
+  onSendRef.current = onSend;
 
   // Auto-grow textarea (max 5 lines ≈ 120px)
   useEffect(() => {
@@ -29,13 +41,25 @@ export default function InputBar({ onSend, isStreaming, placeholder = "Ask Atlas
     el.style.height = Math.min(el.scrollHeight, 120) + "px";
   }, [value]);
 
-  // Prepopulate from query string if available
+  // Handle deep-link params: `?q=` (prefill, or auto-send when enabled) and
+  // `?agent=` (prefill that agent's canonical starter question).
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get("q");
-    if (q) {
-      setValue((prev) => prev || q);
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("q");
+    const agent = params.get("agent");
+    const agentPrompt =
+      !q && agent && agentPrompts
+        ? agentPrompts[agent.toLowerCase()] ?? null
+        : null;
+    if (q || agentPrompt) {
       window.history.replaceState({}, document.title, window.location.pathname);
+      if (q && autoSendQuery) {
+        onSendRef.current(q.trim());
+      } else {
+        setValue((prev) => prev || (q ?? agentPrompt ?? ""));
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSend = useCallback(() => {

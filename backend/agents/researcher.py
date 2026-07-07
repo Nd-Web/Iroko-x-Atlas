@@ -1,6 +1,6 @@
 """
 Researcher Agent
-Finds and retrieves information from indexed CBN fintech regulatory documents.
+Finds and retrieves information from the organisation's indexed enterprise documents.
 Includes Cohere reranking and corrective-RAG knowledge-gap detection.
 Capability-scoped via CapabilityGuard (Integration 12).
 """
@@ -20,7 +20,7 @@ except ImportError:
     logger.warning("[ResearcherAgent] agent_capabilities not available — scoping unenforced")
 
 _KNOWLEDGE_GAP_MESSAGE = (
-    "Atlas does not have sufficient documents to answer this question confidently. "
+    "Iroko does not have sufficient documents to answer this question confidently. "
     "Consider uploading relevant documents to the knowledge base."
 )
 
@@ -34,17 +34,17 @@ class ResearcherAgent:
     """
 
     SYSTEM_PROMPT = """You are Iroko AI, the Researcher agent. Your job is to find the most
-relevant documents from the African fintech regulatory corpus for any query. Execute hybrid search
+relevant documents from the organisation's enterprise document corpus for any query. Execute hybrid search
 (lexical + vector) against Azure AI Search. Return top-k chunks with relevance scores and
 source metadata. Every chunk you return must have a document ID and section reference.
 If confidence is below threshold, flag for Watchdog review. You do not generate answers —
 you retrieve evidence."""
 
     @kernel_function(
-        description="""Search across all fintech compliance documents for information
-        relevant to a query. Use this to find facts, CBN/SEC regulations, reports, policies,
-        complaints, lending data, or any written information. Returns top matching
-        document excerpts with source citations."""
+        description="""Search across all indexed enterprise documents for information
+        relevant to a query. Use this to find facts, regulatory returns, contracts, RCA
+        reports, policies, complaints, network data, or any written information. Returns
+        top matching document excerpts with source citations."""
     )
     async def search_documents(
         self,
@@ -268,14 +268,16 @@ you retrieve evidence."""
         mock_results = [
             {
                 "document_id": "doc_001",
-                "title": "Carbon MFB CAR Breach — Regulatory Incident Q2 2026",
-                "department": "Compliance",
+                "title": "Ikeja Cluster RCA Power Outage Q1 2026",
+                "department": "Network Operations",
                 "doc_type": "report",
                 "excerpt": (
-                    "Incident Reference: REG-2026-CAR-0147. On 14 May 2026, Carbon MFB's "
-                    "Capital Adequacy Ratio (CAR) dropped to 8.4%, breaching the CBN 10% minimum "
-                    "under BOFIA 2020. Regulatory exposure: NGN 42,000,000 capital shortfall. "
-                    "CBN-MFB-001 reference: Section 5.1. Immediate remediation required."
+                    "Incident Reference: INC-2026-IKJ-0147. On 14 February 2026 at 02:14 WAT, "
+                    "the Ikeja base station cluster experienced a full power outage after an AES "
+                    "utility feeder failure; the generator auto-transfer relay on Tower 4471 (IKJ-001) "
+                    "failed to activate. Six (6) base stations (IKJ-001 to IKJ-006) were down for "
+                    "4.2 hours, impacting approximately 18,000 subscribers. Severity: P1 — Critical. "
+                    "IHS diesel backup SLA breached — exposure NGN 2,660,000."
                 ),
                 "section_heading": "1. INCIDENT SUMMARY",
                 "page_number": 1,
@@ -283,15 +285,16 @@ you retrieve evidence."""
             },
             {
                 "document_id": "doc_002",
-                "title": "CRC Credit Bureau Data Processing Agreement",
-                "department": "Legal/Compliance",
+                "title": "TowerCo IHS Nigeria Tower Lease Agreement",
+                "department": "Procurement",
                 "doc_type": "contract",
                 "excerpt": (
-                    "Contract Reference: CRC/IROKO/2024-001. Parties: CRC Credit Bureau Limited "
-                    "and Iroko AI / African Fintech Platform. Commencement Date: 1 January 2024. "
-                    "Expiry Date: 31 December 2025. Annual Fee: NGN 890,000,000. "
-                    "Data sharing SLA: 99.5% uptime for credit bureau API. "
-                    "Renewal Notice: 60 days prior to expiry date."
+                    "Contract Reference: IHS/MTN/IKJ/2024-001. Parties: IHS Nigeria Limited (Lessor) "
+                    "and MTN Nigeria Communications Plc (Lessee). Commencement Date: 1 July 2024. "
+                    "Expiry Date: 30 June 2026. Monthly Lease Fee: NGN 28,000,000 for six (6) Ikeja "
+                    "macro sites, anchor site Tower 4471 (IKJ-001). Diesel backup power SLA applies; "
+                    "penalty: 2% lease fee reduction per 0.1% below contracted uptime. "
+                    "Renewal Notice: 90 days prior to expiry date."
                 ),
                 "section_heading": "3. CONTRACT TERMS AND CONDITIONS",
                 "page_number": 3,
@@ -299,16 +302,16 @@ you retrieve evidence."""
             },
             {
                 "document_id": "doc_003",
-                "title": "Customer Complaints — Loan Deductions Q2 2026",
+                "title": "Customer Complaints MoMo Deductions Q1 2026",
                 "department": "Customer Experience",
                 "doc_type": "complaint",
                 "excerpt": (
-                    "Report Period: April–June 2026. Total complaints received: 2,847. "
+                    "Report Period: January–March 2026. Total complaints received: 2,847 (+187% vs Q4 2025). "
                     "Total disputed transaction value: NGN 45,000,000. "
-                    "Top complaint category: Unauthorised loan repayment deductions (61%). "
+                    "Top complaint category: Unauthorised MoMo wallet deductions (61%). "
                     "Overall resolution rate: 73% (NGN 32.8M refunded). "
-                    "Highest volume region: Lagos (1,143 complaints, 40.1% of total). "
-                    "Root cause: duplicate disbursement entries in batch #7."
+                    "Primary driver: duplicate MoMo deductions during transaction retries following "
+                    "the Ikeja cluster power outage of 14 February 2026 (Incident INC-2026-IKJ-0147)."
                 ),
                 "section_heading": "2. COMPLAINT ANALYSIS SUMMARY",
                 "page_number": 2,
@@ -316,66 +319,64 @@ you retrieve evidence."""
             },
             {
                 "document_id": "doc_004",
-                "title": "CBN AML/CFT Quarterly Return — Q2 2026",
+                "title": "NCC QoS Quarterly Return Q4 2025",
                 "department": "Legal/Regulatory",
                 "doc_type": "policy",
                 "excerpt": (
-                    "Submission Reference: FINTECH-CBN-AML-Q2-2026. Reporting Period: "
-                    "April–June 2026. KYC Coverage Rate: 98.7% (benchmark: 99.0% — MONITOR). "
-                    "STR Filing Rate: 100% (benchmark: 100% — COMPLIANT). "
-                    "Section 8: Transaction monitoring records must be retained for a "
-                    "minimum of 10 (ten) years from the submission date, per CBN AML/CFT Regulations 2022."
+                    "Submission Reference: NCC/QOS/MTN/Q4-2025/001. Reporting Period: "
+                    "October–December 2025. Network Availability: 99.1% (NCC benchmark: ≥99.0% — COMPLIANT). "
+                    "Call Setup Success Rate: 97.3% (benchmark: ≥95.0% — COMPLIANT). "
+                    "Call Drop Rate: 1.8% (benchmark: ≤3.0% — COMPLIANT). "
+                    "Submitted 13 February 2026 (on time), pursuant to the NCC Quality of Service "
+                    "Regulations 2012 (as amended). Quarterly returns are due 45 days after period end."
                 ),
-                "section_heading": "7. DATA RETENTION AND COMPLIANCE",
-                "page_number": 8,
+                "section_heading": "2. NETWORK PERFORMANCE METRICS",
+                "page_number": 2,
                 "relevance_score": 0.89,
             },
             {
                 "document_id": "doc_005",
-                "title": "NDPA Article 24 Data Processing Record — Fintechs 2026",
+                "title": "NDPA Article 24 Processing Record",
                 "department": "Legal/Regulatory",
                 "doc_type": "policy",
                 "excerpt": (
-                    "Document Reference: FINTECH-NDPA-ART24-2026-001. Prepared by: Data Protection Office. "
-                    "Processing Purpose: Borrower onboarding, loan servicing, fraud prevention. "
-                    "Data Categories: Identity, financial, BVN, credit history. "
-                    "Retention Period: 5 years (under review — CBN AML/CFT 10-year requirement pending). "
-                    "Cross-border transfers: South Africa (group entity), AWS Ireland. "
-                    "Safeguards: Standard Contractual Clauses — DPO sign-off PENDING. "
-                    "DPO Contact: dpo@iroko.ai."
+                    "Document Reference: MTN-NDPA-ART24-2026-001. Prepared by: Data Protection Office. "
+                    "Maintained pursuant to Article 24 of the Nigeria Data Protection Act 2023 — the operator "
+                    "is a Data Controller of Major Importance. Processing Purposes: subscriber onboarding and "
+                    "SIM registration, network operations, MoMo wallet billing, fraud prevention, regulatory reporting. "
+                    "Status: DRAFT — DPO sign-off PENDING. Review Frequency: Annual (review overdue)."
                 ),
-                "section_heading": "4. CROSS-BORDER DATA TRANSFERS",
-                "page_number": 5,
+                "section_heading": "2. PROCESSING PURPOSES",
+                "page_number": 2,
                 "relevance_score": 0.87,
             },
             {
                 "document_id": "doc_006",
-                "title": "Interswitch Group Payment Gateway SLA — 2026",
-                "department": "Legal/Compliance",
+                "title": "Ericsson RAN Maintenance SLA 2026",
+                "department": "Procurement",
                 "doc_type": "contract",
                 "excerpt": (
-                    "Contract Reference: ISW/IROKO/PG/2026-001. Vendor: Interswitch Group Limited. "
-                    "Scope: Payment processing gateway for disbursements and repayments across all fintechs. "
-                    "Monthly Fee: NGN 100,000,000. Response SLA: 4 hours for critical faults. "
-                    "Parts Availability: 99.5% API uptime guaranteed. "
-                    "Contract Expiry: 31 March 2026."
+                    "Contract Reference: ERIC/MTN/RAN/2026-001. Vendor: Ericsson Nigeria Limited. "
+                    "Scope: Corrective and preventive maintenance for 847 base stations nationwide. "
+                    "Response SLA: 4 hours for Critical (P1) faults; resolution within 24 hours. "
+                    "Spare Parts Availability: 95% of critical RAN spares within 2 hours for Lagos sites. "
+                    "Contract Expiry: 31 December 2026."
                 ),
-                "section_heading": "2. SCOPE OF SERVICES",
-                "page_number": 2,
+                "section_heading": "3. SERVICE LEVEL COMMITMENTS",
+                "page_number": 3,
                 "relevance_score": 0.92,
             },
             {
                 "document_id": "doc_007",
-                "title": "CBN Lending Exposure Compliance Report — Q2 2026",
-                "department": "Compliance",
+                "title": "Kano Kaduna Fibre Route BoQ",
+                "department": "Network Operations",
                 "doc_type": "report",
                 "excerpt": (
-                    "Report Reference: FINTECH-CBN-LENDING-Q2-2026. Reporting Period: Q2 2026. "
-                    "Monitored Fintechs: 5 (Kuda MFB, Carbon MFB, Moniepoint, Fairmoney, Opay PSB). "
-                    "Total lending portfolio: NGN 42,000,000,000. "
-                    "Single-obligor breaches detected: 1 (Kuda batch #7). "
-                    "Target completion: July 15, 2026. "
-                    "Current Status: Data reconciliation 67% complete; 3 entities pending sign-off."
+                    "Project Reference: MTN-FIBRE-KNO-KAD-2025-007. Route: Kano City Centre to "
+                    "Kaduna CBD — 287 km, 12 POP sites. Total Project Value: NGN 4,200,000,000. "
+                    "Main Contractor: Julius Berger Nigeria Plc. "
+                    "Target completion: 30 September 2026 (Q3 2026). "
+                    "Current Status: Civil works in progress; 288-core fibre and HDPE microduct installation ongoing."
                 ),
                 "section_heading": "1. PROJECT OVERVIEW",
                 "page_number": 1,
@@ -383,18 +384,19 @@ you retrieve evidence."""
             },
             {
                 "document_id": "doc_008",
-                "title": "CBN Microfinance Licence Register — Active Entities 2026",
-                "department": "Legal/Regulatory",
+                "title": "Enterprise Customer SLA Register EBU",
+                "department": "Enterprise Business",
                 "doc_type": "contract",
                 "excerpt": (
-                    "Document Reference: CBN-MFB-REG-2026. Total Licensed MFBs: 5. "
-                    "Total Combined Loan Portfolio: NGN 890,000,000,000. "
-                    "Minimum CAR: 10%. SLA: Monthly CBN FinA reporting mandatory. "
-                    "Licensed entities: Kuda MFB (CBN/MFB/001), Carbon MFB (CBN/MFB/002), "
-                    "Moniepoint MFB (CBN/MFB/003), FairMoney MFB (CBN/MFB/004), OPay PSB (CBN/PSB/001)."
+                    "Document Reference: MTN-EBU-SLA-REG-2026. Total active enterprise customers: 47. "
+                    "Total annual contract value: NGN 890,000,000. "
+                    "Tier 1 (incl. Zenith Bank Plc): 99.9% contracted uptime; SLA credit 10% of monthly "
+                    "contract value per hour of downtime. "
+                    "SLA credit exposure from the Ikeja cluster outage (14 Feb 2026): NGN 2,100,000 "
+                    "across three Tier-1 customers."
                 ),
-                "section_heading": "3. LICENSING TERMS AND COMPLIANCE REQUIREMENTS",
-                "page_number": 4,
+                "section_heading": "1. OVERVIEW",
+                "page_number": 1,
                 "relevance_score": 0.94,
             },
         ]
@@ -407,13 +409,13 @@ you retrieve evidence."""
 
     def _mock_document_list(self) -> str:
         docs = [
-            {"id": "doc_001", "title": "Carbon MFB CAR Breach — Regulatory Incident Q2 2026", "department": "Compliance", "type": "report"},
-            {"id": "doc_002", "title": "CRC Credit Bureau Data Processing Agreement", "department": "Legal/Compliance", "type": "contract"},
-            {"id": "doc_003", "title": "Customer Complaints — Loan Deductions Q2 2026", "department": "Customer Experience", "type": "complaint"},
-            {"id": "doc_004", "title": "CBN AML/CFT Quarterly Return — Q2 2026", "department": "Legal/Regulatory", "type": "policy"},
-            {"id": "doc_005", "title": "NDPA Article 24 Data Processing Record — Fintechs 2026", "department": "Legal/Regulatory", "type": "policy"},
-            {"id": "doc_006", "title": "Interswitch Group Payment Gateway SLA — 2026", "department": "Legal/Compliance", "type": "contract"},
-            {"id": "doc_007", "title": "CBN Lending Exposure Compliance Report — Q2 2026", "department": "Compliance", "type": "report"},
-            {"id": "doc_008", "title": "CBN Microfinance Licence Register — Active Entities 2026", "department": "Legal/Regulatory", "type": "contract"},
+            {"id": "doc_001", "title": "Ikeja Cluster RCA Power Outage Q1 2026", "department": "Network Operations", "type": "report"},
+            {"id": "doc_002", "title": "TowerCo IHS Nigeria Tower Lease Agreement", "department": "Procurement", "type": "contract"},
+            {"id": "doc_003", "title": "Customer Complaints MoMo Deductions Q1 2026", "department": "Customer Experience", "type": "complaint"},
+            {"id": "doc_004", "title": "NCC QoS Quarterly Return Q4 2025", "department": "Legal/Regulatory", "type": "policy"},
+            {"id": "doc_005", "title": "NDPA Article 24 Processing Record", "department": "Legal/Regulatory", "type": "policy"},
+            {"id": "doc_006", "title": "Ericsson RAN Maintenance SLA 2026", "department": "Procurement", "type": "contract"},
+            {"id": "doc_007", "title": "Kano Kaduna Fibre Route BoQ", "department": "Network Operations", "type": "report"},
+            {"id": "doc_008", "title": "Enterprise Customer SLA Register EBU", "department": "Enterprise Business", "type": "contract"},
         ]
         return json.dumps({"documents": docs, "total": len(docs)})

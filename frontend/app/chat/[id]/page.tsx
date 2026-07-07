@@ -1,16 +1,17 @@
-// /chat/[id]: loads existing conversation by ID; streams response tokens
+// /chat/[id]: deep link to an existing conversation.
 import { redirect } from "next/navigation";
 
 /**
- * Individual conversation route — redirects to the main chat page.
- * The chat page manages conversation state via the useChat hook;
- * deep-linking to a specific conversation ID can be implemented here later.
+ * Individual conversation route — forwards to the main chat page with a
+ * `conv` query param. The chat page loads the conversation history via
+ * GET /api/atlas/conversations/{id}/messages (cookie-auth proxy).
  */
-export default function ConversationPage({
+export default async function ConversationPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  // Redirect to main chat — conversation selection handled client-side
-  redirect("/chat");
+  // In Next.js 16 dynamic routes, params is a Promise
+  const { id } = await params;
+  redirect(`/chat?conv=${encodeURIComponent(id)}`);
 }

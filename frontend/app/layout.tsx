@@ -13,15 +13,79 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://irokoai.site"),
   title: {
-    default: "Iroko AI",
+    default: "Iroko AI · Enterprise Document Intelligence & Real-Time Workflow Analytics",
     template: "%s · Iroko AI",
   },
   description:
-    "Financial Regulation Monitor for African Fintechs — AI platform monitoring CBN/SEC compliance across lending, KYC/AML, and capital adequacy.",
+    "Iroko AI turns your organisation's scattered documents into real-time answers and insight — five AI agents that ingest, understand and analyse enterprise documents, with plain-language Q&A and live workflow analytics. Also available configured for fintech/MFB regulatory compliance (CBN/SEC).",
+  keywords: [
+    // Primary cluster — enterprise document intelligence
+    "enterprise document intelligence",
+    "AI workflow analytics",
+    "real-time document insights",
+    "multi-agent AI Nigeria",
+    "enterprise AI document search",
+    // Secondary cluster — fintech/regulatory compliance (retained)
+    "CBN compliance software",
+    "SEC Nigeria compliance",
+    "fintech regulatory compliance Nigeria",
+    "microfinance bank compliance",
+    "AML CFT monitoring",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "Iroko AI",
+    title: "Iroko AI · Enterprise Document Intelligence",
+    description:
+      "Turn scattered documents into real-time answers. Five AI agents ingest, understand and analyse your organisation's documents — with cited answers and live workflow analytics.",
+    url: "https://irokoai.site",
+  },
+  twitter: {
+    card: "summary",
+    title: "Iroko AI · Enterprise Document Intelligence",
+    description:
+      "Turn scattered documents into real-time answers. Five AI agents ingest, understand and analyse your organisation's documents — with cited answers and live workflow analytics.",
+  },
   icons: {
     icon: "/icon.png",
   },
+};
+
+// Organization structured data — document intelligence leads; compliance is
+// listed as an additional offering (not the primary description).
+const ORG_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Iroko AI",
+  url: "https://irokoai.site",
+  description:
+    "Iroko AI is an enterprise document intelligence and real-time workflow analytics platform. Five AI agents ingest, understand and analyse an organisation's documents, answering staff questions in plain language with cited evidence.",
+  makesOffer: [
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Enterprise document intelligence & workflow analytics",
+        description:
+          "Document ingestion, understanding, real-time analytics and contextual Q&A for large organisations.",
+      },
+    },
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Fintech & MFB regulatory compliance (CBN/SEC)",
+        description:
+          "The compliance configuration of the engine for Nigerian microfinance banks and fintechs — regulatory monitoring, filings and audit-grade logging.",
+      },
+    },
+  ],
+  award: [
+    "4th place of 200+ teams — TeKnowledge × Microsoft Agentic AI Hackathon Finale",
+    "Best Student Award — YPIT Artificial Future Hackathon",
+  ],
 };
 
 export default function RootLayout({
@@ -32,6 +96,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}
+        />
         <QueryProvider>
           <Toaster
             position="bottom-right"

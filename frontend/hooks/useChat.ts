@@ -48,6 +48,10 @@ export interface UseChatReturn {
   error: string | null;
   sendMessage: (content: string) => Promise<void>;
   clearChat: () => void;
+  /** Load an existing conversation's history from the backend. */
+  loadConversation: (conversationId: string) => Promise<void>;
+  /** ID of the conversation currently loaded (null for a fresh chat). */
+  conversationId: string | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -63,6 +67,7 @@ export function useChat(): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const conversationIdRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -78,6 +83,7 @@ export function useChat(): UseChatReturn {
         }
         if (parsed.conversationId) {
           conversationIdRef.current = parsed.conversationId;
+          setConversationId(parsed.conversationId);
         }
       }
     } catch (e) {
@@ -200,6 +206,7 @@ export function useChat(): UseChatReturn {
       if (completionData) {
         conversationIdRef.current =
           completionData.conversation_id ?? conversationIdRef.current;
+        setConversationId(conversationIdRef.current);
 
         setMessages((prev) =>
           prev.map((m) =>
@@ -243,10 +250,63 @@ export function useChat(): UseChatReturn {
     setError(null);
     setIsLoading(false);
     conversationIdRef.current = null;
+    setConversationId(null);
     sessionStorage.removeItem("iroko_chat_state");
   }, []);
 
-  return { messages, isLoading, error, sendMessage, clearChat };
+  /**
+   * Load an existing conversation's history via the Next.js proxy
+   * (GET /api/atlas/conversations/{id}/messages — cookie auth, same origin).
+   */
+  const loadConversation = useCallback(async (id: string) => {
+    abortRef.current?.abort();
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/atlas/conversations/${id}/messages`);
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      const loaded: ChatMessage[] = (data.messages ?? []).map(
+        (m: {
+          id: string | number;
+          role: "user" | "assistant";
+          content: string;
+          agent_trace?: AgentTraceStep[];
+          citations?: Citation[];
+          created_at?: string;
+        }) => ({
+          id: String(m.id ?? msgId()),
+          role: m.role,
+          content: m.content,
+          timestamp: m.created_at ?? new Date().toISOString(),
+          citations: m.citations ?? undefined,
+          trace: m.agent_trace ?? undefined,
+        }),
+      );
+      conversationIdRef.current = id;
+      setConversationId(id);
+      setMessages(loaded);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to load conversation.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return {
+    messages,
+    isLoading,
+    error,
+    sendMessage,
+    clearChat,
+    loadConversation,
+    conversationId,
+  };
 }
 
 export default useChat;

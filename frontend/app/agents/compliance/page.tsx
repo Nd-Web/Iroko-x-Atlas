@@ -4,17 +4,17 @@ import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
 import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
 
 const STATS = [
-  { label: "Open DSRs",           value: "3",  sub: "data subject requests",      accent: "#F79009", color: "#F79009" },
-  { label: "Pending DPIAs",       value: "2",  sub: "awaiting DPO sign-off",      accent: "#4A55D4", color: "#4A55D4" },
-  { label: "CBN Filings due 30d", value: "2",  sub: "Lending & AML returns due",  accent: "#F04438", color: "#F04438" },
-  { label: "Monitored Fintechs",  value: "5",  sub: "Kuda · Carbon · Moniepoint", accent: "#17B26A", color: "#17B26A" },
+  { label: "Open DSRs",           value: "3",     sub: "subscriber data requests",     accent: "#F79009", color: "#F79009" },
+  { label: "Pending DPIAs",       value: "2",     sub: "awaiting DPO sign-off",        accent: "#4A55D4", color: "#4A55D4" },
+  { label: "NCC filings due 30d", value: "2",     sub: "QoS & incident returns due",   accent: "#F04438", color: "#F04438" },
+  { label: "Ikeja availability",  value: "82.7%", sub: "vs NCC minimum 95%",           accent: "#17B26A", color: "#17B26A" },
 ];
 
 export default function ComplianceAgentPage() {
   return (
     <AppShell
-      title="Fintech Compliance Agent"
-      subtitle="CBN · SEC · NDPA · DPO console · DPIA wizard · filing history"
+      title="Regulatory Compliance Agent"
+      subtitle="NCC · NDPA · FCCPC · DPO console · DPIA wizard · filing history"
       actions={
         <Link href="/chat?agent=Compliance" className="btn-primary py-2 px-[14px] text-[13px] no-underline">
           Ask Compliance Agent →
@@ -78,10 +78,10 @@ export default function ComplianceAgentPage() {
           </div>
           <div className="py-2">
             {[
-              { name: "Credit Scoring ML Pipeline v3",  lawful: "Legitimate interest", risk: "High",   status: "in-review" },
-              { name: "KYC Biometric Verification Flow", lawful: "Legal obligation",    risk: "High",   status: "draft"     },
-              { name: "Loan Repayment Behaviour Model",  lawful: "Contract",            risk: "Medium", status: "approved"  },
-              { name: "Savings Analytics Dashboard v2",  lawful: "Legitimate interest", risk: "Low",    status: "approved"  },
+              { name: "MoMo Analytics Pipeline v3",           lawful: "Legitimate interest", risk: "High",   status: "in-review" },
+              { name: "SIM Registration Biometric Flow",       lawful: "Legal obligation",    risk: "High",   status: "draft"     },
+              { name: "Subscriber Usage Behaviour Model",      lawful: "Contract",            risk: "Medium", status: "approved"  },
+              { name: "CX Complaints Dashboard v2",            lawful: "Legitimate interest", risk: "Low",    status: "approved"  },
             ].map((d, i, arr) => {
               const st = {
                 "in-review": { color: "var(--color-info-700)",    bg: "var(--color-info-50)",    label: "In review" },
@@ -124,9 +124,9 @@ export default function ComplianceAgentPage() {
               ))}
             </div>
             {[
-              { ref: "DSR-0041", req: "Right to access — full data export requested",     subject: "Consumer",   type: "Access",        received: "Apr 30", sla: "1 day left", urgent: true  },
-              { ref: "DSR-0040", req: "Right to erasure — account and transaction data",  subject: "Consumer",   type: "Erasure",       received: "Apr 28", sla: "3 days",     urgent: false },
-              { ref: "DSR-0039", req: "Right to rectification — incorrect NIN on file",   subject: "Enterprise", type: "Rectification", received: "Apr 27", sla: "4 days",     urgent: false },
+              { ref: "DSR-0041", req: "Right to access — call & MoMo transaction history export", subject: "Subscriber", type: "Access",        received: "Apr 30", sla: "1 day left", urgent: true  },
+              { ref: "DSR-0040", req: "Right to erasure — subscriber profile and usage data",     subject: "Subscriber", type: "Erasure",       received: "Apr 28", sla: "3 days",     urgent: false },
+              { ref: "DSR-0039", req: "Right to rectification — incorrect NIN on SIM record",     subject: "Enterprise", type: "Rectification", received: "Apr 27", sla: "4 days",     urgent: false },
             ].map((dsr, i, arr) => (
               <div
                 key={dsr.ref}

@@ -198,7 +198,7 @@ export default function ResetPasswordPage() {
           </div>
           <div>
             <div className="text-[17px] font-bold text-gray-900 tracking-[-0.01em] leading-[1.2]">Iroko AI</div>
-            <div className="text-[11px] text-gray-400 leading-none">Fintech RegIntel</div>
+            <div className="text-[11px] text-gray-400 leading-none">Document Intelligence</div>
           </div>
         </div>
 

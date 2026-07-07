@@ -49,7 +49,7 @@ function EmptyState() {
         </svg>
       </div>
       <div className="text-center">
-        <p className="text-[15px] font-semibold text-[#E5E7EB]">Ask Atlas anything</p>
+        <p className="text-[15px] font-semibold text-[#E5E7EB]">Ask Iroko anything</p>
         <p className="text-[13px] text-[#6B7280] mt-1 max-w-xs">
           Your enterprise AI is ready. Query documents, analyse contracts, or investigate network alerts.
         </p>

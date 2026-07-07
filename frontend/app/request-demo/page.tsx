@@ -18,7 +18,7 @@ const LOGO = (
     </div>
     <div>
       <p style={{ fontSize: 15, fontWeight: 700, color: "#fff", margin: 0 }}>Iroko AI</p>
-      <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", margin: 0 }}>Fintech RegIntel</p>
+      <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", margin: 0 }}>Document Intelligence</p>
     </div>
   </div>
 );
@@ -36,7 +36,7 @@ export default function RequestDemoPage() {
     phone:     "",
     role:      "",
     size:      "",
-    licenceTier: "",
+    orgType:   "",
     message:   "",
   });
 
@@ -173,9 +173,9 @@ export default function RequestDemoPage() {
             {/* ── Section 1: Company ── */}
             <Section label="Company details">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                <Field label="Company / institution name *">
+                <Field label="Company / organisation name *">
                   <input required name="company" value={form.company} onChange={handleChange}
-                    placeholder="Zenith MFB" style={field} />
+                    placeholder="Acme Group Plc" style={field} />
                 </Field>
                 <Field label="Company size">
                   <select name="size" value={form.size} onChange={handleChange}
@@ -189,15 +189,18 @@ export default function RequestDemoPage() {
                   </select>
                 </Field>
               </div>
-              <Field label="CBN licence tier">
-                <select name="licenceTier" value={form.licenceTier} onChange={handleChange}
-                  style={{ ...field, color: form.licenceTier ? "#fff" : "rgba(255,255,255,0.35)" }}>
-                  <option value="">Select tier (optional)</option>
+              <Field label="Organisation type">
+                <select name="orgType" value={form.orgType} onChange={handleChange}
+                  style={{ ...field, color: form.orgType ? "#fff" : "rgba(255,255,255,0.35)" }}>
+                  <option value="">Select type (optional)</option>
+                  <option>Large enterprise — telecom / operations</option>
+                  <option>Large enterprise — other</option>
+                  <option>Bank / fintech</option>
                   <option>Unit MFB</option>
                   <option>State MFB</option>
                   <option>National MFB</option>
                   <option>PSB / Payment Service Bank</option>
-                  <option>Fintech (non-MFB)</option>
+                  <option>Public sector / other</option>
                 </select>
               </Field>
             </Section>
@@ -213,11 +216,13 @@ export default function RequestDemoPage() {
                   <select required name="role" value={form.role} onChange={handleChange}
                     style={{ ...field, color: form.role ? "#fff" : "rgba(255,255,255,0.35)" }}>
                     <option value="" disabled>Select role</option>
+                    <option>Head of Operations</option>
+                    <option>CIO / CTO / IT Lead</option>
+                    <option>Head of Data / Analytics</option>
                     <option>Chief Compliance Officer</option>
                     <option>Compliance Manager</option>
                     <option>Legal & Risk</option>
                     <option>CEO / MD</option>
-                    <option>CTO / IT Lead</option>
                     <option>Other</option>
                   </select>
                 </Field>
@@ -225,7 +230,7 @@ export default function RequestDemoPage() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <Field label="Work email *">
                   <input required type="email" name="email" value={form.email} onChange={handleChange}
-                    placeholder="ada@mfb.ng" style={field} />
+                    placeholder="ada@company.com" style={field} />
                 </Field>
                 <Field label="Phone number">
                   <input type="tel" name="phone" value={form.phone} onChange={handleChange}
@@ -247,7 +252,7 @@ export default function RequestDemoPage() {
                     </svg>
                   }
                   title="Live demo"
-                  desc="A tailored 30-minute walkthrough with a compliance specialist — your data, your workflows."
+                  desc="A tailored 30-minute walkthrough with our team — your documents, your workflows."
                   color="#818CF8"
                 />
                 <DemoOption
@@ -273,7 +278,7 @@ export default function RequestDemoPage() {
                     </svg>
                   }
                   title="Slide deck"
-                  desc="Download our product overview and compliance capability deck — shareable with your leadership team."
+                  desc="Download our product overview and capability deck — shareable with your leadership team."
                   color="#F59E0B"
                 />
               </div>
@@ -286,7 +291,7 @@ export default function RequestDemoPage() {
             <Section label="Anything specific you'd like covered?" last>
               <textarea
                 name="message" value={form.message} onChange={handleChange}
-                placeholder="e.g. We want to see how Iroko handles CBN filing deadlines and automated KYC gap detection for a national MFB…"
+                placeholder="e.g. We want to see how Iroko answers questions across our contract archive, or how the compliance configuration handles CBN filing deadlines…"
                 rows={4}
                 style={{ ...field, resize: "vertical", lineHeight: 1.65 }}
               />

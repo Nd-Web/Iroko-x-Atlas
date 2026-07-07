@@ -47,11 +47,11 @@ function SkeletonCard() {
   );
 }
 
-const STARTERS = ["CBN lending exposure limits", "AML/CFT quarterly returns", "CBN capital adequacy requirements", "Fintech licence obligations"];
+const STARTERS = ["Ikeja cluster outage root cause", "IHS diesel backup SLA penalties", "NCC QoS return requirements", "MoMo deduction complaints Q1"];
 const MOCK_RESULTS: SearchResult[] = [
-  { content: "Single obligor exposure limit for MFB lending shall not exceed 5% of shareholders' funds unimpaired by losses for unsecured lending. Aggregate insider lending capped at 10% of shareholders' funds.", source: "CBN_Microfinance_Directive_Q2_2026.pdf", score: 0.94, document_id: "doc-1a2b3c4d" },
-  { content: "The AML/CFT quarterly return must be submitted by the 15th of the first month following each quarter-end. Entities that fail to submit within the prescribed timeframe are liable to a fine of ₦500,000 per day of delay.", source: "CBN_AML_CFT_Quarterly_Return_Q2_2026.xlsx", score: 0.88, document_id: "doc-4d5e6f7g" },
-  { content: "Minimum Capital Adequacy Ratio (CAR) of 10% shall be maintained at all times. Tier 1 capital must comprise at least 6% of risk-weighted assets. Monthly CAR computation and reporting to CBN via FinA system is mandatory.", source: "CBN_BOFIA_2020_Compliance_Guide.pdf", score: 0.79, document_id: "doc-7g8h9i1j" },
+  { content: "Root cause analysis: the AES industrial feeder serving the Ikeja cluster failed on 14 February 2026 and the IHS diesel backup did not engage within the contracted window. Cluster availability fell to 82.7% against the NCC minimum of 95%; drop-call rate peaked at 12.4%.", source: "Ikeja_Cluster_RCA_Power_Outage_Q1_2026.txt", score: 0.94, document_id: "doc_001" },
+  { content: "Diesel backup service level: generators must engage within 15 minutes of grid failure. Failure to meet the availability SLA attracts a 2% fee reduction per 0.1% below the committed level, applied to the monthly lease invoice for the affected sites.", source: "TowerCo_IHS_Nigeria_Tower_Lease_Agreement.txt", score: 0.88, document_id: "doc_002" },
+  { content: "The NCC quality-of-service quarterly return must be submitted within 14 days of quarter-end. Operators failing to submit within the prescribed timeframe are liable to a fine of ₦5,000,000 per day of delay. Availability below 95% must be disclosed with a root-cause report.", source: "NCC_QoS_Quarterly_Return_Q4_2025.txt", score: 0.79, document_id: "doc_004" },
 ];
 
 export default function SearchPage() {
