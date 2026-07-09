@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import StatusMessage from "@/components/ui/StatusMessage";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 import type { Invitation } from "@/lib/types";
 import { useInvitations } from "@/app/user-management/_hooks/useInvitations";
 import { useRevokeInvitation } from "@/app/user-management/_hooks/useRevokeInvitation";
@@ -81,7 +81,7 @@ export default function PendingInvitesContent() {
     return (
       <div className="card overflow-hidden">
         <div className="flex items-center justify-center py-16 gap-3 text-gray-400">
-          <LoadingSpinner size={20} />
+          <Spinner size={20} />
           <span className="text-sm">Loading invitations…</span>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function PendingInvitesContent() {
                         onClick={() => handleResend(inv)}
                         disabled={isSending}
                       >
-                        {isSending ? <LoadingSpinner size={11} /> : isResent ? "Resent ✓" : "Resend"}
+                        {isSending ? <Spinner size={11} /> : isResent ? "Resent ✓" : "Resend"}
                       </button>
                       <button
                         className="btn-secondary py-1 px-[10px] text-xs text-danger-700"
@@ -168,7 +168,7 @@ export default function PendingInvitesContent() {
                       onClick={() => handleResend(inv)}
                       disabled={isSending}
                     >
-                      {isSending ? <LoadingSpinner size={11} /> : isResent ? "Sent ✓" : "Resend"}
+                      {isSending ? <Spinner size={11} /> : isResent ? "Sent ✓" : "Resend"}
                     </button>
                   )}
                 </div>
@@ -230,7 +230,7 @@ export default function PendingInvitesContent() {
               >
                 {revoke.isPending ? (
                   <>
-                    <LoadingSpinner size={13} />
+                    <Spinner size={13} />
                     Revoking…
                   </>
                 ) : (

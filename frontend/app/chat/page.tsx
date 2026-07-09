@@ -26,38 +26,37 @@ function ConvSidebar({ convs, convsLoading, activeId, onSelect, onNew }: {
   const filtered = convs.filter(c => c.title.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="w-[280px] shrink-0 flex flex-col border-r border-white/[0.06] h-full" style={{ background: "#08090F" }}>
+    <div className="w-[280px] shrink-0 flex flex-col border-r border-border-default h-full bg-white">
       {/* Header */}
       <div className="px-4 pt-4 pb-3 space-y-3">
         <button id="new-chat-btn" onClick={onNew}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,123,246,0.3)]"
-          style={{ background: "linear-gradient(135deg, #3B7BF6, #2563EB)" }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-xs transition-all hover:scale-[1.02] hover:shadow-sm">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
           New Chat
         </button>
         <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <svg aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="13" height="13" viewBox="0 0 13 13" fill="none">
             <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.3"/><path d="M11 11l-2.5-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
           </svg>
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search conversations…"
-            className="w-full pl-8 pr-3 py-2 text-[12px] bg-white/[0.04] border border-white/[0.08] rounded-lg text-[#D1D5DB] placeholder-[#4B5563] outline-none focus:border-[#3B7BF6]/40 transition-colors" />
+            className="w-full pl-8 pr-3 py-2 text-[12px] bg-white border border-border-strong rounded-lg text-gray-800 placeholder-gray-300 outline-none focus:border-brand-500 transition-colors shadow-xs" />
         </div>
       </div>
       {/* Conversations */}
       <div className="flex-1 overflow-y-auto px-2 pb-4">
         {filtered.filter(c => c.pinned).length > 0 && (
-          <div className="text-[9.5px] font-bold text-[#374151] uppercase tracking-widest px-2 mb-1 mt-2">Pinned</div>
+          <div className="text-[9.5px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-1 mt-2">Pinned</div>
         )}
         {filtered.filter(c => c.pinned).map(c => (
           <ConvItem key={c.id} conv={c} active={activeId === c.id} onClick={() => onSelect(c.id)} />
         ))}
-        <div className="text-[9.5px] font-bold text-[#374151] uppercase tracking-widest px-2 mb-1 mt-3">Recent</div>
+        <div className="text-[9.5px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-1 mt-3">Recent</div>
         {filtered.filter(c => !c.pinned).map(c => (
           <ConvItem key={c.id} conv={c} active={activeId === c.id} onClick={() => onSelect(c.id)} />
         ))}
         {filtered.length === 0 && (
-          <p className="text-[11px] text-[#4B5563] text-center py-6">
+          <p className="text-[11px] text-gray-400 text-center py-6">
             {convsLoading ? "Loading conversations…" : "No conversations yet — ask your first question"}
           </p>
         )}
@@ -70,12 +69,12 @@ function ConvItem({ conv, active, onClick }: { conv: ConvSummary; active: boolea
   return (
     <button onClick={onClick}
       className={cn("w-full text-left px-3 py-2.5 rounded-lg mb-0.5 transition-all duration-150 group",
-        active ? "bg-[#3B7BF6]/15 border border-[#3B7BF6]/20" : "hover:bg-white/[0.04] border border-transparent")}>
-      <div className={cn("text-[12.5px] font-medium truncate leading-snug", active ? "text-[#E5E7EB]" : "text-[#9CA3AF] group-hover:text-[#D1D5DB]")}>
+        active ? "bg-brand-50 border border-brand-200" : "hover:bg-gray-50 border border-transparent")}>
+      <div className={cn("text-[12.5px] font-medium truncate leading-snug", active ? "text-brand-700" : "text-gray-500 group-hover:text-gray-700")}>
         {conv.pinned && <span className="mr-1">📌</span>}
         {conv.title}
       </div>
-      <div className="text-[10px] text-[#4B5563] mt-0.5">{formatRelativeTime(conv.updatedAt)}</div>
+      <div className="text-[10px] text-gray-400 mt-0.5">{formatRelativeTime(conv.updatedAt)}</div>
     </button>
   );
 }
@@ -87,17 +86,17 @@ function ReasoningPanel({ query, open, onClose, recentInsights }: {
 }) {
   return (
     <div className={cn(
-      "shrink-0 border-l border-white/[0.06] flex flex-col transition-all duration-300 overflow-hidden",
+      "shrink-0 border-l border-border-default bg-white flex flex-col transition-all duration-300 overflow-hidden",
       open ? "w-[320px]" : "w-0",
-    )} style={{ background: "#08090F" }}>
+    )}>
       {open && (
         <>
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-            <span className="text-[12px] font-bold text-[#E5E7EB] uppercase tracking-wider">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border-default">
+            <span className="text-[12px] font-bold text-gray-900 uppercase tracking-wider">
               {query ? "Reasoning Chain" : "Recent Insights"}
             </span>
-            <button onClick={onClose} className="w-6 h-6 rounded-md flex items-center justify-center text-[#6B7280] hover:text-white hover:bg-white/5 transition-colors">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <button onClick={onClose} aria-label="Close reasoning panel" className="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+              <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-3">
@@ -106,9 +105,9 @@ function ReasoningPanel({ query, open, onClose, recentInsights }: {
             ) : (
               <div className="space-y-2">
                 {["IHS Ikeja Cluster SLA breach — ₦2.66M exposure", "NCC QoS return Q1 2026 due in 12 days", "ATC Lagos Zone 2 contract expires in 28 days"].map((insight, i) => (
-                  <div key={i} className="p-3 rounded-xl border border-white/[0.06]" style={{ background: "#0F1320" }}>
-                    <div className="w-2 h-2 rounded-full mb-2" style={{ background: i === 0 ? "#EF4444" : i === 1 ? "#F59E0B" : "#3B7BF6" }} />
-                    <p className="text-[11px] text-[#9CA3AF] leading-relaxed">{insight}</p>
+                  <div key={i} className="p-3 rounded-xl bg-surface-card border border-border-default shadow-xs">
+                    <div className={cn("w-2 h-2 rounded-full mb-2", i === 0 ? "bg-danger-500" : i === 1 ? "bg-warning-500" : "bg-brand-600")} />
+                    <p className="text-[11px] text-gray-500 leading-relaxed">{insight}</p>
                   </div>
                 ))}
               </div>
@@ -228,14 +227,14 @@ export default function ChatPage() {
 
           {/* Error banner — a failed request must never look like a silent freeze */}
           {error && !isLoading && (
-            <div className="mx-4 mb-2 flex items-center justify-between gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+            <div className="mx-4 mb-2 flex items-center justify-between gap-3 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3">
               <div className="min-w-0">
-                <p className="text-[12.5px] font-semibold text-red-300">Iroko couldn&apos;t complete that request</p>
-                <p className="text-[11px] text-red-400/80 truncate">{error}</p>
+                <p className="text-[12.5px] font-semibold text-danger-700">Iroko couldn&apos;t complete that request</p>
+                <p className="text-[11px] text-danger-600 truncate">{error}</p>
               </div>
               {lastQuery && (
                 <button onClick={() => handleSend(lastQuery)}
-                  className="shrink-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold text-white bg-red-500/80 hover:bg-red-500 transition-colors">
+                  className="shrink-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold text-white bg-danger-500 hover:bg-danger-600 transition-colors">
                   Retry
                 </button>
               )}
@@ -247,7 +246,7 @@ export default function ChatPage() {
             <div className="px-4 pb-2 flex flex-wrap gap-2 justify-center">
               {DEFAULT_SUGGESTED_PROMPTS.map(p => (
                 <button key={p.query} onClick={() => handleSend(p.query)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium text-[#9CA3AF] hover:text-[#E5E7EB] border border-white/[0.08] hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-150">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium text-gray-500 hover:text-gray-800 border border-border-default hover:border-border-strong bg-white hover:bg-gray-50 shadow-xs transition-all duration-150">
                   <span>{p.icon}</span>
                   {p.label}
                 </button>
@@ -268,8 +267,8 @@ export default function ChatPage() {
         {/* Toggle reasoning panel button */}
         {!reasoningOpen && lastQuery && (
           <button onClick={() => setReasoningOpen(true)}
-            className="fixed right-0 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1.5 px-2.5 py-3 rounded-l-xl text-[10px] font-bold text-[#3B7BF6] border border-r-0 border-[#3B7BF6]/20 hover:bg-[#3B7BF6]/10 transition-all"
-            style={{ background: "#0F1320", writingMode: "vertical-rl" }}>
+            className="fixed right-0 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1.5 px-2.5 py-3 rounded-l-xl text-[10px] font-bold text-brand-600 bg-surface-card border border-r-0 border-brand-200 hover:bg-brand-50 shadow-xs transition-all"
+            style={{ writingMode: "vertical-rl" }}>
             Reasoning ▶
           </button>
         )}

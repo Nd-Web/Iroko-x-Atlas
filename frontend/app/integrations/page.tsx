@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import AppShell from "@/components/layout/AppShell";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -272,7 +272,7 @@ export default function IntegrationsPage() {
 
         {loading ? (
           <div className="px-5 py-10 flex justify-center text-brand-600">
-            <LoadingSpinner size={20} />
+            <Spinner size={20} />
           </div>
         ) : connectors.length === 0 ? (
           <div className="px-5 py-10 text-center">
@@ -372,7 +372,7 @@ export default function IntegrationsPage() {
                       : "btn-primary disabled:opacity-70",
                   ].join(" ")}
                 >
-                  {isConnecting && <LoadingSpinner size={13} />}
+                  {isConnecting && <Spinner size={13} />}
                   {isConnecting
                     ? "Redirecting…"
                     : alreadyConnected

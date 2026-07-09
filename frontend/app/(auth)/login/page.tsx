@@ -18,7 +18,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import StatusMessage from "@/components/ui/StatusMessage";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 import { useAuth } from "@/context/AuthContext";
 
 // ─── Brand panel (desktop left column) ────────────────────────────────────────
@@ -306,7 +306,7 @@ export default function LoginPage() {
             >
               {loading ? (
                 <>
-                  <LoadingSpinner size={15} />
+                  <Spinner size={15} />
                   Signing in…
                 </>
               ) : (

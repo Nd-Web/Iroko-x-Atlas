@@ -21,7 +21,7 @@ import { useState, useEffect } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth, getInitials } from "@/context/AuthContext";
 import StatusMessage from "@/components/ui/StatusMessage";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
@@ -240,7 +240,7 @@ export default function ProfilePage() {
               >
                 {saving ? (
                   <>
-                    <LoadingSpinner size={14} />
+                    <Spinner size={14} />
                     Saving…
                   </>
                 ) : (

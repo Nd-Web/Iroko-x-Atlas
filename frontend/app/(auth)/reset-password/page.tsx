@@ -23,7 +23,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import StatusMessage from "@/components/ui/StatusMessage";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 
 // ─── Inner form (needs Suspense because of useSearchParams) ───────────────────
 
@@ -158,7 +158,7 @@ function ResetPasswordForm() {
         >
           {loading ? (
             <>
-              <LoadingSpinner size={15} />
+              <Spinner size={15} />
               Resetting…
             </>
           ) : (

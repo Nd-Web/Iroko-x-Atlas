@@ -86,7 +86,7 @@ const DEFAULT_META = {
   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>,
 };
 
-function PipelineNode({ step, index, isLast, active }: { step: AgentStep; index: number; isLast: boolean; active: boolean }) {
+function PipelineNode({ step, isLast }: { step: AgentStep; isLast: boolean }) {
   const meta = AGENT_META[step.agent] ?? DEFAULT_META;
   const isDone = step.status === "done";
   const isThinking = step.status === "thinking";
@@ -99,12 +99,12 @@ function PipelineNode({ step, index, isLast, active }: { step: AgentStep; index:
         <div
           className="relative w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 transition-all duration-500"
           style={{
-            background: isDone ? `${meta.color}25` : isThinking ? `${meta.color}15` : "rgba(255,255,255,0.04)",
-            border: `2px solid ${isDone ? meta.color : isThinking ? meta.color : "rgba(255,255,255,0.1)"}`,
-            boxShadow: isThinking ? `0 0 16px ${meta.color}60` : isDone ? `0 0 8px ${meta.color}30` : "none",
+            background: isDone ? `${meta.color}20` : isThinking ? `${meta.color}12` : "var(--color-gray-50)",
+            border: `2px solid ${isDone ? meta.color : isThinking ? meta.color : "var(--color-gray-200)"}`,
+            boxShadow: isThinking ? `0 0 12px ${meta.color}40` : "none",
           }}
         >
-          <span style={{ color: isDone || isThinking ? meta.color : "#6B7280" }}>
+          <span style={{ color: isDone || isThinking ? meta.color : "var(--color-gray-400)" }}>
             {isDone ? (
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <circle cx="7" cy="7" r="6" stroke={meta.color} strokeWidth="1.5"/>
@@ -119,7 +119,7 @@ function PipelineNode({ step, index, isLast, active }: { step: AgentStep; index:
         {/* Connector line */}
         {!isLast && (
           <div className="flex-1 w-px my-1 transition-all duration-700"
-            style={{ background: isDone ? `linear-gradient(to bottom, ${meta.color}60, rgba(255,255,255,0.06))` : "rgba(255,255,255,0.06)" }} />
+            style={{ background: isDone ? `linear-gradient(to bottom, ${meta.color}60, var(--color-border-default))` : "var(--color-border-default)" }} />
         )}
       </div>
 
@@ -128,28 +128,27 @@ function PipelineNode({ step, index, isLast, active }: { step: AgentStep; index:
         <div
           className="rounded-xl px-4 py-3 transition-all duration-500"
           style={{
-            background: isThinking ? meta.bg : "rgba(255,255,255,0.02)",
-            border: `1px solid ${isThinking ? `${meta.color}30` : isDone ? `${meta.color}15` : "rgba(255,255,255,0.05)"}`,
-            boxShadow: isThinking ? `0 0 24px ${meta.color}15` : "none",
+            background: isThinking ? meta.bg : "var(--color-gray-25)",
+            border: `1px solid ${isThinking ? `${meta.color}30` : isDone ? `${meta.color}25` : "var(--color-border-default)"}`,
           }}
         >
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: meta.color }}>{meta.label}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
               style={{
-                background: isThinking ? `${meta.color}20` : isDone ? "rgba(16,185,129,0.1)" : "rgba(255,255,255,0.05)",
-                color: isThinking ? meta.color : isDone ? "#10B981" : "#6B7280",
+                background: isThinking ? `${meta.color}18` : isDone ? "var(--color-success-50)" : "var(--color-gray-100)",
+                color: isThinking ? meta.color : isDone ? "var(--color-success-700)" : "var(--color-gray-500)",
               }}>
               {isThinking ? "thinking" : isDone ? "done" : step.status}
             </span>
           </div>
-          <p className="text-[12.5px] text-[#9CA3AF] leading-relaxed">{step.message}</p>
+          <p className="text-[12.5px] text-gray-500 leading-relaxed">{step.message}</p>
         </div>
         {step.status === "handoff" && !isLast && (
           <div className="flex items-center gap-2 mt-1.5 ml-2">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent to-transparent"
               style={{ backgroundImage: `linear-gradient(to right, transparent, ${meta.color}40, transparent)` }} />
-            <span className="text-[10px] text-[#6B7280] italic">handoff</span>
+            <span className="text-[10px] text-gray-400 italic">handoff</span>
             <div className="h-px flex-1" style={{ backgroundImage: `linear-gradient(to right, ${meta.color}40, transparent)` }} />
           </div>
         )}
@@ -166,7 +165,7 @@ function RiskBadgeLarge({ score }: { score: number }) {
       <div className="text-3xl font-black" style={{ color }}>{score}</div>
       <div>
         <div className="text-xs font-bold uppercase tracking-wider" style={{ color }}>{label}</div>
-        <div className="text-[10px] text-[#6B7280]">out of 10</div>
+        <div className="text-[10px] text-gray-400">out of 10</div>
       </div>
     </div>
   );
@@ -321,20 +320,18 @@ export default function ReasoningChain({ query, onComplete, onError }: Props) {
   }, []); // eslint-disable-line
 
   return (
-    <div className="w-full rounded-2xl overflow-hidden" style={{ background: "#0A0D16" }}>
+    <div className="w-full rounded-xl overflow-hidden bg-surface-card border border-border-default shadow-xs">
       {/* Header */}
-      <div className="px-5 py-3.5 flex items-center gap-3 border-b border-white/[0.06]"
-        style={{ background: "linear-gradient(to right, rgba(59,123,246,0.08), rgba(139,92,246,0.08))" }}>
-        <div className="flex gap-1.5">
+      <div className="px-5 py-3.5 flex items-center gap-3 border-b border-border-default bg-brand-50">
+        <div className="flex gap-1.5" aria-hidden="true">
           {["#EF4444","#3B7BF6","#8B5CF6","#F59E0B","#10B981"].map((c,i) => (
             <div key={i} className="w-2 h-2 rounded-full" style={{ background: c, opacity: isStreaming ? 1 : 0.35,
               animation: isStreaming ? `pulse-agent 1.4s ease ${i * 0.15}s infinite` : "none" }} />
           ))}
         </div>
-        <span className="text-sm font-bold text-[#E5E7EB] tracking-tight">Agent Reasoning Pipeline</span>
+        <span className="text-sm font-bold text-gray-900 tracking-tight">Agent Reasoning Pipeline</span>
         {isStreaming && (
-          <span className="ml-auto text-[10px] font-bold px-2.5 py-0.5 rounded-full animate-pulse"
-            style={{ background: "rgba(59,123,246,0.2)", color: "#3B7BF6", border: "1px solid rgba(59,123,246,0.3)" }}>
+          <span className="ml-auto text-[10px] font-bold px-2.5 py-0.5 rounded-full animate-pulse bg-brand-100 text-brand-700 border border-brand-200">
             LIVE
           </span>
         )}
@@ -342,33 +339,32 @@ export default function ReasoningChain({ query, onComplete, onError }: Props) {
 
       {/* Query badge */}
       <div className="px-5 pt-4 pb-2">
-        <div className="rounded-lg px-3 py-2 text-xs" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <span style={{ color: "#6B7280" }}>Query: </span>
-          <span style={{ color: "#E5E7EB" }}>{query}</span>
+        <div className="rounded-lg px-3 py-2 text-xs bg-gray-50 border border-border-default">
+          <span className="text-gray-400">Query: </span>
+          <span className="text-gray-800">{query}</span>
         </div>
       </div>
 
       {/* Pipeline */}
       <div className="px-5 py-3 max-h-[520px] overflow-y-auto">
         {steps.map((step, i) => (
-          <PipelineNode key={`${step.agent}-${i}`} step={step} index={i} isLast={i === steps.length - 1 && !isStreaming && !finalResult} active={i === steps.length - 1} />
+          <PipelineNode key={`${step.agent}-${i}`} step={step} isLast={i === steps.length - 1 && !isStreaming && !finalResult} />
         ))}
 
         {isStreaming && steps.length === 0 && (
-          <div className="flex items-center gap-3 py-4 text-sm text-[#6B7280]">
-            <div className="w-4 h-4 rounded-full border-2 border-[#3B7BF6] border-t-transparent animate-spin" />
+          <div className="flex items-center gap-3 py-4 text-sm text-gray-500">
+            <div className="w-4 h-4 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" role="status" aria-label="Loading" />
             Initialising agent pipeline…
           </div>
         )}
 
         {/* Output node */}
         {finalResult && (
-          <div className="rounded-xl px-5 py-4 mt-2 transition-all duration-700"
-            style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(59,123,246,0.06) 100%)", border: "1px solid rgba(139,92,246,0.25)", boxShadow: "0 0 32px rgba(139,92,246,0.1)" }}>
+          <div className="rounded-xl px-5 py-4 mt-2 transition-all duration-700 bg-brand-50 border border-brand-200 shadow-xs">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#8B5CF6] animate-pulse" />
-                <span className="text-xs font-bold uppercase tracking-wider text-[#8B5CF6]">Output</span>
+                <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" aria-hidden="true" />
+                <span className="text-xs font-bold uppercase tracking-wider text-brand-700">Output</span>
                 {finalResult.verdict && (
                   <span className="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-full border tracking-wide"
                     style={{
@@ -382,16 +378,15 @@ export default function ReasoningChain({ query, onComplete, onError }: Props) {
               </div>
               <RiskBadgeLarge score={finalResult.risk_score} />
             </div>
-            <p className="text-[13.5px] leading-[1.8] text-[#D1D5DB] whitespace-pre-wrap">{finalResult.response}</p>
+            <p className="text-[13.5px] leading-[1.8] text-gray-700 whitespace-pre-wrap">{finalResult.response}</p>
           </div>
         )}
 
         {hasError && (
-          <div className="rounded-xl px-5 py-4 text-center" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
-            <p className="text-sm font-medium mb-3 text-[#F87171]">Pipeline connection lost. Please retry.</p>
+          <div role="alert" className="rounded-xl px-5 py-4 text-center bg-danger-50 border border-danger-200">
+            <p className="text-sm font-medium mb-3 text-danger-700">Pipeline connection lost. Please retry.</p>
             <button onClick={() => { setHasError(false); startStream(); }}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-[#F87171] transition-all"
-              style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}>
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-danger-600 hover:bg-danger-700 transition-all">
               ↻ Retry
             </button>
           </div>

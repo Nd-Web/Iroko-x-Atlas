@@ -20,7 +20,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import StatusMessage from "@/components/ui/StatusMessage";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail]   = useState("");
@@ -132,7 +132,7 @@ export default function ForgotPasswordPage() {
             >
               {loading ? (
                 <>
-                  <LoadingSpinner size={15} />
+                  <Spinner size={15} />
                   Sending…
                 </>
               ) : (

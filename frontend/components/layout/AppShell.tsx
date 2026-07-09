@@ -30,10 +30,19 @@ export default function AppShell({ children, title, subtitle, actions }: AppShel
      * controls its own internal scroll and never triggers this outer scroll.
      */
     <div className="flex h-screen overflow-hidden bg-surface-page">
+      {/* Keyboard users can jump straight past the sidebar/topbar */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-white focus:text-brand-700 focus:shadow-md focus:text-sm focus:font-semibold"
+      >
+        Skip to main content
+      </a>
+
       {/* Mobile Sidebar Overlay */}
       <div
         className={`sidebar-overlay lg:hidden ${sidebarOpen ? 'active' : ''}`}
         onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
       />
 
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -48,7 +57,7 @@ export default function AppShell({ children, title, subtitle, actions }: AppShel
         />
 
         {/* overflow-y-auto lets normal pages scroll; chat page fills this exactly via flex-1 min-h-0 */}
-        <main className="flex-1 p-4 md:p-6 lg:p-7 flex flex-col gap-6 max-w-[1600px] mx-auto w-full overflow-y-auto">
+        <main id="main-content" className="flex-1 p-4 md:p-6 lg:p-7 flex flex-col gap-6 max-w-[1600px] mx-auto w-full overflow-y-auto">
           {children}
         </main>
       </div>

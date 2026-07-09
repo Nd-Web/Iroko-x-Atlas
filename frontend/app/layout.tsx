@@ -6,11 +6,29 @@
  */
 
 import type { Metadata } from "next";
+import { DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import SessionExpiredToast from "@/components/ui/SessionExpiredToast";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { Toaster } from "sonner";
+
+// Self-hosted via next/font — no runtime request to fonts.googleapis.com,
+// zero layout shift (size-adjusted fallbacks generated at build time).
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-dm-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://irokoai.site"),
@@ -94,7 +112,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${dmSans.variable} ${dmMono.variable}`}>
       <body suppressHydrationWarning>
         <script
           type="application/ld+json"
@@ -105,9 +123,10 @@ export default function RootLayout({
             position="bottom-right"
             toastOptions={{
               style: {
-                background: "#1a1d2e",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "#E5E7EB",
+                background: "var(--color-surface-card)",
+                border: "1px solid var(--color-border-default)",
+                color: "var(--color-gray-700)",
+                boxShadow: "var(--shadow-md)",
               },
             }}
           />
