@@ -111,24 +111,30 @@ const WebIntelDashboard: FC = () => {
   const auditCount   = auditData?.entries?.length ?? 0;
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface-page text-gray-800">
+    <div className="flex flex-col min-h-screen bg-[#080B14] text-[#E5E7EB]">
       {/* ── Page header ───────────────────────────────────────────────────── */}
-      <div className="px-8 pt-8 pb-0 border-b border-border-default">
+      <div className="px-8 pt-8 pb-0 border-b border-white/[0.06]">
         <div className="flex items-start justify-between gap-6 pb-5">
           {/* Title block */}
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 bg-brand-600 text-white shadow-xs">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 bg-gradient-to-br from-[rgba(59,123,246,0.2)] to-[rgba(139,92,246,0.2)] border border-[rgba(59,123,246,0.25)] shadow-[0_0_24px_rgba(59,123,246,0.25)]">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 2L22 7V12C22 17 17.5 21 12 22C6.5 21 2 17 2 12V7L12 2Z"
-                  stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/>
+                  stroke="url(#webintel-grad)" strokeWidth="1.5" strokeLinejoin="round"/>
+                <circle cx="12" cy="12" r="3" stroke="url(#webintel-grad)" strokeWidth="1.5"/>
+                <defs>
+                  <linearGradient id="webintel-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%"   stopColor="#3B7BF6"/>
+                    <stop offset="100%" stopColor="#8B5CF6"/>
+                  </linearGradient>
+                </defs>
               </svg>
             </div>
             <div>
-              <h1 className="text-[22px] font-black tracking-tight leading-tight text-gray-900">
+              <h1 className="text-[22px] font-black tracking-tight leading-tight text-[#F9FAFB]">
                 Web Intelligence
               </h1>
-              <p className="text-[13px] mt-0.5 text-gray-500">
+              <p className="text-[13px] mt-0.5 text-[#6B7280]">
                 Boardroom-ready document &amp; operations intelligence for enterprise telecoms — powered by Bright Data
               </p>
             </div>
@@ -137,20 +143,20 @@ const WebIntelDashboard: FC = () => {
           {/* Stats pills */}
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {opsStats.docs !== null && (
-              <StatPill label="Documents Indexed" value={opsStats.docs} valueClass="text-success-700" loading={false} />
+              <StatPill label="Documents Indexed" value={opsStats.docs} valueClass="text-[#10B981]" loading={false} />
             )}
             {opsStats.alerts !== null && (
-              <StatPill label="Open Alerts" value={opsStats.alerts} valueClass="text-warning-700" loading={false} />
+              <StatPill label="Open Alerts" value={opsStats.alerts} valueClass="text-[#F59E0B]" loading={false} />
             )}
-            <StatPill label="Total Signals"  value={totalSignals} valueClass="text-brand-600"  loading={signalsLoading} />
-            <StatPill label="Fraud Alerts"   value={fraudCount}   valueClass="text-danger-600" loading={signalsLoading} />
-            <StatPill label="Audit Entries"  value={auditCount}   valueClass="text-brand-600"  loading={auditLoading}  />
+            <StatPill label="Total Signals"  value={totalSignals} valueClass="text-[#3B7BF6]" loading={signalsLoading} />
+            <StatPill label="Fraud Alerts"   value={fraudCount}   valueClass="text-[#EF4444]" loading={signalsLoading} />
+            <StatPill label="Audit Entries"  value={auditCount}   valueClass="text-[#8B5CF6]" loading={auditLoading}  />
             {auditData?.chain_integrity?.valid !== undefined && (
               <div
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold border ${
                   auditData.chain_integrity.valid
-                    ? "bg-success-50 border-success-100 text-success-700"
-                    : "bg-danger-50 border-danger-100 text-danger-700"
+                    ? "bg-[rgba(16,185,129,0.08)] border-[rgba(16,185,129,0.2)] text-[#10B981]"
+                    : "bg-[rgba(239,68,68,0.08)] border-[rgba(239,68,68,0.2)] text-[#EF4444]"
                 }`}
               >
                 {auditData.chain_integrity.valid ? "✅" : "⚠️"} Chain{" "}

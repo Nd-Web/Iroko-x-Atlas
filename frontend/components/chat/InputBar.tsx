@@ -85,11 +85,11 @@ export default function InputBar({
     <div className="px-4 pb-4 pt-2 shrink-0">
       <div
         className={cn(
-          "relative flex items-end gap-3 rounded-2xl border bg-white px-4 py-3 transition-all duration-200",
+          "relative flex items-end gap-3 rounded-2xl border bg-[#0F1320] px-4 py-3 transition-all duration-200",
           focused
-            ? "border-brand-500 shadow-sm"
-            : "border-border-strong shadow-xs",
-          overLimit && "border-danger-500",
+            ? "border-[#3B7BF6]/60 shadow-[0_0_20px_rgba(59,123,246,0.15)]"
+            : "border-white/[0.08]",
+          overLimit && "border-red-500/60",
         )}
       >
         {/* Textarea */}
@@ -104,7 +104,7 @@ export default function InputBar({
           disabled={isStreaming}
           rows={1}
           className={cn(
-            "flex-1 resize-none bg-transparent text-sm text-gray-800 placeholder-gray-300",
+            "flex-1 resize-none bg-transparent text-sm text-[#E5E7EB] placeholder-[#4B5563]",
             "outline-none leading-relaxed min-h-[24px] max-h-[120px]",
             "disabled:opacity-60 disabled:cursor-not-allowed",
           )}
@@ -113,7 +113,7 @@ export default function InputBar({
         {/* Right side: count + send */}
         <div className="flex items-center gap-2 shrink-0 pb-0.5">
           {showCount && (
-            <span className={cn("text-[11px] font-medium", overLimit ? "text-danger-600" : "text-gray-400")}>
+            <span className={cn("text-[11px] font-medium", overLimit ? "text-red-400" : "text-[#6B7280]")}>
               {value.length}/{MAX_CHARS}
             </span>
           )}
@@ -124,16 +124,15 @@ export default function InputBar({
             className={cn(
               "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200",
               canSend
-                ? "bg-brand-600 text-white shadow-xs hover:bg-brand-700 hover:shadow-sm hover:scale-105 active:scale-95"
-                : "bg-gray-100 text-gray-300 cursor-not-allowed",
+                ? "bg-gradient-to-br from-[#3B7BF6] to-[#2563EB] text-white shadow-[0_0_16px_rgba(59,123,246,0.3)] hover:shadow-[0_0_24px_rgba(59,123,246,0.5)] hover:scale-105 active:scale-95"
+                : "bg-white/5 text-[#374151] cursor-not-allowed",
             )}
             title="Send (Ctrl+Enter)"
-            aria-label="Send message"
           >
             {isStreaming ? (
-              <Spinner size="sm" className="text-white" />
+              <Spinner size="sm" color="white" />
             ) : (
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M14 8L2 2l2.5 6L2 14l12-6z" fill="currentColor"/>
               </svg>
             )}
@@ -142,8 +141,8 @@ export default function InputBar({
       </div>
 
       {/* Hint */}
-      <p className="text-[10px] text-gray-400 text-center mt-1.5">
-        Press <kbd className="px-1 py-0.5 rounded bg-gray-100 border border-border-default text-[9px] text-gray-500">Ctrl+Enter</kbd> to send
+      <p className="text-[10px] text-[#374151] text-center mt-1.5">
+        Press <kbd className="px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[9px]">Ctrl+Enter</kbd> to send
       </p>
     </div>
   );

@@ -2,7 +2,6 @@
 /**
  * components/ui/Button.tsx
  * Reusable button with variants, sizes and loading state.
- * Styled entirely from the design tokens in app/globals.css.
  */
 import React from "react";
 import { cn } from "@/lib/utils";
@@ -21,30 +20,35 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<Variant, string> = {
   primary: [
-    "bg-brand-600 text-white border border-brand-700",
-    "hover:bg-brand-700 shadow-xs hover:shadow-sm",
+    "bg-gradient-to-r from-[#3B7BF6] to-[#2563EB]",
+    "text-white border border-[#1D4ED8]",
+    "hover:from-[#2563EB] hover:to-[#1D4ED8]",
+    "shadow-[0_0_20px_rgba(59,123,246,0.25)]",
+    "hover:shadow-[0_0_28px_rgba(59,123,246,0.4)]",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
   ].join(" "),
   secondary: [
-    "bg-surface-card text-gray-700 border border-border-strong",
-    "hover:bg-gray-50 shadow-xs",
+    "bg-[#1a1d27] text-[#E5E7EB] border border-white/10",
+    "hover:bg-[#22263a] hover:border-white/20",
     "disabled:opacity-50 disabled:cursor-not-allowed",
   ].join(" "),
   danger: [
-    "bg-danger-500 text-white border border-danger-700",
-    "hover:bg-danger-600 shadow-xs",
+    "bg-[#EF4444] text-white border border-[#DC2626]",
+    "hover:bg-[#DC2626]",
+    "shadow-[0_0_12px_rgba(239,68,68,0.2)]",
+    "hover:shadow-[0_0_20px_rgba(239,68,68,0.35)]",
     "disabled:opacity-50 disabled:cursor-not-allowed",
   ].join(" "),
   ghost: [
-    "bg-transparent text-gray-500 border border-transparent",
-    "hover:bg-gray-100 hover:text-gray-700",
+    "bg-transparent text-[#9CA3AF] border border-transparent",
+    "hover:bg-white/5 hover:text-[#E5E7EB]",
     "disabled:opacity-50 disabled:cursor-not-allowed",
   ].join(" "),
 };
 
 const sizeStyles: Record<Size, string> = {
   sm: "h-8 px-3 text-xs gap-1.5 rounded-lg",
-  md: "h-10 px-4 text-sm gap-2 rounded-lg",
+  md: "h-10 px-4 text-sm gap-2 rounded-xl",
   lg: "h-12 px-6 text-base gap-2.5 rounded-xl",
 };
 
@@ -63,17 +67,18 @@ export default function Button({
   return (
     <button
       disabled={isDisabled}
-      aria-busy={loading || undefined}
       className={cn(
         "inline-flex items-center justify-center font-semibold transition-all duration-200 ease-out",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-page",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B7BF6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#080B14]",
         variantStyles[variant],
         sizeStyles[size],
         className,
       )}
       {...props}
     >
-      {loading ? <Spinner size="sm" /> : leftIcon}
+      {loading ? (
+        <Spinner size="sm" color={variant === "primary" || variant === "danger" ? "white" : "blue"} />
+      ) : leftIcon}
       {children}
       {!loading && rightIcon}
     </button>

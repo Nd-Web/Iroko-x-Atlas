@@ -2,10 +2,10 @@
  * components/dashboard/webintel/meta.tsx
  *
  * Category / verdict metadata + small formatting helpers.
- * All colours are expressed as Tailwind utility classes backed by the
- * design tokens declared in app/globals.css (@theme block).
- * Category mapping: regulatory→brand, competitor→warning, vendor_risk→info,
- * fraud→danger, market→success.
+ * All colours are expressed as Tailwind utility classes using the original
+ * Iroko dark palette (page #080B14, card #0F1320, elevated #141824).
+ * Category mapping: regulatory→#3B7BF6, competitor→#F59E0B,
+ * vendor_risk→#8B5CF6, fraud→#EF4444, market→#10B981.
  */
 
 import React, { type ReactNode } from "react";
@@ -27,10 +27,10 @@ export interface CategoryMeta {
 export const CATEGORY_META: Record<SignalCategory, CategoryMeta> = {
   regulatory: {
     label: "Regulatory",
-    text: "text-brand-700",
-    dot: "bg-brand-500",
-    leftBorder: "border-l-brand-500",
-    chip: "bg-brand-50 text-brand-700 border border-brand-100",
+    text: "text-[#3B7BF6]",
+    dot: "bg-[#3B7BF6]",
+    leftBorder: "border-l-[#3B7BF6]",
+    chip: "bg-[rgba(59,123,246,0.08)] text-[#3B7BF6] border border-[rgba(59,123,246,0.19)]",
     icon: (
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M8 1.5L13.5 4v5.5C13.5 12.5 11 14.5 8 15.5c-3-1-5.5-3-5.5-6V4L8 1.5Z"
@@ -41,10 +41,10 @@ export const CATEGORY_META: Record<SignalCategory, CategoryMeta> = {
   },
   competitor: {
     label: "Competitor",
-    text: "text-warning-700",
-    dot: "bg-warning-500",
-    leftBorder: "border-l-warning-500",
-    chip: "bg-warning-50 text-warning-700 border border-warning-100",
+    text: "text-[#F59E0B]",
+    dot: "bg-[#F59E0B]",
+    leftBorder: "border-l-[#F59E0B]",
+    chip: "bg-[rgba(245,158,11,0.08)] text-[#F59E0B] border border-[rgba(245,158,11,0.19)]",
     icon: (
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
@@ -54,10 +54,10 @@ export const CATEGORY_META: Record<SignalCategory, CategoryMeta> = {
   },
   vendor_risk: {
     label: "Vendor Risk",
-    text: "text-info-700",
-    dot: "bg-info-500",
-    leftBorder: "border-l-info-500",
-    chip: "bg-info-50 text-info-700 border border-info-100",
+    text: "text-[#8B5CF6]",
+    dot: "bg-[#8B5CF6]",
+    leftBorder: "border-l-[#8B5CF6]",
+    chip: "bg-[rgba(139,92,246,0.08)] text-[#8B5CF6] border border-[rgba(139,92,246,0.19)]",
     icon: (
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M8 2L2 5v4c0 3.3 2.7 5.3 6 6 3.3-.7 6-2.7 6-6V5L8 2Z"
@@ -68,10 +68,10 @@ export const CATEGORY_META: Record<SignalCategory, CategoryMeta> = {
   },
   fraud: {
     label: "Fraud",
-    text: "text-danger-700",
-    dot: "bg-danger-500",
-    leftBorder: "border-l-danger-500",
-    chip: "bg-danger-50 text-danger-700 border border-danger-100",
+    text: "text-[#EF4444]",
+    dot: "bg-[#EF4444]",
+    leftBorder: "border-l-[#EF4444]",
+    chip: "bg-[rgba(239,68,68,0.08)] text-[#EF4444] border border-[rgba(239,68,68,0.19)]",
     icon: (
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M8 2L14 13H2L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
@@ -81,10 +81,10 @@ export const CATEGORY_META: Record<SignalCategory, CategoryMeta> = {
   },
   market: {
     label: "Market Intel",
-    text: "text-success-700",
-    dot: "bg-success-500",
-    leftBorder: "border-l-success-500",
-    chip: "bg-success-50 text-success-700 border border-success-100",
+    text: "text-[#10B981]",
+    dot: "bg-[#10B981]",
+    leftBorder: "border-l-[#10B981]",
+    chip: "bg-[rgba(16,185,129,0.08)] text-[#10B981] border border-[rgba(16,185,129,0.19)]",
     icon: (
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M2 12L6 8l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -103,6 +103,8 @@ export interface VerdictMeta {
   text: string;
   /** Icon colour wrapper */
   iconText: string;
+  /** Outer-card glow shadow */
+  glow: string;
   /** Small verdict pill (audit table) */
   pill: string;
   label: string;
@@ -111,11 +113,12 @@ export interface VerdictMeta {
 
 export const VERDICT_META: Record<string, VerdictMeta> = {
   GO: {
-    bannerBg: "bg-success-50",
-    border: "border-success-100",
-    text: "text-success-700",
-    iconText: "text-success-500",
-    pill: "bg-success-50 border border-success-100 text-success-700",
+    bannerBg: "bg-[rgba(16,185,129,0.08)]",
+    border: "border-[rgba(16,185,129,0.3)]",
+    text: "text-[#10B981]",
+    iconText: "text-[#10B981]",
+    glow: "shadow-[0_0_32px_rgba(16,185,129,0.2)]",
+    pill: "bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.3)] text-[#10B981]",
     label: "✅ GO — Proceed with confidence",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -125,11 +128,12 @@ export const VERDICT_META: Record<string, VerdictMeta> = {
     ),
   },
   "NO-GO": {
-    bannerBg: "bg-danger-50",
-    border: "border-danger-200",
-    text: "text-danger-700",
-    iconText: "text-danger-500",
-    pill: "bg-danger-50 border border-danger-100 text-danger-700",
+    bannerBg: "bg-[rgba(239,68,68,0.08)]",
+    border: "border-[rgba(239,68,68,0.3)]",
+    text: "text-[#EF4444]",
+    iconText: "text-[#EF4444]",
+    glow: "shadow-[0_0_32px_rgba(239,68,68,0.2)]",
+    pill: "bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.3)] text-[#EF4444]",
     label: "🚫 NO-GO — Action required immediately",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -139,11 +143,12 @@ export const VERDICT_META: Record<string, VerdictMeta> = {
     ),
   },
   MONITOR: {
-    bannerBg: "bg-warning-50",
-    border: "border-warning-100",
-    text: "text-warning-700",
-    iconText: "text-warning-500",
-    pill: "bg-warning-50 border border-warning-100 text-warning-700",
+    bannerBg: "bg-[rgba(245,158,11,0.08)]",
+    border: "border-[rgba(245,158,11,0.3)]",
+    text: "text-[#F59E0B]",
+    iconText: "text-[#F59E0B]",
+    glow: "shadow-[0_0_32px_rgba(245,158,11,0.2)]",
+    pill: "bg-[rgba(245,158,11,0.08)] border border-[rgba(245,158,11,0.3)] text-[#F59E0B]",
     label: "⚠️ MONITOR — Flag for human review",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -160,11 +165,11 @@ export function verdictMeta(v: string): VerdictMeta {
 
 /** Tinted badge classes for a signal risk level. */
 export function riskBadgeClasses(level?: string): string {
-  if (!level) return "text-gray-500 bg-gray-50 border border-border-default";
+  if (!level) return "text-[#6B7280] bg-[rgba(107,114,128,0.09)] border border-[rgba(107,114,128,0.21)]";
   const l = level.toUpperCase();
-  if (l === "HIGH")   return "text-danger-700 bg-danger-50 border border-danger-100";
-  if (l === "MEDIUM") return "text-warning-700 bg-warning-50 border border-warning-100";
-  return "text-success-700 bg-success-50 border border-success-100";
+  if (l === "HIGH")   return "text-[#EF4444] bg-[rgba(239,68,68,0.09)] border border-[rgba(239,68,68,0.21)]";
+  if (l === "MEDIUM") return "text-[#F59E0B] bg-[rgba(245,158,11,0.09)] border border-[rgba(245,158,11,0.21)]";
+  return "text-[#10B981] bg-[rgba(16,185,129,0.09)] border border-[rgba(16,185,129,0.21)]";
 }
 
 export function formatTime(iso?: string): string {

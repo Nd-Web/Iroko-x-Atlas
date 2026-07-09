@@ -9,15 +9,23 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 type NamedSize = "sm" | "md" | "lg";
+type NamedColor = "white" | "blue" | "amber";
 
 const NAMED_SIZES: Record<NamedSize, number> = { sm: 16, md: 24, lg: 40 };
+const NAMED_COLORS: Record<NamedColor, string> = {
+  white: "text-white",
+  blue: "text-[#3B7BF6]",
+  amber: "text-[#F59E0B]",
+};
 
 interface SpinnerProps {
   size?: number | NamedSize;
+  /** Optional named color; omit to inherit currentColor from the parent. */
+  color?: NamedColor;
   className?: string;
 }
 
-export default function Spinner({ size = "md", className }: SpinnerProps) {
+export default function Spinner({ size = "md", color, className }: SpinnerProps) {
   const px = typeof size === "number" ? size : NAMED_SIZES[size];
   return (
     <svg
@@ -25,7 +33,7 @@ export default function Spinner({ size = "md", className }: SpinnerProps) {
       height={px}
       viewBox="0 0 16 16"
       fill="none"
-      className={cn("animate-spin shrink-0", className)}
+      className={cn("animate-spin shrink-0", color && NAMED_COLORS[color], className)}
       role="status"
       aria-label="Loading"
     >

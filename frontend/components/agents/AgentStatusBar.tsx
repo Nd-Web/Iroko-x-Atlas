@@ -31,21 +31,20 @@ function StatusDot({ status }: { status: string }) {
   if (status === "running") {
     return (
       <span
-        aria-hidden="true"
-        className="w-2 h-2 rounded-full bg-warning-500 shrink-0"
+        className="w-2 h-2 rounded-full bg-amber-400 shrink-0"
         style={{ animation: "pulse-dot 1.2s ease-in-out infinite" }}
       />
     );
   }
-  if (status === "error") return <span aria-hidden="true" className="w-2 h-2 rounded-full bg-danger-500 shrink-0" />;
-  return <span aria-hidden="true" className="w-2 h-2 rounded-full bg-success-500 shrink-0" />;
+  if (status === "error") return <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />;
+  return <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />;
 }
 
 export default function AgentStatusBar({ agents = DEFAULT_AGENTS }: Props) {
   return (
     <>
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-border-default bg-surface-card/80 backdrop-blur-sm overflow-x-auto scrollbar-none">
-        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest shrink-0 mr-1">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06] bg-[#080B14]/80 backdrop-blur-sm overflow-x-auto scrollbar-none">
+        <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest shrink-0 mr-1">
           Agents
         </span>
         {agents.map((agent) => {
@@ -57,13 +56,13 @@ export default function AgentStatusBar({ agents = DEFAULT_AGENTS }: Props) {
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-medium shrink-0 transition-all duration-200",
                 agent.status === "running"
-                  ? "border-warning-100 bg-warning-50 text-warning-700"
+                  ? "border-amber-400/30 bg-amber-400/10 text-amber-300"
                   : agent.status === "error"
-                  ? "border-danger-100 bg-danger-50 text-danger-700"
-                  : "border-border-default bg-gray-50 text-gray-500 hover:border-border-strong hover:text-gray-800",
+                  ? "border-red-400/30 bg-red-400/10 text-red-300"
+                  : "border-white/[0.06] bg-white/[0.03] text-[#9CA3AF] hover:border-white/10 hover:text-[#E5E7EB]",
               )}
             >
-              <span aria-hidden="true" className="text-[11px]">{meta.icon}</span>
+              <span className="text-[11px]">{meta.icon}</span>
               <StatusDot status={agent.status} />
               <span>{agent.display_name}</span>
             </div>

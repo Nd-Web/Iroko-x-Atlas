@@ -14,29 +14,26 @@ interface SearchResult { content: string; source: string; score: number; documen
 
 function ResultCard({ result, query }: { result: SearchResult; query: string }) {
   const pct = Math.round(result.score * 100);
-  const scoreClass =
-    pct >= 80 ? "text-success-700 bg-success-50" :
-    pct >= 60 ? "text-warning-700 bg-warning-50" :
-    "text-gray-500 bg-gray-100";
+  const col = pct >= 80 ? "#10B981" : pct >= 60 ? "#F59E0B" : "#6B7280";
   const parts = truncate(result.content, 400).split(
     new RegExp(`(${query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"),
   );
   return (
-    <div className="rounded-xl bg-surface-card border border-border-default shadow-xs p-5 hover:border-border-strong hover:shadow-sm transition-all">
+    <div className="rounded-2xl border border-white/[0.06] p-5 hover:border-white/15 transition-all" style={{ background: "#0F1320" }}>
       <div className="flex items-start justify-between gap-3 mb-3">
-        <span className="text-[12px] font-semibold text-brand-600 truncate">{result.source}</span>
-        <span className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-black ${scoreClass}`}>{pct}%</span>
+        <span className="text-[12px] font-semibold text-[#3B7BF6] truncate">{result.source}</span>
+        <span className="shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-black" style={{ color: col, background: `${col}15` }}>{pct}%</span>
       </div>
-      <p className="text-[12.5px] text-gray-500 leading-relaxed line-clamp-4">
+      <p className="text-[12.5px] text-[#9CA3AF] leading-relaxed line-clamp-4">
         {parts.map((p, i) =>
           p.toLowerCase() === query.trim().toLowerCase()
-            ? <mark key={i} className="bg-brand-100 text-brand-800 rounded px-0.5 not-italic font-semibold">{p}</mark>
+            ? <mark key={i} className="bg-[#3B7BF6]/25 text-[#93C5FD] rounded px-0.5 not-italic font-semibold">{p}</mark>
             : p,
         )}
       </p>
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border-default">
-        <span className="text-[10px] text-gray-400 font-mono">id:{result.document_id.slice(0, 10)}…</span>
-        <Link href="/documents" className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 transition-colors">Open →</Link>
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
+        <span className="text-[10px] text-[#4B5563] font-mono">id:{result.document_id.slice(0, 10)}…</span>
+        <Link href="/documents" className="text-[11px] font-semibold text-[#3B7BF6] hover:text-[#60A5FA] transition-colors">Open →</Link>
       </div>
     </div>
   );
@@ -44,9 +41,9 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl bg-surface-card border border-border-default p-5 animate-pulse space-y-3">
-      <div className="flex justify-between"><div className="h-3.5 w-40 rounded bg-gray-100" /><div className="h-6 w-12 rounded-lg bg-gray-100" /></div>
-      <div className="h-3 rounded bg-gray-100" /><div className="h-3 w-5/6 rounded bg-gray-100" /><div className="h-3 w-4/6 rounded bg-gray-100" />
+    <div className="rounded-2xl border border-white/[0.06] p-5 animate-pulse space-y-3" style={{ background: "#0F1320" }}>
+      <div className="flex justify-between"><div className="h-3.5 w-40 rounded bg-white/[0.08]" /><div className="h-6 w-12 rounded-lg bg-white/[0.06]" /></div>
+      <div className="h-3 rounded bg-white/[0.06]" /><div className="h-3 w-5/6 rounded bg-white/[0.05]" /><div className="h-3 w-4/6 rounded bg-white/[0.04]" />
     </div>
   );
 }
@@ -82,17 +79,19 @@ export default function SearchPage() {
     <AppShell title="Search" subtitle="Semantic search across your document corpus">
       {/* Search bar */}
       <form onSubmit={e => { e.preventDefault(); run(q); }} role="search">
-        <div className="relative flex items-center rounded-xl bg-surface-card border border-border-strong shadow-xs transition-all duration-200 focus-within:border-brand-500 focus-within:shadow-[0_0_0_4px_rgba(97,114,243,0.12)]">
-          <svg className="absolute left-5 text-gray-400" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+        <div className="relative flex items-center rounded-2xl border transition-all duration-200 focus-within:border-[#3B7BF6]/50 focus-within:shadow-[0_0_28px_rgba(59,123,246,0.12)]"
+          style={{ background: "#0F1320", borderColor: "rgba(255,255,255,0.08)" }}>
+          <svg className="absolute left-5 text-[#6B7280]" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
             <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5"/>
             <path d="M16 16l-3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
           <input type="text" value={q} onChange={e => setQ(e.target.value)} autoFocus
             aria-label="Search documents"
             placeholder="Search documents, SLA agreements, contracts…"
-            className="flex-1 bg-transparent pl-12 pr-4 py-4 text-[15px] text-gray-800 placeholder-gray-300 outline-none" />
+            className="flex-1 bg-transparent pl-12 pr-4 py-4 text-[15px] text-[#E5E7EB] placeholder-[#4B5563] outline-none" />
           <button type="submit" disabled={loading || !q.trim()}
-            className="mr-2 px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xs">
+            className="mr-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-all hover:shadow-[0_0_20px_rgba(59,123,246,0.3)]"
+            style={{ background: "linear-gradient(135deg,#3B7BF6,#2563EB)" }}>
             {loading ? "Searching…" : "Search"}
           </button>
         </div>
@@ -101,7 +100,7 @@ export default function SearchPage() {
       {/* Result stats */}
       {searched && !loading && !searchError && (
         <div className="flex items-center justify-end">
-          <span className="text-[11px] text-gray-400">{results.length} result{results.length !== 1 ? "s" : ""} · {took}ms</span>
+          <span className="text-[11px] text-[#6B7280]">{results.length} result{results.length !== 1 ? "s" : ""} · {took}ms</span>
         </div>
       )}
 
@@ -111,18 +110,20 @@ export default function SearchPage() {
           {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : searchError ? (
-        <div role="alert" className="flex flex-col items-center gap-3 py-16 px-6 rounded-xl bg-danger-50 border border-danger-200 text-center">
-          <p className="text-[14px] font-semibold text-danger-700">Search is currently unavailable</p>
-          <p className="text-[12px] text-danger-600 max-w-md">{searchError}</p>
+        <div role="alert" className="flex flex-col items-center gap-3 py-16 px-6 rounded-2xl text-center"
+          style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
+          <p className="text-[14px] font-semibold text-[#F87171]">Search is currently unavailable</p>
+          <p className="text-[12px] text-[#FCA5A5] max-w-md">{searchError}</p>
           <button onClick={() => run(q)}
-            className="mt-1 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-danger-600 hover:bg-danger-700 transition-colors">
-            Retry
+            className="mt-1 px-4 py-2 rounded-lg text-[12px] font-semibold text-[#F87171] transition-all"
+            style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}>
+            ↻ Retry
           </button>
         </div>
       ) : searched && results.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-[14px] font-semibold text-gray-600">No results for &ldquo;{q}&rdquo;</p>
-          <p className="text-[12px] text-gray-400">Try different keywords or broaden the category.</p>
+          <p className="text-[14px] font-semibold text-[#6B7280]">No results for &ldquo;{q}&rdquo;</p>
+          <p className="text-[12px] text-[#4B5563]">Try different keywords or broaden the category.</p>
         </div>
       ) : searched ? (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -130,17 +131,18 @@ export default function SearchPage() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-6 py-16 text-center">
-          <div className="w-20 h-20 rounded-3xl bg-brand-50 border border-brand-100 flex items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="14" cy="14" r="10" stroke="var(--color-brand-600)" strokeWidth="1.5"/><path d="M28 28l-6-6" stroke="var(--color-brand-400)" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg,rgba(59,123,246,0.1),rgba(139,92,246,0.1))", border: "1px solid rgba(59,123,246,0.15)" }}>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="14" cy="14" r="10" stroke="#3B7BF6" strokeWidth="1.5"/><path d="M28 28l-6-6" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round"/></svg>
           </div>
           <div>
-            <p className="text-[16px] font-bold text-gray-900">Semantic Document Search</p>
-            <p className="text-[13px] text-gray-500 mt-2 max-w-md">Search across your indexed documents using natural language — contracts, SLAs, compliance reports.</p>
+            <p className="text-[16px] font-bold text-[#E5E7EB]">Semantic Document Search</p>
+            <p className="text-[13px] text-[#6B7280] mt-2 max-w-md">Search across your indexed documents using natural language — contracts, SLAs, compliance reports.</p>
           </div>
           <div className="grid grid-cols-2 gap-2 w-full max-w-lg">
             {STARTERS.map(s => (
               <button key={s} onClick={() => { setQ(s); run(s); }}
-                className="text-left px-4 py-3 rounded-xl text-[12px] text-gray-500 hover:text-gray-800 border border-border-default hover:border-border-strong bg-surface-card hover:bg-gray-50 transition-all shadow-xs">
+                className="text-left px-4 py-3 rounded-xl text-[12px] text-[#9CA3AF] hover:text-[#E5E7EB] border border-white/[0.06] hover:border-white/15 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
                 🔍 {s}
               </button>
             ))}

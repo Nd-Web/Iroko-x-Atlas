@@ -30,23 +30,23 @@ const AuditRow: FC<{ entry: AuditEntry; index: number }> = ({ entry, index }) =>
 
   return (
     <tr
-      className={`transition-colors duration-150 hover:bg-brand-50 ${
-        index % 2 === 0 ? "bg-transparent" : "bg-gray-50"
+      className={`transition-colors duration-150 hover:bg-[rgba(59,123,246,0.04)] ${
+        index % 2 === 0 ? "bg-transparent" : "bg-white/[0.015]"
       }`}
     >
       {/* Agent */}
-      <td className="px-4 py-3 text-[12px] font-semibold text-gray-800">
+      <td className="px-4 py-3 text-[12px] font-semibold text-[#E5E7EB]">
         {entry.agent_name}
       </td>
       {/* Action */}
       <td className="px-4 py-3">
-        <span className="text-[11px] px-2 py-0.5 rounded-md font-medium bg-gray-50 border border-border-default text-gray-500">
+        <span className="text-[11px] px-2 py-0.5 rounded-md font-medium bg-white/[0.05] border border-white/[0.08] text-[#9CA3AF]">
           {entry.action_type}
         </span>
       </td>
       {/* Summary */}
       <td
-        className="px-4 py-3 text-[12px] max-w-xs text-gray-500"
+        className="px-4 py-3 text-[12px] max-w-xs text-[#6B7280]"
         title={entry.decision_summary}
       >
         {truncate(entry.decision_summary, 64)}
@@ -54,12 +54,12 @@ const AuditRow: FC<{ entry: AuditEntry; index: number }> = ({ entry, index }) =>
       {/* Verdict */}
       <td className="px-4 py-3">{verdictPill(entry.verdict)}</td>
       {/* Timestamp */}
-      <td className="px-4 py-3 text-[11px] whitespace-nowrap text-gray-400">
+      <td className="px-4 py-3 text-[11px] whitespace-nowrap text-[#4B5563]">
         {formatTime(entry.created_at)}
       </td>
       {/* Chain hash */}
       <td className="px-4 py-3">
-        <code className="text-[10px] font-mono px-2 py-1 rounded-lg tracking-[0.04em] bg-brand-50 border border-brand-100 text-brand-700">
+        <code className="text-[10px] font-mono px-2 py-1 rounded-lg tracking-[0.04em] bg-[rgba(139,92,246,0.1)] border border-[rgba(139,92,246,0.2)] text-[#8B5CF6]">
           …{hashTail}
         </code>
       </td>
@@ -94,12 +94,12 @@ const AuditTrailTab: FC<{
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {loading ? (
-            <span className="text-[12px] px-3 py-1 rounded-full bg-gray-50 text-gray-500">
+            <span className="text-[12px] px-3 py-1 rounded-full bg-[#141824] text-[#6B7280]">
               Loading audit trail…
             </span>
           ) : (
             <>
-              <span className="text-[13px] font-semibold text-gray-900">
+              <span className="text-[13px] font-semibold text-[#E5E7EB]">
                 {entries.length} entries
               </span>
               {/* Chain integrity badge */}
@@ -107,8 +107,8 @@ const AuditTrailTab: FC<{
                 <span
                   className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full border ${
                     chainValid
-                      ? "bg-success-50 border-success-100 text-success-700"
-                      : "bg-danger-50 border-danger-100 text-danger-700"
+                      ? "bg-[rgba(16,185,129,0.1)] border-[rgba(16,185,129,0.25)] text-[#10B981]"
+                      : "bg-[rgba(239,68,68,0.1)] border-[rgba(239,68,68,0.25)] text-[#EF4444]"
                   }`}
                 >
                   {chainValid ? (
@@ -138,7 +138,7 @@ const AuditTrailTab: FC<{
         {/* Pagination controls */}
         {!loading && totalPages > 1 && (
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-[#4B5563]">
               Page {page + 1} / {totalPages}
             </span>
             <div className="flex gap-1">
@@ -151,7 +151,7 @@ const AuditTrailTab: FC<{
                   onClick={action}
                   disabled={disabled}
                   aria-label={aria}
-                  className="w-8 h-8 rounded-lg text-[13px] font-bold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed bg-surface-card border border-border-default text-gray-500 hover:border-border-strong"
+                  className="w-8 h-8 rounded-lg text-[13px] font-bold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed bg-[#141824] border border-white/[0.06] text-[#9CA3AF]"
                 >
                   {label}
                 </button>
@@ -164,15 +164,15 @@ const AuditTrailTab: FC<{
       {error && <ErrorBanner message={error} />}
 
       {/* Table */}
-      <div className="rounded-2xl overflow-hidden bg-surface-card border border-border-default shadow-xs">
+      <div className="rounded-2xl overflow-hidden border border-white/[0.06]">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="bg-gray-50">
+              <tr className="bg-[#141824]">
                 {["Agent", "Action", "Summary", "Verdict", "Timestamp", "Chain Hash"].map((h) => (
                   <th
                     key={h}
-                    className="px-4 py-3 text-[10px] font-black uppercase tracking-widest whitespace-nowrap text-gray-400 border-b border-border-default"
+                    className="px-4 py-3 text-[10px] font-black uppercase tracking-widest whitespace-nowrap text-[#4B5563] border-b border-white/[0.06]"
                   >
                     {h}
                   </th>
@@ -192,7 +192,7 @@ const AuditTrailTab: FC<{
                 ))
               ) : pageSlice.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center text-[13px] text-gray-400">
+                  <td colSpan={6} className="px-4 py-16 text-center text-[13px] text-[#4B5563]">
                     No audit entries found.
                   </td>
                 </tr>
@@ -207,12 +207,12 @@ const AuditTrailTab: FC<{
 
         {/* Table footer */}
         {!loading && entries.length > 0 && (
-          <div className="px-4 py-3 flex items-center justify-between border-t border-border-default bg-gray-50">
-            <p className="text-[11px] text-gray-400">
+          <div className="px-4 py-3 flex items-center justify-between border-t border-white/[0.06] bg-[#141824]">
+            <p className="text-[11px] text-[#4B5563]">
               Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, entries.length)} of {entries.length}
             </p>
             {data?.chain_integrity?.broken_at && (
-              <p className="text-[11px] text-danger-600">
+              <p className="text-[11px] text-[#EF4444]">
                 Chain broken at entry: {data.chain_integrity.broken_at}
               </p>
             )}

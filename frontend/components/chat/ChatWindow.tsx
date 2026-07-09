@@ -16,16 +16,16 @@ interface Props {
 function TypingIndicator() {
   return (
     <div className="flex gap-3 items-start">
-      <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center shrink-0 shadow-xs">
-        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B7BF6] to-[#8B5CF6] flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(59,123,246,0.4)]">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
         </svg>
       </div>
-      <div className="bg-surface-card border border-border-default shadow-xs rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
+      <div className="bg-[#1a1d27] border border-white/[0.06] rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="w-2 h-2 rounded-full bg-brand-600"
+            className="w-2 h-2 rounded-full bg-[#3B7BF6]"
             style={{ animation: `bounce 1.4s ease-in-out ${i * 0.2}s infinite` }}
           />
         ))}
@@ -43,14 +43,14 @@ function TypingIndicator() {
 function EmptyState() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 py-12">
-      <div className="w-16 h-16 rounded-2xl bg-brand-50 border border-brand-200 flex items-center justify-center">
-        <svg aria-hidden="true" className="text-brand-600" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B7BF6]/20 to-[#8B5CF6]/20 border border-white/10 flex items-center justify-center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B7BF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
         </svg>
       </div>
       <div className="text-center">
-        <p className="text-[15px] font-semibold text-gray-900">Ask Iroko anything</p>
-        <p className="text-[13px] text-gray-500 mt-1 max-w-xs">
+        <p className="text-[15px] font-semibold text-[#E5E7EB]">Ask Iroko anything</p>
+        <p className="text-[13px] text-[#6B7280] mt-1 max-w-xs">
           Your enterprise AI is ready. Query documents, analyse contracts, or investigate network alerts.
         </p>
       </div>
@@ -60,7 +60,7 @@ function EmptyState() {
 
 export default function ChatWindow({ conversationId, messages, isStreaming }: Props) {
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 scrollbar-brand">
+    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
       {messages.length === 0 && !isStreaming ? (
         <EmptyState />
       ) : (
