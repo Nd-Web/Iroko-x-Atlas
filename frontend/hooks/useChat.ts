@@ -22,6 +22,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { readStream } from "@/lib/stream";
 import type {
   Citation,
@@ -64,6 +65,7 @@ function msgId(): string {
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useChat(): UseChatReturn {
+  const { triggerSessionExpiry } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,8 +156,21 @@ export function useChat(): UseChatReturn {
       });
 
       if (!res.ok) {
+        // Expired/invalid session → show the global session-expired toast,
+        // which redirects to /login, instead of an inline error.
+        if (res.status === 401) {
+          triggerSessionExpiry();
+        }
+        // The proxy returns { error: "<human-readable message>", ... } —
+        // show the message itself, not the raw JSON blob.
         const text = await res.text().catch(() => "");
-        throw new Error(text || `HTTP ${res.status}`);
+        let message = `HTTP ${res.status}`;
+        try {
+          message = JSON.parse(text).error ?? message;
+        } catch {
+          if (text) message = text;
+        }
+        throw new Error(message);
       }
 
       // 4. Stream tokens into the assistant message
@@ -265,8 +280,21 @@ export function useChat(): UseChatReturn {
     try {
       const res = await fetch(`/api/atlas/conversations/${id}/messages`);
       if (!res.ok) {
+        // Expired/invalid session → show the global session-expired toast,
+        // which redirects to /login, instead of an inline error.
+        if (res.status === 401) {
+          triggerSessionExpiry();
+        }
+        // The proxy returns { error: "<human-readable message>", ... } —
+        // show the message itself, not the raw JSON blob.
         const text = await res.text().catch(() => "");
-        throw new Error(text || `HTTP ${res.status}`);
+        let message = `HTTP ${res.status}`;
+        try {
+          message = JSON.parse(text).error ?? message;
+        } catch {
+          if (text) message = text;
+        }
+        throw new Error(message);
       }
       const data = await res.json();
       const loaded: ChatMessage[] = (data.messages ?? []).map(

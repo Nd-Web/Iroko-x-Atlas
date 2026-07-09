@@ -18,6 +18,7 @@
  *       {type:"error", message} → show error
  */
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 interface AgentStep {
   agent: string;
@@ -188,6 +189,7 @@ function deriveRiskScore(agentTrace: Array<{ agent?: string; description?: strin
 }
 
 export default function ReasoningChain({ query, onComplete, onError }: Props) {
+  const { triggerSessionExpiry } = useAuth();
   const [steps, setSteps] = useState<AgentStep[]>([]);
   const [finalResult, setFinalResult] = useState<FinalResult | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -215,6 +217,10 @@ export default function ReasoningChain({ query, onComplete, onError }: Props) {
         signal: abortRef.current.signal,
       });
 
+      if (res.status === 401) {
+        // Expired/invalid session → global session-expired toast + redirect
+        triggerSessionExpiry();
+      }
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
       const reader = res.body.getReader();
@@ -313,7 +319,7 @@ export default function ReasoningChain({ query, onComplete, onError }: Props) {
       setHasError(true);
       onError();
     }
-  }, [query, onComplete, onError]);
+  }, [query, onComplete, onError, triggerSessionExpiry]);
 
   useEffect(() => {
     startStream();
