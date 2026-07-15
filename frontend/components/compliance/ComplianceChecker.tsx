@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { useSector } from "@/hooks/useSector";
+import { SECTOR_META } from "@/lib/sector";
+import { QUICK_FILLS_BY_SECTOR } from "@/lib/compliance-data";
 
 interface ComplianceResult {
   verdict: "GO" | "NO-GO" | "MONITOR";
@@ -12,12 +15,6 @@ interface ComplianceResult {
   confidence: number;
   checked_at: string;
 }
-
-const QUICK_FILLS = [
-  "Can we charge 45% monthly interest on emergency microloans?",
-  "Is our 30-day agent network suspension compliant with CBN Circular 2024/001?",
-  "Does collecting customer BVN without explicit written consent violate NDPA?",
-];
 
 const VERDICT_CONFIG = {
   "GO": {
@@ -72,6 +69,9 @@ function formatCheckedAt(iso: string): string {
 
 export default function ComplianceChecker() {
   const { user, userLoading } = useAuth();
+  const [sector] = useSector();
+  const meta = SECTOR_META[sector];
+  const quickFills = QUICK_FILLS_BY_SECTOR[sector];
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ComplianceResult | null>(null);
@@ -90,7 +90,7 @@ export default function ComplianceChecker() {
       const res = await fetch("/api/v1/compliance/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText.trim(), context: "Nigerian MFB compliance check" }),
+        body: JSON.stringify({ text: inputText.trim(), context: meta.checkerContext, sector }),
       });
 
       if (!res.ok) {
@@ -138,7 +138,7 @@ export default function ComplianceChecker() {
         rows={4}
         value={inputText}
         onChange={e => setInputText(e.target.value)}
-        placeholder="Describe the action, product, or policy you want to check against CBN/NCC regulations..."
+        placeholder={meta.checkerPlaceholder}
         className="input-base w-full resize-none text-[13.5px] leading-relaxed"
         style={{ padding: "12px 14px" }}
         onKeyDown={e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleCheck(); }}
@@ -148,7 +148,7 @@ export default function ComplianceChecker() {
       <div className="flex flex-col gap-2">
         <span className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.06em]">Quick examples</span>
         <div className="flex flex-wrap gap-2">
-          {QUICK_FILLS.map(q => (
+          {quickFills.map(q => (
             <button
               key={q}
               onClick={() => { setInputText(q); setResult(null); setError(null); }}
@@ -178,7 +178,7 @@ export default function ComplianceChecker() {
             <path d="M8 2a6 6 0 0 1 6 6" stroke="var(--color-brand-600)" strokeWidth="2" strokeLinecap="round" />
           </svg>
           <span className="text-[13px] text-brand-700 font-medium">
-            Iroko is checking against CBN · NCC · SEC · NDPA regulations...
+            Iroko is checking against {meta.regulators} regulations...
           </span>
         </div>
       )}

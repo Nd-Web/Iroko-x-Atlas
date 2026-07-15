@@ -444,6 +444,303 @@ NDPC_REGULATIONS: list[dict] = [
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# NCC Telecom Regulatory Corpus (Network operators — e.g. MTN Nigeria)
+# ─────────────────────────────────────────────────────────────────────────────
+# Sources (all verified, 2003–2026):
+#   NCC  — Nigerian Communications Commission (ncc.gov.ng)
+#   NCA  — Nigerian Communications Act 2003
+#   NDPC — Nigeria Data Protection Commission (subscriber data — shared with fintech corpus)
+# Penalty precedents, section references, and enforcement actions are real.
+
+NCC_TELECOM_REGULATIONS: list[dict] = [
+    {
+        "id": "NCC-QOS-001",
+        "name": "NCC Quality of Service Business Rules & Regulations 2024",
+        "authority": "Nigerian Communications Commission — Technical Standards & Network Integrity",
+        "category": "quality_of_service",
+        "status": "active",
+        "key_sections": [
+            {
+                "section": "Rule 4 — Dropped Call Rate (DCR)",
+                "summary": "Network Dropped Call Rate must not exceed 2% measured monthly per network per state.",
+            },
+            {
+                "section": "Rule 5 — Call Setup Success Rate (CSSR)",
+                "summary": "Call Setup Success Rate must be at or above 98%; SDCCH/TCH congestion must stay below 1%.",
+            },
+            {
+                "section": "Rule 8 — Data & Network Availability",
+                "summary": (
+                    "Network availability must be ≥ 98% per month; minimum data throughput thresholds "
+                    "apply to 3G/4G/5G cells. Operators submit QoS returns to NCC quarterly."
+                ),
+            },
+        ],
+        "obligations": [
+            "Maintain Dropped Call Rate ≤ 2% and Call Setup Success Rate ≥ 98% at all times.",
+            "Keep network availability ≥ 98% per month per state.",
+            "Submit quarterly Quality of Service returns to NCC.",
+            "Report major service outages to NCC within 24 hours.",
+        ],
+        "penalties": [
+            "KPI breach: administrative fine of ₦5 million per breach, per network, per month.",
+            "Persistent QoS failure: NCC may bar new sales/activations in affected states.",
+            "Systemic breach: escalation under NCC Enforcement Processes Regulations.",
+        ],
+        "notable_cases": [
+            {
+                "case": "MTN / Airtel / Glo / 9mobile QoS Fines (2018–2024)",
+                "detail": (
+                    "NCC repeatedly fined the four GSM operators for breaching QoS KPI thresholds "
+                    "(DCR, CSSR, congestion) across multiple states — fines running into hundreds of "
+                    "millions of Naira and temporary sales bars in affected regions."
+                ),
+            }
+        ],
+        "source_url": "https://www.ncc.gov.ng/technical-regulation/quality-of-service",
+    },
+    {
+        "id": "NCC-SIM-001",
+        "name": "NCC SIM Registration Regulations 2011 & NIN-SIM Linkage Directive",
+        "authority": "Nigerian Communications Commission — Consumer Affairs / NIMC",
+        "category": "identity_registration",
+        "status": "active",
+        "key_sections": [
+            {
+                "section": "Reg 6 — Proper Registration",
+                "summary": "No SIM may be activated without complete, verified subscriber registration data.",
+            },
+            {
+                "section": "NIN-SIM Directive (2020, updated)",
+                "summary": (
+                    "Every active SIM must be linked to a valid National Identity Number (NIN). "
+                    "Operators must bar outbound service on unlinked SIMs by the NCC deadline."
+                ),
+            },
+            {
+                "section": "Reg 9 — Pre-registered SIM Prohibition",
+                "summary": "Sale or possession of pre-registered / improperly registered SIMs is prohibited.",
+            },
+        ],
+        "obligations": [
+            "Register all subscribers with complete, verified biometric and identity data.",
+            "Link every active SIM to a valid NIN; bar unlinked SIMs by the NCC deadline.",
+            "Deactivate improperly or pre-registered SIMs and audit the SIM database.",
+            "Submit SIM registration integrity reports to NCC on request.",
+        ],
+        "penalties": [
+            "Improperly registered SIMs: ₦200,000 fine per unregistered/pre-registered SIM.",
+            "Failure to enforce NIN-SIM barring: NCC directive + escalating administrative fines.",
+            "Systemic registration failure: licence sanction under NCA 2003.",
+        ],
+        "notable_cases": [
+            {
+                "case": "MTN Nigeria SIM Registration Fine (2015)",
+                "detail": (
+                    "NCC imposed a ₦1.04 trillion fine on MTN for failing to disconnect 5.1 million "
+                    "improperly registered SIMs — later negotiated down to ₦330 billion. The largest "
+                    "telecom regulatory penalty in Nigerian history."
+                ),
+            }
+        ],
+        "source_url": "https://www.ncc.gov.ng/accessible/documents/158-registration-of-telephone-subscribers-regulations-2011",
+    },
+    {
+        "id": "NCC-CCP-001",
+        "name": "NCC Consumer Code of Practice Regulations 2007 (as amended)",
+        "authority": "Nigerian Communications Commission — Consumer Affairs Bureau",
+        "category": "consumer_protection",
+        "status": "active",
+        "key_provisions": [
+            {
+                "rule": "Billing Accuracy & Transparency",
+                "detail": "Operators must bill accurately, disclose all tariffs, and obtain consent before any charge.",
+            },
+            {
+                "rule": "Complaint Resolution SLA",
+                "detail": "Subscriber complaints must be acknowledged promptly and resolved within the NCC-mandated window.",
+            },
+            {
+                "rule": "Unsolicited Messages / DND (2442)",
+                "detail": "Honour Do-Not-Disturb (2442) opt-outs; no forced subscriptions or unsolicited value-added services.",
+            },
+        ],
+        "obligations": [
+            "Bill subscribers accurately and disclose all tariffs before activation.",
+            "Obtain explicit consent before enabling any Value Added Service (VAS).",
+            "Honour Do-Not-Disturb (2442) requests within 24 hours.",
+            "Resolve subscriber complaints within the NCC-mandated SLA and report metrics quarterly.",
+        ],
+        "penalties": [
+            "Unsolicited VAS / forced subscription: NCC directive to refund + administrative fine.",
+            "Billing violations: ₦5 million+ per systemic breach and mandatory subscriber refunds.",
+            "Repeated consumer breaches: escalation under NCC Enforcement Processes Regulations.",
+        ],
+        "notable_cases": [
+            {
+                "case": "NCC Unsolicited-VAS Directive (2019–2023)",
+                "detail": (
+                    "NCC directed all operators to auto-renew VAS only with explicit consent after a "
+                    "wave of forced-subscription complaints, mandating refunds and DND enforcement."
+                ),
+            }
+        ],
+        "source_url": "https://www.ncc.gov.ng/accessible/documents/104-consumer-code-of-practice-regulations",
+    },
+    {
+        "id": "NCC-LIC-001",
+        "name": "Nigerian Communications Act 2003 — Licensing, Spectrum & Annual Operating Levy",
+        "authority": "Nigerian Communications Commission — Licensing & Spectrum",
+        "category": "licensing_spectrum",
+        "status": "active",
+        "key_sections": [
+            {
+                "section": "NCA 2003 s.31–38 — Licensing",
+                "summary": "No person shall operate a communications network without a valid NCC licence (e.g. Unified Access Service Licence).",
+            },
+            {
+                "section": "Annual Operating Levy (AOL)",
+                "summary": "Licensees pay an Annual Operating Levy of 2.5% of net operating revenue to NCC.",
+            },
+            {
+                "section": "Spectrum Assignment & Renewal",
+                "summary": "Spectrum must be used per assignment terms; renewal fees and use-it-or-lose-it conditions apply.",
+            },
+        ],
+        "obligations": [
+            "Operate only under a valid NCC licence and within assigned spectrum terms.",
+            "Pay the Annual Operating Levy (2.5% of net revenue) by the NCC deadline.",
+            "Renew spectrum licences before expiry and meet rollout obligations.",
+            "Notify NCC of any change in control, network expansion, or infrastructure sharing.",
+        ],
+        "penalties": [
+            "Operating without/beyond licence: NCA 2003 offence — fines and possible network shutdown.",
+            "Late Annual Operating Levy: interest and administrative penalties.",
+            "Spectrum misuse: withdrawal of assignment and forfeiture of fees.",
+        ],
+        "source_url": "https://www.ncc.gov.ng/the-ncc/legal-regulatory/acts/6-nigerian-communications-act-2003",
+    },
+    {
+        "id": "NCC-TYP-001",
+        "name": "NCC Type Approval Regulations 2007",
+        "authority": "Nigerian Communications Commission — Type Approval",
+        "category": "equipment_standards",
+        "status": "active",
+        "key_provisions": [
+            {
+                "rule": "Mandatory Type Approval",
+                "detail": "All communications equipment (BTS, handsets, CPE, IoT modules) connected to networks must be NCC type-approved.",
+            },
+            {
+                "rule": "Certification & Labelling",
+                "detail": "Approved equipment must carry a valid NCC type-approval certificate and identifier.",
+            },
+        ],
+        "obligations": [
+            "Deploy only NCC type-approved network and subscriber equipment.",
+            "Maintain type-approval certificates for all active equipment classes.",
+            "Withdraw and replace any non-approved equipment on NCC notice.",
+        ],
+        "penalties": [
+            "Use of non-type-approved equipment: ₦2 million+ fine and mandatory withdrawal.",
+            "Import/sale of unapproved devices: seizure and administrative sanction.",
+        ],
+        "source_url": "https://www.ncc.gov.ng/technical-regulation/type-approval",
+    },
+    {
+        "id": "NCC-ENF-001",
+        "name": "NCC Enforcement Processes Regulations 2019",
+        "authority": "Nigerian Communications Commission — Legal & Regulatory Services",
+        "category": "enforcement",
+        "status": "active",
+        "key_sections": [
+            {
+                "section": "Reg 12 — Administrative Sanctions",
+                "summary": "NCC may impose fines, order corrective action, suspend sales/activations, or revoke licences for non-compliance.",
+            },
+            {
+                "section": "Reg 18 — False Information",
+                "summary": "Submitting false returns, QoS data, or subscriber figures to NCC is a regulatory offence.",
+            },
+        ],
+        "obligations": [
+            "Comply with all NCC directives, determinations, and enforcement notices.",
+            "Submit accurate QoS, subscriber, and financial returns to NCC.",
+            "Respond to NCC enforcement notices within the stipulated timeframe.",
+        ],
+        "penalties": [
+            "Administrative fines scaled to breach severity per the Enforcement Regulations.",
+            "Suspension of new sales/activations in affected areas.",
+            "Licence suspension or revocation for wilful or systemic non-compliance.",
+        ],
+        "source_url": "https://www.ncc.gov.ng/accessible/documents/enforcement-processes-regulations",
+    },
+]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Compliance priorities for network operators (NCC + NDPC)
+# ─────────────────────────────────────────────────────────────────────────────
+
+TELECOM_COMPLIANCE_CHECKLIST: list[dict] = [
+    {
+        "area": "Quality of Service KPIs",
+        "regulator": "NCC",
+        "regulation": "NCC QoS Business Rules 2024 — Rules 4–8 (NCC-QOS-001)",
+        "obligation": "Keep Dropped Call Rate ≤ 2%, Call Setup Success ≥ 98%, availability ≥ 98%; file quarterly QoS returns.",
+        "risk": "HIGH",
+        "penalty_if_breached": "₦5M per KPI breach per state per month; NCC may bar new activations.",
+        "network_relevance": "DCR/CSSR drift in dense clusters (Lagos, Kano) is the leading trigger of NCC QoS fines.",
+    },
+    {
+        "area": "SIM / NIN Registration Integrity",
+        "regulator": "NCC",
+        "regulation": "SIM Registration Regs 2011 + NIN-SIM Directive (NCC-SIM-001)",
+        "obligation": "Register all subscribers with verified data; link SIMs to NIN; bar unlinked SIMs by deadline.",
+        "risk": "HIGH",
+        "penalty_if_breached": "₦200K per improperly registered SIM; MTN precedent: ₦1.04tn (reduced to ₦330bn).",
+        "network_relevance": "Unlinked NIN-SIM and pre-registered SIMs are the highest-exposure enforcement area for MTN.",
+    },
+    {
+        "area": "Consumer Billing & Complaints",
+        "regulator": "NCC",
+        "regulation": "Consumer Code of Practice 2007 (NCC-CCP-001)",
+        "obligation": "Bill accurately, obtain VAS consent, honour DND (2442), resolve complaints within SLA.",
+        "risk": "MEDIUM",
+        "penalty_if_breached": "₦5M+ per systemic billing breach; refunds ordered for forced subscriptions.",
+        "network_relevance": "Unsolicited VAS auto-renewal and DND breaches drive NCC consumer directives.",
+    },
+    {
+        "area": "Annual Operating Levy & Licensing",
+        "regulator": "NCC",
+        "regulation": "NCA 2003 — Licensing & AOL (NCC-LIC-001)",
+        "obligation": "Operate under valid licence/spectrum; pay 2.5% net-revenue Annual Operating Levy on time.",
+        "risk": "MEDIUM",
+        "penalty_if_breached": "Interest + penalties on late AOL; spectrum forfeiture; shutdown for unlicensed operation.",
+        "network_relevance": "AOL underpayment and spectrum-renewal lapses are recurring audit findings for large operators.",
+    },
+    {
+        "area": "Subscriber Data Breach Notification",
+        "regulator": "NDPC",
+        "regulation": "NDPA 2023 Section 24 (NDPC-003)",
+        "obligation": "Report high-risk subscriber-data breaches to NDPC within 72 hours; notify subjects immediately.",
+        "risk": "HIGH",
+        "penalty_if_breached": "₦10M OR 2% of annual gross revenue; MultiChoice precedent: ₦766M for cross-border data misuse.",
+        "network_relevance": "CDR, location, and subscriber PII breaches trigger mandatory NDPC notification.",
+    },
+    {
+        "area": "Equipment Type Approval",
+        "regulator": "NCC",
+        "regulation": "Type Approval Regs 2007 (NCC-TYP-001)",
+        "obligation": "Deploy only NCC type-approved network and subscriber equipment; keep certificates current.",
+        "risk": "MEDIUM",
+        "penalty_if_breached": "₦2M+ fine and mandatory withdrawal of non-approved equipment.",
+        "network_relevance": "New BTS, 5G RAN, and CPE rollouts must clear NCC type approval before activation.",
+    },
+]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Compliance priorities for African fintechs
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -565,53 +862,165 @@ _KEYWORD_MAP = {
     "regulatory": ["CBN-MFB-001", "CBN-CAR-001", "NDPC-001"],
 }
 
-_ALL_REGS = {r["id"]: r for r in (CBN_REGULATIONS + NDPC_REGULATIONS)}
+# Telecom (NCC) keyword → regulation IDs. NDPC entries are shared with the
+# financial map so subscriber-data queries resolve in either sector.
+_TELECOM_KEYWORD_MAP = {
+    "quality of service": ["NCC-QOS-001"],
+    "qos": ["NCC-QOS-001"],
+    "dropped call": ["NCC-QOS-001"],
+    "call setup": ["NCC-QOS-001"],
+    "cssr": ["NCC-QOS-001"],
+    "dcr": ["NCC-QOS-001"],
+    "congestion": ["NCC-QOS-001"],
+    "network availability": ["NCC-QOS-001"],
+    "outage": ["NCC-QOS-001"],
+    "throughput": ["NCC-QOS-001"],
+    "sim": ["NCC-SIM-001"],
+    "sim registration": ["NCC-SIM-001"],
+    "nin": ["NCC-SIM-001"],
+    "nin-sim": ["NCC-SIM-001"],
+    "barring": ["NCC-SIM-001"],
+    "pre-registered": ["NCC-SIM-001"],
+    "subscriber registration": ["NCC-SIM-001"],
+    "billing": ["NCC-CCP-001"],
+    "tariff": ["NCC-CCP-001"],
+    "vas": ["NCC-CCP-001"],
+    "value added service": ["NCC-CCP-001"],
+    "unsolicited": ["NCC-CCP-001"],
+    "do not disturb": ["NCC-CCP-001"],
+    "dnd": ["NCC-CCP-001"],
+    "forced subscription": ["NCC-CCP-001"],
+    "consumer code": ["NCC-CCP-001"],
+    "complaint": ["NCC-CCP-001"],
+    "licence": ["NCC-LIC-001"],
+    "license": ["NCC-LIC-001"],
+    "spectrum": ["NCC-LIC-001"],
+    "operating levy": ["NCC-LIC-001"],
+    "aol": ["NCC-LIC-001"],
+    "unified access": ["NCC-LIC-001"],
+    "rollout": ["NCC-LIC-001"],
+    "type approval": ["NCC-TYP-001"],
+    "equipment": ["NCC-TYP-001"],
+    "bts": ["NCC-TYP-001"],
+    "base station": ["NCC-TYP-001"],
+    "cpe": ["NCC-TYP-001"],
+    "enforcement": ["NCC-ENF-001"],
+    "sanction": ["NCC-ENF-001"],
+    "false return": ["NCC-ENF-001"],
+    "penalty": ["NCC-QOS-001", "NCC-SIM-001", "NDPC-001"],
+    "fine": ["NCC-QOS-001", "NCC-SIM-001", "NDPC-001"],
+    "ncc": ["NCC-QOS-001", "NCC-SIM-001", "NCC-LIC-001"],
+    "cdr": ["NDPC-001", "NDPC-003"],
+    "call detail record": ["NDPC-001", "NDPC-003"],
+    "location data": ["NDPC-001", "NDPC-003"],
+    "subscriber data": ["NDPC-001", "NDPC-003"],
+    "data protection": ["NDPC-001", "NDPC-002"],
+    "ndpa": ["NDPC-001"],
+    "data breach": ["NDPC-001", "NDPC-003"],
+    "breach notification": ["NDPC-003"],
+    "cross-border": ["NDPC-002"],
+    "cross border": ["NDPC-002"],
+    "dpo": ["NDPC-001"],
+    "dpia": ["NDPC-001", "NDPC-002"],
+    "compliance": ["NCC-QOS-001", "NCC-SIM-001", "NCC-CCP-001", "NDPC-001"],
+    "regulation": ["NCC-QOS-001", "NDPC-001"],
+    "regulatory": ["NCC-QOS-001", "NCC-LIC-001", "NDPC-001"],
+}
+
+# Registries per sector. NDPC is shared; NCC vs CBN/SEC differ.
+_ALL_REGS = {r["id"]: r for r in (CBN_REGULATIONS + NDPC_REGULATIONS + NCC_TELECOM_REGULATIONS)}
+
+Sector = str  # "financial" | "network" | "both"
 
 
-def get_regulatory_context(query: str) -> dict:
-    """Return regulations relevant to the query string."""
+def _sector_config(sector: Sector) -> dict:
+    """Return the keyword map, checklist, and default reg IDs for a sector."""
+    if sector == "network":
+        return {
+            "keyword_map": _TELECOM_KEYWORD_MAP,
+            "checklist": TELECOM_COMPLIANCE_CHECKLIST,
+            "defaults": {"NCC-QOS-001", "NCC-SIM-001", "NCC-CCP-001", "NDPC-001", "NDPC-003"},
+        }
+    if sector == "both":
+        return {
+            "keyword_map": {**_KEYWORD_MAP, **_TELECOM_KEYWORD_MAP},
+            "checklist": TELECOM_COMPLIANCE_CHECKLIST + FINTECH_COMPLIANCE_CHECKLIST,
+            "defaults": {
+                "CBN-MFB-001", "CBN-AML-001", "NCC-QOS-001", "NCC-SIM-001", "NDPC-001",
+            },
+        }
+    # default: financial
+    return {
+        "keyword_map": _KEYWORD_MAP,
+        "checklist": FINTECH_COMPLIANCE_CHECKLIST,
+        "defaults": {"CBN-MFB-001", "CBN-AML-001", "CBN-CAR-001", "NDPC-001", "NDPC-003"},
+    }
+
+
+def get_regulatory_context(query: str, sector: Sector = "financial") -> dict:
+    """Return regulations relevant to the query string for the given sector.
+
+    sector: "financial" (CBN/SEC), "network" (NCC), or "both".
+    NDPC data-protection rules are shared across sectors.
+    """
     q = query.lower()
+    cfg = _sector_config(sector)
     matched_ids: set[str] = set()
 
-    for keyword, reg_ids in _KEYWORD_MAP.items():
+    for keyword, reg_ids in cfg["keyword_map"].items():
         if keyword in q:
             matched_ids.update(reg_ids)
 
-    # Default: return top CBN+NDPC primary regulations if nothing specific matched
+    # Default: return the sector's primary regulations if nothing specific matched
     if not matched_ids:
-        matched_ids = {"CBN-MFB-001", "CBN-AML-001", "CBN-CAR-001", "NDPC-001", "NDPC-003"}
+        matched_ids = set(cfg["defaults"])
 
     matched_regs = [_ALL_REGS[rid] for rid in matched_ids if rid in _ALL_REGS]
     matched_regs.sort(key=lambda r: r["id"])
 
     return {
         "regulations": matched_regs,
-        "compliance_checklist": FINTECH_COMPLIANCE_CHECKLIST,
+        "compliance_checklist": cfg["checklist"],
+        "sector": sector,
         "total_matched": len(matched_regs),
     }
 
 
-def get_all_regulations() -> dict:
-    """Return the full regulatory corpus."""
-    return {
-        "cbn": CBN_REGULATIONS,
+def get_all_regulations(sector: Sector = "both") -> dict:
+    """Return the full regulatory corpus (all sectors by default)."""
+    cfg = _sector_config(sector)
+    result = {
         "ndpc": NDPC_REGULATIONS,
-        "compliance_checklist": FINTECH_COMPLIANCE_CHECKLIST,
+        "compliance_checklist": cfg["checklist"],
+        "sector": sector,
     }
+    if sector in ("financial", "both"):
+        result["cbn"] = CBN_REGULATIONS
+    if sector in ("network", "both"):
+        result["ncc"] = NCC_TELECOM_REGULATIONS
+    return result
 
 
-def get_regulatory_summary_text(query: str) -> str:
+def get_regulatory_summary_text(query: str, sector: Sector = "financial") -> str:
     """
     Return a concise text block (for LLM context injection) with
-    real regulation names, sections, and penalty figures.
+    real regulation names, sections, and penalty figures for the given sector.
     """
-    ctx = get_regulatory_context(query)
+    ctx = get_regulatory_context(query, sector=sector)
     regs = ctx["regulations"]
-    lines = [
-        "=== AFRICAN FINTECH REGULATORY REFERENCE (CBN, SEC & NDPC) ===",
-        "The following regulations are sourced from official CBN, SEC, and NDPC publications.",
-        "",
-    ]
+    if sector == "network":
+        header = "=== NIGERIAN TELECOM REGULATORY REFERENCE (NCC & NDPC) ==="
+        subhead = "The following regulations are sourced from official NCC and NDPC publications."
+        priorities_label = "=== NIGERIAN NETWORK OPERATOR COMPLIANCE PRIORITIES ==="
+    elif sector == "both":
+        header = "=== NIGERIAN REGULATORY REFERENCE (NCC, CBN, SEC & NDPC) ==="
+        subhead = "The following regulations are sourced from official NCC, CBN, SEC, and NDPC publications."
+        priorities_label = "=== NIGERIAN COMPLIANCE PRIORITIES ==="
+    else:
+        header = "=== AFRICAN FINTECH REGULATORY REFERENCE (CBN, SEC & NDPC) ==="
+        subhead = "The following regulations are sourced from official CBN, SEC, and NDPC publications."
+        priorities_label = "=== AFRICAN FINTECH COMPLIANCE PRIORITIES ==="
+    lines = [header, subhead, ""]
     for r in regs:
         lines.append(f"[{r['id']}] {r['name']} — Status: {r['status'].upper()}")
         if r.get("key_sections"):
@@ -630,7 +1039,7 @@ def get_regulatory_summary_text(query: str) -> str:
                 lines.append(f"  Enforcement precedent: {nc['case']} — {nc.get('penalty', nc.get('detail', ''))[:120]}")
         lines.append("")
 
-    lines.append("=== AFRICAN FINTECH COMPLIANCE PRIORITIES ===")
+    lines.append(priorities_label)
     for c in ctx["compliance_checklist"]:
         lines.append(
             f"[{c['risk']}] {c['area']} ({c['regulator']}): {c['obligation']} "

@@ -4,10 +4,18 @@ import AppShell from "@/components/layout/AppShell";
 import { useState, useEffect } from "react";
 import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
 import ComplianceChecker from "@/components/compliance/ComplianceChecker";
-import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
+import SectorSwitcher from "@/components/compliance/SectorSwitcher";
+import { FILINGS_BY_SECTOR, STATUS_LABELS } from "@/lib/filings-data";
+import { DSR_BY_SECTOR } from "@/lib/compliance-data";
+import { SECTOR_META } from "@/lib/sector";
+import { useSector } from "@/hooks/useSector";
 
 export default function ComplianceReportsPage() {
   const [modal, setModal] = useState<{type: "report" | "dpia" | "dsr", title?: string} | null>(null);
+  const [sector] = useSector();
+  const meta = SECTOR_META[sector];
+  const filings = FILINGS_BY_SECTOR[sector];
+  const dsrs = DSR_BY_SECTOR[sector];
 
   useEffect(() => {
     if (!modal) return;
@@ -17,13 +25,13 @@ export default function ComplianceReportsPage() {
   }, [modal]);
 
   return (
-    <AppShell title="Compliance reports" subtitle="CBN returns · SEC filings · NDPA audit · DPIA tracker · DSR queue">
+    <AppShell title="Compliance reports" subtitle={meta.reportsSubtitle} actions={<SectorSwitcher />}>
       {/* Live compliance checker */}
       <div className="mb-8">
         <div className="mb-4">
           <h2 className="text-[15px] font-semibold text-gray-900 tracking-[-0.01em]">Live Compliance Check</h2>
           <p className="text-[13px] text-gray-400 mt-[3px]">
-            Check any action, product, or policy against CBN · NCC · SEC · NDPA regulations in real time
+            Check any action, product, or policy against {meta.regulators} regulations in real time
           </p>
         </div>
         <ComplianceChecker />
@@ -31,7 +39,7 @@ export default function ComplianceReportsPage() {
 
       {/* Report cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[14px]">
-        {REGULATORY_FILINGS.map((r) => (
+        {filings.map((r) => (
           <div key={r.name} className="card flex flex-col gap-3 px-[22px] py-5">
             <div className="flex justify-between items-start">
               <span className="text-[11px] font-bold text-brand-700 bg-brand-50 px-2 py-[2px] rounded-full">
@@ -103,30 +111,26 @@ export default function ComplianceReportsPage() {
         </div>
         <div className="overflow-x-auto">
           <div className="min-w-[600px] md:min-w-0">
-            {[
-              { id: "DSR-0041", type: "Right to access",        daysLeft: 1, status: "urgent"  },
-              { id: "DSR-0040", type: "Right to erasure",       daysLeft: 3, status: "pending" },
-              { id: "DSR-0039", type: "Right to rectification", daysLeft: 4, status: "pending" },
-            ].map((dsr, i, arr) => (
+            {dsrs.map((dsr, i, arr) => (
               <div
-                key={dsr.id}
+                key={dsr.ref}
                 className={`flex items-center justify-between px-5 py-[13px] gap-4${i < arr.length - 1 ? " border-b border-border-default" : ""}`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-xs text-brand-700 font-semibold">{dsr.id}</span>
-                  <span className="text-[13px] text-gray-700 font-medium">{dsr.type}</span>
+                  <span className="font-mono text-xs text-brand-700 font-semibold">{dsr.ref}</span>
+                  <span className="text-[13px] text-gray-700 font-medium">Right to {dsr.type.toLowerCase()}</span>
                 </div>
                 <div className="flex items-center gap-[10px]">
-                  <span className={`text-xs ${dsr.daysLeft <= 1 ? "text-danger-700" : "text-gray-500"}`}>
-                    {dsr.daysLeft} day{dsr.daysLeft !== 1 ? "s" : ""} left
+                  <span className={`text-xs ${dsr.urgent ? "text-danger-700" : "text-gray-500"}`}>
+                    {dsr.sla}
                   </span>
-                  <span className={`text-[11px] font-semibold px-2 py-[2px] rounded-full ${dsr.status === "urgent" ? "text-danger-700 bg-danger-50" : "text-warning-700 bg-warning-50"}`}>
-                    {dsr.status === "urgent" ? "Urgent" : "Pending"}
+                  <span className={`text-[11px] font-semibold px-2 py-[2px] rounded-full ${dsr.urgent ? "text-danger-700 bg-danger-50" : "text-warning-700 bg-warning-50"}`}>
+                    {dsr.urgent ? "Urgent" : "Pending"}
                   </span>
-                  <button 
-                    className="btn-secondary" 
+                  <button
+                    className="btn-secondary"
                     style={{ padding: "4px 10px", fontSize: "12px" }}
-                    onClick={() => setModal({ type: "dsr", title: dsr.id })}
+                    onClick={() => setModal({ type: "dsr", title: dsr.ref })}
                   >
                     Respond
                   </button>

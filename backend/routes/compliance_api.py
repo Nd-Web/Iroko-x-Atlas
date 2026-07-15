@@ -69,6 +69,7 @@ def _check_rate_limit(api_key: str) -> None:
 class ComplianceCheckRequest(BaseModel):
     text: str
     context: Optional[str] = None
+    sector: Optional[str] = None  # "network" (NCC) or "financial" (CBN/SEC); default financial
 
 
 class ComplianceCheckResponse(BaseModel):
@@ -130,8 +131,12 @@ async def compliance_check(
 
     # ── Compliance engine ─────────────────────────────────────────────────────
     try:
-        org = body.context or "African Fintech Platform"
-        raw = await _watchdog.find_policy_conflicts(organisation=org, topic=body.text)
+        sector = (body.sector or "financial").lower()
+        if sector not in ("network", "financial"):
+            sector = "financial"
+        default_org = "MTN Nigeria" if sector == "network" else "African Fintech Platform"
+        org = body.context or default_org
+        raw = await _watchdog.find_policy_conflicts(organisation=org, topic=body.text, sector=sector)
         result = json.loads(raw)
         alerts = result.get("alerts", [])
     except HTTPException:

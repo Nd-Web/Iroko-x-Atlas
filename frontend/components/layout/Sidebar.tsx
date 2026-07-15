@@ -102,8 +102,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <div className="min-w-0">
             <div className="text-[13px] font-bold text-white tracking-tight leading-tight">Iroko AI</div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[10px] text-[#6B7280]">Fintech RegIntel</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-[#3B7BF6] bg-[#3B7BF6]/10 border border-[#3B7BF6]/20">CBN/SEC</span>
+              <span className="text-[10px] text-[#6B7280]">RegIntel</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-[#3B7BF6] bg-[#3B7BF6]/10 border border-[#3B7BF6]/20">NCC · CBN</span>
             </div>
           </div>
         )}
