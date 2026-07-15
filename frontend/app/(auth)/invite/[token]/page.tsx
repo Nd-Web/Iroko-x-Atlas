@@ -2,7 +2,7 @@
  * app/(auth)/invite/[token]/page.tsx
  *
  * Invite acceptance page — handles the path-parameter URL format that
- * AtlasCore includes in invitation emails:
+ * the backend includes in invitation emails:
  *
  *   https://iroko-frontend.azurewebsites.net/invite/<token>
  *
@@ -26,7 +26,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import StatusMessage from "@/components/ui/StatusMessage";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 import { useAuth } from "@/context/AuthContext";
 import type { InviteTokenPayload } from "@/lib/types";
 
@@ -152,7 +152,7 @@ export default function InviteTokenPage({
     return (
       <div className="min-h-screen bg-surface-page flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-gray-400">
-          <LoadingSpinner size={28} />
+          <Spinner size={28} />
           <span className="text-sm">Validating invitation…</span>
         </div>
       </div>
@@ -407,7 +407,7 @@ export default function InviteTokenPage({
             >
               {loading ? (
                 <>
-                  <LoadingSpinner size={15} />
+                  <Spinner size={15} />
                   Creating account…
                 </>
               ) : (

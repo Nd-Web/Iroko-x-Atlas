@@ -19,20 +19,21 @@ interface ClauseMatch {
   category: string;
 }
 
-// CRC renewal is ~30 days out; compute at module load so it never goes stale.
-const CRC_RENEWAL_DATE = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+// ATC renewal is ~28 days out; compute at module load so it never goes stale.
+const ATC_RENEWAL_DATE = new Date(Date.now() + 28 * 86400000).toISOString().slice(0, 10);
 
-const MOCK_CONTRACTS = [
-  { id: "cx1", vendor: "CRC Credit Bureau", type: "Data Agreement", value: "₦890M/yr", expiry: CRC_RENEWAL_DATE, risk: 8, clauses: 94, status: "expiring" },
-  { id: "cx2", vendor: "Interswitch Group", type: "Payment Gateway SLA", value: "₦1.2B/yr", expiry: "2026-03-31", risk: 4, clauses: 211, status: "active" },
-  { id: "cx3", vendor: "CBN Microfinance Licence", type: "Regulatory Licence", value: "—", expiry: "Ongoing", risk: 5, clauses: 67, status: "active" },
-  { id: "cx4", vendor: "NDPA Data Protection Audit", type: "Regulatory Engagement", value: "—", expiry: "2026-06-30", risk: 6, clauses: 38, status: "active" },
+const SAMPLE_CONTRACTS = [
+  { id: "cx1", vendor: "ATC Lagos Zone 2", type: "Tower Lease — 12 Sites", value: "₦19.5M/mo", expiry: ATC_RENEWAL_DATE, risk: 8, clauses: 94, status: "expiring" },
+  { id: "cx2", vendor: "IHS Nigeria Limited", type: "Tower Lease & Power Mgmt", value: "—", expiry: "2027-03-31", risk: 7, clauses: 211, status: "active" },
+  { id: "cx3", vendor: "Ericsson Nigeria Limited", type: "RAN Maintenance SLA 2026", value: "—", expiry: "2026-12-31", risk: 4, clauses: 67, status: "active" },
+  { id: "cx4", vendor: "Julius Berger Nigeria Plc", type: "Kano-Kaduna Fibre BoQ", value: "—", expiry: "2026-06-30", risk: 6, clauses: 38, status: "active" },
+  { id: "cx5", vendor: "Zenith Bank Plc (EBU)", type: "Enterprise Connectivity SLA", value: "—", expiry: "2027-01-31", risk: 5, clauses: 52, status: "active" },
 ];
 
-const MOCK_CLAUSES: ClauseMatch[] = [
-  { id: "cl1", title: "Single-obligor lending limit — CAR breach trigger", document: "CBN Microfinance Directive Q2 2026", clause: "Section 4.2", excerpt: "Aggregate exposure to a single borrower or group of related borrowers shall not exceed 5% of shareholders' funds unimpaired by losses. Breach triggers immediate escalation to the CBN supervision desk.", riskScore: 8, category: "Compliance" },
-  { id: "cl2", title: "Data processing termination — 30-day cure period", document: "CRC Credit Bureau Data Agreement", clause: "Section 15.2", excerpt: "Either party may terminate this agreement if the other party fails to cure a material breach within 30 days of written notice. Data destruction certificate must be provided within 14 days of termination.", riskScore: 6, category: "Termination" },
-  { id: "cl3", title: "Transaction fee escalation — CPI adjustment clause", document: "Interswitch Group Payment Gateway SLA", clause: "Article 4.1", excerpt: "Annual transaction processing fees shall be adjusted on the anniversary date in line with the Official Consumer Price Index as published by the NBS, subject to a maximum of 10% per annum.", riskScore: 5, category: "Financial" },
+const SAMPLE_CLAUSES: ClauseMatch[] = [
+  { id: "cl1", title: "Diesel backup SLA — fee reduction penalty trigger", document: "TowerCo IHS Nigeria Tower Lease Agreement", clause: "Section 6.3", excerpt: "Where site availability falls below the guaranteed diesel backup SLA, the monthly service fee shall be reduced by 2% for every 0.1% below the SLA threshold. Repeat breaches in consecutive quarters trigger escalation to executive review.", riskScore: 8, category: "SLA" },
+  { id: "cl2", title: "Auto-renewal — 28-day written notice window", document: "ATC Lagos Zone 2 Lease (ATC/MTN/LAG/2023-007)", clause: "Section 15.2", excerpt: "This agreement covering 12 sites at ₦19.5M per month shall renew automatically unless written notice is served prior to expiry. Failure to serve notice within the renewal window locks in prevailing rates for a further 24 months.", riskScore: 6, category: "Termination" },
+  { id: "cl3", title: "Fault response times — maintenance window caps", document: "Ericsson RAN Maintenance SLA 2026", clause: "Article 4.1", excerpt: "Priority 1 faults shall be acknowledged within 15 minutes and restored within 4 hours. Scheduled preventive maintenance shall not exceed two windows per site per quarter, each capped at 120 minutes outside busy hours.", riskScore: 5, category: "Operational" },
 ];
 
 function ClauseCard({ clause }: { clause: ClauseMatch }) {
@@ -89,12 +90,17 @@ export default function ContractsPage() {
         <div className="xl:col-span-2 space-y-4">
           {/* Contract list */}
           <div className="rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: "#0F1320" }}>
-            <div className="px-5 py-4 border-b border-white/[0.06]">
-              <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Contract Registry</h2>
-              <p className="text-[11px] text-[#6B7280]">{MOCK_CONTRACTS.length} agreements · 1 expiring soon</p>
+            <div className="px-5 py-4 border-b border-white/[0.06] flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Contract Registry</h2>
+                <p className="text-[11px] text-[#6B7280]">{SAMPLE_CONTRACTS.length} agreements · 1 expiring soon</p>
+              </div>
+              <span className="shrink-0 text-[9.5px] font-bold uppercase tracking-wider px-2 py-1 rounded-full text-amber-400 bg-amber-400/10 border border-amber-400/20">
+                Sample data — for demonstration
+              </span>
             </div>
             <div className="divide-y divide-white/[0.04]">
-              {MOCK_CONTRACTS.map(c => {
+              {SAMPLE_CONTRACTS.map(c => {
                 const rHex = getRiskHex(c.risk);
                 const isSelected = selectedContract === c.id;
                 return (
@@ -121,12 +127,17 @@ export default function ContractsPage() {
 
           {/* Clause matches */}
           <div className="rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: "#0F1320" }}>
-            <div className="px-5 py-4 border-b border-white/[0.06]">
-              <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Clause Intelligence</h2>
-              <p className="text-[11px] text-[#6B7280]">AI-extracted high-risk clauses · sorted by risk score</p>
+            <div className="px-5 py-4 border-b border-white/[0.06] flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Clause Intelligence</h2>
+                <p className="text-[11px] text-[#6B7280]">AI-extracted high-risk clauses · sorted by risk score</p>
+              </div>
+              <span className="shrink-0 text-[9.5px] font-bold uppercase tracking-wider px-2 py-1 rounded-full text-amber-400 bg-amber-400/10 border border-amber-400/20">
+                Sample data — for demonstration
+              </span>
             </div>
             <div className="p-4 space-y-3">
-              {MOCK_CLAUSES.map(c => <ClauseCard key={c.id} clause={c} />)}
+              {SAMPLE_CLAUSES.map(c => <ClauseCard key={c.id} clause={c} />)}
             </div>
           </div>
 

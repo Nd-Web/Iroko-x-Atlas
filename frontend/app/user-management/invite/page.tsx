@@ -5,7 +5,7 @@ import AppShell from "@/components/layout/AppShell";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import StatusMessage from "@/components/ui/StatusMessage";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 import { useSendInvite } from "../_hooks/useSendInvite";
 
 export default function InviteUserPage() {
@@ -144,7 +144,7 @@ export default function InviteUserPage() {
               >
                 {sendInvite.isPending ? (
                   <>
-                    <LoadingSpinner size={15} />
+                    <Spinner size={15} />
                     Sending…
                   </>
                 ) : (

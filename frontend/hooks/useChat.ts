@@ -22,6 +22,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { readStream } from "@/lib/stream";
 import type {
   Citation,
@@ -48,6 +49,10 @@ export interface UseChatReturn {
   error: string | null;
   sendMessage: (content: string) => Promise<void>;
   clearChat: () => void;
+  /** Load an existing conversation's history from the backend. */
+  loadConversation: (conversationId: string) => Promise<void>;
+  /** ID of the conversation currently loaded (null for a fresh chat). */
+  conversationId: string | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -60,9 +65,11 @@ function msgId(): string {
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useChat(): UseChatReturn {
+  const { triggerSessionExpiry } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const conversationIdRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -78,6 +85,7 @@ export function useChat(): UseChatReturn {
         }
         if (parsed.conversationId) {
           conversationIdRef.current = parsed.conversationId;
+          setConversationId(parsed.conversationId);
         }
       }
     } catch (e) {
@@ -148,8 +156,21 @@ export function useChat(): UseChatReturn {
       });
 
       if (!res.ok) {
+        // Expired/invalid session → show the global session-expired toast,
+        // which redirects to /login, instead of an inline error.
+        if (res.status === 401) {
+          triggerSessionExpiry();
+        }
+        // The proxy returns { error: "<human-readable message>", ... } —
+        // show the message itself, not the raw JSON blob.
         const text = await res.text().catch(() => "");
-        throw new Error(text || `HTTP ${res.status}`);
+        let message = `HTTP ${res.status}`;
+        try {
+          message = JSON.parse(text).error ?? message;
+        } catch {
+          if (text) message = text;
+        }
+        throw new Error(message);
       }
 
       // 4. Stream tokens into the assistant message
@@ -200,6 +221,7 @@ export function useChat(): UseChatReturn {
       if (completionData) {
         conversationIdRef.current =
           completionData.conversation_id ?? conversationIdRef.current;
+        setConversationId(conversationIdRef.current);
 
         setMessages((prev) =>
           prev.map((m) =>
@@ -243,10 +265,76 @@ export function useChat(): UseChatReturn {
     setError(null);
     setIsLoading(false);
     conversationIdRef.current = null;
+    setConversationId(null);
     sessionStorage.removeItem("iroko_chat_state");
   }, []);
 
-  return { messages, isLoading, error, sendMessage, clearChat };
+  /**
+   * Load an existing conversation's history via the Next.js proxy
+   * (GET /api/atlas/conversations/{id}/messages — cookie auth, same origin).
+   */
+  const loadConversation = useCallback(async (id: string) => {
+    abortRef.current?.abort();
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/atlas/conversations/${id}/messages`);
+      if (!res.ok) {
+        // Expired/invalid session → show the global session-expired toast,
+        // which redirects to /login, instead of an inline error.
+        if (res.status === 401) {
+          triggerSessionExpiry();
+        }
+        // The proxy returns { error: "<human-readable message>", ... } —
+        // show the message itself, not the raw JSON blob.
+        const text = await res.text().catch(() => "");
+        let message = `HTTP ${res.status}`;
+        try {
+          message = JSON.parse(text).error ?? message;
+        } catch {
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+      const data = await res.json();
+      const loaded: ChatMessage[] = (data.messages ?? []).map(
+        (m: {
+          id: string | number;
+          role: "user" | "assistant";
+          content: string;
+          agent_trace?: AgentTraceStep[];
+          citations?: Citation[];
+          created_at?: string;
+        }) => ({
+          id: String(m.id ?? msgId()),
+          role: m.role,
+          content: m.content,
+          timestamp: m.created_at ?? new Date().toISOString(),
+          citations: m.citations ?? undefined,
+          trace: m.agent_trace ?? undefined,
+        }),
+      );
+      conversationIdRef.current = id;
+      setConversationId(id);
+      setMessages(loaded);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to load conversation.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return {
+    messages,
+    isLoading,
+    error,
+    sendMessage,
+    clearChat,
+    loadConversation,
+    conversationId,
+  };
 }
 
 export default useChat;

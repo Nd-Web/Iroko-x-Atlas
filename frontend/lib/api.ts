@@ -2,14 +2,14 @@
  * lib/api.ts
  *
  * Client-side typed fetch helper for all backend routes.
- * Attaches the Bearer token automatically.
  *
  * IMPORTANT: This file is safe to import from "use client" components and
- * hooks.  It does NOT use next/headers — all requests go through the Next.js
- * API proxy or the direct backend URL.
+ * hooks. All requests go through SAME-ORIGIN Next.js proxy routes
+ * (app/api/**), which read the httpOnly `iroko_token` cookie server-side
+ * and forward it as a Bearer token. Never call the backend origin directly
+ * from the browser — httpOnly cookies are invisible to JS, so a direct call
+ * always arrives unauthenticated and 401s.
  */
-
-import { API_BASE } from "./config";
 
 // ── Token helpers ────────────────────────────────────────────────────────────
 
@@ -44,14 +44,14 @@ export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = getStoredToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string> | undefined),
   };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
+  // Same-origin: hit the Next.js proxy route, which injects auth from the
+  // httpOnly cookie. Absolute URLs are passed through untouched.
+  const url = path;
 
   const res = await fetch(url, {
     ...options,
@@ -152,13 +152,10 @@ export async function askStream(
   onEvent: (event: SSEEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const token = getStoredToken();
-  const res = await fetch(`${API_BASE}/api/atlas/ask/stream-http`, {
+  // Same-origin streaming proxy — reads the httpOnly cookie server-side.
+  const res = await fetch(`/api/atlas/ask/stream`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, conversation_id: conversationId }),
     signal,
   });

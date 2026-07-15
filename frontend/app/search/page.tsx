@@ -1,15 +1,16 @@
 "use client";
 /**
  * app/search/page.tsx — Semantic document search.
+ * Results come exclusively from /api/search; a failed request shows a
+ * visible error state with retry (no mock fallbacks).
  */
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
+import Link from "next/link";
 import AppShell from "@/components/layout/AppShell";
 import { apiFetch } from "@/lib/api";
-import { cn, truncate } from "@/lib/utils";
+import { truncate } from "@/lib/utils";
 
 interface SearchResult { content: string; source: string; score: number; document_id: string; }
-
-const CATEGORIES = ["All", "SLA", "Compliance", "Contracts", "Network", "Fraud"];
 
 function ResultCard({ result, query }: { result: SearchResult; query: string }) {
   const pct = Math.round(result.score * 100);
@@ -32,7 +33,7 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
       </p>
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
         <span className="text-[10px] text-[#4B5563] font-mono">id:{result.document_id.slice(0, 10)}…</span>
-        <button className="text-[11px] font-semibold text-[#3B7BF6] hover:text-[#60A5FA] transition-colors">Open →</button>
+        <Link href="/documents" className="text-[11px] font-semibold text-[#3B7BF6] hover:text-[#60A5FA] transition-colors">Open →</Link>
       </div>
     </div>
   );
@@ -47,48 +48,45 @@ function SkeletonCard() {
   );
 }
 
-const STARTERS = ["CBN lending exposure limits", "AML/CFT quarterly returns", "CBN capital adequacy requirements", "Fintech licence obligations"];
-const MOCK_RESULTS: SearchResult[] = [
-  { content: "Single obligor exposure limit for MFB lending shall not exceed 5% of shareholders' funds unimpaired by losses for unsecured lending. Aggregate insider lending capped at 10% of shareholders' funds.", source: "CBN_Microfinance_Directive_Q2_2026.pdf", score: 0.94, document_id: "doc-1a2b3c4d" },
-  { content: "The AML/CFT quarterly return must be submitted by the 15th of the first month following each quarter-end. Entities that fail to submit within the prescribed timeframe are liable to a fine of ₦500,000 per day of delay.", source: "CBN_AML_CFT_Quarterly_Return_Q2_2026.xlsx", score: 0.88, document_id: "doc-4d5e6f7g" },
-  { content: "Minimum Capital Adequacy Ratio (CAR) of 10% shall be maintained at all times. Tier 1 capital must comprise at least 6% of risk-weighted assets. Monthly CAR computation and reporting to CBN via FinA system is mandatory.", source: "CBN_BOFIA_2020_Compliance_Guide.pdf", score: 0.79, document_id: "doc-7g8h9i1j" },
-];
+const STARTERS = ["Ikeja cluster outage root cause", "IHS diesel backup SLA penalties", "NCC QoS return requirements", "MoMo deduction complaints Q1"];
 
 export default function SearchPage() {
   const [q, setQ] = useState("");
-  const [cat, setCat] = useState("All");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [took, setTook] = useState(0);
 
-  const run = useCallback(async (query: string, category: string) => {
+  const run = useCallback(async (query: string) => {
     const trimmed = query.trim();
     if (!trimmed) return;
-    setLoading(true); setSearched(true);
+    setLoading(true); setSearched(true); setSearchError(null);
     const t0 = Date.now();
     try {
       const d = await apiFetch<{ results: SearchResult[] }>("/api/search", {
         method: "POST",
-        body: JSON.stringify({ query: trimmed, category: category === "All" ? undefined : category, top_k: 10 }),
+        body: JSON.stringify({ query: trimmed, top_k: 10 }),
       });
       setResults(d.results ?? []); setTook(Date.now() - t0);
-    } catch {
-      setResults(MOCK_RESULTS); setTook(Date.now() - t0);
+    } catch (e: unknown) {
+      setResults([]);
+      setSearchError(e instanceof Error ? e.message : "Search failed. Please try again.");
     } finally { setLoading(false); }
   }, []);
 
   return (
     <AppShell title="Search" subtitle="Semantic search across your document corpus">
       {/* Search bar */}
-      <form onSubmit={e => { e.preventDefault(); run(q, cat); }}>
+      <form onSubmit={e => { e.preventDefault(); run(q); }} role="search">
         <div className="relative flex items-center rounded-2xl border transition-all duration-200 focus-within:border-[#3B7BF6]/50 focus-within:shadow-[0_0_28px_rgba(59,123,246,0.12)]"
           style={{ background: "#0F1320", borderColor: "rgba(255,255,255,0.08)" }}>
-          <svg className="absolute left-5 text-[#6B7280]" width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <svg className="absolute left-5 text-[#6B7280]" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
             <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5"/>
             <path d="M16 16l-3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
           <input type="text" value={q} onChange={e => setQ(e.target.value)} autoFocus
+            aria-label="Search documents"
             placeholder="Search documents, SLA agreements, contracts…"
             className="flex-1 bg-transparent pl-12 pr-4 py-4 text-[15px] text-[#E5E7EB] placeholder-[#4B5563] outline-none" />
           <button type="submit" disabled={loading || !q.trim()}
@@ -99,26 +97,28 @@ export default function SearchPage() {
         </div>
       </form>
 
-      {/* Category chips + stats */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {CATEGORIES.map(c => (
-          <button key={c} onClick={() => { setCat(c); if (searched) run(q, c); }}
-            className={cn("px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all border",
-              cat === c
-                ? "bg-[#3B7BF6] text-white border-[#3B7BF6]"
-                : "text-[#9CA3AF] border-white/[0.08] bg-white/[0.02] hover:text-white hover:border-white/20")}>
-            {c}
-          </button>
-        ))}
-        {searched && !loading && (
-          <span className="ml-auto text-[11px] text-[#6B7280]">{results.length} result{results.length !== 1 ? "s" : ""} · {took}ms</span>
-        )}
-      </div>
+      {/* Result stats */}
+      {searched && !loading && !searchError && (
+        <div className="flex items-center justify-end">
+          <span className="text-[11px] text-[#6B7280]">{results.length} result{results.length !== 1 ? "s" : ""} · {took}ms</span>
+        </div>
+      )}
 
       {/* Content */}
       {loading ? (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      ) : searchError ? (
+        <div role="alert" className="flex flex-col items-center gap-3 py-16 px-6 rounded-2xl text-center"
+          style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
+          <p className="text-[14px] font-semibold text-[#F87171]">Search is currently unavailable</p>
+          <p className="text-[12px] text-[#FCA5A5] max-w-md">{searchError}</p>
+          <button onClick={() => run(q)}
+            className="mt-1 px-4 py-2 rounded-lg text-[12px] font-semibold text-[#F87171] transition-all"
+            style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}>
+            ↻ Retry
+          </button>
         </div>
       ) : searched && results.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
@@ -133,7 +133,7 @@ export default function SearchPage() {
         <div className="flex flex-col items-center gap-6 py-16 text-center">
           <div className="w-20 h-20 rounded-3xl flex items-center justify-center"
             style={{ background: "linear-gradient(135deg,rgba(59,123,246,0.1),rgba(139,92,246,0.1))", border: "1px solid rgba(59,123,246,0.15)" }}>
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="14" cy="14" r="10" stroke="#3B7BF6" strokeWidth="1.5"/><path d="M28 28l-6-6" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="14" cy="14" r="10" stroke="#3B7BF6" strokeWidth="1.5"/><path d="M28 28l-6-6" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round"/></svg>
           </div>
           <div>
             <p className="text-[16px] font-bold text-[#E5E7EB]">Semantic Document Search</p>
@@ -141,7 +141,7 @@ export default function SearchPage() {
           </div>
           <div className="grid grid-cols-2 gap-2 w-full max-w-lg">
             {STARTERS.map(s => (
-              <button key={s} onClick={() => { setQ(s); run(s, cat); }}
+              <button key={s} onClick={() => { setQ(s); run(s); }}
                 className="text-left px-4 py-3 rounded-xl text-[12px] text-[#9CA3AF] hover:text-[#E5E7EB] border border-white/[0.06] hover:border-white/15 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
                 🔍 {s}
               </button>

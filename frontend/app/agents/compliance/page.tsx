@@ -1,38 +1,29 @@
-"use client";
-
 import AppShell from "@/components/layout/AppShell";
 import Link from "next/link";
 import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
-import SectorSwitcher from "@/components/compliance/SectorSwitcher";
-import { FILINGS_BY_SECTOR, STATUS_LABELS } from "@/lib/filings-data";
-import { STATS_BY_SECTOR, DPIA_BY_SECTOR, DSR_BY_SECTOR } from "@/lib/compliance-data";
-import { SECTOR_META } from "@/lib/sector";
-import { useSector } from "@/hooks/useSector";
+import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
+
+const STATS = [
+  { label: "Open DSRs",           value: "3",     sub: "subscriber data requests",     accent: "#F79009", color: "#F79009" },
+  { label: "Pending DPIAs",       value: "2",     sub: "awaiting DPO sign-off",        accent: "#4A55D4", color: "#4A55D4" },
+  { label: "NCC filings due 30d", value: "2",     sub: "QoS & incident returns due",   accent: "#F04438", color: "#F04438" },
+  { label: "Ikeja availability",  value: "82.7%", sub: "vs NCC minimum 95%",           accent: "#17B26A", color: "#17B26A" },
+];
 
 export default function ComplianceAgentPage() {
-  const [sector] = useSector();
-  const meta = SECTOR_META[sector];
-  const stats = STATS_BY_SECTOR[sector];
-  const filings = FILINGS_BY_SECTOR[sector];
-  const dpias = DPIA_BY_SECTOR[sector];
-  const dsrs = DSR_BY_SECTOR[sector];
-
   return (
     <AppShell
-      title={meta.agentTitle}
-      subtitle={meta.agentSubtitle}
+      title="Regulatory Compliance Agent"
+      subtitle="NCC · NDPA · FCCPC · DPO console · DPIA wizard · filing history"
       actions={
-        <div className="flex items-center gap-3">
-          <SectorSwitcher />
-          <Link href="/chat?agent=Compliance" className="btn-primary py-2 px-[14px] text-[13px] no-underline">
-            Ask Compliance Agent →
-          </Link>
-        </div>
+        <Link href="/chat?agent=Compliance" className="btn-primary py-2 px-[14px] text-[13px] no-underline">
+          Ask Compliance Agent →
+        </Link>
       }
     >
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[14px]">
-        {stats.map((s) => (
+        {STATS.map((s) => (
           <div key={s.label} className="card relative overflow-hidden py-[18px] px-5">
             <div className="absolute top-0 inset-x-0 h-[2px] opacity-70" style={{ background: s.accent }} />
             <div className="text-[28px] font-bold tracking-[-0.04em] leading-none mb-[5px]" style={{ color: s.color }}>{s.value}</div>
@@ -53,7 +44,7 @@ export default function ComplianceAgentPage() {
             </Link>
           </div>
           <div className="py-2">
-            {filings.map((f, i, arr) => {
+            {REGULATORY_FILINGS.map((f, i, arr) => {
               const st = {
                 "in-progress": { color: "var(--color-brand-700)",   bg: "var(--color-brand-50)"   },
                 "not-started": { color: "var(--color-gray-400)",    bg: "var(--color-gray-100)"   },
@@ -86,7 +77,12 @@ export default function ComplianceAgentPage() {
             <button className="btn-secondary py-[5px] px-3 text-xs">+ New DPIA</button>
           </div>
           <div className="py-2">
-            {dpias.map((d, i, arr) => {
+            {[
+              { name: "MoMo Analytics Pipeline v3",           lawful: "Legitimate interest", risk: "High",   status: "in-review" },
+              { name: "SIM Registration Biometric Flow",       lawful: "Legal obligation",    risk: "High",   status: "draft"     },
+              { name: "Subscriber Usage Behaviour Model",      lawful: "Contract",            risk: "Medium", status: "approved"  },
+              { name: "CX Complaints Dashboard v2",            lawful: "Legitimate interest", risk: "Low",    status: "approved"  },
+            ].map((d, i, arr) => {
               const st = {
                 "in-review": { color: "var(--color-info-700)",    bg: "var(--color-info-50)",    label: "In review" },
                 draft:       { color: "var(--color-warning-700)", bg: "var(--color-warning-50)", label: "Draft"     },
@@ -127,7 +123,11 @@ export default function ComplianceAgentPage() {
                 <span key={h} className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.055em]">{h}</span>
               ))}
             </div>
-            {dsrs.map((dsr, i, arr) => (
+            {[
+              { ref: "DSR-0041", req: "Right to access — call & MoMo transaction history export", subject: "Subscriber", type: "Access",        received: "Apr 30", sla: "1 day left", urgent: true  },
+              { ref: "DSR-0040", req: "Right to erasure — subscriber profile and usage data",     subject: "Subscriber", type: "Erasure",       received: "Apr 28", sla: "3 days",     urgent: false },
+              { ref: "DSR-0039", req: "Right to rectification — incorrect NIN on SIM record",     subject: "Enterprise", type: "Rectification", received: "Apr 27", sla: "4 days",     urgent: false },
+            ].map((dsr, i, arr) => (
               <div
                 key={dsr.ref}
                 className={`grid items-center py-3 px-5 gap-3 hover:bg-gray-50 transition-colors${i < arr.length - 1 ? " border-b border-border-default" : ""}`}

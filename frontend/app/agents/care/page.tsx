@@ -4,39 +4,39 @@ import Link from "next/link";
 export const metadata = { title: "Care Agent" };
 
 const STATS = [
-  { label: "Active loan products",  value: "12",  sub: "lending, savings, BNPL",       accent: "#4A55D4", color: "#4A55D4" },
-  { label: "Last product update",   value: "2d",   sub: "Kuda Overdraft revised",        accent: "#0BA5EC", color: "#0BA5EC" },
-  { label: "Open complaints",       value: "128",  sub: "CBN-notifiable: 3",             accent: "#F79009", color: "#F79009" },
-  { label: "High-risk borrowers",   value: "41",   sub: "above 5% single-obligor cap",  accent: "#F04438", color: "#F04438" },
+  { label: "MoMo deduction tickets", value: "850",    sub: "Q1 2026 · Lagos +312% vs Q4",  accent: "#4A55D4", color: "#4A55D4" },
+  { label: "Disputed deductions",    value: "₦28.4M", sub: "under investigation",           accent: "#0BA5EC", color: "#0BA5EC" },
+  { label: "Open complaints",        value: "128",    sub: "NCC-escalable: 3",              accent: "#F79009", color: "#F79009" },
+  { label: "CSAT — incident day",    value: "41.2",   sub: "Ikeja outage · ~70 baseline",  accent: "#F04438", color: "#F04438" },
 ];
 
 const PLANS = [
-  { name: "Kuda Overdraft — ₦50K limit", price: "5% p.a.",   type: "Lending", updated: "2 days ago"  },
-  { name: "Carbon Loan — Personal",       price: "3% p.m.",   type: "Lending", updated: "2 days ago"  },
-  { name: "Moniepoint Business Loan",     price: "2.5% p.m.", type: "Lending", updated: "1 week ago"  },
-  { name: "Opay Savings — FlexSave",      price: "10% p.a.",  type: "Savings", updated: "3 days ago"  },
-  { name: "Fairmoney BNPL — 30-day",      price: "4% flat",   type: "BNPL",    updated: "2 weeks ago" },
+  { name: "Lagos — MoMo wallet deductions", price: "850", type: "MoMo",    updated: "2 hours ago" },
+  { name: "Lagos — Ikeja cluster coverage",  price: "312", type: "Network", updated: "Feb 14"      },
+  { name: "Abuja — data bundle billing",     price: "96",  type: "Billing", updated: "3 days ago"  },
+  { name: "Kano — drop-call reports",        price: "74",  type: "Network", updated: "1 week ago"  },
+  { name: "PH GRA — outage complaints",      price: "41",  type: "Network", updated: "2 weeks ago" },
 ];
 
 const COMPLAINTS = [
-  { type: "Loan disbursement delays",     count: 34, pct: 27 },
-  { type: "Incorrect interest charges",   count: 28, pct: 22 },
-  { type: "Failed repayment deductions",  count: 21, pct: 16 },
-  { type: "KYC rejection — onboarding",   count: 18, pct: 14 },
-  { type: "Account restriction dispute",  count: 12, pct: 9  },
+  { type: "MoMo wallet deductions",        count: 34, pct: 27 },
+  { type: "Network coverage / drop calls", count: 28, pct: 22 },
+  { type: "Data bundle billing",           count: 21, pct: 16 },
+  { type: "Failed recharge — airtime",     count: 18, pct: 14 },
+  { type: "SIM registration & swap",       count: 12, pct: 9  },
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  Lending: "#4A55D4",
-  Savings: "#17B26A",
-  BNPL:    "#0BA5EC",
+  MoMo:    "#4A55D4",
+  Network: "#17B26A",
+  Billing: "#0BA5EC",
 };
 
 export default function CareAgentPage() {
   return (
     <AppShell
       title="Care Agent"
-      subtitle="Loan products · complaint scripts · borrower signals · KYC · BNPL"
+      subtitle="MoMo complaints · coverage tickets · CSAT signals · regional queues"
       actions={
         <Link href="/chat?agent=Care" className="btn-primary px-[14px] py-2 text-[13px] no-underline">
           Ask Care Agent →
@@ -60,8 +60,8 @@ export default function CareAgentPage() {
         <div className="card overflow-hidden">
           <div className="flex justify-between items-center px-5 py-4 border-b border-border-default">
             <div>
-              <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Active loan products</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Current rates across all fintech product lines</p>
+              <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Regional complaint queues</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Live open volumes by region and category</p>
             </div>
             <button className="btn-secondary px-3 py-[5px] text-xs">View all</button>
           </div>
@@ -113,8 +113,8 @@ export default function CareAgentPage() {
       <div className="card overflow-hidden">
         <div className="flex justify-between items-center px-5 py-4 border-b border-border-default">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">High-risk borrower signals</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Borrowers approaching or exceeding single-obligor CBN limit</p>
+            <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">High-priority complaint cohorts</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Cohorts approaching or exceeding NCC consumer-escalation thresholds</p>
           </div>
           <Link href="/chat?agent=Care&q=high-risk" className="btn-secondary px-3 py-[5px] text-xs no-underline">
             Get script →
@@ -126,15 +126,15 @@ export default function CareAgentPage() {
               className="grid px-5 py-[9px] bg-gray-50 border-b border-border-default gap-3"
               style={{ gridTemplateColumns: "130px 1fr 90px 110px 90px 100px" }}
             >
-              {["Borrower ID", "Segment", "Exposure", "Last activity", "Risk", "Action"].map((h) => (
+              {["Cohort ID", "Segment", "Tickets", "Last activity", "Priority", "Action"].map((h) => (
                 <span key={h} className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.055em]">{h}</span>
               ))}
             </div>
             {[
-              { msisdn: "BRW-004421", seg: "SME Loan — Lagos",          arpu: "₦62M",  last: "4 days ago", risk: "High",   action: "Review" },
-              { msisdn: "BRW-008812", seg: "Personal Loan — Kano",       arpu: "₦28M",  last: "6 days ago", risk: "High",   action: "Flag"   },
-              { msisdn: "BRW-001133", seg: "BNPL — Abuja",               arpu: "₦17M",  last: "3 days ago", risk: "Medium", action: "Watch"  },
-              { msisdn: "BRW-005509", seg: "Business Loan — PH",         arpu: "₦16M",  last: "5 days ago", risk: "Medium", action: "Watch"  },
+              { msisdn: "COH-004421", seg: "MoMo deductions — Lagos",     arpu: "850", last: "2 hours ago", risk: "High",   action: "Review" },
+              { msisdn: "COH-008812", seg: "Coverage — Ikeja cluster",    arpu: "312", last: "Feb 14",      risk: "High",   action: "Flag"   },
+              { msisdn: "COH-001133", seg: "Billing — Abuja",             arpu: "96",  last: "3 days ago",  risk: "Medium", action: "Watch"  },
+              { msisdn: "COH-005509", seg: "Enterprise (EBU) — Zenith Bank", arpu: "12", last: "5 days ago", risk: "Medium", action: "Watch"  },
             ].map((row, i, arr) => (
               <div
                 key={row.msisdn}

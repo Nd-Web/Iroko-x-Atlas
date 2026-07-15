@@ -29,10 +29,10 @@ export default function SystemSettingsPage() {
     <AppShell title="System settings" subtitle="LLM router · sovereignty · multi-agent config">
       <div className="max-w-[700px] flex flex-col gap-6 mx-auto lg:mx-0 pb-10">
         
-        {/* Atlas Multi-Agent System */}
+        {/* Iroko Multi-Agent System */}
         <div className="card overflow-hidden">
           <div className="py-[18px] px-5 md:px-6 border-b border-border-default bg-gray-50/50">
-            <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Atlas Multi-Agent System</h2>
+            <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Iroko Multi-Agent System</h2>
             <p className="text-xs text-gray-400 mt-[3px]">Functional AI roles built on Microsoft Semantic Kernel</p>
           </div>
           <div className="px-3 md:px-5 py-4 flex flex-col gap-2">

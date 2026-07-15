@@ -1,12 +1,15 @@
 "use client";
 /**
  * app/insights/page.tsx — Insights page with filter bar and card grid.
+ * Data comes exclusively from /api/insights; loading, error, empty and
+ * populated states are all rendered honestly (no mock fallbacks).
  */
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import AppShell from "@/components/layout/AppShell";
 import { apiFetch } from "@/lib/api";
 import { formatRelativeTime, cn } from "@/lib/utils";
-import { getSeverityColor, getSeverityLabel, INSIGHT_CATEGORIES } from "@/types/insight";
+import { getSeverityColor, getSeverityLabel } from "@/types/insight";
 import type { Insight } from "@/types/insight";
 
 function SeverityBadge({ severity }: { severity: number }) {
@@ -31,7 +34,7 @@ function InsightCard({ insight, onReview, onDismiss }: {
     <div className="relative rounded-2xl border overflow-hidden transition-all duration-200 hover:border-white/20 hover:shadow-[0_0_24px_rgba(59,123,246,0.06)] group"
       style={{ background: "#0F1320", borderColor: "rgba(255,255,255,0.06)", borderLeft: `3px solid ${color}` }}>
       {isNew && (
-        <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#3B7BF6]" style={{ animation: "ping 2s ease infinite" }} />
+        <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#3B7BF6]" style={{ animation: "ping 2s ease infinite" }} aria-hidden="true" />
       )}
       <div className="p-5">
         {/* Category + agent */}
@@ -85,53 +88,51 @@ function SkeletonCard() {
   );
 }
 
-// Compute days remaining from a fixed due date to today, clamped ≥ 0.
-function daysUntil(isoDate: string): number {
-  const due = new Date(isoDate);
-  const now = new Date();
-  // Zero out time portion to count full calendar days
-  due.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-  return Math.max(0, Math.round((due.getTime() - now.getTime()) / 86400000));
+// The backend reuses Alert rows, whose statuses are new/acknowledged/
+// resolved/dismissed — normalise onto the insight vocabulary so the
+// status filter and card actions always match.
+function normaliseInsightStatus(s: string): Insight["status"] {
+  if (s === "acknowledged" || s === "resolved" || s === "reviewed") return "reviewed";
+  if (s === "dismissed") return "dismissed";
+  return "new";
 }
 
-// CRC renewal: ~30 days out from today
-const CRC_EXPIRY = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-const AML_DUE_DATE = "2026-07-15";
-const amlDays = daysUntil(AML_DUE_DATE);
-
-const MOCK_INSIGHTS: Insight[] = [
-  { id: "i1", org_id: null, document_id: null, title: "Carbon MFB CAR breach — capital adequacy ratio below 10% CBN minimum", summary: "Carbon MFB's CAR has dropped to 8.4%, breaching the CBN 10% minimum under BOFIA 2020. Immediate capital injection or loan book reduction required to avoid sanctions.", category: "compliance", severity: 9, agent_source: "WatchdogAgent", status: "new", created_at: new Date(Date.now()-120000).toISOString() },
-  { id: "i2", org_id: null, document_id: null, title: `CBN AML/CFT return submission deadline in ${amlDays} day${amlDays !== 1 ? "s" : ""}`, summary: `Q2 2026 AML/CFT quarterly return is due July 15, 2026. ${amlDays}-day window for final data reconciliation and FinA submission. Risk of ₦500K/day late penalty under CBN ENF-001.`, category: "regulatory", severity: 6, agent_source: "WatchdogAgent", status: "new", created_at: new Date(Date.now()-3600000).toISOString() },
-  { id: "i3", org_id: null, document_id: null, title: "CBN lending limit data discrepancy detected in Q2 2026 submission", summary: "Internal lending data shows single-borrower exposure at ₦52M while submitted return shows ₦48M. This discrepancy could trigger a regulatory inquiry under CBN BOFIA 2020 Section 35.", category: "compliance", severity: 9, agent_source: "AnalystAgent", status: "new", created_at: new Date(Date.now()-7200000).toISOString() },
-  { id: "i4", org_id: null, document_id: null, title: "Loan disbursement anomaly — Duplicate batch #7 entries detected", summary: "Three disbursement entries for the same borrower in batch #7 total ₦47.3M. Pattern may indicate duplicate-processing error or internal fraud. Recommend immediate payment suspension.", category: "fraud", severity: 9, agent_source: "WatchdogAgent", status: "reviewed", created_at: new Date(Date.now()-86400000).toISOString() },
-  { id: "i5", org_id: null, document_id: null, title: "Transaction velocity anomaly — 3 Kuda agent wallets flagged", summary: "3 Kuda agent wallets show 340% above-average transaction velocity in the last 48 hours. Total flagged exposure: ₦31.4M. STR filing recommended per CBN AML/CFT guidelines.", category: "fraud", severity: 7, agent_source: "AnalystAgent", status: "new", created_at: new Date(Date.now()-172800000).toISOString() },
-  { id: "i6", org_id: null, document_id: null, title: "CRC Credit Bureau data agreement — renewal due in 30 days", summary: `The CRC Credit Bureau data processing agreement expires ${CRC_EXPIRY}. Non-renewal would prevent credit bureau checks on new loan applicants, breaching CBN MFB lending guidelines. Renewal negotiation should commence immediately.`, category: "contract", severity: 5, agent_source: "ResearcherAgent", status: "dismissed", created_at: new Date(Date.now()-259200000).toISOString() },
-];
-
 export default function InsightsPage() {
-  const [insights, setInsights] = useState<Insight[]>(MOCK_INSIGHTS);
-  const [loading, setLoading] = useState(false);
+  const [insights, setInsights] = useState<Insight[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [category, setCategory] = useState("All");
   const [statusFilter, setStatusFilter] = useState<"all" | "new" | "reviewed" | "dismissed">("all");
   const [severityMin, setSeverityMin] = useState(1);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
+    setLoadError(null);
     apiFetch<{ insights: Insight[] }>("/api/insights")
-      .then(d => { if (d.insights?.length) setInsights(d.insights); })
-      .catch(() => {})
+      .then(d => {
+        setInsights((d.insights ?? []).map(i => ({ ...i, status: normaliseInsightStatus(String(i.status)) })));
+      })
+      .catch((e: unknown) => {
+        setLoadError(e instanceof Error ? e.message : "Failed to load insights.");
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  const handleReview = async (id: string) => {
-    await apiFetch(`/api/insights/${id}/review`, { method: "PATCH" }).catch(() => {});
-    setInsights(prev => prev.map(i => i.id === id ? { ...i, status: "reviewed" } : i));
+  useEffect(() => { load(); }, [load]);
+
+  // Optimistic status change; rolled back with a toast if the API rejects it.
+  const updateStatus = async (id: string, next: "reviewed" | "dismissed", endpoint: string) => {
+    const previous = insights;
+    setInsights(prev => prev.map(i => i.id === id ? { ...i, status: next } : i));
+    try {
+      await apiFetch(endpoint, { method: "PATCH" });
+    } catch {
+      setInsights(previous);
+      toast.error(`Could not mark the insight as ${next}. Please try again.`);
+    }
   };
-  const handleDismiss = async (id: string) => {
-    await apiFetch(`/api/insights/${id}/dismiss`, { method: "PATCH" }).catch(() => {});
-    setInsights(prev => prev.map(i => i.id === id ? { ...i, status: "dismissed" } : i));
-  };
+  const handleReview = (id: string) => updateStatus(id, "reviewed", `/api/insights/${id}/review`);
+  const handleDismiss = (id: string) => updateStatus(id, "dismissed", `/api/insights/${id}/dismiss`);
 
   const filtered = insights.filter(i => {
     if (category !== "All" && i.category !== category) return false;
@@ -146,10 +147,11 @@ export default function InsightsPage() {
     <AppShell title="Insights" subtitle={`${newCount} new insight${newCount !== 1 ? "s" : ""} from your agents`}>
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Category chips */}
+        {/* Category chips — derived from the loaded data so live categories always match */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {["All", "SLA", "compliance", "contract", "network", "fraud"].map(cat => (
+          {["All", ...Array.from(new Set(insights.map(i => i.category)))].map(cat => (
             <button key={cat} onClick={() => setCategory(cat)}
+              aria-pressed={category === cat}
               className={cn("px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all border",
                 category === cat
                   ? "bg-[#3B7BF6] text-white border-[#3B7BF6] shadow-[0_0_12px_rgba(59,123,246,0.3)]"
@@ -159,12 +161,13 @@ export default function InsightsPage() {
           ))}
         </div>
 
-        <div className="h-6 w-px bg-white/[0.08] mx-1 hidden sm:block" />
+        <div className="h-6 w-px bg-white/[0.08] mx-1 hidden sm:block" aria-hidden="true" />
 
         {/* Status filter */}
         <div className="flex items-center gap-1">
           {(["all","new","reviewed","dismissed"] as const).map(s => (
             <button key={s} onClick={() => setStatusFilter(s)}
+              aria-pressed={statusFilter === s}
               className={cn("px-2.5 py-1 rounded-lg text-[11px] font-medium capitalize transition-all",
                 statusFilter === s ? "bg-white/10 text-[#E5E7EB]" : "text-[#6B7280] hover:text-[#E5E7EB]")}>
               {s}
@@ -172,12 +175,13 @@ export default function InsightsPage() {
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2 text-[12px] text-[#6B7280]">
+        <label className="ml-auto flex items-center gap-2 text-[12px] text-[#6B7280]">
           <span>Min severity</span>
           <input type="range" min={1} max={10} value={severityMin} onChange={e => setSeverityMin(+e.target.value)}
+            aria-label="Minimum severity"
             className="w-24 accent-[#3B7BF6]" />
           <span className="font-bold text-[#E5E7EB]">{severityMin}+</span>
-        </div>
+        </label>
       </div>
 
       {/* Grid */}
@@ -185,10 +189,31 @@ export default function InsightsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
+      ) : loadError ? (
+        <div role="alert" className="flex flex-col items-center justify-center gap-3 py-16 px-6 rounded-2xl text-center"
+          style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
+          <p className="text-[14px] font-semibold text-[#F87171]">Insights could not be loaded</p>
+          <p className="text-[12px] text-[#FCA5A5] max-w-md">{loadError}</p>
+          <button onClick={load}
+            className="mt-1 px-4 py-2 rounded-lg text-[12px] font-semibold text-[#F87171] transition-all"
+            style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}>
+            ↻ Retry
+          </button>
+        </div>
+      ) : insights.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="w-16 h-16 rounded-2xl border border-white/[0.06] flex items-center justify-center" style={{ background: "#0F1320" }}>
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#4B5563" strokeWidth="1.5" aria-hidden="true"><path d="M14 2a5 5 0 0 1 4 9c0 1 1 1.5 1 2.5v.5H9v-.5c0-1 1-1.5 1-2.5A5 5 0 0 1 14 2Z"/><path d="M11 17v1a3 3 0 0 0 6 0v-1" strokeLinecap="round"/></svg>
+          </div>
+          <div className="text-center">
+            <p className="text-[14px] font-semibold text-[#6B7280]">No insights yet</p>
+            <p className="text-[12px] text-[#4B5563] mt-1">Your agents will surface insights here as they analyse incoming documents and events.</p>
+          </div>
+        </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="w-16 h-16 rounded-2xl border border-white/[0.06] flex items-center justify-center" style={{ background: "#0F1320" }}>
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#4B5563" strokeWidth="1.5"><path d="M14 2a5 5 0 0 1 4 9c0 1 1 1.5 1 2.5v.5H9v-.5c0-1 1-1.5 1-2.5A5 5 0 0 1 14 2Z"/><path d="M11 17v1a3 3 0 0 0 6 0v-1" strokeLinecap="round"/></svg>
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#4B5563" strokeWidth="1.5" aria-hidden="true"><path d="M14 2a5 5 0 0 1 4 9c0 1 1 1.5 1 2.5v.5H9v-.5c0-1 1-1.5 1-2.5A5 5 0 0 1 14 2Z"/><path d="M11 17v1a3 3 0 0 0 6 0v-1" strokeLinecap="round"/></svg>
           </div>
           <div className="text-center">
             <p className="text-[14px] font-semibold text-[#6B7280]">No insights match your filters</p>

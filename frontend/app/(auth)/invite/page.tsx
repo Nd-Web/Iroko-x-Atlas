@@ -4,7 +4,7 @@
  * Redirect handler for the legacy query-string invite URL format:
  *   /invite?token=<token>
  *
- * AtlasCore sends email links as /invite/<token> (path parameter), which is
+ * the backend sends email links as /invite/<token> (path parameter), which is
  * handled by app/(auth)/invite/[token]/page.tsx.
  *
  * This page exists as a fallback — if someone arrives with ?token=xxx in the
@@ -16,7 +16,7 @@
 
 import { useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 
 function InviteRedirector() {
   const searchParams = useSearchParams();
@@ -36,7 +36,7 @@ function InviteRedirector() {
     return (
       <div className="min-h-screen bg-surface-page flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-gray-400">
-          <LoadingSpinner size={24} />
+          <Spinner size={24} />
           <span className="text-sm">Redirecting…</span>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default function InvitePage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-surface-page flex items-center justify-center">
-          <LoadingSpinner size={24} />
+          <Spinner size={24} />
         </div>
       }
     >

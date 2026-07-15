@@ -5,7 +5,7 @@ export const metadata = { title: "Documents" };
 
 export default function DocumentsPage() {
   return (
-    <AppShell title="Document library" subtitle="24,811 indexed documents across 11 connectors">
+    <AppShell title="Document library" subtitle="Indexed documents across your connected sources">
       <DocumentsContent />
     </AppShell>
   );

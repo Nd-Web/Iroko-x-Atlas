@@ -15,6 +15,10 @@ export const API_BASE = (
 export const COOKIE_NAME = "iroko_token";
 
 /**
- * Cookie lifetime in seconds — 7 days.
+ * Cookie lifetime in seconds — 24 hours.
+ *
+ * MUST match the backend JWT TTL (ACCESS_TOKEN_EXPIRE_HOURS = 24 in
+ * backend/services/auth_utils.py). If the cookie outlives the token, the
+ * app looks logged-in while every API call fails with 401 mid-session.
  */
-export const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+export const COOKIE_MAX_AGE = 60 * 60 * 24;

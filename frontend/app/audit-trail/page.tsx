@@ -5,7 +5,7 @@ export const metadata = { title: "Audit Trail" };
 
 export default function AuditTrailPage() {
   return (
-    <AppShell title="Audit trail" subtitle="Powered by Atlas · Cryptographically-chained · NDPA-grade">
+    <AppShell title="Audit trail" subtitle="Powered by Iroko · Cryptographically-chained · NDPA-grade">
       <AuditTrailContent />
     </AppShell>
   );

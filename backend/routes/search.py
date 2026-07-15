@@ -23,7 +23,9 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 
 class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000)
-    org_id: str = Field(default="African Fintech Platform")
+    # No default org filter — the index stores real departments (Network
+    # Operations, Procurement, …); filtering by a fixed org name returns 0 hits.
+    org_id: Optional[str] = None
     category: Optional[str] = None
     top_k: int = Field(default=5, ge=1, le=20)
 
@@ -43,7 +45,7 @@ class SearchResponse(BaseModel):
 
 class ContextRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000)
-    org_id: str = Field(default="African Fintech Platform")
+    org_id: Optional[str] = None
     top_k: int = Field(default=5, ge=1, le=20)
 
 

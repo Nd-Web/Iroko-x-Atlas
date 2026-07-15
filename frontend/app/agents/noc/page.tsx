@@ -1,46 +1,53 @@
 "use client";
 /**
  * app/agents/noc/page.tsx — Network Operations Centre view.
- * Active alerts, SLA indicators, and an embedded query interface.
+ * Live alerts (via /api/alerts), SLA indicators, and an embedded query interface.
  */
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
-import { cn } from "@/lib/utils";
+import { cn, formatRelativeTime } from "@/lib/utils";
 import { useChat } from "@/hooks/useChat";
 import InputBar from "@/components/chat/InputBar";
 import ChatWindow from "@/components/chat/ChatWindow";
+import { toast } from "sonner";
 
-function daysUntil(isoDate: string): number {
-  const due = new Date(isoDate);
-  const now = new Date();
-  due.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-  return Math.max(0, Math.round((due.getTime() - now.getTime()) / 86400000));
+interface NocAlert {
+  id: string;
+  title: string;
+  detail: string;
+  severity: string;
+  age: string;
+  slaImpact: boolean;
+  status: string;
 }
 
-const amlDaysNoc = daysUntil("2026-07-15");
-
-const KUDA_ALERTS = [
-  { id: "a1", title: "Kuda MFB — lending exposure limit approaching CBN threshold",                       region: "Lagos",    severity: "critical", age: "4m ago", slaImpact: true,  status: "active" },
-  { id: "a2", title: `Kuda MFB — AML/CFT quarterly return due in ${amlDaysNoc} day${amlDaysNoc !== 1 ? "s" : ""}`, region: "National", severity: "warning",  age: "1h ago", slaImpact: false, status: "active" },
-  { id: "a3", title: "Kuda MFB — 3 incomplete SAR filings flagged by CBN",                                region: "Abuja",    severity: "warning",  age: "2h ago", slaImpact: false, status: "active" },
-  { id: "a4", title: "Kuda MFB — KYC gap in Q2 onboarding batch (187 accounts)",                         region: "Lagos",    severity: "info",     age: "3h ago", slaImpact: false, status: "acknowledged" },
+// Fallback alerts mirroring the seeded backend data — shown only if the live
+// fetch fails, so the story stays identical either way.
+const FALLBACK_ALERTS: NocAlert[] = [
+  { id: "a1", title: "IHS Ikeja Cluster SLA Breach — February 2026 Outage",     detail: "vendor_sla · ₦2.66M exposure",     severity: "critical", age: "4m ago", slaImpact: true,  status: "new" },
+  { id: "a2", title: "ATC Lagos Zone 2 Contract Expiring in 28 Days",           detail: "contract · ₦19.5M/month",          severity: "critical", age: "1h ago", slaImpact: false, status: "new" },
+  { id: "a3", title: "NCC QoS Return Q1 2026 — Submission Due in 12 Days",      detail: "regulatory · ₦5M/day if late",     severity: "warning",  age: "2h ago", slaImpact: false, status: "new" },
+  { id: "a4", title: "MoMo Deduction Complaints Spike — Lagos +312% vs Q4 2025", detail: "complaints · ₦28.4M disputed",     severity: "warning",  age: "3h ago", slaImpact: false, status: "new" },
+  { id: "a5", title: "NDPA Article 24 Processing Record — Annual Review Overdue", detail: "regulatory · DPO action required", severity: "warning",  age: "5h ago", slaImpact: false, status: "acknowledged" },
+  { id: "a6", title: "Kano-Kaduna Fibre Cut — SLA Milestone at Risk",           detail: "network · Km 142 ROW excavation",  severity: "info",     age: "6h ago", slaImpact: true,  status: "new" },
 ];
 
-const COMPETITOR_ALERTS = [
-  { id: "c1", title: "Carbon MFB — CAR below 10% minimum — immediate action required", region: "Lagos",    severity: "critical", age: "12m ago", status: "active" },
-  { id: "c2", title: "Moniepoint — AML/CFT quarterly return overdue by 3 days",        region: "National", severity: "warning",  age: "28m ago", status: "active" },
-  { id: "c3", title: "Fairmoney — CBN credit bureau check gap detected in loan batch",  region: "Abuja",    severity: "warning",  age: "1h ago",  status: "acknowledged" },
-  { id: "c4", title: "Opay PSB — consumer complaint resolution SLA exceeded",          region: "National", severity: "info",     age: "2h ago",  status: "acknowledged" },
-  { id: "c5", title: "Risevest — SEC registration renewal due in 15 days",             region: "Lagos",    severity: "warning",  age: "3h ago",  status: "active" },
+// Regulator-sourced signals — market watch, not operator incidents.
+const REGULATORY_WATCH = [
+  { id: "r1", title: "NCC directive — operators to actively detect and disable SIM-box lines",       source: "NCC",   severity: "warning", age: "1h ago" },
+  { id: "r2", title: "NDPC enforcement precedent — ₦766.2M fine for illegal cross-border transfer",  source: "NDPC",  severity: "critical", age: "2h ago" },
+  { id: "r3", title: "GAID 2025 — cross-border data transfer restrictions now in force",             source: "NDPC",  severity: "warning", age: "4h ago" },
+  { id: "r4", title: "FCCPC notice — quarterly consumer complaint reporting reminder",               source: "FCCPC", severity: "info",    age: "6h ago" },
+  { id: "r5", title: "NCC consultation — proposed QoS framework revision for 5G services",           source: "NCC",   severity: "info",    age: "8h ago" },
 ];
 
-// threshold: breach only when value falls BELOW this CBN minimum
+// threshold: breach when value falls BELOW the regulatory/target minimum
 const SLA_INDICATORS = [
-  { name: "Lending Compliance",  value: 94.2, threshold: 90.0, unit: "%", label: "≥ 90% CBN min" },
-  { name: "KYC Coverage Rate",   value: 98.7, threshold: 95.0, unit: "%", label: "≥ 95% CBN min" },
-  { name: "CAR (Avg Portfolio)", value: 12.4, threshold: 10.0, unit: "%", label: "≥ 10% CBN min" },
-  { name: "AML Filing Rate",     value: 96.1, threshold: 95.0, unit: "%", label: "≥ 95% CBN min" },
+  { name: "National Availability",     value: 99.2, threshold: 95.0, unit: "%", label: "≥ 95% NCC min" },
+  { name: "Ikeja Cluster Availability", value: 82.7, threshold: 95.0, unit: "%", label: "≥ 95% NCC min" },
+  { name: "Call Setup Success",        value: 96.8, threshold: 95.0, unit: "%", label: "≥ 95% NCC min" },
+  { name: "CX Resolution Rate",        value: 76.0, threshold: 70.0, unit: "%", label: "≥ 70% target" },
 ];
 
 const SEV_COLOR: Record<string, string> = { critical: "#EF4444", warning: "#F59E0B", info: "#3B7BF6" };
@@ -69,28 +76,87 @@ function SLAGauge({ sla }: { sla: typeof SLA_INDICATORS[0] }) {
 }
 
 export default function NOCPage() {
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
-  const { messages, isLoading, sendMessage } = useChat();
+  const [alerts, setAlerts] = useState<NocAlert[]>(FALLBACK_ALERTS);
+  const [isLive, setIsLive] = useState(false);
+  const { messages, isLoading, error, sendMessage } = useChat();
+  const [lastQuery, setLastQuery] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
 
-  const filteredKuda = KUDA_ALERTS.filter(a =>
+  // Load live alerts through the Next.js proxy (cookie auth).
+  useEffect(() => {
+    fetch("/api/alerts?status=all&limit=20")
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((data: { alerts?: Array<{ id: string; title: string; summary?: string; severity: string; status: string; alert_type?: string; created_at?: string }> }) => {
+        const rows: NocAlert[] = (data.alerts ?? []).map(a => ({
+          id: String(a.id),
+          title: a.title,
+          detail: a.alert_type ?? "general",
+          severity: a.severity ?? "info",
+          age: a.created_at ? formatRelativeTime(a.created_at) : "—",
+          slaImpact: (a.alert_type ?? "").toLowerCase().includes("sla") || (a.title ?? "").toLowerCase().includes("sla"),
+          status: a.status ?? "new",
+        }));
+        if (rows.length > 0) {
+          setAlerts(rows);
+          setIsLive(true);
+        }
+      })
+      .catch(() => { /* fall back to canonical demo alerts */ });
+  }, []);
+
+  const handleSend = useCallback((content: string) => {
+    setLastQuery(content);
+    sendMessage(content);
+  }, [sendMessage]);
+
+  /** Acknowledge or resolve an alert via the existing proxies. */
+  const advanceAlert = async (alert: NocAlert) => {
+    const action = alert.status === "acknowledged" ? "resolve" : "acknowledge";
+    const nextStatus = action === "acknowledge" ? "acknowledged" : "resolved";
+    try {
+      if (isLive) {
+        const res = await fetch(`/api/alerts/${alert.id}/${action}`, { method: "PATCH" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      }
+      setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, status: nextStatus } : a));
+      toast.success(`Alert ${nextStatus}`);
+    } catch {
+      toast.error(`Could not ${action} the alert — backend unreachable`);
+    }
+  };
+
+  const filteredAlerts = alerts.filter(a =>
     activeFilter === "all" || a.severity === activeFilter || a.status === activeFilter
   );
+
+  const activeCount = alerts.filter(a => a.status === "new").length;
+  const criticalCount = alerts.filter(a => a.severity === "critical" && a.status !== "resolved").length;
 
   const chatMessages = messages.map(m => ({
     id: m.id, role: m.role, content: m.content,
     reasoning_steps: m.trace?.map(t => ({ agent: t.agent, status: "done" as const, message: t.description, timestamp: t.timestamp })),
+    // The backend emits either {document_id, document_title} or {source, excerpt} — accept both.
+    citations: m.citations?.map(c => {
+      const cc = c as { document_id?: string; document_title?: string; source?: string; excerpt?: string };
+      return {
+        document_id: cc.document_id ?? cc.source ?? "unknown",
+        document_title: cc.document_title ?? cc.source ?? cc.document_id ?? "Source document",
+        excerpt: cc.excerpt,
+      };
+    }),
     timestamp: m.timestamp,
   }));
 
   return (
-    <AppShell title="Fintech Risk Operations Centre"
-      subtitle="Kuda MFB — Real-time CBN/SEC Compliance Monitor"
+    <AppShell title="Network Operations Centre"
+      subtitle="Real-time network, SLA & regulatory monitor"
       actions={
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-3 py-1.5 rounded-full">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "pulse-noc 2s ease infinite" }} />
-            LIVE MONITORING
+            {isLive ? "LIVE MONITORING" : "DEMO DATA"}
           </span>
           <button onClick={() => setChatOpen(!chatOpen)}
             className="flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-bold text-white transition-all"
@@ -100,7 +166,7 @@ export default function NOCPage() {
         </div>
       }>
 
-      {/* SLA indicators — Kuda MFB metrics only */}
+      {/* SLA indicators */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {SLA_INDICATORS.map(sla => <SLAGauge key={sla.name} sla={sla} />)}
       </div>
@@ -109,13 +175,13 @@ export default function NOCPage() {
         {/* Alert feed */}
         <div className="xl:col-span-3 space-y-4">
 
-          {/* Kuda internal alerts */}
+          {/* Operator alerts */}
           <div className="rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: "#0F1320" }}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
               <div>
-                <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Kuda MFB — Active Incidents</h2>
+                <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Active Alerts</h2>
                 <p className="text-[11px] text-[#6B7280]">
-                  {KUDA_ALERTS.filter(a => a.status === "active").length} active · {KUDA_ALERTS.filter(a => a.severity === "critical").length} critical
+                  {activeCount} active · {criticalCount} critical
                 </p>
               </div>
               <div className="flex items-center gap-1.5">
@@ -129,11 +195,19 @@ export default function NOCPage() {
               </div>
             </div>
             <div className="divide-y divide-white/[0.04]">
-              {filteredKuda.map(alert => {
+              {filteredAlerts.length === 0 && (
+                <p className="text-[12px] text-[#4B5563] text-center py-8">No alerts match this filter</p>
+              )}
+              {filteredAlerts.map(alert => {
                 const col = SEV_COLOR[alert.severity] ?? "#6B7280";
                 return (
                   <div key={alert.id} className="flex items-start gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors" style={{ borderLeft: `3px solid ${col}` }}>
-                    <div className="flex-1 min-w-0">
+                    {/* Clicking the alert asks Iroko about it — see insight → ask why → cited answer */}
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      title="Ask Iroko about this alert"
+                      onClick={() => router.push(`/chat?q=${encodeURIComponent(`Tell me more about this alert and what we should do: ${alert.title}`)}`)}
+                    >
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ color: col, background: `${col}15` }}>{alert.severity}</span>
                         <span className="text-[9.5px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full border border-blue-400/20">Internal</span>
@@ -141,12 +215,17 @@ export default function NOCPage() {
                         <span className="text-[10px] text-[#4B5563] ml-auto">{alert.age}</span>
                       </div>
                       <p className="text-[13px] text-[#D1D5DB] font-medium leading-snug">{alert.title}</p>
-                      <p className="text-[11px] text-[#6B7280] mt-0.5">{alert.region}</p>
+                      <p className="text-[11px] text-[#6B7280] mt-0.5">{alert.detail}</p>
                     </div>
                     <div className="flex flex-col gap-1.5 shrink-0">
-                      <button className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg text-[#3B7BF6] border border-[#3B7BF6]/20 hover:bg-[#3B7BF6]/10 transition-all">
-                        {alert.status === "active" ? "Acknowledge" : "Resolve"}
-                      </button>
+                      {alert.status === "resolved" ? (
+                        <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg text-emerald-400 bg-emerald-400/10 border border-emerald-400/20">✓ Resolved</span>
+                      ) : (
+                        <button onClick={() => advanceAlert(alert)}
+                          className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg text-[#3B7BF6] border border-[#3B7BF6]/20 hover:bg-[#3B7BF6]/10 transition-all">
+                          {alert.status === "acknowledged" ? "Resolve" : "Acknowledge"}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -154,30 +233,29 @@ export default function NOCPage() {
             </div>
           </div>
 
-          {/* Competitor intelligence section */}
+          {/* Regulatory watch section */}
           <div className="rounded-2xl border border-orange-400/20 overflow-hidden" style={{ background: "#0F1320" }}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-orange-400/20">
               <div>
-                <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Competitor Intelligence</h2>
-                <p className="text-[11px] text-[#6B7280]">Market watch — regulatory signals from peers</p>
+                <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Regulatory Watch</h2>
+                <p className="text-[11px] text-[#6B7280]">Market watch — signals from NCC · NDPC · FCCPC</p>
               </div>
               <span className="text-[9.5px] font-bold text-orange-400 bg-orange-400/10 px-2.5 py-1 rounded-full border border-orange-400/20">
-                {COMPETITOR_ALERTS.filter(a => a.severity === "critical").length} critical signals
+                {REGULATORY_WATCH.filter(a => a.severity === "critical").length} critical signals
               </span>
             </div>
             <div className="divide-y divide-white/[0.04]">
-              {COMPETITOR_ALERTS.map(alert => {
+              {REGULATORY_WATCH.map(alert => {
                 const col = SEV_COLOR[alert.severity] ?? "#6B7280";
                 return (
                   <div key={alert.id} className="flex items-start gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors" style={{ borderLeft: "3px solid #F97316" }}>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ color: col, background: `${col}15` }}>{alert.severity}</span>
-                        <span className="text-[9.5px] font-bold text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full border border-orange-400/20">Competitor Intel</span>
+                        <span className="text-[9.5px] font-bold text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full border border-orange-400/20">{alert.source}</span>
                         <span className="text-[10px] text-[#4B5563] ml-auto">{alert.age}</span>
                       </div>
                       <p className="text-[13px] text-[#D1D5DB] font-medium leading-snug">{alert.title}</p>
-                      <p className="text-[11px] text-[#6B7280] mt-0.5">{alert.region}</p>
                     </div>
                   </div>
                 );
@@ -190,16 +268,27 @@ export default function NOCPage() {
         <div className="xl:col-span-2 rounded-2xl border border-white/[0.06] flex flex-col overflow-hidden" style={{ background: "#0F1320", minHeight: 400 }}>
           <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
             <span className="text-lg">🛡️</span>
-            <span className="text-[13px] font-bold text-[#E5E7EB]">Fintech Watchdog Intelligence</span>
+            <span className="text-[13px] font-bold text-[#E5E7EB]">Watchdog Intelligence</span>
             <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full text-red-400 bg-red-400/10 border border-red-400/20 animate-pulse">
-              {KUDA_ALERTS.filter(a => a.severity === "critical").length} CRITICAL
+              {criticalCount} CRITICAL
             </span>
           </div>
           <div className="flex-1 min-h-0">
             <ChatWindow conversationId="noc" messages={chatMessages} isStreaming={isLoading} />
           </div>
-          <InputBar onSend={sendMessage} isStreaming={isLoading}
-            placeholder="Ask Watchdog about CBN violations, regulatory alerts…" />
+          {error && !isLoading && (
+            <div className="mx-3 mb-1 flex items-center justify-between gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2">
+              <span className="text-[11px] text-red-300 truncate">Request failed — {error}</span>
+              {lastQuery && (
+                <button onClick={() => handleSend(lastQuery)}
+                  className="shrink-0 text-[10.5px] font-bold text-red-300 hover:text-white transition-colors">
+                  Retry
+                </button>
+              )}
+            </div>
+          )}
+          <InputBar onSend={handleSend} isStreaming={isLoading}
+            placeholder="Ask Watchdog about incidents, SLAs, regulatory deadlines…" />
         </div>
       </div>
       <style>{`@keyframes pulse-noc{0%,100%{opacity:.4}50%{opacity:1}}`}</style>

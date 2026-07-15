@@ -102,13 +102,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <div className="min-w-0">
             <div className="text-[13px] font-bold text-white tracking-tight leading-tight">Iroko AI</div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[10px] text-[#6B7280]">RegIntel</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-[#3B7BF6] bg-[#3B7BF6]/10 border border-[#3B7BF6]/20">NCC · CBN</span>
+              <span className="text-[10px] text-[#6B7280]">Document Intelligence</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-[#3B7BF6] bg-[#3B7BF6]/10 border border-[#3B7BF6]/20">5 AGENTS</span>
             </div>
           </div>
         )}
         <button onClick={() => setCollapsed(!collapsed)}
           className="ml-auto hidden lg:flex w-6 h-6 rounded-md items-center justify-center text-[#6B7280] hover:text-white hover:bg-white/5 transition-colors shrink-0"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d={collapsed ? "M4 2l4 4-4 4" : "M8 2L4 6l4 4"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -117,7 +119,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <div className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+      <nav aria-label="Main navigation" className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
         {NAV.map(({ group, items }) => (
           <div key={group} className="mb-1">
             {!collapsed && (
@@ -128,6 +130,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               return (
                 <div key={href} className="relative group">
                   <Link href={href}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-2.5 px-2 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 no-underline relative overflow-hidden",
                       collapsed ? "justify-center" : "",
@@ -157,7 +160,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             })}
           </div>
         ))}
-      </div>
+      </nav>
 
       {/* User footer */}
       <div className={cn("border-t border-white/[0.06] p-3 shrink-0 flex items-center gap-2.5", collapsed ? "justify-center" : "")}>
@@ -170,7 +173,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               <div className="text-[12px] font-semibold text-[#E5E7EB] truncate">{user?.full_name ?? "Loading…"}</div>
               <div className="text-[10px] text-[#6B7280]">{user ? formatRole(user.role) : ""}</div>
             </div>
-            <button onClick={() => logout()} title="Sign out"
+            <button onClick={() => logout()} aria-label="Sign out" title="Sign out"
               className="w-7 h-7 rounded-lg flex items-center justify-center text-[#6B7280] hover:text-red-400 hover:bg-red-400/10 transition-all duration-150 shrink-0">
               {Icon.logout}
             </button>

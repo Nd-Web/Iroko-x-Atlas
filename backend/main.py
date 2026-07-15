@@ -151,9 +151,9 @@ async def lifespan(app: FastAPI):
 # ─── App ─────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="Iroko AI - Fintech Regulatory Intelligence",
-    description="Iroko AI, powered by Atlas — enterprise compliance intelligence platform for African fintechs. "
-                "Monitors CBN/SEC regulations across lending, KYC/AML, and capital adequacy. "
+    title="Iroko AI - Enterprise Document Intelligence",
+    description="Iroko AI — enterprise document intelligence & real-time workflow analytics platform for telecom operators. "
+                "Understands contracts, RCA reports, NCC QoS returns, NDPA records, and complaint logs across the organisation. "
                 "Multi-agent system built on Azure OpenAI + Microsoft Semantic Kernel.",
     version="2.1.0",
     docs_url="/docs",
@@ -206,13 +206,13 @@ app.include_router(compliance_api_router, prefix="/api/v1")
 async def health():
     return {
         "status": "healthy",
-        "service": "Iroko AI Fintech Regulatory Intelligence Backend",
+        "service": "Iroko AI Enterprise Document Intelligence Backend",
         "version": "2.1.0",
     }
 
 
 @app.get("/api/debug/search")
-async def debug_search(q: str = "CBN capital adequacy microfinance", current_user = Depends(get_current_user)):
+async def debug_search(q: str = "NCC QoS network availability benchmark", current_user = Depends(get_current_user)):
     if current_user.role not in ("superadmin", "admin"):
         raise HTTPException(status_code=403, detail="Debug endpoints require admin role")
     import os as _os
@@ -262,13 +262,13 @@ async def debug_llm(current_user = Depends(get_current_user)):
         test1 = {"ok": False, "error": str(e), "type": type(e).__name__, "traceback": tb.format_exc()}
 
     # Test 2: simulate Strategist reason — large prompt with 2000 token budget
-    long_prompt = ("You are Iroko AI, a fintech regulatory intelligence assistant for African fintechs.\n"
+    long_prompt = ("You are Iroko AI, an enterprise document intelligence assistant for a telecom operator.\n"
                    "Answer the user's question grounded ONLY in the evidence below.\n\n"
-                   "Question: \"What is the minimum Capital Adequacy Ratio required by CBN for microfinance banks?\"\n\n"
-                   "Retrieved Evidence:\nCBN REVISED REGULATORY AND SUPERVISORY GUIDELINES FOR MICROFINANCE BANKS\n"
-                   "Section 5.1 — Capital Adequacy: All MFBs shall maintain a minimum Capital Adequacy Ratio (CAR) "
-                   "of 10% of risk-weighted assets at all times. Tier 1 capital must comprise at least 6%. "
-                   "Monthly CAR computation and reporting to CBN via FinA system is mandatory.\n\n"
+                   "Question: \"What is the minimum network availability required by the NCC quality of service benchmarks?\"\n\n"
+                   "Retrieved Evidence:\nNCC QUALITY OF SERVICE QUARTERLY RETURN — Q4 2025\n"
+                   "Section 2.1 — Network Availability: Operators shall maintain network availability of "
+                   "at least 99.0% and a call setup success rate of at least 95.0% at all times. "
+                   "Quarterly QoS returns must be submitted to the NCC within 45 days of period end.\n\n"
                    "RULES:\n1. Give a detailed answer\n2. Cite document IDs\n3. Pidgin: False\n\n"
                    "Respond with valid JSON: {\"answer\": \"...\", \"citations\": [], \"suggested_actions\": [], "
                    "\"suggested_followups\": [], \"confidence\": \"high|medium|low\"}")

@@ -12,13 +12,23 @@ interface OverviewData {
   agent_usage_breakdown?: Record<string, number>;
 }
 
+interface DashboardStatsData {
+  total_documents?: number;
+  documents_indexed?: number;
+  total_queries_today?: number;
+  total_queries_this_week?: number;
+  active_alerts?: number;
+  critical_alerts?: number;
+  avg_query_response_ms?: number;
+}
+
 // ─── Static fallbacks ─────────────────────────────────────────────────────────
 
 const FALLBACK_STATS = [
-  { label: "Queries this week", value: "8,412",  delta: "+14%",   deltaUp: true,  accent: "#4A55D4" },
-  { label: "Avg latency",       value: "1.84s",  delta: "−6%",    deltaUp: true,  accent: "#17B26A" },
-  { label: "Citation accuracy", value: "98.4%",  delta: "+0.3%",  deltaUp: true,  accent: "#17B26A" },
-  { label: "Refusal rate",      value: "0.18%",  delta: "−0.02%", deltaUp: true,  accent: "#2E90FA" },
+  { label: "Queries this week",  value: "8,412", delta: "+14%", deltaUp: true,  accent: "#4A55D4" },
+  { label: "Avg latency",        value: "1.84s", delta: "−6%",  deltaUp: true,  accent: "#17B26A" },
+  { label: "Documents indexed",  value: "8",     delta: "",     deltaUp: true,  accent: "#17B26A" },
+  { label: "Active alerts",      value: "6",     delta: "",     deltaUp: false, accent: "#F04438" },
 ];
 
 const FALLBACK_AGENTS = [
@@ -40,43 +50,48 @@ const AGENT_COLORS: Record<string, string> = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function AnalyticsPage() {
-  const result = await apiRequest<OverviewData>("/api/analytics/overview");
-  const overview = result.error === null ? result.data : null;
+  const [overviewResult, statsResult] = await Promise.all([
+    apiRequest<OverviewData>("/api/analytics/overview"),
+    apiRequest<DashboardStatsData>("/api/analytics/stats"),
+  ]);
+  const overview = overviewResult.error === null ? overviewResult.data : null;
+  const liveStats = statsResult.error === null ? statsResult.data : null;
 
-  // ── KPI stats — citation_accuracy and refusal_rate have no API field, kept static ──
-  const stats = overview
+  // ── KPI stats — all four tiles backed by live endpoints where available ──
+  const stats = overview || liveStats
     ? [
         {
           label: "Queries this week",
-          value: overview.queries_week?.toLocaleString() ?? "8,412",
+          value:
+            (overview?.queries_week ?? liveStats?.total_queries_this_week)?.toLocaleString() ??
+            "8,412",
           delta: "+14%",
           deltaUp: true,
           accent: "#4A55D4",
         },
         {
           label: "Avg latency",
-          value: overview.avg_response_ms != null
-            ? `${(overview.avg_response_ms / 1000).toFixed(2)}s`
-            : "1.84s",
+          value: (() => {
+            const ms = overview?.avg_response_ms ?? liveStats?.avg_query_response_ms;
+            return ms != null ? `${(ms / 1000).toFixed(2)}s` : "1.84s";
+          })(),
           delta: "−6%",
           deltaUp: true,
           accent: "#17B26A",
         },
         {
-          label: "Citation accuracy",
-          value: "98.4%",
-          delta: "+0.3%",
+          label: "Documents indexed",
+          value: (liveStats?.documents_indexed ?? liveStats?.total_documents)?.toLocaleString() ?? "8",
+          delta: "",
           deltaUp: true,
           accent: "#17B26A",
         },
         {
-          label: "Refusal rate",
-          value: overview.watchdog_alert_rate != null
-            ? `${overview.watchdog_alert_rate.toFixed(1)}%`
-            : "0.18%",
-          delta: "−0.02%",
-          deltaUp: true,
-          accent: "#2E90FA",
+          label: "Active alerts",
+          value: liveStats?.active_alerts?.toLocaleString() ?? "6",
+          delta: liveStats?.critical_alerts ? `${liveStats.critical_alerts} critical` : "",
+          deltaUp: false,
+          accent: "#F04438",
         },
       ]
     : FALLBACK_STATS;
@@ -111,9 +126,11 @@ export default async function AnalyticsPage() {
               <div className="text-[28px] font-bold text-gray-900 tracking-[-0.04em] leading-none">
                 {s.value}
               </div>
-              <span className={`text-xs font-semibold px-2 py-[2px] rounded-full mt-[2px] ${s.deltaUp ? "text-success-700 bg-success-50" : "text-danger-700 bg-danger-50"}`}>
-                {s.delta}
-              </span>
+              {s.delta && (
+                <span className={`text-xs font-semibold px-2 py-[2px] rounded-full mt-[2px] ${s.deltaUp ? "text-success-700 bg-success-50" : "text-danger-700 bg-danger-50"}`}>
+                  {s.delta}
+                </span>
+              )}
             </div>
             <div className="text-[13px] font-medium text-gray-500">{s.label}</div>
           </div>

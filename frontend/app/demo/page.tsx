@@ -3,7 +3,8 @@
 /**
  * app/demo/page.tsx
  *
- * Full pitch-deck demo for MFB prospects.
+ * Full pitch-deck product demo — enterprise document intelligence first,
+ * with the fintech/MFB compliance configuration as a dedicated section.
  * Self-contained — no AppShell, no auth required.
  * Walk-through narrative with live navigation links into the real app.
  */
@@ -107,19 +108,20 @@ function Slide0() {
     <div style={{ maxWidth: 760, margin: "0 auto" }}>
       <Tag color={C.red}>The Problem</Tag>
       <h1 style={{ fontSize: "clamp(28px,4vw,46px)", fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.03em", margin: "20px 0 18px", color: "#fff" }}>
-        Nigerian MFBs are drowning<br />in regulatory complexity
+        Your answers exist. They&apos;re buried<br />in a thousand documents.
       </h1>
       <p style={{ fontSize: 17, color: C.muted, lineHeight: 1.7, marginBottom: 48 }}>
-        CBN issues new circulars every quarter. NDPA data protection requirements are new. SEC digital-asset rules are still being written.
-        Your compliance team is 2–3 people trying to cover it all — manually.
+        Large organisations run on documents — contracts, incident reports, regulatory returns, complaint
+        logs — scattered across drives, inboxes and internal systems in every format. Finding one answer
+        is slow. The insight across all of them never surfaces. Decisions wait.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 48 }}>
         {[
-          { stat: "900+", label: "licensed MFBs in Nigeria", color: C.brandLight },
-          { stat: "₦500K", label: "CBN AML fine per day late", color: C.red },
-          { stat: "30 days", label: "NDPA DSR response window", color: C.amber },
-          { stat: "3 people", label: "avg compliance team size", color: C.sub },
+          { stat: "Everywhere", label: "documents spread across systems", color: C.brandLight },
+          { stat: "Every format", label: "PDFs, scans, spreadsheets, contracts", color: C.amber },
+          { stat: "Hours", label: "to manually find a single answer", color: C.red },
+          { stat: "Too late", label: "when insight finally reaches a decision", color: C.sub },
         ].map(s => (
           <Card key={s.label} style={{ padding: "22px 20px", textAlign: "center" }}>
             <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-0.04em", color: s.color, lineHeight: 1 }}>{s.stat}</div>
@@ -130,8 +132,10 @@ function Slide0() {
 
       <Card style={{ borderLeft: `3px solid ${C.red}`, padding: "20px 24px" }}>
         <p style={{ margin: 0, fontSize: 14, color: C.white, lineHeight: 1.7 }}>
-          <strong style={{ color: C.red }}>The real risk:</strong> a missed filing, a wrong interest rate, or an undetected AML breach doesn't just cost a fine.
-          It costs your <strong style={{ color: "#fff" }}>licence</strong>. Iroko exists to make sure that never happens.
+          <strong style={{ color: C.red }}>The real cost:</strong> a missed contract deadline, an SLA breach
+          nobody spotted, or a regulatory filing built on stale data doesn&apos;t just waste hours — it costs
+          real money and, in regulated industries, your <strong style={{ color: "#fff" }}>licence</strong>.
+          Iroko exists to make sure that never happens.
         </p>
       </Card>
     </div>
@@ -140,22 +144,22 @@ function Slide0() {
 
 function Slide1() {
   const agents = [
-    { icon: "🛡️", name: "Watchdog", color: C.red,   desc: "Monitors CBN thresholds 24/7. Fires alerts the moment CAR, KYC coverage or AML rates drift." },
-    { icon: "🔍", name: "Analyst",  color: C.brand, desc: "Deep-reads your filings and transaction data, flags discrepancies before CBN does." },
-    { icon: "📚", name: "Researcher", color: C.brandLight, desc: "Tracks every CBN circular, SEC rule change, NDPA update — summarised and linked to your exposure." },
-    { icon: "✍️", name: "Scribe",   color: C.green, desc: "Ingests your documents, extracts clauses, builds your knowledge graph automatically." },
-    { icon: "📊", name: "Strategist", color: C.amber, desc: "Turns competitor signals and regulatory shifts into board-ready strategic briefings." },
+    { icon: "📥", name: "Ingestion", color: C.brandLight, desc: "Pulls documents from wherever they live — SharePoint, drives, email, core systems — into one indexed corpus." },
+    { icon: "📚", name: "Understanding", color: C.green, desc: "Parses and extracts meaning regardless of format: PDFs, scans, spreadsheets, contracts. Nothing stays unreadable." },
+    { icon: "📊", name: "Analytics", color: C.amber, desc: "Real-time dashboards and insight generation — trends, anomalies and exposure surface before anyone asks." },
+    { icon: "🔍", name: "Contextual Q&A", color: C.brand, desc: "Staff ask questions in plain language and get answers sourced from the right document — with citations." },
+    { icon: "🛡️", name: "Compliance", color: C.red, desc: "The same engine configured for regulatory document workflows — deadlines, thresholds and audit-grade logging." },
   ];
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto" }}>
       <Tag color={C.brand}>Meet Iroko AI</Tag>
       <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
-        Five agents. One platform.<br />Built only for Nigerian fintechs.
+        Five agents. One platform.<br />Every document, working for you.
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 36 }}>
-        Unlike generic AI tools, every agent speaks CBN, SEC, NDPA, and BOFIA 2020.
-        They know your regulatory calendar, your licence tier, and your specific filing obligations.
+        Unlike generic AI tools, Iroko&apos;s agents work as a pipeline over your own verified corpus —
+        every answer grounded in your documents, every action logged, nothing invented.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14, marginBottom: 32 }}>
@@ -170,9 +174,9 @@ function Slide1() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
         {[
-          { v: "< 2s", l: "compliance verdict" },
+          { v: "< 2s", l: "answers with citations" },
           { v: "24/7", l: "agent monitoring" },
-          { v: "100%", l: "CBN-verifiable audit trail" },
+          { v: "100%", l: "cited & auditable" },
         ].map(s => (
           <Card key={s.l} style={{ padding: "18px 14px", textAlign: "center" }}>
             <div style={{ fontSize: 26, fontWeight: 800, color: C.brandLight, letterSpacing: "-0.04em" }}>{s.v}</div>
@@ -189,10 +193,10 @@ function Slide2() {
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
       <Tag color={C.brandLight}>Live Dashboard</Tag>
       <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
-        Your entire compliance posture on one screen
+        Your entire operation&apos;s knowledge on one screen
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 36 }}>
-        The moment you log in, you see your institution's live CBN/SEC signals, open alerts, filing deadlines, and the market intelligence feed — no configuration required.
+        The moment you log in, you see live operational signals from your documents — open alerts, contract and filing deadlines, complaint trends, and the intelligence feed — no configuration required.
       </p>
 
       {/* Mock dashboard preview */}
@@ -207,10 +211,10 @@ function Slide2() {
         </div>
         <div style={{ padding: "20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           {[
-            { title: "CBN AML/CFT return — 28 days", cat: "regulatory", sev: 6 },
-            { title: "Carbon MFB CAR breach — 8.4%", cat: "compliance", sev: 9 },
-            { title: "Kuda wallet velocity anomaly × 3", cat: "fraud", sev: 7 },
-            { title: "SEC digital assets rule update", cat: "regulatory", sev: 5 },
+            { title: "Vendor contract expires — 28 days", cat: "contract", sev: 6 },
+            { title: "Site availability below SLA — 82.7%", cat: "operations", sev: 9 },
+            { title: "Payment reversal anomaly × 3 agents", cat: "fraud", sev: 7 },
+            { title: "Data-protection rule update", cat: "regulatory", sev: 5 },
           ].map(s => {
             const col = s.sev >= 8 ? C.red : s.sev >= 6 ? C.amber : C.brandLight;
             return (
@@ -240,12 +244,14 @@ function Slide3() {
 
   return (
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
-      <Tag color={C.green}>Compliance Engine</Tag>
+      <Tag color={C.green}>The Compliance Configuration</Tag>
       <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
         GO · MONITOR · NO-GO in under 2 seconds
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 32 }}>
-        Ask any compliance question in plain English. Iroko checks it against CBN, SEC, NDPA, and BOFIA 2020 simultaneously — and cites the exact regulation section.
+        The next few sections show the same five-agent engine configured for regulated finance —
+        our fintech &amp; MFB vertical. Ask any compliance question in plain English. Iroko checks it
+        against CBN, SEC, NDPA, and BOFIA 2020 simultaneously — and cites the exact regulation section.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 28 }}>
@@ -541,9 +547,9 @@ function Slide8() {
 
 function Slide9() {
   const steps = [
-    { day: "Day 1", title: "Credentials & connectors", body: "You give us read-only access to your SharePoint/Google Drive and your CBS API key. Iroko indexes your documents overnight." },
-    { day: "Day 1", title: "Regulatory mapping", body: "Your compliance officer fills a 10-minute form: licence tier, filing obligations, DPO contact. Iroko maps you to the canonical CBN regulatory calendar." },
-    { day: "Week 1", title: "Data pipeline live", body: "Nightly CBS export begins. Your KPI metrics populate. Watchdog starts monitoring your CAR, KYC coverage, AML rate against live thresholds." },
+    { day: "Day 1", title: "Credentials & connectors", body: "You give us read-only access to your SharePoint/Google Drive and core-system API keys. Iroko indexes your documents overnight." },
+    { day: "Day 1", title: "Workflow mapping", body: "Your team fills a 10-minute form: departments, filing obligations, key contacts. Regulated institutions are mapped to their regulatory calendar automatically." },
+    { day: "Week 1", title: "Data pipeline live", body: "Nightly core-system export begins. Your KPI metrics populate. Watchdog starts monitoring your operational and regulatory thresholds live." },
     { day: "Week 1", title: "DSR channel configured", body: "Your compliance mailbox is connected. Every incoming data subject request auto-populates the DSR queue with a running 30-day SLA clock." },
     { day: "Ongoing", title: "Agents do the rest", body: "Insights, alerts, competitor signals, and your knowledge graph self-populate. You review and act. Iroko monitors and alerts. Zero manual data entry." },
   ];
@@ -635,11 +641,47 @@ function Slide10() {
     <div style={{ maxWidth: 900, margin: "0 auto" }}>
       <Tag color={C.brandLight}>Pricing & Next Steps</Tag>
       <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
-        Less than one compliance hire. More than a full team.
+        Priced for the problem you&apos;re solving
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 36 }}>
-        A junior compliance officer costs ₦4–6M per year before overheads. Iroko costs a fraction — and works 24 hours a day, never misses a circular, and never forgets a deadline.
+        Enterprise document-intelligence engagements are scoped to your organisation.
+        The fintech &amp; MFB compliance configuration ships as ready-made tiers.
       </p>
+
+      {/* Enterprise document intelligence — custom-quoted lead */}
+      <div style={{
+        background: `${C.brand}14`, border: `1px solid ${C.brand}40`,
+        borderRadius: 16, padding: "26px 24px", marginBottom: 28,
+        display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 20,
+      }}>
+        <div style={{ maxWidth: 560 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.brandLight, marginBottom: 8 }}>Enterprise document intelligence</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
+            <span style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>Custom-quoted</span>
+            <span style={{ fontSize: 12, color: C.sub }}>for large organisations</span>
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.65 }}>
+            Scoped to document volume, systems to connect, departments to onboard, and deployment
+            model (cloud, private cloud, on-prem). Every engagement starts with a working pilot
+            on your own documents.
+          </p>
+        </div>
+        <Link href="/request-demo" style={{
+          fontSize: 14, fontWeight: 700, color: "#fff", textDecoration: "none",
+          padding: "13px 28px", borderRadius: 10, background: C.brand,
+          display: "inline-block", flexShrink: 0,
+        }}>
+          Book a call →
+        </Link>
+      </div>
+
+      {/* Fintech & MFB compliance configuration tiers */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <Tag color={C.green}>Fintech &amp; MFB compliance configuration</Tag>
+        <span style={{ fontSize: 12, color: C.sub }}>
+          Less than one compliance hire (₦4–6M/year) — works 24 hours a day, never misses a circular.
+        </span>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 36 }}>
         {tiers.map(t => (
@@ -718,7 +760,7 @@ export default function DemoPage() {
               </svg>
             </div>
             <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>Iroko AI</span>
-            <span style={{ fontSize: 10, fontWeight: 600, color: C.sub, background: C.border, padding: "2px 7px", borderRadius: 999, marginLeft: 2 }}>MFB Demo</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: C.sub, background: C.border, padding: "2px 7px", borderRadius: 999, marginLeft: 2 }}>Product Demo</span>
           </div>
 
           {/* Step pills — scrollable on mobile */}

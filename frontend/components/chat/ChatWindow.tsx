@@ -49,7 +49,7 @@ function EmptyState() {
         </svg>
       </div>
       <div className="text-center">
-        <p className="text-[15px] font-semibold text-[#E5E7EB]">Ask Atlas anything</p>
+        <p className="text-[15px] font-semibold text-[#E5E7EB]">Ask Iroko anything</p>
         <p className="text-[13px] text-[#6B7280] mt-1 max-w-xs">
           Your enterprise AI is ready. Query documents, analyse contracts, or investigate network alerts.
         </p>
@@ -65,9 +65,17 @@ export default function ChatWindow({ conversationId, messages, isStreaming }: Pr
         <EmptyState />
       ) : (
         <>
-          {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
-          ))}
+          {messages.map((msg, i) => {
+            // The most recent user message before this one — gives PDF exports
+            // the real question that was asked.
+            const prevUser = messages
+              .slice(0, i)
+              .reverse()
+              .find((m) => m.role === "user");
+            return (
+              <MessageBubble key={msg.id} message={msg} contextQuery={prevUser?.content} />
+            );
+          })}
           {isStreaming && <TypingIndicator />}
         </>
       )}

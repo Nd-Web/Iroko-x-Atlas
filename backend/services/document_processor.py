@@ -494,36 +494,31 @@ async def extract_text(file_path: str, file_type: str) -> Optional[str]:
 
 def _mock_document_text(file_type: str) -> str:
     """Returns realistic mock document text for development."""
-    return """Iroko AI — Internal Regulatory Intelligence Document
+    return """Iroko AI — Internal Operations Intelligence Document
 
 EXECUTIVE SUMMARY
 
-This document contains enterprise information for African Fintech Platform.
-Regulatory compliance data indicates active monitoring of CBN/SEC obligations
-across all licensed entities. Lagos, Abuja, and Port Harcourt remain top revenue contributors.
+This document contains enterprise operational information for the organisation.
+Network and regulatory data indicate active monitoring of NCC QoS and NDPA obligations
+across all regions. Lagos, Abuja, and Port Harcourt remain top revenue contributors.
 
 Key Metrics for Q1 2026:
 
-- Total active customers: 4.2 million
-- Platform uptime: 99.3%
+- Network availability (national): 99.2%
 - Customer satisfaction index: 71/100
-- Revenue growth: 18% year-on-year
-- Total revenue: NGN 12,400,000,000
+- Complaint resolution rate: 76%
+- Active regulatory filings in progress: 3
 
 AREAS REQUIRING ATTENTION
 
-Carbon MFB Capital Adequacy Ratio is operating below the CBN minimum of 10%.
-The CRC Credit Bureau data processing agreement renewal requires immediate action — expiry is imminent.
-CBN AML/CFT quarterly return must be filed before the quarterly deadline.
-
-Compliance Status:
-
-Q2 2026 AML/CFT return flagged 14 potential structuring patterns — none escalated to STR
-as required by CBN AML/CFT Regulations 2022 Section 15. Remediation required within 48 hours.
+Ikeja cluster availability fell to 82.7% during the February feeder outage —
+below the NCC minimum of 95% and must be disclosed in the Q1 QoS return.
+The NDPA Article 24 processing record annual review is overdue — DPO action required.
+NCC QoS quarterly return must be filed before the 2026-04-14 deadline (₦5M/day if late).
 
 CONTRACT STATUS
 
-TowerCo Infrastructure Agreement expires May 15, 2026.
-Monthly fee: NGN 45,000,000. SLA: 99.5% uptime guarantee.
+ATC Lagos Zone 2 tower agreement (ATC/MTN/LAG/2023-007) expires in 28 days.
+Monthly fee: NGN 19,500,000. 12 sites affected.
 Renewal notice was due 90 days prior — action is now overdue.
 """

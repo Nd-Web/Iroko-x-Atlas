@@ -52,8 +52,18 @@ export async function POST(request: NextRequest) {
   });
 
   if (!upstream.ok || !upstream.body) {
+    // Surface the real failure to the client instead of a generic message —
+    // the most common case is an expired JWT (30 min TTL) inside a cookie
+    // that lives much longer (7 days), which the backend rejects with 401.
+    const detail = await upstream.text().catch(() => "");
+    let error = "The AI service could not process this request. Please try again.";
+    if (upstream.status === 401) {
+      error = "Your session has expired. Please sign out and sign in again.";
+    } else if (upstream.status === 429) {
+      error = "You're sending requests too quickly. Please wait a moment and try again.";
+    }
     return NextResponse.json(
-      { error: "Upstream stream request failed." },
+      { error, upstream_status: upstream.status, detail: detail.slice(0, 500) },
       { status: upstream.status }
     );
   }

@@ -15,46 +15,46 @@ const NODE_COLORS: Record<string, string> = {
 };
 
 const NODE_LABELS: Record<string, string> = {
-  primary: "Primary", competitor: "Competitor", contract: "Contract",
+  primary: "Network", competitor: "Vendor", contract: "Contract",
   sla: "SLA", alert: "Alert", document: "Document", regulation: "Regulation",
 };
 
 const NODES: Node[] = [
-  { id: "n1",  label: "Kuda MFB",                type: "primary",    x: 220, y: 160, connections: ["n2","n3","n5"] },
-  { id: "n2",  label: "CBN MFB Licence 2024",    type: "contract",   x: 100, y: 90,  connections: ["n1","n4","n6"] },
-  { id: "n3",  label: "CAR — 10% Minimum",       type: "sla",        x: 320, y: 80,  connections: ["n1","n7"] },
-  { id: "n4",  label: "Lending Exposure Limit",  type: "document",   x: 60,  y: 200, connections: ["n2","n7"] },
-  { id: "n5",  label: "Carbon MFB CAR Breach",   type: "alert",      x: 200, y: 280, connections: ["n1","n3","n8"] },
-  { id: "n6",  label: "CBN BOFIA 2020 s.35",     type: "regulation", x: 120, y: 320, connections: ["n2","n9"] },
-  { id: "n7",  label: "Capital Shortfall Alert",  type: "alert",      x: 400, y: 180, connections: ["n3","n5"] },
-  { id: "n8",  label: "CBN AML/CFT Guideline",   type: "sla",        x: 340, y: 300, connections: ["n5","n9"] },
-  { id: "n9",  label: "CBN Lending Return Q2",   type: "document",   x: 480, y: 260, connections: ["n6","n8"] },
-  { id: "n10", label: "SEC Digital Assets Rule", type: "contract",   x: 460, y: 110, connections: ["n3","n9"] },
-  { id: "n11", label: "Carbon MFB",              type: "competitor", x: 80,  y: 360, connections: ["n5","n6"] },
-  { id: "n12", label: "Moniepoint MFB",          type: "competitor", x: 300, y: 380, connections: ["n8","n9"] },
-  { id: "n13", label: "Fairmoney MFB",           type: "competitor", x: 500, y: 360, connections: ["n9","n10"] },
+  { id: "n1",  label: "Ikeja Cluster",            type: "primary",    x: 220, y: 160, connections: ["n2","n3","n5"] },
+  { id: "n2",  label: "IHS Tower Lease Agreement", type: "contract",   x: 100, y: 90,  connections: ["n1","n4","n6"] },
+  { id: "n3",  label: "Diesel Backup SLA",        type: "sla",        x: 320, y: 80,  connections: ["n1","n7"] },
+  { id: "n4",  label: "Ikeja Cluster RCA Q1 2026", type: "document",   x: 60,  y: 200, connections: ["n2","n7"] },
+  { id: "n5",  label: "INC-2026-IKJ-0147 Outage", type: "alert",      x: 200, y: 280, connections: ["n1","n3","n8"] },
+  { id: "n6",  label: "NDPA 2023 Article 24",     type: "regulation", x: 120, y: 320, connections: ["n2","n9"] },
+  { id: "n7",  label: "SLA Breach — ₦2.66M",      type: "alert",      x: 400, y: 180, connections: ["n3","n5"] },
+  { id: "n8",  label: "NCC QoS Minimum — 95%",    type: "sla",        x: 340, y: 300, connections: ["n5","n9"] },
+  { id: "n9",  label: "NCC QoS Return Q1 2026",   type: "document",   x: 480, y: 260, connections: ["n6","n8"] },
+  { id: "n10", label: "Zenith Bank EBU SLA",      type: "contract",   x: 460, y: 110, connections: ["n3","n9"] },
+  { id: "n11", label: "IHS Nigeria",              type: "competitor", x: 80,  y: 360, connections: ["n5","n6"] },
+  { id: "n12", label: "Ericsson Nigeria",         type: "competitor", x: 300, y: 380, connections: ["n8","n9"] },
+  { id: "n13", label: "ATC Lagos Zone 2",         type: "competitor", x: 500, y: 360, connections: ["n9","n10"] },
 ];
 
 const EDGES: Edge[] = [
-  { from: "n1", to: "n2", label: "leases" },
+  { from: "n1", to: "n2", label: "leased under" },
   { from: "n1", to: "n3", label: "governed by" },
   { from: "n1", to: "n5", label: "triggered" },
-  { from: "n2", to: "n4", label: "contains" },
+  { from: "n2", to: "n4", label: "cited in" },
   { from: "n2", to: "n6", label: "subject to" },
   { from: "n3", to: "n7", label: "breach of" },
-  { from: "n4", to: "n7", label: "applies to" },
+  { from: "n4", to: "n7", label: "quantifies" },
   { from: "n5", to: "n3", label: "violates" },
-  { from: "n5", to: "n8", label: "also violates" },
+  { from: "n5", to: "n8", label: "also breaches" },
   { from: "n6", to: "n9", label: "referenced in" },
   { from: "n8", to: "n9", label: "cited in" },
   { from: "n10", to: "n3", label: "references" },
   { from: "n10", to: "n9", label: "appears in" },
   { from: "n11", to: "n5", label: "is subject of" },
-  { from: "n11", to: "n6", label: "same regulation" },
+  { from: "n11", to: "n6", label: "bound by" },
   { from: "n12", to: "n8", label: "under review" },
-  { from: "n12", to: "n9", label: "filing due" },
-  { from: "n13", to: "n9", label: "filing due" },
-  { from: "n13", to: "n10", label: "SEC exposure" },
+  { from: "n12", to: "n9", label: "measured in" },
+  { from: "n13", to: "n9", label: "reported in" },
+  { from: "n13", to: "n10", label: "serves sites for" },
 ];
 
 function getNode(id: string) { return NODES.find(n => n.id === id); }

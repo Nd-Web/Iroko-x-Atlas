@@ -1,11 +1,11 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:opsz,wght@9..40,400;9..40,500&display=swap");
-
 @import "tailwindcss";
 
 @theme {
   /* ── Fonts ─────────────────────────────────────────────── */
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, monospace;
+  /* Families are self-hosted via next/font in app/layout.tsx, which
+     exposes them as --font-dm-sans / --font-dm-mono on <html>. */
+  --font-sans: var(--font-dm-sans, "DM Sans"), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono, "DM Mono"), ui-monospace, monospace;
 
   /* ── Brand Blue ────────────────────────────────────────── */
   --color-brand-50:  #EEF3FF;

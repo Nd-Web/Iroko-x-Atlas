@@ -4,9 +4,9 @@
  * Password reset request page.
  *
  * API:  POST /api/auth/forgot-password  (our Next.js proxy route)
- * Flow: user submits email → AtlasCore sends reset link → show success message
+ * Flow: user submits email → the backend sends reset link → show success message
  *
- * AtlasCore always returns 200 regardless of whether the email exists,
+ * the backend always returns 200 regardless of whether the email exists,
  * to prevent email enumeration attacks. We surface the same success message
  * in both cases.
  *
@@ -20,7 +20,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import StatusMessage from "@/components/ui/StatusMessage";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Spinner from "@/components/ui/Spinner";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail]   = useState("");
@@ -132,7 +132,7 @@ export default function ForgotPasswordPage() {
             >
               {loading ? (
                 <>
-                  <LoadingSpinner size={15} />
+                  <Spinner size={15} />
                   Sending…
                 </>
               ) : (
