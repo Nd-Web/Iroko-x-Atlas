@@ -36,36 +36,35 @@ async def generate_detailed_pdf(request: PdfGenerateRequest):
             ]
             citation_lines = "\n".join(f"- {t}" for t in titles)
 
-        # 1. Expand the response using Azure OpenAI with a structured outline
+        # 1. Summarise the response using Azure OpenAI — short, plain, clear.
         prompt = f"""
-        You are a senior intelligence analyst at Iroko AI writing a board-ready report for a large
-        telecom operator. Expand the summary below into a detailed Executive Intelligence Report
-        (roughly 2 pages), written in Markdown.
+        You are an analyst at Iroko AI. Write a SHORT, plain, clear summary of the analysis below
+        for a telecom operator — NOT a long report. Keep it to about one page and skip all filler.
 
         User Question:
         {request.query or "N/A"}
 
-        Original Summary Response:
+        Analysis to summarise:
         {request.original_response}
 
         {"Source documents cited by the analysis:" + chr(10) + citation_lines if citation_lines else ""}
 
-        Structure the report EXACTLY as follows (use these as ## headings):
-        1. Executive Summary — 3-5 sentences, lead with the single most important finding and any headline figure.
-        2. Key Findings — bulleted, each with the specific metric or evidence behind it.
-        3. Detailed Analysis — the substance; use ### sub-headings and Markdown tables for any numeric comparison.
-        4. Financial & Operational Impact — quantify exposure in NGN where the evidence supports it; never invent figures.
-        5. Regulatory & Compliance Assessment — evaluate against NCC and NDPA obligations; end this section with a single verdict line formatted exactly as: **VERDICT: GO** or **VERDICT: MONITOR** or **VERDICT: NO-GO**, with a one-line justification.
-        6. Recommended Actions — a Markdown table with columns: Action | Owner | Priority | Timeline.
+        Write it in Markdown with these short sections (use these as ## headings):
+        1. Summary — 2 to 4 plain sentences with the key takeaway and any headline figure.
+        2. Key Points — a short bulleted list (5 bullets max), each one line, each with its metric or evidence.
+        3. Recommended Actions — a short bulleted list (4 bullets max), each one line, with an owner where clear.
 
-        Rules: authoritative analytical tone; ground every claim in the provided context; no invented
-        numbers; no pleasantries or conversational filler; start directly with the first heading.
+        Only if the analysis concerns regulatory compliance, add ONE final line formatted exactly as
+        **VERDICT: GO** or **VERDICT: MONITOR** or **VERDICT: NO-GO** with a one-line reason; otherwise omit it.
+
+        Rules: plain, clear English; be brief and do not pad to fill space; ground every claim in the
+        provided analysis; never invent numbers; no pleasantries or filler; start directly with the first heading.
         """
 
         expanded_content = await get_chat_completion(
             messages=[{"role": "user", "content": prompt}],
             temperature=0.2,
-            max_tokens=4000,
+            max_tokens=1200,
         )
 
         # 2. Convert expanded Markdown to HTML — tables/fenced-code extensions are
@@ -114,7 +113,7 @@ async def generate_detailed_pdf(request: PdfGenerateRequest):
         <html>
           <head>
             <meta charset="utf-8">
-            <title>Iroko AI — Executive Intelligence Report</title>
+            <title>Iroko AI — Intelligence Summary</title>
             <style>
               * {{ box-sizing: border-box; }}
               body {{
@@ -202,7 +201,7 @@ async def generate_detailed_pdf(request: PdfGenerateRequest):
                   </div>
                   <div>
                     <div class="brand">Iroko AI · Document Intelligence</div>
-                    <h1>Executive Intelligence Report</h1>
+                    <h1>Intelligence Summary</h1>
                   </div>
                 </div>
                 <div class="meta-right">
