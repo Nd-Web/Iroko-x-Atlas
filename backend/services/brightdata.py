@@ -393,7 +393,13 @@ class BrightDataClient:
 
         import urllib.parse
         search_query = urllib.parse.quote_plus(query)
-        target_url = f"https://www.google.com/search?q={search_query}&gl={country}&num={num_results}"
+        # brd_json=1 tells the Bright Data SERP API to return parsed JSON
+        # (general/organic/pagination/...) in the response body. Without it the
+        # body is raw Google HTML and the "organic" parse below yields 0 results.
+        target_url = (
+            f"https://www.google.com/search?q={search_query}"
+            f"&gl={country}&num={num_results}&brd_json=1"
+        )
 
         payload = {
             "zone": zone,
