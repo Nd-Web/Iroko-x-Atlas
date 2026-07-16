@@ -256,7 +256,7 @@ async def debug_llm(current_user = Depends(get_current_user)):
     # Test 1: minimal prompt
     client = AsyncAzureOpenAI(azure_endpoint=endpoint, api_key=api_key, api_version=api_version)
     try:
-        r = await client.chat.completions.create(model=deployment, messages=[{"role":"user","content":"Say ok"}], max_completion_tokens=10, temperature=0.0)
+        r = await client.chat.completions.create(model=deployment, messages=[{"role":"user","content":"Say ok"}], max_completion_tokens=10)
         test1 = {"ok": True, "response": r.choices[0].message.content}
     except Exception as e:
         test1 = {"ok": False, "error": str(e), "type": type(e).__name__, "traceback": tb.format_exc()}
@@ -273,7 +273,7 @@ async def debug_llm(current_user = Depends(get_current_user)):
                    "Respond with valid JSON: {\"answer\": \"...\", \"citations\": [], \"suggested_actions\": [], "
                    "\"suggested_followups\": [], \"confidence\": \"high|medium|low\"}")
     try:
-        r2 = await client.chat.completions.create(model=deployment, messages=[{"role":"user","content":long_prompt}], max_completion_tokens=2000, temperature=0.3)
+        r2 = await client.chat.completions.create(model=deployment, messages=[{"role":"user","content":long_prompt}], max_completion_tokens=2000)
         test2 = {"ok": True, "response": r2.choices[0].message.content[:300]}
     except Exception as e:
         test2 = {"ok": False, "error": str(e), "type": type(e).__name__, "traceback": tb.format_exc()}

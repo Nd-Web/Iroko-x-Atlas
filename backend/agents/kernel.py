@@ -168,11 +168,12 @@ async def llm_complete(
     last_error: Exception = RuntimeError("llm_complete: no attempts made")
     for attempt in range(1, _LLM_MAX_RETRIES + 1):
         try:
+            # NOTE: GPT-5.x models only support the default temperature (1);
+            # sending any other value returns a 400, so we do not forward it.
             response = await client.chat.completions.create(
                 model=deployment,
                 messages=messages,
                 max_completion_tokens=max_tokens,
-                temperature=temperature,
             )
             return response.choices[0].message.content or ""
         except (RateLimitError, APITimeoutError, APIConnectionError) as e:
@@ -243,11 +244,11 @@ async def llm_complete_stream(
     last_error: Exception = RuntimeError("llm_complete_stream: no attempts made")
     for attempt in range(1, _LLM_MAX_RETRIES + 1):
         try:
+            # GPT-5.x models only support the default temperature (1) — do not forward it.
             stream = await client.chat.completions.create(
                 model=deployment,
                 messages=stream_messages,
                 max_completion_tokens=max_tokens,
-                temperature=temperature,
                 stream=True,
             )
             async for chunk in stream:
