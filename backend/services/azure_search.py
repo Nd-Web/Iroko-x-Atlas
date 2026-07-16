@@ -341,7 +341,7 @@ def rerank_results(
             query=query,
             documents=list(docs),
             top_n=min(top_n, len(docs)),
-            model="rerank-english-v3.0",
+            model="rerank-v3.5",
         )
 
         reranked = []
