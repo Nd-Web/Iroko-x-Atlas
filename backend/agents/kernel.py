@@ -170,10 +170,14 @@ async def llm_complete(
         try:
             # NOTE: GPT-5.x models only support the default temperature (1);
             # sending any other value returns a 400, so we do not forward it.
+            # reasoning_effort="none" makes these reasoning models count tokens as
+            # output-only (like GPT-4o). Without it, reasoning tokens silently
+            # consume max_completion_tokens and the visible answer comes back empty.
             response = await client.chat.completions.create(
                 model=deployment,
                 messages=messages,
                 max_completion_tokens=max_tokens,
+                extra_body={"reasoning_effort": "none"},
             )
             return response.choices[0].message.content or ""
         except (RateLimitError, APITimeoutError, APIConnectionError) as e:
@@ -244,12 +248,14 @@ async def llm_complete_stream(
     last_error: Exception = RuntimeError("llm_complete_stream: no attempts made")
     for attempt in range(1, _LLM_MAX_RETRIES + 1):
         try:
-            # GPT-5.x models only support the default temperature (1) — do not forward it.
+            # GPT-5.x: default temperature only; reasoning_effort="none" so reasoning
+            # tokens don't consume the budget and leave the stream empty.
             stream = await client.chat.completions.create(
                 model=deployment,
                 messages=stream_messages,
                 max_completion_tokens=max_tokens,
                 stream=True,
+                extra_body={"reasoning_effort": "none"},
             )
             async for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:

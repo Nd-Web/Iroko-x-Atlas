@@ -1,0 +1,4 @@
+
+# local sqlite test db
+atlas.db
+backend/atlas.db

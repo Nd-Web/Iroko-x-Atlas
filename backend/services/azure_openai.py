@@ -113,11 +113,13 @@ async def get_chat_completion(
         full_messages.append({"role": "system", "content": system_prompt})
     full_messages.extend(messages)
 
-    # GPT-5.x models only support the default temperature (1) — do not forward it.
+    # GPT-5.x: default temperature only; reasoning_effort="none" so reasoning tokens
+    # don't consume the budget and return an empty completion.
     response = await client.chat.completions.create(
         model=model,
         messages=full_messages,
         max_completion_tokens=max_tokens,
+        extra_body={"reasoning_effort": "none"},
     )
     return response.choices[0].message.content or ""
 
@@ -172,12 +174,14 @@ async def stream_chat_completion(
 
     for attempt in range(2):
         try:
-            # GPT-5.x models only support the default temperature (1) — do not forward it.
+            # GPT-5.x: default temperature only; reasoning_effort="none" so reasoning
+            # tokens don't consume the budget and leave the stream empty.
             stream = await client.chat.completions.create(
                 model=model,
                 messages=full_messages,
                 max_completion_tokens=max_tokens,
                 stream=True,
+                extra_body={"reasoning_effort": "none"},
             )
             async for chunk in stream:
                 if (
