@@ -166,6 +166,7 @@ class ThreatDebateAgent(BaseAgent):
                 prompt,
                 max_tokens=_MAX_TOKENS_ARGUE,
                 temperature=_DEBATE_TEMPERATURE,
+                service_id="flagship",
                 system_prompt=(
                     "You are a diligent risk analyst building the strongest affirmative "
                     "threat case. Return valid JSON only — no prose, no markdown fences."
@@ -248,6 +249,7 @@ class ThreatDebateAgent(BaseAgent):
                 prompt,
                 max_tokens=_MAX_TOKENS_ARGUE,
                 temperature=_DEBATE_TEMPERATURE,
+                service_id="flagship",
                 system_prompt=(
                     "You are a rigorous skeptical analyst challenging threat claims. "
                     "Return valid JSON only — no prose, no markdown fences."
@@ -348,6 +350,7 @@ class ThreatDebateAgent(BaseAgent):
                 prompt,
                 max_tokens=_MAX_TOKENS_RECONCILE,
                 temperature=_TRIAGE_TEMPERATURE,
+                service_id="flagship",
                 system_prompt=(
                     "You are a decisive senior risk officer who reads both sides of a debate "
                     "and issues a clear, evidence-based verdict. "

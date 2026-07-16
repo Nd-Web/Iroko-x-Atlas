@@ -340,6 +340,7 @@ class FraudIntelligenceService:
                     prompt,
                     max_tokens=200,
                     temperature=0.2,
+                    service_id="nano",
                     system_prompt=(
                         "You are a concise fraud risk analyst. "
                         "Respond with valid JSON only — no preamble, no markdown fences."

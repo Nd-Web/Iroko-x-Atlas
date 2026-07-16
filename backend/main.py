@@ -250,7 +250,7 @@ async def debug_llm(current_user = Depends(get_current_user)):
     endpoint = _os.getenv("AZURE_OPENAI_ENDPOINT")
     api_key = _os.getenv("AZURE_OPENAI_API_KEY")
     api_version = _os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
-    deployment = _os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT", "gpt-5.4-mini")
+    deployment = _os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT", "gpt-5.6-terra")
     env_info = {"endpoint": endpoint, "deployment": deployment, "api_version": api_version, "api_key_set": bool(api_key)}
 
     # Test 1: minimal prompt

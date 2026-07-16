@@ -66,10 +66,10 @@ class AppSettings(BaseSettings):
         default="text-embedding-3-large", description="Azure OpenAI embedding model deployment name"
     )
     AZURE_OPENAI_GPT4O_DEPLOYMENT: str = Field(
-        default="gpt-4o", description="Azure OpenAI GPT-4o deployment name"
+        default="gpt-5.6-terra", description="Azure OpenAI balanced/workhorse deployment name"
     )
     AZURE_OPENAI_NANO_DEPLOYMENT: str = Field(
-        default="gpt-5.4-nano", description="Azure OpenAI nano model deployment name"
+        default="gpt-5.6-luna", description="Azure OpenAI small/fast deployment name"
     )
 
     # -- Azure AI Search ---------------------------------------------------

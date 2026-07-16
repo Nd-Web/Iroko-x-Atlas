@@ -597,7 +597,7 @@ IMPORTANT: If the input is a short reaction or affirmation (e.g. "omo", "yes", "
 JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
 
         try:
-            r = await llm_complete(prompt, max_tokens=120, temperature=0.1)
+            r = await llm_complete(prompt, max_tokens=120, temperature=0.1, service_id="nano")
             return json.loads(r.strip().replace("```json", "").replace("```", "").strip())
         except (json.JSONDecodeError, ValueError):
             return self._heuristic_classify(question)
@@ -745,7 +745,7 @@ User said: "{question}" Pidgin: {is_pidgin}
 Respond warmly (2-3 sentences). Mention you help with network incidents, vendor contracts, regulatory filings (NCC, NDPA), customer complaints, and document search.
 If Pidgin, use Pidgin English."""
         try:
-            answer = await llm_complete(prompt, max_tokens=200, temperature=0.7)
+            answer = await llm_complete(prompt, max_tokens=200, temperature=0.7, service_id="nano")
             return {
                 "answer": answer.strip(),
                 "citations": [],
@@ -767,7 +767,7 @@ If Pidgin, use Pidgin English."""
 Previous: "{last['question']}" -> "{last['answer_summary']}"
 Give a helpful follow-up. Pidgin: {is_pidgin}"""
         try:
-            answer = await llm_complete(prompt, max_tokens=400, temperature=0.5)
+            answer = await llm_complete(prompt, max_tokens=400, temperature=0.5, service_id="nano")
             return {
                 "answer": answer.strip(),
                 "citations": [],
@@ -790,7 +790,7 @@ Give a helpful follow-up. Pidgin: {is_pidgin}"""
 Politely decline, explain your scope (network incidents, vendor contracts, NCC/NDPA regulatory filings, customer complaints, document search).
 Pidgin: {is_pidgin}"""
         try:
-            answer = await llm_complete(prompt, max_tokens=200, temperature=0.6)
+            answer = await llm_complete(prompt, max_tokens=200, temperature=0.6, service_id="nano")
             return {
                 "answer": answer.strip(),
                 "citations": [],

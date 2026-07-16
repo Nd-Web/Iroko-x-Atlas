@@ -38,7 +38,7 @@ def build_kernel():
     kernel.add_service(
         AzureChatCompletion(
             service_id="gpt4o",
-            deployment_name=os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT", "gpt-5.4-mini"),
+            deployment_name=os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT", "gpt-5.6-terra"),
             endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),
             api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview"),
@@ -49,7 +49,7 @@ def build_kernel():
     kernel.add_service(
         AzureChatCompletion(
             service_id="nano",
-            deployment_name=os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT", "gpt-5.4-nano"),
+            deployment_name=os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT", "gpt-5.6-luna"),
             endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),
             api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview"),
@@ -147,8 +147,9 @@ async def llm_complete(
         return ""
 
     deployment_map = {
-        "gpt4o": os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT", "gpt-5.4-mini"),
-        "nano":  os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT",  "gpt-5.4-nano"),
+        "flagship": os.getenv("AZURE_OPENAI_FLAGSHIP_DEPLOYMENT", "gpt-5.6-sol"),
+        "gpt4o":    os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT",    "gpt-5.6-terra"),
+        "nano":     os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT",     "gpt-5.6-luna"),
     }
     deployment = deployment_map.get(service_id, deployment_map["gpt4o"])
 
@@ -221,8 +222,9 @@ async def llm_complete_stream(
         return  # caller treats zero tokens as unconfigured
 
     deployment_map = {
-        "gpt4o": os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT", "gpt-5.4-mini"),
-        "nano":  os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT",  "gpt-5.4-nano"),
+        "flagship": os.getenv("AZURE_OPENAI_FLAGSHIP_DEPLOYMENT", "gpt-5.6-sol"),
+        "gpt4o":    os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT",    "gpt-5.6-terra"),
+        "nano":     os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT",     "gpt-5.6-luna"),
     }
     deployment = deployment_map.get(service_id, deployment_map["gpt4o"])
 

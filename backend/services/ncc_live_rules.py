@@ -403,6 +403,7 @@ Respond ONLY with valid JSON in this exact format:
                 prompt,
                 max_tokens=200,
                 temperature=0.1,
+                service_id="flagship",
                 system_prompt=(
                     "You are a Nigerian fintech and financial regulatory analyst (CBN/SEC). "
                     "Return only valid JSON. No commentary."
@@ -639,6 +640,7 @@ Respond ONLY with valid JSON in this exact format:
                 prompt,
                 max_tokens=600,
                 temperature=0.05,
+                service_id="flagship",
                 system_prompt=(
                     "You are a Nigerian fintech regulatory compliance analyst (CBN/SEC). "
                     "Be precise and conservative. Return only valid JSON. No commentary."
