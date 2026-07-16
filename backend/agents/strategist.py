@@ -587,6 +587,7 @@ Retrieved Evidence:
 - "customer_complaint" -- customer ticket, MoMo deduction dispute, CSAT, CX, resolution, NPS, complaint trends
 - "fraud_intelligence" -- fraud, SIM-swap, interconnect bypass, suspicious transactions, duplicate invoices, agent collusion, vendor irregularities, procurement fraud
 - "document_query" -- contracts, RCA reports, NCC returns, NDPA records, policy documents, regulatory filings
+- "regulatory_compliance" -- NCC/NDPC/NDPR/NDPA regulatory obligations, data protection & privacy law, data localization/residency, cross-border data transfer, breach notification, QoS/SIM/spectrum/licensing regulations, penalty or fine exposure, AI governance, model explainability, training-data sourcing, automated-decision transparency
 - "out_of_domain" -- completely unrelated to the organisation's operations or regulation (weather, sports, jokes, cooking)
 
 Input: "{question}"
@@ -647,16 +648,26 @@ JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
             return {"intent": "fraud_intelligence", "topic": q[:60], "confidence": 0.85}
 
         if any(p in q for p in [
-            "ncc regulation", "ndpc", "ndpa", "data protection act",
+            "ncc regulation", "ndpc", "ndpa", "ndpr", "data protection act",
             "nigerian communications act", "nca 2003", "consumer code",
             "regulatory framework", "regulatory obligation", "compliance obligation",
             "regulatory penalty", "regulatory fine", "qos regulation",
             "sim registration regulation", "spectrum regulation",
             "data breach notification", "breach notification", "72 hour",
-            "cross-border data", "cross border data", "dpco", "data protection officer",
+            "cross-border data", "cross border data", "cross-border transfer",
+            "dpco", "data protection officer",
             "compliance framework", "regulatory compliance", "ncc fine",
             "ncc penalty", "regulatory risk", "regulatory exposure",
             "ndpc fine", "ndpc penalty", "data protection compliance",
+            # data-protection / privacy-law / AI-governance signals
+            "data localization", "data localisation", "data residency",
+            "data sovereignty", "privacy law", "personal data", "lawful basis",
+            "dpia", "data protection impact", "privacy impact",
+            "gaid", "type approval", "licensing condition", "licence condition",
+            # AI-governance signals (NDPR alignment of AI tooling)
+            "training data", "model explainability", "explainability",
+            "ai governance", "ai act", "automated decision", "automated processing",
+            "algorithmic", "model transparency", "responsible ai",
         ]):
             return {"intent": "regulatory_compliance", "topic": q[:60], "confidence": 0.88}
 
@@ -1222,8 +1233,8 @@ Respond with valid JSON:
         self._log_trace("Researcher", "regulatory_lookup", "Loading regulatory corpus (NCC, NDPA)")
         from services.regulatory_service import get_regulatory_summary_text, get_regulatory_context
 
-        reg_text = get_regulatory_summary_text(question)
-        ctx = get_regulatory_context(question)
+        reg_text = get_regulatory_summary_text(question, sector="network")
+        ctx = get_regulatory_context(question, sector="network")
 
         self._log_trace("Analyst", "compliance_analysis",
                         f"Matched {ctx['total_matched']} regulations; building compliance briefing")
@@ -1262,9 +1273,27 @@ Respond with valid JSON:
                 ),
             )
             clean = response.strip().replace("```json", "").replace("```", "").strip()
-            result = json.loads(clean)
-            result.setdefault("citations", doc_context.get("citations", []))
-            return result
+            try:
+                result = json.loads(clean)
+                result.setdefault("citations", doc_context.get("citations", []))
+                return result
+            except json.JSONDecodeError:
+                # GPT-5.x usually returns a well-formatted prose briefing (bold
+                # headings, cited sections) rather than strict JSON. Use that text
+                # directly instead of discarding a good answer for the generic
+                # checklist fallback below.
+                if clean:
+                    return {
+                        "answer": clean,
+                        "citations": doc_context.get("citations", []),
+                        "suggested_followups": [
+                            "What are the NDPA 2023 data breach notification requirements?",
+                            "What does the GAID 2025 require for cross-border data transfers?",
+                            "What QoS thresholds does the NCC enforce under NCC-QOS-001?",
+                        ],
+                        "confidence": "high",
+                    }
+                raise
         except Exception as e:
             logger.warning(f"Regulatory LLM synthesis failed, using fallback: {e}")
             checklist = ctx.get("compliance_checklist", [])
