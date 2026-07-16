@@ -1,14 +1,15 @@
 """
-Create / refresh the Iroko AI voice compliance agent on AethexAI.
+Configure the Iroko AI voice compliance agent on AethexAI (telecom-facing).
 
-Telecom-facing: the agent assesses actions against Nigerian telecom regulation
-(NCC) and data-protection law (NDPA 2023 / NDPC, incl. the former NDPR) — NOT
-fintech (CBN/SEC).
+The agent assesses actions against Nigerian telecom regulation (NCC) and data
+protection law (NDPA 2023 / NDPC, incl. the former NDPR) — NOT fintech (CBN/SEC).
+
+This script is idempotent: it UPDATES the existing agent in place (so re-running
+never creates orphan agents). Point it at a different agent by setting
+IROKO_AGENT_ID; if that agent doesn't exist it falls back to creating one.
 
 Run:
     IROKO_AGENT_API_KEY=ae_live_... python setup_aethex_agent.py
-
-Then copy the printed NEXT_PUBLIC_IROKO_AGENT_ID into frontend/.env.local.
 """
 import os
 import requests
@@ -17,37 +18,11 @@ API_KEY = os.environ["IROKO_AGENT_API_KEY"]
 BASE_URL = "https://api.aethexai.com/api/v1"
 headers = {"X-API-Key": API_KEY, "Content-Type": "application/json"}
 
-# ── Step 1 — pick a voice (prefer the Nigerian English voice for MTN context) ─────
-# "Ada" is the Nigerian-English voice the frontend already uses for TTS
-# (see frontend/lib/agent.ts DEFAULT_VOICE).
-ADA_NIGERIAN_VOICE = "354d8730-388b-5d94-a7e8-9f8bc87dc4fc"
+# The live agent the frontend calls (NEXT_PUBLIC_IROKO_AGENT_ID); override via env.
+AGENT_ID = os.getenv("IROKO_AGENT_ID", "9aad19b0-5d6e-4306-ac66-cbc8e2486cae")
+# "Ada" — the Nigerian-English voice the frontend already uses (frontend/lib/agent.ts).
+VOICE_ID = "354d8730-388b-5d94-a7e8-9f8bc87dc4fc"
 
-voices = requests.get(f"{BASE_URL}/voices?language=english", headers=headers)
-voices.raise_for_status()
-voice_list = [v for v in voices.json() if not v.get("is_cloned")]
-
-def _is_nigerian(v: dict) -> bool:
-    blob = " ".join(
-        str(v.get(k, "")) for k in ("name", "accent", "description", "labels", "language")
-    ).lower()
-    return "nigeria" in blob or "naija" in blob
-
-by_id = {v["id"]: v for v in voice_list}
-nigerian = [v for v in voice_list if _is_nigerian(v)]
-if ADA_NIGERIAN_VOICE in by_id:
-    chosen = by_id[ADA_NIGERIAN_VOICE]
-elif nigerian:
-    chosen = nigerian[0]
-else:
-    chosen = voice_list[0]
-voice_id = chosen["id"]
-# Ada may not appear in the /voices listing but is still a valid voice_id.
-if ADA_NIGERIAN_VOICE not in by_id and not nigerian:
-    voice_id = ADA_NIGERIAN_VOICE
-    chosen = {"name": "Ada (Nigerian English)"}
-print(f"Using voice: {chosen.get('name', voice_id)} ({voice_id})")
-
-# ── Step 2 — create the telecom compliance agent ─────────────────────────────────
 SYSTEM_PROMPT = """You are the voice of Iroko AI, a regulatory-intelligence assistant for Nigerian telecom operators such as MTN Nigeria.
 
 When the user describes an action, product, decision, data-handling practice, or statement, assess it against Nigerian TELECOM and DATA-PROTECTION regulation only:
@@ -59,21 +34,35 @@ Then explain in two to three sentences which specific regulation applies and why
 Be direct, professional, and concise. Do not ask follow-up questions.
 Never give financial-sector (CBN or SEC) advice — you focus strictly on telecom and data protection."""
 
-agent = requests.post(f"{BASE_URL}/agents", headers=headers, json={
+payload = {
     "name": "Iroko Telecom Compliance Voice",
     "system_prompt": SYSTEM_PROMPT,
     "first_message": "Iroko telecom compliance check ready. Describe the action, product, or data-handling practice you want me to assess against NCC and NDPA rules.",
-    "voice_id": voice_id,
+    "voice_id": VOICE_ID,
     "language": "english",
     "temperature": 0.2,
     "response_min_sentences": 2,
     "response_max_sentences": 3,
     "max_duration_seconds": 120,
-    "script_adherence": "strict"
-})
-agent.raise_for_status()
-agent_data = agent.json()
+    "script_adherence": "strict",
+}
 
-print("\nTelecom compliance voice agent created successfully.")
-print(f"NEXT_PUBLIC_IROKO_AGENT_ID={agent_data['id']}")
-print("\nAdd/replace this in frontend/.env.local, then redeploy the frontend.")
+# Update the existing agent in place (idempotent).
+resp = requests.patch(f"{BASE_URL}/agents/{AGENT_ID}", headers=headers, json=payload)
+
+if resp.status_code == 404:
+    # Agent doesn't exist — create a fresh one instead.
+    print(f"Agent {AGENT_ID} not found; creating a new one.")
+    resp = requests.post(f"{BASE_URL}/agents", headers=headers, json=payload)
+    resp.raise_for_status()
+    AGENT_ID = resp.json()["id"]
+    print(f"Created new agent. Set NEXT_PUBLIC_IROKO_AGENT_ID={AGENT_ID} in frontend/.env.local.")
+else:
+    resp.raise_for_status()
+
+# Verify.
+agent = requests.get(f"{BASE_URL}/agents/{AGENT_ID}", headers=headers).json()
+sp = agent.get("system_prompt", "")
+print(f"Agent {AGENT_ID} is now: {agent.get('name')}")
+print(f"  Telecom-facing (NCC & NDPA present): {('NCC' in sp and 'NDPA' in sp)}")
+print(f"  Voice id: {agent.get('voice_id')}")

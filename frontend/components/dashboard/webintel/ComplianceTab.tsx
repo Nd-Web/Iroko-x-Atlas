@@ -223,7 +223,7 @@ const ComplianceTab: FC = () => {
   // ── AethexAI live voice agent ──────────────────────────────────────────────
   const [agentError, setAgentError] = useState<string | null>(null);
   const { status: agentStatus, startCall, endCall } = useAgent({
-    agentId: process.env.NEXT_PUBLIC_IROKO_AGENT_ID ?? "d2976468-0951-4666-b074-e0473d13044e",
+    agentId: process.env.NEXT_PUBLIC_IROKO_AGENT_ID ?? "9aad19b0-5d6e-4306-ac66-cbc8e2486cae",
     onError: (msg) => setAgentError(msg),
   });
 
