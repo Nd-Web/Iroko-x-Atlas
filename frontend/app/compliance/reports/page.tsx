@@ -25,6 +25,11 @@ export default function ComplianceReportsPage() {
 
   return (
     <AppShell title="Compliance reports" subtitle="NCC returns · NDPA audit · FCCPC reports · DPIA tracker · DSR queue">
+      {/* Send Iroko to a live meeting */}
+      <div className="mb-8">
+        <MeetingJoinPanel />
+      </div>
+
       {/* Live compliance checker */}
       <div className="mb-8">
         <div className="mb-4">
@@ -139,9 +144,6 @@ export default function ComplianceReportsPage() {
           </div>
         </div>
       </div>
-
-      {/* API key */}
-      <MeetingJoinPanel />
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" onClick={() => setModal(null)}>
