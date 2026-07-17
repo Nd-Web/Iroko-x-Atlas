@@ -137,6 +137,12 @@ Your demo maps 1-to-1 onto its four verbs: **AGGREGATE → UNDERSTAND → ACT �
 
 ## Q&A — objection handling
 
+**"Why not just use Microsoft Copilot?"** *(the most likely question — answer with respect, then differentiate)*
+> "Copilot is excellent at what it's for — drafting in Word, summarising in Teams, personal productivity — and the two can coexist. But Copilot doesn't solve *this* problem statement. It has no Nigerian regulatory brain — no NCC thresholds, no NDPA sections, no naira penalties, no enforcement precedents. It's reactive — it answers when asked; Iroko's Watchdog scans the corpus *unprompted* and finds the expiring contract before anyone knew to look. It stops at the answer — Iroko turns every finding into a routed task with an owner and an SLA deadline, which is the 'workflow management' in your problem title. It's a black box — Iroko shows its full reasoning chain and keeps a hash-chained audit trail, which is what a regulator asks for. And on efficiency: Copilot is ~$30 per user per month on top of E3/E5 licenses — seven figures a year at MTN scale, forever. Iroko serves unlimited users for the cost of the questions they actually ask, on your own Azure tenant. To solve this problem statement with Copilot, you'd have to build everything you just watched *on top of it* — which is exactly what Iroko already is."
+
+**The one-liner version:**
+> "Copilot helps you write the email about the problem. Iroko finds the problem, prices it in naira, cites the regulation, and assigns it to the right department with a deadline — before you asked."
+
 **"Is this real data?"**
 > "Realistic seeded MTN operational data — we don't have access to your production documents yet, deliberately. But nothing here is a mock-up: the same ingestion, search, AI, and workflow pipeline runs end-to-end on it. Connect SharePoint and the identical system runs on your real corpus, day one."
 
