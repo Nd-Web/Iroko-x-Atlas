@@ -114,6 +114,18 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
+    # ── Demo data (self-healing) ──────────────────────────────────────────────
+    # The demo runs on a seeded MTN dataset and the DB is ephemeral, so re-seed
+    # on boot when enabled — keeps graph/analytics/productivity/workflows lit
+    # after every restart. Set SEED_DEMO_DATA=false once real data is ingested.
+    if os.getenv("SEED_DEMO_DATA", "true").lower() in ("1", "true", "yes"):
+        try:
+            from services.demo_seed import seed_demo_data
+            res = seed_demo_data()
+            logger.info(f"Demo data: {res}")
+        except Exception as exc:
+            logger.warning(f"Demo seeding skipped (non-fatal): {exc}")
+
     # Start connector auto-sync scheduler
     from services.connector_sync import start_sync_scheduler
     start_sync_scheduler()
