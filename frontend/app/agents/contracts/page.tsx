@@ -40,29 +40,29 @@ function ClauseCard({ clause }: { clause: ClauseMatch }) {
   const [expanded, setExpanded] = useState(false);
   const hex = getRiskHex(clause.riskScore);
   return (
-    <div className="rounded-xl border overflow-hidden transition-all duration-200 hover:border-white/15"
-      style={{ background: "#0F1320", borderColor: "rgba(255,255,255,0.06)", borderLeft: `3px solid ${hex}` }}>
+    <div className="rounded-xl border border-border-default bg-surface-card overflow-hidden transition-all duration-200 hover:border-border-strong"
+      style={{ borderLeft: `3px solid ${hex}` }}>
       <div className="p-4">
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ color: hex, background: `${hex}15` }}>{clause.category}</span>
-              <span className="text-[9.5px] text-[#6B7280]">{clause.clause}</span>
+              <span className="text-[9.5px] text-gray-400">{clause.clause}</span>
             </div>
-            <h4 className="text-[13px] font-semibold text-[#E5E7EB] leading-snug">{clause.title}</h4>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">{clause.document}</p>
+            <h4 className="text-[13px] font-semibold text-gray-800 leading-snug">{clause.title}</h4>
+            <p className="text-[11px] text-gray-400 mt-0.5">{clause.document}</p>
           </div>
           <div className="flex items-center gap-1 shrink-0 px-2.5 py-1.5 rounded-lg text-[12px] font-black" style={{ background: `${hex}15`, color: hex }}>
             {clause.riskScore}/10
           </div>
         </div>
         {expanded && (
-          <div className="mt-3 p-3 rounded-lg text-[12px] text-[#9CA3AF] leading-relaxed italic border border-white/[0.05]" style={{ background: "rgba(255,255,255,0.02)" }}>
+          <div className="mt-3 p-3 rounded-lg text-[12px] text-gray-500 leading-relaxed italic border border-border-default bg-gray-50">
             &ldquo;{clause.excerpt}&rdquo;
           </div>
         )}
         <button onClick={() => setExpanded(!expanded)}
-          className="mt-2 text-[10px] text-[#6B7280] hover:text-[#3B7BF6] transition-colors flex items-center gap-1">
+          className="mt-2 text-[10px] text-gray-400 hover:text-info-500 transition-colors flex items-center gap-1">
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={cn("transition-transform", expanded ? "rotate-180" : "")}>
             <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>

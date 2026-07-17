@@ -50,25 +50,25 @@ const SLA_INDICATORS = [
   { name: "CX Resolution Rate",        value: 76.0, threshold: 70.0, unit: "%", label: "≥ 70% target" },
 ];
 
-const SEV_COLOR: Record<string, string> = { critical: "#EF4444", warning: "#F59E0B", info: "#3B7BF6" };
+const SEV_COLOR: Record<string, string> = { critical: "#EF4444", warning: "#F59E0B", info: "#38BDF8" };
 
 function SLAGauge({ sla }: { sla: typeof SLA_INDICATORS[0] }) {
   const passing = sla.value >= sla.threshold;
   const pct = Math.min(100, (sla.value / (sla.threshold * 1.5)) * 100);
   const color = passing ? "#10B981" : "#EF4444";
   return (
-    <div className="rounded-xl p-4 border border-white/[0.06]" style={{ background: "#0F1320" }}>
+    <div className="rounded-xl p-4 border border-border-default bg-surface-card">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] text-[#9CA3AF] font-medium">{sla.name}</span>
+        <span className="text-[11px] text-gray-500 font-medium">{sla.name}</span>
         <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", passing ? "text-emerald-400 bg-emerald-400/10" : "text-red-400 bg-red-400/10")}>
           {passing ? "✓ PASS" : "✗ BREACH"}
         </span>
       </div>
       <div className="flex items-baseline gap-1.5 mb-2">
         <span className="text-2xl font-black" style={{ color }}>{sla.value}{sla.unit}</span>
-        <span className="text-[11px] text-[#4B5563]">{sla.label}</span>
+        <span className="text-[11px] text-gray-300">{sla.label}</span>
       </div>
-      <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+      <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(pct, 100)}%`, background: color }} />
       </div>
     </div>
@@ -159,9 +159,11 @@ export default function NOCPage() {
             {isLive ? "LIVE MONITORING" : "DEMO DATA"}
           </span>
           <button onClick={() => setChatOpen(!chatOpen)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-bold text-white transition-all"
-            style={{ background: chatOpen ? "#1a1d27" : "linear-gradient(135deg,#3B7BF6,#8B5CF6)", border: "1px solid rgba(59,123,246,0.2)" }}>
-            🛡️ Ask Watchdog
+            className={cn("flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-bold transition-all",
+              chatOpen
+                ? "bg-gray-100 text-gray-800 border border-border-default"
+                : "bg-brand-500 text-[#0A0A0B] border border-transparent hover:bg-brand-400")}>
+            Ask Watchdog
           </button>
         </div>
       }>
@@ -176,11 +178,11 @@ export default function NOCPage() {
         <div className="xl:col-span-3 space-y-4">
 
           {/* Operator alerts */}
-          <div className="rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: "#0F1320" }}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+          <div className="rounded-2xl border border-border-default overflow-hidden bg-surface-card">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
               <div>
-                <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Active Alerts</h2>
-                <p className="text-[11px] text-[#6B7280]">
+                <h2 className="text-[14px] font-semibold text-gray-800">Active Alerts</h2>
+                <p className="text-[11px] text-gray-400">
                   {activeCount} active · {criticalCount} critical
                 </p>
               </div>
@@ -188,20 +190,20 @@ export default function NOCPage() {
                 {["all","critical","warning","acknowledged"].map(f => (
                   <button key={f} onClick={() => setActiveFilter(f)}
                     className={cn("px-2.5 py-1 rounded-lg text-[10px] font-semibold capitalize transition-all",
-                      activeFilter === f ? "bg-white/10 text-[#E5E7EB]" : "text-[#6B7280] hover:text-[#E5E7EB]")}>
+                      activeFilter === f ? "bg-brand-50 text-brand-500" : "text-gray-400 hover:text-gray-800")}>
                     {f}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="divide-y divide-white/[0.04]">
+            <div className="divide-y divide-border-default">
               {filteredAlerts.length === 0 && (
-                <p className="text-[12px] text-[#4B5563] text-center py-8">No alerts match this filter</p>
+                <p className="text-[12px] text-gray-400 text-center py-8">No alerts match this filter</p>
               )}
               {filteredAlerts.map(alert => {
-                const col = SEV_COLOR[alert.severity] ?? "#6B7280";
+                const col = SEV_COLOR[alert.severity] ?? "#9C9CA6";
                 return (
-                  <div key={alert.id} className="flex items-start gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors" style={{ borderLeft: `3px solid ${col}` }}>
+                  <div key={alert.id} className="flex items-start gap-3 px-5 py-4 hover:bg-gray-50 transition-colors" style={{ borderLeft: `3px solid ${col}` }}>
                     {/* Clicking the alert asks Iroko about it — see insight → ask why → cited answer */}
                     <div
                       className="flex-1 min-w-0 cursor-pointer"
@@ -210,19 +212,19 @@ export default function NOCPage() {
                     >
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ color: col, background: `${col}15` }}>{alert.severity}</span>
-                        <span className="text-[9.5px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full border border-blue-400/20">Internal</span>
-                        {alert.slaImpact && <span className="text-[9.5px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">SLA Impact</span>}
-                        <span className="text-[10px] text-[#4B5563] ml-auto">{alert.age}</span>
+                        <span className="text-[9.5px] font-bold text-info-500 bg-info-50 px-2 py-0.5 rounded-full border border-info-100">Internal</span>
+                        {alert.slaImpact && <span className="text-[9.5px] font-bold text-warning-500 bg-warning-50 px-2 py-0.5 rounded-full border border-warning-100">SLA Impact</span>}
+                        <span className="text-[10px] text-gray-400 ml-auto">{alert.age}</span>
                       </div>
-                      <p className="text-[13px] text-[#D1D5DB] font-medium leading-snug">{alert.title}</p>
-                      <p className="text-[11px] text-[#6B7280] mt-0.5">{alert.detail}</p>
+                      <p className="text-[13px] text-gray-800 font-medium leading-snug">{alert.title}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">{alert.detail}</p>
                     </div>
                     <div className="flex flex-col gap-1.5 shrink-0">
                       {alert.status === "resolved" ? (
                         <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg text-emerald-400 bg-emerald-400/10 border border-emerald-400/20">✓ Resolved</span>
                       ) : (
                         <button onClick={() => advanceAlert(alert)}
-                          className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg text-[#3B7BF6] border border-[#3B7BF6]/20 hover:bg-[#3B7BF6]/10 transition-all">
+                          className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg text-brand-500 border border-brand-200 hover:bg-brand-50 transition-all">
                           {alert.status === "acknowledged" ? "Resolve" : "Acknowledge"}
                         </button>
                       )}
@@ -234,28 +236,28 @@ export default function NOCPage() {
           </div>
 
           {/* Regulatory watch section */}
-          <div className="rounded-2xl border border-orange-400/20 overflow-hidden" style={{ background: "#0F1320" }}>
+          <div className="rounded-2xl border border-orange-400/20 overflow-hidden bg-surface-card">
             <div className="flex items-center justify-between px-5 py-4 border-b border-orange-400/20">
               <div>
-                <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Regulatory Watch</h2>
-                <p className="text-[11px] text-[#6B7280]">Market watch — signals from NCC · NDPC · FCCPC</p>
+                <h2 className="text-[14px] font-semibold text-gray-800">Regulatory Watch</h2>
+                <p className="text-[11px] text-gray-400">Market watch — signals from NCC · NDPC · FCCPC</p>
               </div>
               <span className="text-[9.5px] font-bold text-orange-400 bg-orange-400/10 px-2.5 py-1 rounded-full border border-orange-400/20">
                 {REGULATORY_WATCH.filter(a => a.severity === "critical").length} critical signals
               </span>
             </div>
-            <div className="divide-y divide-white/[0.04]">
+            <div className="divide-y divide-border-default">
               {REGULATORY_WATCH.map(alert => {
-                const col = SEV_COLOR[alert.severity] ?? "#6B7280";
+                const col = SEV_COLOR[alert.severity] ?? "#9C9CA6";
                 return (
-                  <div key={alert.id} className="flex items-start gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors" style={{ borderLeft: "3px solid #F97316" }}>
+                  <div key={alert.id} className="flex items-start gap-3 px-5 py-4 hover:bg-gray-50 transition-colors" style={{ borderLeft: "3px solid #F97316" }}>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ color: col, background: `${col}15` }}>{alert.severity}</span>
                         <span className="text-[9.5px] font-bold text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full border border-orange-400/20">{alert.source}</span>
-                        <span className="text-[10px] text-[#4B5563] ml-auto">{alert.age}</span>
+                        <span className="text-[10px] text-gray-400 ml-auto">{alert.age}</span>
                       </div>
-                      <p className="text-[13px] text-[#D1D5DB] font-medium leading-snug">{alert.title}</p>
+                      <p className="text-[13px] text-gray-800 font-medium leading-snug">{alert.title}</p>
                     </div>
                   </div>
                 );
@@ -265,10 +267,9 @@ export default function NOCPage() {
         </div>
 
         {/* Watchdog chat panel */}
-        <div className="xl:col-span-2 rounded-2xl border border-white/[0.06] flex flex-col overflow-hidden" style={{ background: "#0F1320", minHeight: 400 }}>
-          <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
-            <span className="text-lg">🛡️</span>
-            <span className="text-[13px] font-bold text-[#E5E7EB]">Watchdog Intelligence</span>
+        <div className="xl:col-span-2 rounded-2xl border border-border-default bg-surface-card flex flex-col overflow-hidden" style={{ minHeight: 400 }}>
+          <div className="px-4 py-3 border-b border-border-default flex items-center gap-2">
+            <span className="text-[13px] font-bold text-gray-800">Watchdog Intelligence</span>
             <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full text-red-400 bg-red-400/10 border border-red-400/20 animate-pulse">
               {criticalCount} CRITICAL
             </span>
@@ -281,7 +282,7 @@ export default function NOCPage() {
               <span className="text-[11px] text-red-300 truncate">Request failed — {error}</span>
               {lastQuery && (
                 <button onClick={() => handleSend(lastQuery)}
-                  className="shrink-0 text-[10.5px] font-bold text-red-300 hover:text-white transition-colors">
+                  className="shrink-0 text-[10.5px] font-bold text-red-300 hover:text-gray-900 transition-colors">
                   Retry
                 </button>
               )}

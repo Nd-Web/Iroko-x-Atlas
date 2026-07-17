@@ -85,10 +85,10 @@ export default function InputBar({
     <div className="px-4 pb-4 pt-2 shrink-0">
       <div
         className={cn(
-          "relative flex items-end gap-3 rounded-2xl border bg-[#0F1320] px-4 py-3 transition-all duration-200",
+          "relative flex items-end gap-3 rounded-2xl border bg-surface-card px-4 py-3 transition-all duration-200",
           focused
-            ? "border-[#3B7BF6]/60 shadow-[0_0_20px_rgba(59,123,246,0.15)]"
-            : "border-white/[0.08]",
+            ? "border-brand-500/60 shadow-[0_0_0_3px_rgba(255,203,5,0.12)]"
+            : "border-border-default",
           overLimit && "border-red-500/60",
         )}
       >
@@ -104,7 +104,7 @@ export default function InputBar({
           disabled={isStreaming}
           rows={1}
           className={cn(
-            "flex-1 resize-none bg-transparent text-sm text-[#E5E7EB] placeholder-[#4B5563]",
+            "flex-1 resize-none bg-transparent text-sm text-gray-800 placeholder-gray-400",
             "outline-none leading-relaxed min-h-[24px] max-h-[120px]",
             "disabled:opacity-60 disabled:cursor-not-allowed",
           )}
@@ -113,7 +113,7 @@ export default function InputBar({
         {/* Right side: count + send */}
         <div className="flex items-center gap-2 shrink-0 pb-0.5">
           {showCount && (
-            <span className={cn("text-[11px] font-medium", overLimit ? "text-red-400" : "text-[#6B7280]")}>
+            <span className={cn("text-[11px] font-medium", overLimit ? "text-red-400" : "text-gray-400")}>
               {value.length}/{MAX_CHARS}
             </span>
           )}
@@ -124,8 +124,8 @@ export default function InputBar({
             className={cn(
               "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200",
               canSend
-                ? "bg-gradient-to-br from-[#3B7BF6] to-[#2563EB] text-white shadow-[0_0_16px_rgba(59,123,246,0.3)] hover:shadow-[0_0_24px_rgba(59,123,246,0.5)] hover:scale-105 active:scale-95"
-                : "bg-white/5 text-[#374151] cursor-not-allowed",
+                ? "bg-brand-500 text-[#0A0A0B] hover:bg-brand-400 hover:scale-105 active:scale-95"
+                : "bg-gray-50 text-gray-300 cursor-not-allowed",
             )}
             title="Send (Ctrl+Enter)"
           >
@@ -141,8 +141,8 @@ export default function InputBar({
       </div>
 
       {/* Hint */}
-      <p className="text-[10px] text-[#374151] text-center mt-1.5">
-        Press <kbd className="px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[9px]">Ctrl+Enter</kbd> to send
+      <p className="text-[10px] text-gray-400 text-center mt-1.5">
+        Press <kbd className="px-1 py-0.5 rounded bg-gray-50 border border-border-default text-[9px]">Ctrl+Enter</kbd> to send
       </p>
     </div>
   );

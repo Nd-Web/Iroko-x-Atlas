@@ -87,24 +87,26 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-white/[0.06] overflow-y-auto overflow-x-hidden sidebar-transition",
         open ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
       )}
-      style={{ width: w, background: "#080B14", minHeight: "100vh" }}
+      style={{ width: w, background: "var(--color-sidebar-bg)", minHeight: "100vh" }}
     >
-      {/* Logo */}
+      {/* Logo — MTN × Iroko co-brand */}
       <div className={cn("flex items-center gap-3 py-4 border-b border-white/[0.06] shrink-0",
         collapsed ? "justify-center px-4" : "px-4")}>
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(59,123,246,0.4)]"
-          style={{ background: "linear-gradient(135deg, #3B7BF6, #8B5CF6)" }}>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: "#FFCB05" }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 1.5L13 4.5V10.5L8 13.5L3 10.5V4.5L8 1.5Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
-            <circle cx="8" cy="7.5" r="1.75" fill="white"/>
+            <path d="M8 1.5L13 4.5V10.5L8 13.5L3 10.5V4.5L8 1.5Z" stroke="#0A0A0B" strokeWidth="1.5" strokeLinejoin="round"/>
+            <circle cx="8" cy="7.5" r="1.75" fill="#0A0A0B"/>
           </svg>
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <div className="text-[13px] font-bold text-white tracking-tight leading-tight">Iroko AI</div>
+            <div className="text-[13px] font-bold text-gray-900 tracking-tight leading-tight">
+              MTN <span className="text-gray-400 font-medium">×</span> Iroko AI
+            </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[10px] text-[#6B7280]">Document Intelligence</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-[#3B7BF6] bg-[#3B7BF6]/10 border border-[#3B7BF6]/20">5 AGENTS</span>
+              <span className="text-[10px] text-gray-400">Enterprise Intelligence</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-brand-500 bg-brand-50 border border-brand-200">5 AGENTS</span>
             </div>
           </div>
         )}
@@ -136,10 +138,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       "flex items-center gap-2.5 px-2 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 no-underline relative overflow-hidden",
                       collapsed ? "justify-center" : "",
                       active
-                        ? "text-white bg-[#3B7BF6]/15 border-l-2 border-[#3B7BF6] pl-[6px]"
-                        : "text-[#6B7280] hover:text-[#E5E7EB] hover:bg-white/[0.04]",
+                        ? "text-gray-900 bg-brand-50 border-l-2 border-brand-500 pl-[6px]"
+                        : "text-gray-400 hover:text-gray-800 hover:bg-white/[0.04]",
                     )}>
-                    <span className={cn("shrink-0", active ? "text-[#3B7BF6]" : "")}>{icon}</span>
+                    <span className={cn("shrink-0", active ? "text-brand-500" : "")}>{icon}</span>
                     {!collapsed && <span className="truncate">{label}</span>}
                     {!collapsed && badge === "Live" && (
                       <span className="ml-auto flex items-center gap-1 text-[9px] font-bold text-emerald-400">
@@ -165,7 +167,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* User footer */}
       <div className={cn("border-t border-white/[0.06] p-3 shrink-0 flex items-center gap-2.5", collapsed ? "justify-center" : "")}>
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B7BF6] to-[#8B5CF6] flex items-center justify-center text-[11px] font-bold text-white shrink-0">
+        <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-[11px] font-bold text-[#0A0A0B] shrink-0">
           {user ? getInitials(user.full_name) : "?"}
         </div>
         {!collapsed && (

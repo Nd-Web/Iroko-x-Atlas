@@ -21,9 +21,9 @@ interface GraphData {
 interface LaidNode extends ApiNode { x: number; y: number; connections: string[]; }
 
 const NODE_COLORS: Record<string, string> = {
-  document: "#6366F1", vendor: "#F97316", regulator: "#EC4899",
-  regulation: "#8B5CF6", location: "#FACC15", contract: "#3B7BF6",
-  alert: "#EF4444", task: "#10B981",
+  document: "#818CF8", vendor: "#FB923C", regulator: "#F472B6",
+  regulation: "#A78BFA", location: "#38BDF8", contract: "#60A5FA",
+  alert: "#F87171", task: "#34D399",
 };
 const NODE_LABELS: Record<string, string> = {
   document: "Document", vendor: "Vendor", regulator: "Regulator",
@@ -87,12 +87,12 @@ function layoutGraph(nodes: ApiNode[], edges: ApiEdge[]): LaidNode[] {
 
 function GraphLegend({ byType }: { byType: Record<string, number> }) {
   return (
-    <div className="absolute top-4 right-4 rounded-xl px-4 py-3 space-y-2" style={{ background: "rgba(8,11,20,0.85)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}>
-      <div className="text-[9.5px] font-bold text-[#6B7280] uppercase tracking-wider mb-2">Node Types</div>
+    <div className="absolute top-4 right-4 rounded-xl px-4 py-3 space-y-2" style={{ background: "rgba(26,26,31,0.9)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}>
+      <div className="text-[9.5px] font-bold text-gray-400 uppercase tracking-wider mb-2">Node Types</div>
       {Object.entries(NODE_COLORS).filter(([t]) => (byType[t] ?? 0) > 0).map(([type, color]) => (
         <div key={type} className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ background: color }} />
-          <span className="text-[10px] text-[#9CA3AF]">{NODE_LABELS[type] ?? type} · {byType[type]}</span>
+          <span className="text-[10px] text-gray-500">{NODE_LABELS[type] ?? type} · {byType[type]}</span>
         </div>
       ))}
     </div>
@@ -137,20 +137,20 @@ export default function KnowledgeGraphPage() {
     <AppShell title="Knowledge Graph" subtitle="Live semantic relationships across your documents, entities, alerts and action tasks">
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
         {/* Graph canvas */}
-        <div className="xl:col-span-3 relative rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: "#080B14", minHeight: 520 }}>
+        <div className="xl:col-span-3 relative rounded-2xl border border-border-default overflow-hidden" style={{ background: "#0A0A0B", minHeight: 520 }}>
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center text-[12px] text-[#6B7280]">Building live graph from your corpus…</div>
+            <div className="absolute inset-0 flex items-center justify-center text-[12px] text-gray-400">Building live graph from your corpus…</div>
           )}
           {error && !loading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
               <div className="text-[12px] text-[#EF4444]">{error}</div>
-              <button onClick={() => void load()} className="text-[11px] font-semibold px-3 py-1.5 rounded-lg text-[#3B7BF6] border border-[#3B7BF6]/30 hover:bg-[#3B7BF6]/10">Retry</button>
+              <button onClick={() => void load()} className="text-[11px] font-semibold px-3 py-1.5 rounded-lg text-brand-500 border border-brand-200 hover:bg-brand-50">Retry</button>
             </div>
           )}
           {!loading && !error && nodes.length === 0 && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <div className="text-[13px] text-[#9CA3AF] font-semibold">No graph data yet</div>
-              <div className="text-[11px] text-[#6B7280] max-w-xs text-center">Upload documents or run a Watchdog sweep — nodes appear as soon as the corpus has content.</div>
+              <div className="text-[13px] text-gray-500 font-semibold">No graph data yet</div>
+              <div className="text-[11px] text-gray-400 max-w-xs text-center">Upload documents or run a Watchdog sweep — nodes appear as soon as the corpus has content.</div>
             </div>
           )}
           {!loading && !error && nodes.length > 0 && (
@@ -159,12 +159,6 @@ export default function KnowledgeGraphPage() {
                 <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                   <path d="M0,0 L0,6 L6,3 Z" fill="rgba(255,255,255,0.15)" />
                 </marker>
-                {Object.entries(NODE_COLORS).map(([type, color]) => (
-                  <radialGradient key={type} id={`grad-${type}`} cx="35%" cy="35%">
-                    <stop offset="0%" stopColor={color} stopOpacity="0.9" />
-                    <stop offset="100%" stopColor={color} stopOpacity="0.5" />
-                  </radialGradient>
-                ))}
               </defs>
               <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
                 <path d="M30 0L0 0 0 30" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
@@ -180,18 +174,18 @@ export default function KnowledgeGraphPage() {
                 return (
                   <g key={i}>
                     <line x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-                      stroke={highlighted ? "rgba(59,123,246,0.25)" : "rgba(255,255,255,0.04)"}
+                      stroke={highlighted ? "rgba(255,203,5,0.3)" : "rgba(255,255,255,0.04)"}
                       strokeWidth={highlighted ? 1.5 : 0.8}
                       markerEnd="url(#arrow)" style={{ transition: "all 0.3s ease" }} />
                     {selected && highlighted && edge.label && (
-                      <text x={mx} y={my - 4} textAnchor="middle" fontSize="7" fill="rgba(155,171,255,0.6)" fontStyle="italic">{edge.label}</text>
+                      <text x={mx} y={my - 4} textAnchor="middle" fontSize="7" fill="rgba(184,184,193,0.75)" fontStyle="italic">{edge.label}</text>
                     )}
                   </g>
                 );
               })}
 
               {nodes.map(node => {
-                const col = NODE_COLORS[node.type] ?? "#6B7280";
+                const col = NODE_COLORS[node.type] ?? "#7A7A85";
                 const lit = isHighlighted(node.id);
                 const hov = hovered === node.id;
                 const sel = selected?.id === node.id;
@@ -203,12 +197,12 @@ export default function KnowledgeGraphPage() {
                     onMouseEnter={() => setHovered(node.id)}
                     onMouseLeave={() => setHovered(null)}>
                     {(sel || hov) && <circle cx={node.x} cy={node.y} r={r + 10} fill={col} opacity="0.1" />}
-                    <circle cx={node.x} cy={node.y} r={r} fill={`url(#grad-${node.type})`}
+                    <circle cx={node.x} cy={node.y} r={r} fill={col}
                       opacity={lit ? 1 : 0.2} stroke={sel ? col : "rgba(255,255,255,0.15)"}
                       strokeWidth={sel ? 2 : 0.8}
                       style={{ filter: sel ? `drop-shadow(0 0 8px ${col}80)` : "none", transition: "all 0.25s ease" }} />
                     <text x={node.x} y={node.y + r + 11} textAnchor="middle" fontSize="7.5"
-                      fill={lit ? "#E5E7EB" : "#4B5563"} fontWeight="600" style={{ transition: "fill 0.3s" }}>
+                      fill={lit ? "#EBEBEF" : "#4A4A54"} fontWeight="600" style={{ transition: "fill 0.3s" }}>
                       {node.label.length > 20 ? node.label.slice(0, 19) + "…" : node.label}
                     </text>
                   </g>
@@ -218,14 +212,14 @@ export default function KnowledgeGraphPage() {
           )}
           {data && <GraphLegend byType={data.stats.by_type} />}
           {!selected && !loading && nodes.length > 0 && (
-            <div className="absolute bottom-4 left-4 text-[10px] text-[#4B5563]">
+            <div className="absolute bottom-4 left-4 text-[10px] text-gray-300">
               {data?.stats.node_count} nodes · {data?.stats.edge_count} relationships · built live from {data?.stats.documents_scanned} documents — click a node to explore
             </div>
           )}
         </div>
 
         {/* Detail panel */}
-        <div className="rounded-2xl border border-white/[0.06] p-5 flex flex-col gap-4" style={{ background: "#0F1320" }}>
+        <div className="rounded-2xl border border-border-default p-5 flex flex-col gap-4" style={{ background: "#131316" }}>
           {selected ? (
             <>
               <div>
@@ -233,16 +227,16 @@ export default function KnowledgeGraphPage() {
                   style={{ color: NODE_COLORS[selected.type], background: `${NODE_COLORS[selected.type]}15`, border: `1px solid ${NODE_COLORS[selected.type]}30` }}>
                   {NODE_LABELS[selected.type] ?? selected.type}
                 </span>
-                <h3 className="text-[15px] font-semibold text-[#E5E7EB] mt-3 leading-snug">{selected.label}</h3>
+                <h3 className="text-[15px] font-semibold text-gray-800 mt-3 leading-snug">{selected.label}</h3>
               </div>
               {Object.entries(selected.meta ?? {}).filter(([, v]) => v !== null && v !== "" && v !== undefined).map(([k, v]) => (
                 <div key={k} className="flex items-start justify-between gap-3 text-[11.5px]">
-                  <span className="text-[#6B7280] capitalize">{k.replace(/_/g, " ")}</span>
-                  <span className="text-[#9CA3AF] text-right break-all">{String(v).slice(0, 60)}</span>
+                  <span className="text-gray-400 capitalize">{k.replace(/_/g, " ")}</span>
+                  <span className="text-gray-500 text-right break-all">{String(v).slice(0, 60)}</span>
                 </div>
               ))}
               <div>
-                <div className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-2">
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                   Connected ({selected.connections.length})
                 </div>
                 <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
@@ -252,22 +246,22 @@ export default function KnowledgeGraphPage() {
                     return (
                       <button key={cid} onClick={() => setSelected(c)}
                         className="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/[0.04] transition-colors">
-                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: NODE_COLORS[c.type] ?? "#6B7280" }} />
-                        <span className="text-[11px] text-[#9CA3AF] truncate">{c.label}</span>
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: NODE_COLORS[c.type] ?? "#7A7A85" }} />
+                        <span className="text-[11px] text-gray-500 truncate">{c.label}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
               <button onClick={() => setSelected(null)}
-                className="mt-auto text-[11px] font-semibold px-3 py-2 rounded-lg text-[#6B7280] border border-white/[0.08] hover:bg-white/[0.04] transition-all">
+                className="mt-auto text-[11px] font-semibold px-3 py-2 rounded-lg text-gray-400 border border-white/[0.08] hover:bg-white/[0.04] transition-all">
                 Clear selection
               </button>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-center">
-              <div className="text-[13px] font-semibold text-[#9CA3AF]">Live corpus graph</div>
-              <p className="text-[11px] text-[#6B7280] leading-relaxed">
+              <div className="text-[13px] font-semibold text-gray-500">Live corpus graph</div>
+              <p className="text-[11px] text-gray-400 leading-relaxed">
                 Nodes are built in real time from your indexed documents, the entities they mention,
                 active alerts, and the action tasks they generated. Select any node to trace its relationships.
               </p>

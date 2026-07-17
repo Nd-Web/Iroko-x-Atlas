@@ -24,34 +24,26 @@ import { useAuth } from "@/context/AuthContext";
 // ─── Brand panel (desktop left column) ────────────────────────────────────────
 
 const BrandPanel = () => (
-  <div className="hidden lg:flex w-[440px] shrink-0 bg-[#0C111D] flex-col p-12 relative overflow-hidden">
-    <div
-      className="absolute inset-0 pointer-events-none"
-      style={{
-        background:
-          "radial-gradient(ellipse at 0% 60%, rgba(97,114,243,0.22) 0%, transparent 65%), radial-gradient(ellipse at 95% 5%, rgba(97,114,243,0.1) 0%, transparent 55%)",
-      }}
-    />
-
+  <div className="hidden lg:flex w-[440px] shrink-0 bg-surface-card border-r border-border-default flex-col p-12 relative overflow-hidden">
     {/* Logo */}
     <div className="relative flex items-center gap-3">
-      <div className="size-10 bg-[#4A55D4] rounded-[10px] flex items-center justify-center shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_4px_12px_rgba(74,85,212,0.4)] shrink-0">
+      <div className="size-10 bg-brand-500 rounded-[10px] flex items-center justify-center shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_4px_12px_rgba(255,203,5,0.2)] shrink-0">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
           <path
             d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z"
-            stroke="white"
+            stroke="#0A0A0B"
             strokeWidth="1.5"
             strokeLinejoin="round"
             fill="none"
           />
-          <circle cx="11" cy="10.5" r="2.25" fill="white" />
+          <circle cx="11" cy="10.5" r="2.25" fill="#0A0A0B" />
         </svg>
       </div>
       <div>
-        <div className="text-[17px] font-bold text-white tracking-[-0.01em] leading-[1.2]">
+        <div className="text-[17px] font-bold text-gray-900 tracking-[-0.01em] leading-[1.2]">
           Iroko AI
         </div>
-        <div className="text-[11px] text-white/40 leading-none">
+        <div className="text-[11px] text-gray-400 leading-none">
           Document Intelligence
         </div>
       </div>
@@ -59,11 +51,11 @@ const BrandPanel = () => (
 
     {/* Headline */}
     <div className="relative flex-1 flex flex-col justify-center">
-      <h2 className="text-[29px] font-bold text-white tracking-[-0.035em] leading-[1.25] mb-4">
+      <h2 className="text-[29px] font-bold text-gray-900 tracking-[-0.035em] leading-[1.25] mb-4">
         Enterprise intelligence.{" "}
-        <span className="text-[#818CF8]">Cite-first answers.</span>
+        <span className="text-brand-500">Cite-first answers.</span>
       </h2>
-      <p className="text-sm text-white/50 leading-[1.7] mb-11 max-w-[330px]">
+      <p className="text-sm text-gray-500 leading-[1.7] mb-11 max-w-[330px]">
         Built for large organisations — multilingual AI that grounds every
         answer in your organisation&apos;s verified documents and logs every
         interaction to an audit-grade trail.
@@ -85,11 +77,11 @@ const BrandPanel = () => (
           },
         ].map((f) => (
           <div key={f.title} className="flex items-start gap-3">
-            <div className="size-5 rounded-full bg-[rgba(97,114,243,0.18)] border border-[rgba(97,114,243,0.4)] flex items-center justify-center shrink-0 mt-[2px]">
+            <div className="size-5 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center shrink-0 mt-[2px]">
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path
                   d="M2 5l2 2 4-4"
-                  stroke="#818CF8"
+                  stroke="#FFCB05"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -97,10 +89,10 @@ const BrandPanel = () => (
               </svg>
             </div>
             <div>
-              <div className="text-[13px] font-semibold text-white/[0.88] mb-[2px]">
+              <div className="text-[13px] font-semibold text-gray-800 mb-[2px]">
                 {f.title}
               </div>
-              <div className="text-xs text-white/[0.38] leading-[1.55]">
+              <div className="text-xs text-gray-400 leading-[1.55]">
                 {f.desc}
               </div>
             </div>
@@ -167,25 +159,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen font-sans bg-white md:bg-surface-page lg:bg-white">
+    <div className="flex min-h-screen font-sans bg-surface-page">
       <BrandPanel />
 
       {/* Form panel */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-12">
-        <div className="w-full max-w-[380px] bg-white p-2 md:p-0 rounded-2xl">
+        <div className="w-full max-w-[380px] p-2 md:p-0 rounded-2xl">
           <div className="mb-8 md:mb-9">
             {/* Mobile Logo */}
             <div className="lg:hidden flex items-center gap-2.5 mb-8">
-              <div className="size-9 bg-[#4A55D4] rounded-lg flex items-center justify-center shadow-md">
+              <div className="size-9 bg-brand-500 rounded-lg flex items-center justify-center shadow-md">
                 <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
                   <path
                     d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z"
-                    stroke="white"
+                    stroke="#0A0A0B"
                     strokeWidth="1.5"
                     strokeLinejoin="round"
                     fill="none"
                   />
-                  <circle cx="11" cy="10.5" r="2.25" fill="white" />
+                  <circle cx="11" cy="10.5" r="2.25" fill="#0A0A0B" />
                 </svg>
               </div>
               <div>

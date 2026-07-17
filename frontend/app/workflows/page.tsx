@@ -27,7 +27,7 @@ interface WorkflowStats {
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-  critical: "#EF4444", high: "#F97316", medium: "#FACC15", low: "#6B7280",
+  critical: "#EF4444", high: "#F97316", medium: "#38BDF8", low: "#7A7A85",
 };
 const SOURCE_LABELS: Record<string, string> = {
   alert: "Auto · Watchdog", compliance: "Auto · Compliance", chat: "Chat", manual: "Manual",
@@ -35,25 +35,25 @@ const SOURCE_LABELS: Record<string, string> = {
 
 function StatCard({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] px-5 py-4" style={{ background: "#0F1320" }}>
-      <div className="text-[22px] font-bold" style={{ color: accent ?? "#E5E7EB" }}>{value}</div>
-      <div className="text-[10.5px] text-[#6B7280] uppercase tracking-wider font-semibold mt-1">{label}</div>
+    <div className="rounded-2xl border border-border-default px-5 py-4" style={{ background: "#131316" }}>
+      <div className="text-[22px] font-bold" style={{ color: accent ?? "#F7F7F9" }}>{value}</div>
+      <div className="text-[10.5px] text-gray-400 uppercase tracking-wider font-semibold mt-1">{label}</div>
     </div>
   );
 }
 
 function TaskCard({ task, onTransition }: { task: Task; onTransition: (id: string, status: string) => void }) {
-  const pcol = PRIORITY_COLORS[task.priority] ?? "#6B7280";
+  const pcol = PRIORITY_COLORS[task.priority] ?? "#7A7A85";
   return (
     <div className="rounded-2xl border overflow-hidden transition-all duration-200 hover:border-white/20 group"
-      style={{ background: "#0F1320", borderColor: "rgba(255,255,255,0.06)", borderLeft: `3px solid ${pcol}` }}>
+      style={{ background: "#131316", borderColor: "rgba(255,255,255,0.08)", borderLeft: `3px solid ${pcol}` }}>
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <span className="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
             style={{ color: pcol, background: `${pcol}15`, border: `1px solid ${pcol}30` }}>
             {task.priority}
           </span>
-          <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full text-[#3B7BF6] bg-[#3B7BF6]/10 border border-[#3B7BF6]/20">
+          <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full text-info-500 bg-info-50 border border-[#38BDF8]/20">
             {SOURCE_LABELS[task.source_type] ?? task.source_type}
           </span>
           {task.verdict && (
@@ -67,12 +67,12 @@ function TaskCard({ task, onTransition }: { task: Task; onTransition: (id: strin
             </span>
           )}
         </div>
-        <h3 className="text-[13px] font-semibold text-[#E5E7EB] leading-snug mb-1.5">{task.title}</h3>
+        <h3 className="text-[13px] font-semibold text-gray-800 leading-snug mb-1.5">{task.title}</h3>
         {task.description && (
-          <p className="text-[11.5px] text-[#6B7280] leading-relaxed line-clamp-2">{task.description}</p>
+          <p className="text-[11.5px] text-gray-400 leading-relaxed line-clamp-2">{task.description}</p>
         )}
-        <div className="flex items-center gap-3 mt-3 text-[10px] text-[#4B5563] flex-wrap">
-          {task.department && <span className="text-[#9CA3AF]">→ {task.department}</span>}
+        <div className="flex items-center gap-3 mt-3 text-[10px] text-gray-300 flex-wrap">
+          {task.department && <span className="text-gray-500">→ {task.department}</span>}
           {task.due_date && (
             <span className={task.overdue ? "text-[#EF4444] font-semibold" : ""}>
               due {formatRelativeTime(task.due_date)}
@@ -83,7 +83,7 @@ function TaskCard({ task, onTransition }: { task: Task; onTransition: (id: strin
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.05]">
           {task.status === "open" && (
             <button onClick={() => onTransition(task.id, "in_progress")}
-              className="text-[11px] font-semibold px-3 py-1.5 rounded-lg text-[#3B7BF6] hover:bg-[#3B7BF6]/10 border border-[#3B7BF6]/20 transition-all">
+              className="text-[11px] font-semibold px-3 py-1.5 rounded-lg text-brand-500 hover:bg-brand-50 border border-brand-200 transition-all">
               Start
             </button>
           )}
@@ -95,7 +95,7 @@ function TaskCard({ task, onTransition }: { task: Task; onTransition: (id: strin
           )}
           {(task.status === "open" || task.status === "blocked") && (
             <button onClick={() => onTransition(task.id, "dismissed")}
-              className="text-[11px] font-semibold px-3 py-1.5 rounded-lg text-[#6B7280] hover:bg-white/[0.05] border border-white/[0.08] transition-all">
+              className="text-[11px] font-semibold px-3 py-1.5 rounded-lg text-gray-400 hover:bg-white/[0.05] border border-white/[0.08] transition-all">
               Dismiss
             </button>
           )}
@@ -164,13 +164,13 @@ export default function WorkflowsPage() {
       {/* Header: stats + sweep */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
         <StatCard label="Open tasks" value={stats ? (stats.by_status["open"] ?? 0) + (stats.by_status["blocked"] ?? 0) : "—"} />
-        <StatCard label="In progress" value={stats?.by_status["in_progress"] ?? 0} accent="#3B7BF6" />
+        <StatCard label="In progress" value={stats?.by_status["in_progress"] ?? 0} accent="#38BDF8" />
         <StatCard label="Done this week" value={stats?.completed_this_week ?? 0} accent="#10B981" />
         <StatCard label="Overdue" value={stats?.overdue ?? 0} accent={stats && stats.overdue > 0 ? "#EF4444" : undefined} />
-        <div className="rounded-2xl border border-white/[0.06] px-4 py-3 flex items-center justify-center" style={{ background: "#0F1320" }}>
+        <div className="rounded-2xl border border-border-default px-4 py-3 flex items-center justify-center" style={{ background: "#131316" }}>
           <button onClick={() => void runSweep()} disabled={sweeping}
-            className="w-full text-[12px] font-bold px-3 py-2.5 rounded-xl text-white bg-gradient-to-r from-[#3B7BF6] to-[#8B5CF6] hover:opacity-90 disabled:opacity-50 transition-all">
-            {sweeping ? "Sweeping corpus…" : "⚡ Run Intelligence Sweep"}
+            className="w-full text-[12px] font-bold px-3 py-2.5 rounded-xl text-[#0A0A0B] bg-brand-500 hover:opacity-90 disabled:opacity-50 transition-all">
+            {sweeping ? "Sweeping corpus…" : "Run Intelligence Sweep"}
           </button>
         </div>
       </div>
@@ -185,9 +185,9 @@ export default function WorkflowsPage() {
       {/* Department load */}
       {stats && stats.open_by_department.length > 0 && (
         <div className="flex items-center gap-2 mb-5 flex-wrap">
-          <span className="text-[10px] text-[#6B7280] uppercase tracking-wider font-bold">Open by department:</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Open by department:</span>
           {stats.open_by_department.map(d => (
-            <span key={d.department} className="text-[10.5px] px-2.5 py-1 rounded-full text-[#9CA3AF] bg-white/[0.04] border border-white/[0.08]">
+            <span key={d.department} className="text-[10.5px] px-2.5 py-1 rounded-full text-gray-500 bg-white/[0.04] border border-white/[0.08]">
               {d.department} · {d.open_tasks}
             </span>
           ))}
@@ -196,11 +196,11 @@ export default function WorkflowsPage() {
 
       {/* Board */}
       {loading ? (
-        <div className="text-[12px] text-[#6B7280] py-16 text-center">Loading workflow board…</div>
+        <div className="text-[12px] text-gray-400 py-16 text-center">Loading workflow board…</div>
       ) : tasks.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-20">
-          <div className="text-[14px] font-semibold text-[#9CA3AF]">No tasks yet</div>
-          <p className="text-[11.5px] text-[#6B7280] max-w-sm text-center">
+          <div className="text-[14px] font-semibold text-gray-500">No tasks yet</div>
+          <p className="text-[11.5px] text-gray-400 max-w-sm text-center">
             Run an Intelligence Sweep — the Watchdog scans your document corpus for risks,
             deadlines and conflicts, and turns each finding into a routed task with an SLA.
           </p>
@@ -212,13 +212,13 @@ export default function WorkflowsPage() {
             return (
               <div key={col.key}>
                 <div className="flex items-center gap-2 mb-3">
-                  <h2 className="text-[12px] font-bold text-[#9CA3AF] uppercase tracking-wider">{col.title}</h2>
-                  <span className="text-[10.5px] text-[#4B5563] font-semibold">{colTasks.length}</span>
+                  <h2 className="text-[12px] font-bold text-gray-500 uppercase tracking-wider">{col.title}</h2>
+                  <span className="text-[10.5px] text-gray-300 font-semibold">{colTasks.length}</span>
                 </div>
                 <div className="space-y-3">
                   {colTasks.map(t => <TaskCard key={t.id} task={t} onTransition={transition} />)}
                   {colTasks.length === 0 && (
-                    <div className="rounded-2xl border border-dashed border-white/[0.06] py-8 text-center text-[11px] text-[#4B5563]">Empty</div>
+                    <div className="rounded-2xl border border-dashed border-border-default py-8 text-center text-[11px] text-gray-300">Empty</div>
                   )}
                 </div>
               </div>

@@ -7,78 +7,86 @@
   --font-sans: var(--font-dm-sans, "DM Sans"), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-dm-mono, "DM Mono"), ui-monospace, monospace;
 
-  /* ── Brand Blue ────────────────────────────────────────── */
-  --color-brand-50:  #EEF3FF;
-  --color-brand-100: #E0E9FF;
-  --color-brand-200: #C7D7FE;
-  --color-brand-300: #A5B8FC;
-  --color-brand-400: #8098F9;
-  --color-brand-500: #6172F3;
-  --color-brand-600: #4A55D4;
-  --color-brand-700: #3D44B8;
-  --color-brand-800: #313893;
-  --color-brand-900: #2D3275;
+  /* ══════════════════════════════════════════════════════════════════
+     MTN × IROKO — DARK DESIGN SYSTEM
+     One accent: MTN yellow (#FFCB05), used sparingly and deliberately.
+     Neutral ramp is INVERTED for dark UI: gray-900 = brightest text,
+     gray-0 = deepest background — so existing `text-gray-900` reads as
+     primary text and `bg-gray-50` as subtle elevation, everywhere.
+     ══════════════════════════════════════════════════════════════════ */
 
-  /* ── Neutrals (Design System Grade) ───────────────────── */
-  --color-gray-0:   #FFFFFF;
-  --color-gray-25:  #FCFCFD;
-  --color-gray-50:  #F9FAFB;
-  --color-gray-100: #F2F4F7;
-  --color-gray-150: #EAECF0;
-  --color-gray-200: #D0D5DD;
-  --color-gray-300: #98A2B3;
-  --color-gray-400: #667085;
-  --color-gray-500: #475467;
-  --color-gray-600: #344054;
-  --color-gray-700: #182230;
-  --color-gray-800: #101828;
-  --color-gray-900: #0C111D;
+  /* ── Brand (MTN Yellow) ────────────────────────────────── */
+  --color-brand-50:  rgba(255, 203, 5, 0.08);
+  --color-brand-100: rgba(255, 203, 5, 0.14);
+  --color-brand-200: rgba(255, 203, 5, 0.28);
+  --color-brand-300: rgba(255, 203, 5, 0.45);
+  --color-brand-400: #FFD634;
+  --color-brand-500: #FFCB05;
+  --color-brand-600: #FFCB05;
+  --color-brand-700: #FFD634;
+  --color-brand-800: #E6B800;
+  --color-brand-900: #B38F00;
 
-  /* ── Semantic Colors ───────────────────────────────────── */
-  --color-success-50:  #ECFDF3;
-  --color-success-100: #DCFAE6;
-  --color-success-500: #17B26A;
-  --color-success-700: #067647;
+  /* ── Neutrals (inverted for dark) ─────────────────────── */
+  --color-gray-0:   #0A0A0B;
+  --color-gray-25:  #101012;
+  --color-gray-50:  #17171A;
+  --color-gray-100: #1E1E23;
+  --color-gray-150: #26262C;
+  --color-gray-200: #303038;
+  --color-gray-300: #4A4A54;
+  --color-gray-400: #7A7A85;
+  --color-gray-500: #9C9CA6;
+  --color-gray-600: #B8B8C1;
+  --color-gray-700: #D6D6DC;
+  --color-gray-800: #EBEBEF;
+  --color-gray-900: #F7F7F9;
 
-  --color-warning-50:  #FFFAEB;
-  --color-warning-100: #FEF0C7;
-  --color-warning-500: #F79009;
-  --color-warning-700: #B54708;
+  /* ── Semantic Colors (dark-tuned; tints are translucent) ── */
+  --color-success-50:  rgba(34, 197, 94, 0.12);
+  --color-success-100: rgba(34, 197, 94, 0.22);
+  --color-success-500: #22C55E;
+  --color-success-700: #4ADE80;
 
-  --color-danger-50:  #FFF1F3;
-  --color-danger-100: #FFE4E8;
-  --color-danger-200: #FECDD3;
-  --color-danger-400: #F97066;
-  --color-danger-500: #F04438;
-  --color-danger-600: #D92D20;
-  --color-danger-700: #B42318;
+  --color-warning-50:  rgba(245, 158, 11, 0.12);
+  --color-warning-100: rgba(245, 158, 11, 0.22);
+  --color-warning-500: #F59E0B;
+  --color-warning-700: #FBBF24;
 
-  --color-info-50:  #EFF8FF;
-  --color-info-100: #D1E9FF;
-  --color-info-500: #2E90FA;
-  --color-info-700: #175CD3;
+  --color-danger-50:  rgba(239, 68, 68, 0.12);
+  --color-danger-100: rgba(239, 68, 68, 0.20);
+  --color-danger-200: rgba(239, 68, 68, 0.32);
+  --color-danger-400: #F87171;
+  --color-danger-500: #EF4444;
+  --color-danger-600: #F87171;
+  --color-danger-700: #FCA5A5;
+
+  --color-info-50:  rgba(56, 189, 248, 0.12);
+  --color-info-100: rgba(56, 189, 248, 0.22);
+  --color-info-500: #38BDF8;
+  --color-info-700: #7DD3FC;
 
   /* ── Surfaces ──────────────────────────────────────────── */
-  --color-surface-page: #F7F8FA;
-  --color-surface-card: #FFFFFF;
+  --color-surface-page: #0A0A0B;
+  --color-surface-card: #131316;
 
   /* ── Borders ───────────────────────────────────────────── */
-  --color-border-default: #EAECF0;
-  --color-border-strong:  #D0D5DD;
+  --color-border-default: rgba(255, 255, 255, 0.08);
+  --color-border-strong:  rgba(255, 255, 255, 0.14);
 
   /* ── Sidebar ───────────────────────────────────────────── */
-  --color-sidebar-bg:          #FFFFFF;
-  --color-sidebar-border:      #EAECF0;
-  --color-sidebar-active-bg:   #EEF3FF;
-  --color-sidebar-active-text: #3D44B8;
-  --color-sidebar-hover-bg:    #F9FAFB;
-  --color-sidebar-text:        #344054;
-  --color-sidebar-muted:       #667085;
+  --color-sidebar-bg:          #0E0E10;
+  --color-sidebar-border:      rgba(255, 255, 255, 0.07);
+  --color-sidebar-active-bg:   rgba(255, 203, 5, 0.10);
+  --color-sidebar-active-text: #FFCB05;
+  --color-sidebar-hover-bg:    rgba(255, 255, 255, 0.04);
+  --color-sidebar-text:        #B8B8C1;
+  --color-sidebar-muted:       #7A7A85;
 
-  /* ── Shadows ───────────────────────────────────────────── */
-  --shadow-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  --shadow-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.10), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
-  --shadow-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.10), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  /* ── Shadows (deepened for dark) ───────────────────────── */
+  --shadow-xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.40);
+  --shadow-sm: 0px 1px 3px 0px rgba(0, 0, 0, 0.50), 0px 1px 2px 0px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0px 4px 12px -2px rgba(0, 0, 0, 0.55), 0px 2px 4px -2px rgba(0, 0, 0, 0.40);
 
   /* ── Radius ────────────────────────────────────────────── */
   --radius-xs:   4px;
@@ -284,12 +292,12 @@ body {
     gap: 8px;
     padding: 10px 16px;
     background: var(--color-brand-600);
-    color: #ffffff;
-    border: 1px solid var(--color-brand-700);
+    color: #0A0A0B; /* black text on MTN yellow */
+    border: 1px solid var(--color-brand-800);
     border-radius: var(--radius-md);
     font-family: var(--font-sans);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 20px;
     cursor: pointer;
     transition: background 0.15s ease, box-shadow 0.15s ease;
@@ -370,7 +378,7 @@ body {
   .input-base::placeholder { color: var(--color-gray-300); }
   .input-base:focus {
     border-color: var(--color-brand-500);
-    box-shadow: 0 0 0 4px rgba(97, 114, 243, 0.12), var(--shadow-xs);
+    box-shadow: 0 0 0 4px rgba(255, 203, 5, 0.14), var(--shadow-xs);
   }
 
   .label-base {

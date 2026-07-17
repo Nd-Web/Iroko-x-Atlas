@@ -30,11 +30,11 @@ interface ProductivityData {
 }
 
 const AGENT_COLORS: Record<string, string> = {
-  Strategist: "#4A55D4",
-  Researcher: "#2E90FA",
-  Analyst:    "#17B26A",
-  Scribe:     "#F79009",
-  Watchdog:   "#F04438",
+  Strategist: "#818CF8",
+  Researcher: "#38BDF8",
+  Analyst:    "#34D399",
+  Scribe:     "#FB923C",
+  Watchdog:   "#F87171",
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -59,28 +59,28 @@ export default async function AnalyticsPage() {
       value: (overview?.queries_week ?? liveStats?.total_queries_this_week ?? 0).toLocaleString(),
       delta: "",
       deltaUp: true,
-      accent: "#4A55D4",
+      accent: "#38BDF8",
     },
     {
       label: "Avg answer time",
       value: avgMs != null && avgMs > 0 ? `${(avgMs / 1000).toFixed(2)}s` : "—",
       delta: "",
       deltaUp: true,
-      accent: "#17B26A",
+      accent: "#10B981",
     },
     {
       label: "Documents indexed",
       value: (liveStats?.documents_indexed ?? liveStats?.total_documents ?? 0).toLocaleString(),
       delta: "",
       deltaUp: true,
-      accent: "#17B26A",
+      accent: "#10B981",
     },
     {
       label: "Active alerts",
       value: (liveStats?.active_alerts ?? 0).toLocaleString(),
       delta: liveStats?.critical_alerts ? `${liveStats.critical_alerts} critical` : "",
       deltaUp: false,
-      accent: "#F04438",
+      accent: "#EF4444",
     },
   ];
 
@@ -93,7 +93,7 @@ export default async function AnalyticsPage() {
       name,
       count,
       pct: total > 0 ? Math.round((count / total) * 100) : 0,
-      color: AGENT_COLORS[name] ?? "#4A55D4",
+      color: AGENT_COLORS[name] ?? "#38BDF8",
     }));
   }
   const totalAgentQueries = agents.reduce((s, a) => s + a.count, 0);

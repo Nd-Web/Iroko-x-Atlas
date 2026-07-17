@@ -33,7 +33,7 @@ export default function AppShell({ children, title, subtitle, actions }: AppShel
       {/* Keyboard users can jump straight past the sidebar/topbar */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-white focus:text-brand-700 focus:shadow-md focus:text-sm focus:font-semibold"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-surface-card focus:text-brand-700 focus:shadow-md focus:text-sm focus:font-semibold"
       >
         Skip to main content
       </a>

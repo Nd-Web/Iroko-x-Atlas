@@ -30,23 +30,23 @@ const AuditRow: FC<{ entry: AuditEntry; index: number }> = ({ entry, index }) =>
 
   return (
     <tr
-      className={`transition-colors duration-150 hover:bg-[rgba(59,123,246,0.04)] ${
+      className={`transition-colors duration-150 hover:bg-gray-50 ${
         index % 2 === 0 ? "bg-transparent" : "bg-white/[0.015]"
       }`}
     >
       {/* Agent */}
-      <td className="px-4 py-3 text-[12px] font-semibold text-[#E5E7EB]">
+      <td className="px-4 py-3 text-[12px] font-semibold text-gray-800">
         {entry.agent_name}
       </td>
       {/* Action */}
       <td className="px-4 py-3">
-        <span className="text-[11px] px-2 py-0.5 rounded-md font-medium bg-white/[0.05] border border-white/[0.08] text-[#9CA3AF]">
+        <span className="text-[11px] px-2 py-0.5 rounded-md font-medium bg-white/[0.05] border border-border-default text-gray-500">
           {entry.action_type}
         </span>
       </td>
       {/* Summary */}
       <td
-        className="px-4 py-3 text-[12px] max-w-xs text-[#6B7280]"
+        className="px-4 py-3 text-[12px] max-w-xs text-gray-400"
         title={entry.decision_summary}
       >
         {truncate(entry.decision_summary, 64)}
@@ -54,12 +54,12 @@ const AuditRow: FC<{ entry: AuditEntry; index: number }> = ({ entry, index }) =>
       {/* Verdict */}
       <td className="px-4 py-3">{verdictPill(entry.verdict)}</td>
       {/* Timestamp */}
-      <td className="px-4 py-3 text-[11px] whitespace-nowrap text-[#4B5563]">
+      <td className="px-4 py-3 text-[11px] whitespace-nowrap text-gray-300">
         {formatTime(entry.created_at)}
       </td>
       {/* Chain hash */}
       <td className="px-4 py-3">
-        <code className="text-[10px] font-mono px-2 py-1 rounded-lg tracking-[0.04em] bg-[rgba(139,92,246,0.1)] border border-[rgba(139,92,246,0.2)] text-[#8B5CF6]">
+        <code className="text-[10px] font-mono px-2 py-1 rounded-lg tracking-[0.04em] bg-info-50 border border-[rgba(56,189,248,0.2)] text-info-500">
           …{hashTail}
         </code>
       </td>
@@ -94,12 +94,12 @@ const AuditTrailTab: FC<{
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {loading ? (
-            <span className="text-[12px] px-3 py-1 rounded-full bg-[#141824] text-[#6B7280]">
+            <span className="text-[12px] px-3 py-1 rounded-full bg-gray-50 text-gray-400">
               Loading audit trail…
             </span>
           ) : (
             <>
-              <span className="text-[13px] font-semibold text-[#E5E7EB]">
+              <span className="text-[13px] font-semibold text-gray-800">
                 {entries.length} entries
               </span>
               {/* Chain integrity badge */}
@@ -138,7 +138,7 @@ const AuditTrailTab: FC<{
         {/* Pagination controls */}
         {!loading && totalPages > 1 && (
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-[#4B5563]">
+            <span className="text-[11px] text-gray-300">
               Page {page + 1} / {totalPages}
             </span>
             <div className="flex gap-1">
@@ -151,7 +151,7 @@ const AuditTrailTab: FC<{
                   onClick={action}
                   disabled={disabled}
                   aria-label={aria}
-                  className="w-8 h-8 rounded-lg text-[13px] font-bold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed bg-[#141824] border border-white/[0.06] text-[#9CA3AF]"
+                  className="w-8 h-8 rounded-lg text-[13px] font-bold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed bg-gray-50 border border-border-default text-gray-500"
                 >
                   {label}
                 </button>
@@ -164,15 +164,15 @@ const AuditTrailTab: FC<{
       {error && <ErrorBanner message={error} />}
 
       {/* Table */}
-      <div className="rounded-2xl overflow-hidden border border-white/[0.06]">
+      <div className="rounded-2xl overflow-hidden border border-border-default">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="bg-[#141824]">
+              <tr className="bg-gray-50">
                 {["Agent", "Action", "Summary", "Verdict", "Timestamp", "Chain Hash"].map((h) => (
                   <th
                     key={h}
-                    className="px-4 py-3 text-[10px] font-black uppercase tracking-widest whitespace-nowrap text-[#4B5563] border-b border-white/[0.06]"
+                    className="px-4 py-3 text-[10px] font-black uppercase tracking-widest whitespace-nowrap text-gray-400 border-b border-border-default"
                   >
                     {h}
                   </th>
@@ -192,7 +192,7 @@ const AuditTrailTab: FC<{
                 ))
               ) : pageSlice.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center text-[13px] text-[#4B5563]">
+                  <td colSpan={6} className="px-4 py-16 text-center text-[13px] text-gray-400">
                     No audit entries found.
                   </td>
                 </tr>
@@ -207,8 +207,8 @@ const AuditTrailTab: FC<{
 
         {/* Table footer */}
         {!loading && entries.length > 0 && (
-          <div className="px-4 py-3 flex items-center justify-between border-t border-white/[0.06] bg-[#141824]">
-            <p className="text-[11px] text-[#4B5563]">
+          <div className="px-4 py-3 flex items-center justify-between border-t border-border-default bg-gray-50">
+            <p className="text-[11px] text-gray-400">
               Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, entries.length)} of {entries.length}
             </p>
             {data?.chain_integrity?.broken_at && (

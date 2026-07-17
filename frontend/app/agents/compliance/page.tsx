@@ -4,10 +4,10 @@ import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
 import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
 
 const STATS = [
-  { label: "Open DSRs",           value: "3",     sub: "subscriber data requests",     accent: "#F79009", color: "#F79009" },
-  { label: "Pending DPIAs",       value: "2",     sub: "awaiting DPO sign-off",        accent: "#4A55D4", color: "#4A55D4" },
-  { label: "NCC filings due 30d", value: "2",     sub: "QoS & incident returns due",   accent: "#F04438", color: "#F04438" },
-  { label: "Ikeja availability",  value: "82.7%", sub: "vs NCC minimum 95%",           accent: "#17B26A", color: "#17B26A" },
+  { label: "Open DSRs",           value: "3",     sub: "subscriber data requests",     accent: "#F59E0B", color: "#F59E0B" },
+  { label: "Pending DPIAs",       value: "2",     sub: "awaiting DPO sign-off",        accent: "#38BDF8", color: "#38BDF8" },
+  { label: "NCC filings due 30d", value: "2",     sub: "QoS & incident returns due",   accent: "#EF4444", color: "#EF4444" },
+  { label: "Ikeja availability",  value: "82.7%", sub: "vs NCC minimum 95%",           accent: "#22C55E", color: "#22C55E" },
 ];
 
 export default function ComplianceAgentPage() {
@@ -94,7 +94,7 @@ export default function ComplianceAgentPage() {
                     <div className="text-[13px] font-medium text-gray-700 mb-[3px] truncate">{d.name}</div>
                     <div className="text-[11.5px] text-gray-400 truncate">
                       {d.lawful} ·{" "}
-                      <span className={`font-semibold ${d.risk === "High" ? "text-danger-700" : d.risk === "Medium" ? "text-warning-700" : "text-success-700"}`}>
+                      <span className={`font-semibold ${d.risk === "High" ? "text-danger-700" : d.risk === "Medium" ? "text-info-700" : "text-success-700"}`}>
                         {d.risk} risk
                       </span>
                     </div>

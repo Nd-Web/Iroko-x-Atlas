@@ -58,7 +58,7 @@ export default function Topbar({
 
   return (
     <header
-      className="bg-white border-b border-border-default flex items-center justify-between px-4 md:px-6 sticky top-0 z-30 shrink-0 gap-4"
+      className="bg-sidebar-bg border-b border-border-default flex items-center justify-between px-4 md:px-6 sticky top-0 z-30 shrink-0 gap-4"
       style={{ height: "var(--topbar-height)" }}
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -107,7 +107,7 @@ export default function Topbar({
             aria-expanded={userOpen}
             className="flex items-center gap-2 px-[6px] py-[6px] md:px-[10px] md:py-2 border border-border-default rounded-full bg-transparent cursor-pointer transition-colors shrink-0 hover:bg-gray-50"
           >
-            <div className="size-[24px] md:size-[26px] rounded-full bg-brand-600 flex items-center justify-center text-[9px] md:text-[10px] font-bold text-white tracking-[0.02em] shrink-0">
+            <div className="size-[24px] md:size-[26px] rounded-full bg-brand-600 flex items-center justify-center text-[9px] md:text-[10px] font-bold text-[#0A0A0B] tracking-[0.02em] shrink-0">
               {initials}
             </div>
             <div className="hidden sm:block text-left">
@@ -136,7 +136,7 @@ export default function Topbar({
           </button>
 
           {userOpen && (
-            <div className="absolute top-[calc(100%+6px)] right-0 w-[200px] bg-white border border-border-default rounded-xl shadow-lg z-50 overflow-hidden py-1.5">
+            <div className="absolute top-[calc(100%+6px)] right-0 w-[200px] bg-surface-card border border-border-default rounded-xl shadow-lg z-50 overflow-hidden py-1.5">
               <div className="px-3.5 py-2.5 border-b border-border-default mb-1">
                 <div className="text-[13px] font-semibold text-gray-800 leading-[1.2] truncate">
                   {fullName || "Loading…"}

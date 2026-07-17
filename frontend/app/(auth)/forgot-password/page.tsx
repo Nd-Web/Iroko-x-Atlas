@@ -74,10 +74,10 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-[420px]">
         {/* Logo */}
         <div className="flex items-center gap-3 justify-center mb-12">
-          <div className="size-10 bg-[#4A55D4] rounded-[10px] flex items-center justify-center shadow-[0_4px_12px_rgba(74,85,212,0.3)] shrink-0">
+          <div className="size-10 bg-brand-500 rounded-[10px] flex items-center justify-center shadow-[0_4px_12px_rgba(255,203,5,0.2)] shrink-0">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
-              <circle cx="11" cy="10.5" r="2.25" fill="white" />
+              <path d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z" stroke="#0A0A0B" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
+              <circle cx="11" cy="10.5" r="2.25" fill="#0A0A0B" />
             </svg>
           </div>
           <div>

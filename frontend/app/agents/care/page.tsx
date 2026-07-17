@@ -4,10 +4,10 @@ import Link from "next/link";
 export const metadata = { title: "Care Agent" };
 
 const STATS = [
-  { label: "MoMo deduction tickets", value: "850",    sub: "Q1 2026 · Lagos +312% vs Q4",  accent: "#4A55D4", color: "#4A55D4" },
-  { label: "Disputed deductions",    value: "₦28.4M", sub: "under investigation",           accent: "#0BA5EC", color: "#0BA5EC" },
-  { label: "Open complaints",        value: "128",    sub: "NCC-escalable: 3",              accent: "#F79009", color: "#F79009" },
-  { label: "CSAT — incident day",    value: "41.2",   sub: "Ikeja outage · ~70 baseline",  accent: "#F04438", color: "#F04438" },
+  { label: "MoMo deduction tickets", value: "850",    sub: "Q1 2026 · Lagos +312% vs Q4",  accent: "#38BDF8", color: "#38BDF8" },
+  { label: "Disputed deductions",    value: "₦28.4M", sub: "under investigation",           accent: "#60A5FA", color: "#60A5FA" },
+  { label: "Open complaints",        value: "128",    sub: "NCC-escalable: 3",              accent: "#F59E0B", color: "#F59E0B" },
+  { label: "CSAT — incident day",    value: "41.2",   sub: "Ikeja outage · ~70 baseline",  accent: "#EF4444", color: "#EF4444" },
 ];
 
 const PLANS = [
@@ -27,9 +27,9 @@ const COMPLAINTS = [
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  MoMo:    "#4A55D4",
-  Network: "#17B26A",
-  Billing: "#0BA5EC",
+  MoMo:    "#38BDF8",
+  Network: "#34D399",
+  Billing: "#60A5FA",
 };
 
 export default function CareAgentPage() {
@@ -75,7 +75,7 @@ export default function CareAgentPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   <span
                     className="hidden xs:inline-block text-[11px] font-semibold px-2 py-px rounded-full"
-                    style={{ color: TYPE_COLORS[plan.type] || "var(--color-gray-500)", background: `${TYPE_COLORS[plan.type] || "#888"}14` }}
+                    style={{ color: TYPE_COLORS[plan.type] || "var(--color-gray-500)", background: `${TYPE_COLORS[plan.type] || "#9C9CA6"}14` }}
                   >{plan.type}</span>
                   <span className="text-[13px] font-bold text-gray-800 font-mono">{plan.price}</span>
                 </div>
@@ -148,8 +148,8 @@ export default function CareAgentPage() {
                 <span
                   className="text-[11px] font-semibold px-2 py-0.5 rounded-full w-fit"
                   style={{
-                    color: row.risk === "High" ? "var(--color-danger-700)" : "var(--color-warning-700)",
-                    background: row.risk === "High" ? "var(--color-danger-50)" : "var(--color-warning-50)",
+                    color: row.risk === "High" ? "var(--color-danger-700)" : "var(--color-info-700)",
+                    background: row.risk === "High" ? "var(--color-danger-50)" : "var(--color-info-50)",
                   }}
                 >{row.risk}</span>
                 <button className="btn-secondary px-3 py-1 text-xs">{row.action}</button>
