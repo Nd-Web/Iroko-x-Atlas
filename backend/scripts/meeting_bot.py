@@ -109,8 +109,13 @@ def iroko_login() -> str:
     return d["access_token"]
 
 
-def iroko_ask(token: str, question: str) -> str:
-    """Ask Iroko and return a concise, speech-friendly answer."""
+def iroko_ask(token: str, question: str, _retry: bool = True) -> str:
+    """Ask Iroko and return a concise, speech-friendly answer.
+
+    Self-heals a 401: the free-tier backend can cold-start and rotate its
+    SECRET_KEY mid-session, invalidating the token — so on 401 we re-login
+    once and retry with a fresh token.
+    """
     wrapped = ("Answer in 2 to 4 short spoken sentences for a live meeting — "
                "plain, no markdown, lead with the key point: " + question)
     try:
@@ -118,6 +123,10 @@ def iroko_ask(token: str, question: str) -> str:
                  {"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
                  {"query": wrapped}, timeout=120)
         ans = (d.get("answer") or "").strip()
+    except urllib.error.HTTPError as e:
+        if e.code == 401 and _retry:
+            return iroko_ask(iroko_login(), question, _retry=False)
+        return f"Sorry, I couldn't reach the knowledge base just now. HTTP {e.code}."
     except Exception as e:
         return f"Sorry, I couldn't reach the knowledge base just now. {e}"
     return _speechify(ans)
@@ -232,19 +241,36 @@ def auto_loop(bot_id: str, token: str, stop: threading.Event):
 
 # ── Answering ─────────────────────────────────────────────────────────────────
 
+def _pr(msg: str):
+    """Console print that never crashes on a non-UTF-8 terminal (Windows cp1252)."""
+    try:
+        print(msg)
+    except Exception:
+        print(msg.encode("ascii", "replace").decode())
+
+
 def _answer(bot_id: str, token: str, question: str):
     try:
         speak(bot_id, FILLER)  # instant acknowledgement covers the think time
     except Exception:
         pass
     ans = iroko_ask(token, question)
-    print(f"[Iroko] {ans}\n")
-    speak(bot_id, ans)
+    # Speak FIRST — the spoken answer must never depend on console printing.
+    try:
+        speak(bot_id, ans)
+    except Exception as e:
+        _pr(f"[speak failed] {e}")
+    _pr(f"[Iroko] {ans}\n")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
+    # Make stdout tolerant of Unicode (₦, en-dashes, …) on a Windows console.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
     ap = argparse.ArgumentParser()
     ap.add_argument("--meeting", default=os.getenv("MEETING_URL", ""))
     ap.add_argument("--auto", action="store_true", help="auto-answer from live transcript")
