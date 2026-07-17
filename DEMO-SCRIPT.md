@@ -83,6 +83,25 @@ Your demo maps 1-to-1 onto its four verbs: **AGGREGATE → UNDERSTAND → ACT �
 
 **Why they need it:** *"Every employee gets the recall of your best analyst — network ops, legal, procurement, CX — without waiting in anyone's queue."*
 
+### 🎤 SHOWSTOPPER — Iroko joins your Teams meeting (optional, high-impact)
+
+*Run this if you want the room to gasp. Iroko joins the actual meeting as a participant and answers a compliance question out loud.*
+
+**Setup (before the demo):** wake the backend (~1 min prior); have a Teams meeting running; start the bot from a terminal:
+```powershell
+cd "backend"
+$env:RECALL_API_KEY="<your Recall key>"
+$env:MEETING_URL="<the Teams join link>"
+.\.venv\Scripts\python.exe -m scripts.meeting_bot
+```
+"Iroko AI" appears in the participant list and greets the room aloud.
+
+**Live:** have a colleague ask aloud — *"Iroko, can we activate 5,000 SIM cards without NIN verification to hit our quarterly target?"* — and you type it into the terminal. Iroko says *"one moment…"* then answers **out loud in a Nigerian voice**: a NO-GO citing NCC SIM Registration Regs, ₦200,000 per SIM, and the ₦1.04 trillion 2015 precedent.
+
+**Your line:** *"Iroko isn't just a screen you visit — it sits in the room with your team. Ask it a compliance question in the meeting, and it answers, with the regulation and the penalty, live."*
+
+> ⚠️ Reliability: this needs solid Wi-Fi and a warm backend. If it wobbles, fall back to the **screen-share voice companion** (share screen with computer audio, use the Compliance-tab voice agent) — same effect, bulletproof. Rehearse both.
+
 ---
 
 ## ACT 3 — ACT (4 min) · *Workflows: the problem statement's first word*
