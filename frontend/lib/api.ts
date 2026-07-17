@@ -57,6 +57,9 @@ export async function apiFetch<T = unknown>(
     ...options,
     headers,
     credentials: "include",
+    // Never serve a stale cached response for live API data — e.g. the
+    // workflow board must reflect tasks the moment a sweep creates them.
+    cache: "no-store",
   });
 
   if (res.status === 401) {

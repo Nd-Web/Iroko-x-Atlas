@@ -61,12 +61,15 @@ export async function proxyToBackend(
   }
 
   const text = await upstream.text();
+  // Live API data must never be cached by the browser/CDN — otherwise a
+  // stale empty response survives past the mutation that should refresh it.
+  const noStore = { "Cache-Control": "no-store, max-age=0" };
   try {
-    return NextResponse.json(JSON.parse(text), { status: upstream.status });
+    return NextResponse.json(JSON.parse(text), { status: upstream.status, headers: noStore });
   } catch {
     return new NextResponse(text, {
       status: upstream.status,
-      headers: { "Content-Type": "text/plain" },
+      headers: { "Content-Type": "text/plain", ...noStore },
     });
   }
 }
