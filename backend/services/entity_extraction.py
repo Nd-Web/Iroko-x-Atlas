@@ -15,8 +15,12 @@ from typing import Any
 
 # Alias map → canonical entity. Extend freely; matching is case-insensitive
 # on word boundaries.
+# Telecom-only universe: infrastructure vendors, network operators, telecom &
+# data-protection regulators, telecom regulations, and Nigerian network sites.
+# Deliberately excludes financial-sector entities (banks, CBN) so the graph
+# stays purely telecom.
 _ENTITY_ALIASES: dict[str, dict[str, Any]] = {
-    # ── Vendors / partners ────────────────────────────────────────────────
+    # ── Infrastructure vendors / partners ─────────────────────────────────
     "ihs":                {"name": "IHS Nigeria", "type": "vendor"},
     "ihs towers":         {"name": "IHS Nigeria", "type": "vendor"},
     "ihs nigeria":        {"name": "IHS Nigeria", "type": "vendor"},
@@ -26,22 +30,26 @@ _ENTITY_ALIASES: dict[str, dict[str, Any]] = {
     "zte":                {"name": "ZTE", "type": "vendor"},
     "american tower":     {"name": "ATC Nigeria", "type": "vendor"},
     "atc":                {"name": "ATC Nigeria", "type": "vendor"},
-    "mtn":                {"name": "MTN Nigeria", "type": "vendor"},
-    "airtel":             {"name": "Airtel Nigeria", "type": "vendor"},
-    "glo":                {"name": "Globacom", "type": "vendor"},
-    "globacom":           {"name": "Globacom", "type": "vendor"},
-    "9mobile":            {"name": "9mobile", "type": "vendor"},
-    "zenith bank":        {"name": "Zenith Bank", "type": "vendor"},
+    "julius berger":      {"name": "Julius Berger", "type": "vendor"},
+    "ikeja electric":     {"name": "Ikeja Electric", "type": "vendor"},
+    "ikedc":              {"name": "Ikeja Electric", "type": "vendor"},
 
-    # ── Regulators ────────────────────────────────────────────────────────
+    # ── Network operators (MTN + competitors) ─────────────────────────────
+    "mtn":                {"name": "MTN Nigeria", "type": "operator"},
+    "airtel":             {"name": "Airtel Nigeria", "type": "operator"},
+    "glo":                {"name": "Globacom", "type": "operator"},
+    "globacom":           {"name": "Globacom", "type": "operator"},
+    "9mobile":            {"name": "9mobile", "type": "operator"},
+
+    # ── Telecom & data-protection regulators ──────────────────────────────
     "ncc":                {"name": "NCC", "type": "regulator"},
     "nigerian communications commission": {"name": "NCC", "type": "regulator"},
     "ndpc":               {"name": "NDPC", "type": "regulator"},
     "nigeria data protection commission": {"name": "NDPC", "type": "regulator"},
     "fccpc":              {"name": "FCCPC", "type": "regulator"},
-    "cbn":                {"name": "CBN", "type": "regulator"},
+    "nimc":               {"name": "NIMC", "type": "regulator"},
 
-    # ── Regulations / frameworks ──────────────────────────────────────────
+    # ── Telecom regulations / frameworks ──────────────────────────────────
     "ndpa":               {"name": "NDPA 2023", "type": "regulation"},
     "ndpr":               {"name": "NDPA 2023", "type": "regulation"},
     "data protection act": {"name": "NDPA 2023", "type": "regulation"},
@@ -56,12 +64,13 @@ _ENTITY_ALIASES: dict[str, dict[str, Any]] = {
     "gaid":               {"name": "GAID 2025", "type": "regulation"},
     "sla":                {"name": "SLA", "type": "regulation"},
 
-    # ── Locations / clusters ──────────────────────────────────────────────
+    # ── Network locations / clusters ──────────────────────────────────────
     "ikeja":              {"name": "Ikeja Cluster", "type": "location"},
     "lagos":              {"name": "Lagos", "type": "location"},
     "abuja":              {"name": "Abuja", "type": "location"},
     "kano":               {"name": "Kano", "type": "location"},
     "kaduna":             {"name": "Kaduna", "type": "location"},
+    "oregun":             {"name": "Oregun", "type": "location"},
     "port harcourt":      {"name": "Port Harcourt", "type": "location"},
 }
 

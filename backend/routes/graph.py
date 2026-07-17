@@ -89,9 +89,16 @@ async def get_knowledge_graph(
             })
             vendor_name = getattr(c, "vendor_name", None)
             if vendor_name:
-                vid = entity_id(vendor_name)
-                add_node(vid, vendor_name, "vendor", {})
-                add_edge(cid, vid, "with vendor")
+                # Canonicalize the vendor to a known telecom entity so
+                # "IHS Nigeria Limited" and "IHS Nigeria" resolve to ONE node,
+                # and non-telecom parties (e.g. enterprise-customer banks) are
+                # skipped — the graph stays purely telecom.
+                matched = extract_entities(vendor_name)
+                telecom = next((e for e in matched if e["type"] in ("vendor", "operator")), None)
+                if telecom:
+                    vid = entity_id(telecom["name"])
+                    add_node(vid, telecom["name"], telecom["type"], {})
+                    add_edge(cid, vid, "with vendor")
     except Exception as exc:
         logger.debug(f"Vendor contracts unavailable for graph: {exc}")
 

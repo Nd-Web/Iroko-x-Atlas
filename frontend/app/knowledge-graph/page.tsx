@@ -21,12 +21,12 @@ interface GraphData {
 interface LaidNode extends ApiNode { x: number; y: number; connections: string[]; }
 
 const NODE_COLORS: Record<string, string> = {
-  document: "#818CF8", vendor: "#FB923C", regulator: "#F472B6",
+  document: "#818CF8", vendor: "#FB923C", operator: "#2DD4BF", regulator: "#F472B6",
   regulation: "#A78BFA", location: "#38BDF8", contract: "#60A5FA",
   alert: "#F87171", task: "#34D399",
 };
 const NODE_LABELS: Record<string, string> = {
-  document: "Document", vendor: "Vendor", regulator: "Regulator",
+  document: "Document", vendor: "Vendor", operator: "Operator", regulator: "Regulator",
   regulation: "Regulation", location: "Location", contract: "Contract",
   alert: "Alert", task: "Action Task",
 };
