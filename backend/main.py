@@ -64,6 +64,7 @@ from routes.pdf import router as pdf_router
 from routes.compliance_api import router as compliance_api_router
 from routes.workflows import router as workflows_router
 from routes.graph import router as graph_router
+from routes.meeting import router as meeting_router
 
 # Database
 from models.database import init_db
@@ -215,6 +216,7 @@ app.include_router(pdf_router, prefix="/api/v1/pdf", tags=["pdf"])
 app.include_router(compliance_api_router, prefix="/api/v1")
 app.include_router(workflows_router)
 app.include_router(graph_router)
+app.include_router(meeting_router)
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 

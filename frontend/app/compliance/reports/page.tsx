@@ -2,7 +2,7 @@
 
 import AppShell from "@/components/layout/AppShell";
 import { useState, useEffect } from "react";
-import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
+import MeetingJoinPanel from "@/components/compliance/MeetingJoinPanel";
 import ComplianceChecker from "@/components/compliance/ComplianceChecker";
 import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
 import { toast } from "sonner";
@@ -141,7 +141,7 @@ export default function ComplianceReportsPage() {
       </div>
 
       {/* API key */}
-      <ApiKeyPanel />
+      <MeetingJoinPanel />
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" onClick={() => setModal(null)}>

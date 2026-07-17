@@ -1,6 +1,6 @@
 import AppShell from "@/components/layout/AppShell";
 import Link from "next/link";
-import ApiKeyPanel from "@/components/compliance/ApiKeyPanel";
+import MeetingJoinPanel from "@/components/compliance/MeetingJoinPanel";
 import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
 
 const STATS = [
@@ -108,7 +108,7 @@ export default function ComplianceAgentPage() {
       </div>
 
       {/* API key */}
-      <ApiKeyPanel />
+      <MeetingJoinPanel />
 
       {/* DSR queue */}
       <div className="card overflow-hidden">
