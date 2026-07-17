@@ -414,10 +414,19 @@ async def process_document(
             metadata={**metadata, "created_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")},
         )
 
+        # ── Knowledge graph: extract telecom entities from the document text ──
+        try:
+            from services.entity_extraction import extract_entities
+            entities = extract_entities(f"{title}\n{text}")
+        except Exception as ent_exc:  # never fail ingestion over entity extraction
+            logger.warning(f"Entity extraction failed for '{title}': {ent_exc}")
+            entities = []
+
         return {
             "success": success,
             "chunk_count": len(chunks),
             "text_length": len(text),
+            "entities": entities,
             **({"error": "Azure Search upload failed — check app logs"} if not success else {}),
         }
 

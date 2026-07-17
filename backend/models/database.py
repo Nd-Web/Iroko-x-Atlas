@@ -314,6 +314,8 @@ def init_db():
     from services.regulatory_memory import RegulatoryMemoryEntry  # noqa: F401
     # Import signal node model for persistent knowledge graph
     import models.signal_node  # noqa: F401
+    # Import workflow models (document → insight → action tasks)
+    import models.workflow  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
     # ── Column-level migrations (add new columns to existing tables) ─────────

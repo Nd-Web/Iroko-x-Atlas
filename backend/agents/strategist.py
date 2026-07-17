@@ -839,6 +839,12 @@ Pidgin: {is_pidgin}"""
         return out
 
     def _match_canned_scenario(self, question: str) -> Optional[dict]:
+        # Pre-computed answers are an explicit opt-in demo mode (fast, stable
+        # stage answers over the seeded corpus). In normal operation every
+        # question runs the full live retrieval + synthesis pipeline.
+        import os as _os
+        if _os.getenv("DEMO_CANNED_SCENARIOS", "false").lower() not in ("1", "true", "yes"):
+            return None
         q = question.lower()
         if any(k in q for k in ["ikeja outage", "ikeja cluster outage", "ikeja power outage", "feeder failure"]):
             return self._canned_noc()

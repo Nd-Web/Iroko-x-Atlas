@@ -174,6 +174,24 @@ async def compliance_check(
         if top else ""
     )
 
+    # ── Workflow hook: NO-GO / MONITOR verdicts become actionable tasks ──────
+    try:
+        from services.workflow_service import create_task_from_verdict
+        task = create_task_from_verdict(
+            db,
+            verdict=verdict,
+            subject_text=body.text,
+            reasoning=reasoning,
+            regulation=regulation,
+            organisation=getattr(user, "organisation", None) or org,
+        )
+        if task:
+            db.commit()
+            logger.info("Compliance verdict %s → workflow task '%s'", verdict, task.title)
+    except Exception:
+        logger.exception("Failed to create workflow task from compliance verdict")
+        db.rollback()
+
     return ComplianceCheckResponse(
         verdict=verdict,
         flags=flags,

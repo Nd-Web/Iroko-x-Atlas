@@ -158,6 +158,12 @@ async def upload_document(
 
         document.status = "indexed" if result["success"] else "failed"
         document.chunk_count = result.get("chunk_count", 0)
+        if result.get("entities"):
+            # Persist extracted entities for the live knowledge graph
+            document.extra_metadata = {
+                **(document.extra_metadata or {}),
+                "entities": result["entities"],
+            }
         if not result["success"]:
             document.error_message = result.get("error", "Unknown error")
 
@@ -172,7 +178,7 @@ async def upload_document(
         except Exception:
             pass
 
-    # ── Write document vertex to knowledge graph ──────────────────────────
+    # ── Write document vertex + entity edges to knowledge graph ────────────
     if document.status == "indexed":
         upsert_document_node(
             document_id=doc_id,
@@ -181,6 +187,16 @@ async def upload_document(
             department=department or "",
             blob_url=blob_url or "",
         )
+        # Best-effort: entity vertices + doc→entity edges (Cosmos Gremlin)
+        try:
+            from services.cosmos_graph import upsert_entity_node, upsert_edge
+            from services.entity_extraction import entity_id
+            for ent in (document.extra_metadata or {}).get("entities", [])[:12]:
+                eid = entity_id(ent["name"])
+                upsert_entity_node(eid, ent["type"], ent["name"], ent["type"])
+                upsert_edge(doc_id, eid, "mentions")
+        except Exception as graph_exc:
+            logger.warning(f"Graph entity write failed (non-fatal): {graph_exc}")
 
     db.add(AuditLog(
         user_id=current_user.id,

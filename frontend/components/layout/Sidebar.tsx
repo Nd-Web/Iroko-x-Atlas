@@ -42,6 +42,7 @@ const NAV = [
   {
     group: "Operations",
     items: [
+      { label: "Workflows",    href: "/workflows",           icon: Icon.insights, badge: "New" },
       { label: "Alerts",       href: "/agents/noc",          icon: Icon.alerts,   badge: "Live" },
       { label: "Network Intel",href: "/network-intelligence",icon: Icon.network,  badge: "Live" },
       { label: "Knowledge Graph",href:"/knowledge-graph",    icon: Icon.graph },

@@ -61,8 +61,11 @@ async def refresh_alerts(
     result = json.loads(result_str)
 
     # Save new alerts to database, deduplicating by title + org
-    organisation = current_user.organisation or "African Fintech Platform"
+    from services.workflow_service import create_task_from_alert
+
+    organisation = current_user.organisation or "MTN Nigeria"
     created = 0
+    tasks_created = 0
     for alert_data in result.get("alerts", []):
         title = alert_data.get("title", "")
         existing = db.query(Alert).filter(
@@ -71,22 +74,29 @@ async def refresh_alerts(
             Alert.status.in_(["new", "acknowledged"]),
         ).first()
         if existing:
-            continue
-        db.add(Alert(
-            title=title,
-            summary=alert_data.get("summary", ""),
-            severity=alert_data.get("severity", "info"),
-            alert_type=alert_data.get("alert_type", "general"),
-            extra_metadata=alert_data.get("metadata", {}),
-            suggested_actions=alert_data.get("suggested_actions", []),
-            organisation=organisation,
-        ))
-        created += 1
+            alert = existing
+        else:
+            alert = Alert(
+                title=title,
+                summary=alert_data.get("summary", ""),
+                severity=alert_data.get("severity", "info"),
+                alert_type=alert_data.get("alert_type", "general"),
+                extra_metadata=alert_data.get("metadata", {}),
+                suggested_actions=alert_data.get("suggested_actions", []),
+                organisation=organisation,
+            )
+            db.add(alert)
+            db.flush()  # assign alert.id for task provenance
+            created += 1
+        # ── Workflow hook: every alert becomes a routed, SLA-tracked task ────
+        if create_task_from_alert(db, alert.id, alert_data, organisation):
+            tasks_created += 1
 
     db.commit()
 
     return {
         "created": created,
+        "tasks_created": tasks_created,
         "total_found": result.get("total_alerts", 0),
         "critical": result.get("critical_count", 0),
         "warnings": result.get("warning_count", 0),

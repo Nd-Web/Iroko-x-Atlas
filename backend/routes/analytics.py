@@ -136,6 +136,23 @@ async def get_stats(
         ]
     )
 
+    # REAL per-day query trend from AgentRun timestamps (no synthesized data)
+    trend_start = today_start - timedelta(days=7)
+    per_day_rows = (
+        db.query(func.date(AgentRun.created_at), func.count(AgentRun.id))
+        .filter(AgentRun.created_at >= trend_start)
+        .group_by(func.date(AgentRun.created_at))
+        .all()
+    )
+    per_day = {str(d): c for d, c in per_day_rows}
+    query_trend = [
+        {
+            "date": (now - timedelta(days=i)).strftime("%Y-%m-%d"),
+            "queries": per_day.get((now - timedelta(days=i)).strftime("%Y-%m-%d"), 0),
+        }
+        for i in range(7, -1, -1)
+    ]
+
     return DashboardStats(
         total_documents=total_docs,
         documents_indexed=indexed_docs,
@@ -145,10 +162,7 @@ async def get_stats(
         critical_alerts=critical_alerts,
         avg_query_response_ms=round(avg_response, 1),
         top_departments=top_departments,
-        query_trend=[
-            {"date": (now - timedelta(days=i)).strftime("%Y-%m-%d"), "queries": max(0, queries_week - i * 3)}
-            for i in range(7, -1, -1)
-        ],
+        query_trend=query_trend,
         most_queried_topics=most_queried_topics,
     )
 
@@ -396,4 +410,126 @@ async def get_knowledge_gaps(
             for g in gaps
         ],
         "total": len(gaps),
+    }
+
+@router.get("/productivity")
+async def get_productivity(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Productivity metrics — the "improved productivity" half of the MTN
+    problem statement, computed from REAL usage data (AgentRun query log,
+    Document ingestion, WorkflowTask lifecycle). Nothing synthesized.
+
+    Time-saved model (stated, not hidden): industry studies put manual
+    cross-system document search at 15-30 minutes per information request;
+    we use a conservative 15 minutes as the manual baseline and subtract
+    the actual AI answer time recorded per query.
+    """
+    MANUAL_BASELINE_MIN = 15.0  # conservative manual-search baseline per query
+
+    now = datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = now - timedelta(days=7)
+    month_start = now - timedelta(days=30)
+
+    # ── Query volume & speed (AgentRun = per-query log, strategist rows) ──
+    base = db.query(AgentRun).filter(AgentRun.agent_type == "strategist")
+    total_queries = base.count()
+    queries_week = base.filter(AgentRun.created_at >= week_start).count()
+    queries_today = base.filter(AgentRun.created_at >= today_start).count()
+
+    timed = (
+        base.filter(AgentRun.duration_ms.isnot(None), AgentRun.created_at >= month_start).all()
+    )
+    avg_answer_seconds = (
+        round(sum(r.duration_ms for r in timed) / len(timed) / 1000, 1) if timed else None
+    )
+
+    # ── Time saved: (manual baseline − actual answer time) per answered query ──
+    if timed:
+        saved_min = sum(
+            max(0.0, MANUAL_BASELINE_MIN - (r.duration_ms / 60000.0)) for r in timed
+        )
+        # Extrapolate only over queries actually recorded with timing
+        time_saved_hours_30d = round(saved_min / 60, 1)
+    else:
+        time_saved_hours_30d = 0.0
+
+    # ── Documents made searchable ─────────────────────────────────────────
+    docs_indexed = db.query(Document).filter(Document.status == "indexed").count()
+    chunks_indexed = (
+        db.query(func.coalesce(func.sum(Document.chunk_count), 0))
+        .filter(Document.status == "indexed")
+        .scalar()
+        or 0
+    )
+    docs_this_week = (
+        db.query(Document)
+        .filter(Document.status == "indexed", Document.created_at >= week_start)
+        .count()
+    )
+
+    # ── Workflow throughput (document → insight → action) ────────────────
+    from models.workflow import WorkflowTask, TaskStatus
+
+    tasks_total = db.query(WorkflowTask).count()
+    tasks_open = (
+        db.query(WorkflowTask)
+        .filter(WorkflowTask.status.in_([TaskStatus.open, TaskStatus.in_progress, TaskStatus.blocked]))
+        .count()
+    )
+    tasks_done_week = (
+        db.query(WorkflowTask)
+        .filter(WorkflowTask.status == TaskStatus.done, WorkflowTask.completed_at >= week_start)
+        .count()
+    )
+    tasks_auto_generated = (
+        db.query(WorkflowTask)
+        .filter(WorkflowTask.source_type.in_(["alert", "compliance"]))
+        .count()
+    )
+
+    # ── Per-day activity trend (real counts) ─────────────────────────────
+    per_day_rows = (
+        db.query(func.date(AgentRun.created_at), func.count(AgentRun.id))
+        .filter(AgentRun.created_at >= week_start, AgentRun.agent_type == "strategist")
+        .group_by(func.date(AgentRun.created_at))
+        .all()
+    )
+    per_day = {str(d): c for d, c in per_day_rows}
+    activity_trend = [
+        {
+            "date": (now - timedelta(days=i)).strftime("%Y-%m-%d"),
+            "queries": per_day.get((now - timedelta(days=i)).strftime("%Y-%m-%d"), 0),
+        }
+        for i in range(6, -1, -1)
+    ]
+
+    return {
+        "queries": {
+            "today": queries_today,
+            "this_week": queries_week,
+            "total": total_queries,
+            "avg_answer_seconds": avg_answer_seconds,
+        },
+        "time_saved": {
+            "hours_last_30d": time_saved_hours_30d,
+            "baseline_minutes_per_manual_search": MANUAL_BASELINE_MIN,
+            "note": "Conservative estimate: manual cross-system document search baseline minus recorded AI answer time, over queries actually answered in the last 30 days.",
+        },
+        "documents": {
+            "indexed_total": docs_indexed,
+            "chunks_searchable": int(chunks_indexed),
+            "indexed_this_week": docs_this_week,
+        },
+        "workflow": {
+            "tasks_total": tasks_total,
+            "tasks_open": tasks_open,
+            "tasks_completed_this_week": tasks_done_week,
+            "tasks_auto_generated": tasks_auto_generated,
+        },
+        "activity_trend": activity_trend,
+        "computed_at": now.isoformat(),
     }

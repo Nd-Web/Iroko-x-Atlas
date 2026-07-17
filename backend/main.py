@@ -62,6 +62,8 @@ from routes.chat import router as chat_router
 from routes.web_intel import router as web_intel_router
 from routes.pdf import router as pdf_router
 from routes.compliance_api import router as compliance_api_router
+from routes.workflows import router as workflows_router
+from routes.graph import router as graph_router
 
 # Database
 from models.database import init_db
@@ -199,6 +201,8 @@ app.include_router(fraud_router)
 app.include_router(web_intel_router)
 app.include_router(pdf_router, prefix="/api/v1/pdf", tags=["pdf"])
 app.include_router(compliance_api_router, prefix="/api/v1")
+app.include_router(workflows_router)
+app.include_router(graph_router)
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 
