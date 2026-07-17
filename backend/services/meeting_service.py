@@ -96,12 +96,49 @@ def _tts_mp3_b64(text: str) -> str:
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def join_meeting(meeting_url: str) -> dict:
-    """Create an 'Iroko AI' bot that joins the meeting. Returns {bot_id, platform}."""
+def _webhook_url() -> str:
+    """Public URL Recall streams live transcripts to. The backend is directly
+    reachable, so this is the backend's own origin + the webhook path."""
+    base = (
+        os.getenv("MEETING_WEBHOOK_BASE")
+        or os.getenv("RENDER_EXTERNAL_URL")
+        or "https://iroko-x-atlas.onrender.com"
+    ).rstrip("/")
+    return base + "/api/meeting/webhook"
+
+
+def join_meeting(meeting_url: str, listen: bool = True) -> dict:
+    """Create an 'Iroko AI' bot that joins the meeting.
+
+    When `listen` is on, the bot also transcribes the call in real time and
+    streams each final utterance to our webhook, so Iroko can hear questions
+    and answer aloud without anyone touching the dashboard.
+
+    Returns {bot_id, platform, listening}.
+    """
     if not configured():
         raise MeetingError("Meeting integration is not configured (set RECALL_API_KEY).")
-    bot = _recall("POST", "/bot/", {"meeting_url": meeting_url, "bot_name": "Iroko AI"})
-    return {"bot_id": bot["id"], "platform": (bot.get("meeting_url") or {}).get("platform", "")}
+    body: dict = {"meeting_url": meeting_url, "bot_name": "Iroko AI"}
+    if listen:
+        body["recording_config"] = {
+            "transcript": {
+                "provider": {
+                    "recallai_streaming": {
+                        "mode": "prioritize_low_latency",
+                        "language_code": "en",
+                    }
+                }
+            },
+            "realtime_endpoints": [
+                {"type": "webhook", "url": _webhook_url(), "events": ["transcript.data"]}
+            ],
+        }
+    bot = _recall("POST", "/bot/", body)
+    return {
+        "bot_id": bot["id"],
+        "platform": (bot.get("meeting_url") or {}).get("platform", ""),
+        "listening": listen,
+    }
 
 
 def bot_status(bot_id: str) -> str:

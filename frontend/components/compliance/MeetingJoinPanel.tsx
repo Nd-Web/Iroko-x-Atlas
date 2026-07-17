@@ -71,7 +71,7 @@ export default function MeetingJoinPanel() {
           Send Iroko to a meeting
         </h2>
         <p className="text-[11.5px] text-gray-400 mt-[2px]">
-          Paste a Microsoft Teams, Zoom, or Google Meet link — Iroko joins the call and answers aloud.
+          Paste a Microsoft Teams, Zoom, or Google Meet link — Iroko joins the call, listens, and answers questions aloud.
         </p>
       </div>
 
@@ -113,7 +113,7 @@ export default function MeetingJoinPanel() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2 text-[12.5px]">
               <span className="w-2 h-2 rounded-full bg-success-500 animate-pulse" />
-              <span className="text-gray-800 font-medium">Iroko AI is in the meeting.</span>
+              <span className="text-gray-800 font-medium">Iroko AI is in the meeting — listening for questions.</span>
               <button onClick={leave} className="ml-auto text-[11px] font-semibold px-2.5 py-1 rounded-lg text-gray-400 border border-border-default hover:bg-white/[0.04]">
                 Leave
               </button>
@@ -124,7 +124,7 @@ export default function MeetingJoinPanel() {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && phase !== "asking") ask(); }}
-                placeholder="Ask Iroko to answer aloud — e.g. Can we store subscriber data in a US region?"
+                placeholder="Optional — type a question here too (Iroko already answers ones it hears aloud)"
                 className="input-base flex-1 text-[13px]"
                 disabled={phase === "asking"}
               />
