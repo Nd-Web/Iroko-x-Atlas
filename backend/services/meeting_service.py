@@ -45,6 +45,16 @@ def configured() -> bool:
     return bool(RECALL_KEY and AETHEX_KEY)
 
 
+def config_status() -> dict:
+    """Report which keys are present so the UI can name what's missing."""
+    missing = []
+    if not RECALL_KEY:
+        missing.append("RECALL_API_KEY")
+    if not AETHEX_KEY:
+        missing.append("AETHEX_API_KEY")
+    return {"enabled": not missing, "missing": missing}
+
+
 # ── Recall API ────────────────────────────────────────────────────────────────
 
 def _recall(method: str, path: str, body=None, timeout: int = 40):

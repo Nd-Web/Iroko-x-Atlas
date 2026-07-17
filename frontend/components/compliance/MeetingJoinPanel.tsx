@@ -13,6 +13,7 @@ type Phase = "idle" | "joining" | "in_call" | "asking";
 
 export default function MeetingJoinPanel() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [missing, setMissing] = useState<string[]>([]);
   const [url, setUrl] = useState("");
   const [botId, setBotId] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -21,8 +22,8 @@ export default function MeetingJoinPanel() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiFetch<{ enabled: boolean }>("/api/meeting/config")
-      .then((d) => setEnabled(d.enabled))
+    apiFetch<{ enabled: boolean; missing?: string[] }>("/api/meeting/config")
+      .then((d) => { setEnabled(d.enabled); setMissing(d.missing ?? []); })
       .catch(() => setEnabled(false));
   }, []);
 
@@ -77,7 +78,14 @@ export default function MeetingJoinPanel() {
       <div className="px-5 py-4">
         {enabled === false && (
           <p className="text-xs text-warning-700 bg-warning-50 border border-[rgba(245,158,11,0.25)] rounded-md px-3 py-2">
-            Meeting integration isn't switched on for this deployment yet (set <code className="font-mono">RECALL_API_KEY</code> on the server).
+            Meeting integration isn't switched on for this deployment yet — set{" "}
+            {(missing.length ? missing : ["RECALL_API_KEY", "AETHEX_API_KEY"]).map((k, i) => (
+              <span key={k}>
+                {i > 0 && " and "}
+                <code className="font-mono">{k}</code>
+              </span>
+            ))}{" "}
+            on the server, then redeploy.
           </p>
         )}
 

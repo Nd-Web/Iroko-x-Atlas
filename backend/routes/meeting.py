@@ -54,8 +54,8 @@ def _speechify(text: str) -> str:
 
 @router.get("/config")
 async def meeting_config(current_user: User = Depends(get_current_user)):
-    """Tell the UI whether the meeting feature is switched on (RECALL_API_KEY set)."""
-    return {"enabled": ms.configured()}
+    """Tell the UI whether the meeting feature is switched on, and if not, which keys are missing."""
+    return ms.config_status()
 
 
 @router.post("/join")
