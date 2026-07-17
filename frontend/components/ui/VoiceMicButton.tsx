@@ -23,12 +23,12 @@ export default function VoiceMicButton({
         style={{
           background: "rgba(255,255,255,0.04)",
           border:     "1px solid rgba(255,255,255,0.08)",
-          color:      "#9CA3AF",
+          color:      "#9C9CA6",
         }}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="animate-spin">
           <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.2)" strokeWidth="2"/>
-          <path d="M7 1.5a5.5 5.5 0 0 1 5.5 5.5" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M7 1.5a5.5 5.5 0 0 1 5.5 5.5" stroke="#9C9CA6" strokeWidth="2" strokeLinecap="round"/>
         </svg>
         Checking…
       </button>

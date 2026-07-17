@@ -145,9 +145,9 @@ export default function ComplianceReportsPage() {
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" onClick={() => setModal(null)}>
-          <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
           <div
-            className="relative bg-white rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
+            className="relative bg-[#1A1A1F] rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
             style={{ maxWidth: "480px" }}
             onClick={e => e.stopPropagation()}
           >

@@ -23,12 +23,12 @@ export default function OfflinePage() {
     <AppShell title="Offline bundle manager" subtitle="Pre-download document bundles for field edge-cache mode">
       <div className="max-w-[680px] flex flex-col gap-4 mx-auto lg:mx-0">
         {/* Info banner */}
-        <div className="flex gap-3 px-[18px] py-[14px] bg-brand-50 border border-brand-100 rounded-lg">
+        <div className="flex gap-3 px-[18px] py-[14px] bg-info-50 border border-info-100 rounded-lg">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0 mt-[1px]">
-            <circle cx="9" cy="9" r="7.5" stroke="var(--color-brand-600)" strokeWidth="1.4"/>
-            <path d="M9 8.25V12M9 6h.008" stroke="var(--color-brand-600)" strokeWidth="1.4" strokeLinecap="round"/>
+            <circle cx="9" cy="9" r="7.5" stroke="var(--color-info-500)" strokeWidth="1.4"/>
+            <path d="M9 8.25V12M9 6h.008" stroke="var(--color-info-500)" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
-          <p className="text-[13px] text-brand-800 leading-[1.6] m-0">
+          <p className="text-[13px] text-info-700 leading-[1.6] m-0">
             Bundles sync automatically when you return to coverage.
           </p>
         </div>
@@ -45,7 +45,7 @@ export default function OfflinePage() {
               onClick={() => setModalOpen("build")}
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M7 2v6M4 6l3-3 3 3M2 10h10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 2v6M4 6l3-3 3 3M2 10h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               Build new
             </button>
@@ -105,9 +105,9 @@ export default function OfflinePage() {
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" onClick={() => setModalOpen(null)}>
-          <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
           <div
-            className="relative bg-white rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
+            className="relative bg-[#1A1A1F] rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
             style={{ maxWidth: "440px" }}
             onClick={e => e.stopPropagation()}
           >

@@ -46,10 +46,10 @@ export default function UserManagementContent() {
   ).length;
 
   const STATS = [
-    { label: "Total users",     value: isLoading ? null : String(totalCount),                      sub: "across all roles",    accent: "#4A55D4" },
-    { label: "Active",          value: isLoading ? null : String(activeCount),                     sub: "currently enabled",   accent: "#17B26A" },
-    { label: "Pending invites", value: invitesLoading ? null : String(pendingCount),               sub: "awaiting acceptance", accent: "#F79009" },
-    { label: "Suspended",       value: isLoading ? null : String(suspendedCount),                  sub: "access revoked",      accent: "#F04438" },
+    { label: "Total users",     value: isLoading ? null : String(totalCount),                      sub: "across all roles",    accent: "#38BDF8" },
+    { label: "Active",          value: isLoading ? null : String(activeCount),                     sub: "currently enabled",   accent: "#22C55E" },
+    { label: "Pending invites", value: invitesLoading ? null : String(pendingCount),               sub: "awaiting acceptance", accent: "#F59E0B" },
+    { label: "Suspended",       value: isLoading ? null : String(suspendedCount),                  sub: "access revoked",      accent: "#EF4444" },
   ];
 
   const uniqueRoles = useMemo(
@@ -231,9 +231,9 @@ export default function UserManagementContent() {
 
       {suspendTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" onClick={() => setSuspendTarget(null)}>
-          <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
           <div
-            className="relative bg-white rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
+            className="relative bg-[#1A1A1F] rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
             style={{ maxWidth: "440px" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -274,7 +274,7 @@ export default function UserManagementContent() {
                 Cancel
               </button>
               <button
-                className="bg-danger-600 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-danger-700 transition-colors disabled:opacity-60"
+                className="bg-danger-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-danger-600 transition-colors disabled:opacity-60"
                 onClick={handleSuspendConfirm}
                 disabled={deactivate.isPending}
               >

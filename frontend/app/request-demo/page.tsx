@@ -7,13 +7,13 @@ const LOGO = (
   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
     <div style={{
       width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-      background: "#4A55D4",
-      boxShadow: "0 0 0 1px rgba(255,255,255,0.12), 0 4px 12px rgba(74,85,212,0.4)",
+      background: "#FFCB05",
+      boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
       display: "flex", alignItems: "center", justifyContent: "center",
     }}>
       <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-        <path d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
-        <circle cx="11" cy="10.5" r="2.25" fill="white" />
+        <path d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z" stroke="#0A0A0B" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
+        <circle cx="11" cy="10.5" r="2.25" fill="#0A0A0B" />
       </svg>
     </div>
     <div>
@@ -60,10 +60,10 @@ export default function RequestDemoPage() {
   /* ── shared styles ── */
   const field: React.CSSProperties = {
     width: "100%", boxSizing: "border-box",
-    background: "#131825",
+    background: "#131316",
     border: "1px solid rgba(255,255,255,0.14)",
     borderRadius: 10, padding: "12px 14px",
-    fontSize: 14, color: "#fff",
+    fontSize: 14, color: "#F7F7F9",
     outline: "none",
     fontFamily: "inherit",
   };
@@ -76,7 +76,7 @@ export default function RequestDemoPage() {
   /* ── success screen ── */
   if (submitted) {
     return (
-      <div style={{ background: "#080B14", minHeight: "100vh", fontFamily: "DM Sans, ui-sans-serif, sans-serif", color: "#fff", display: "flex", flexDirection: "column" }}>
+      <div style={{ background: "#0A0A0B", minHeight: "100vh", fontFamily: "DM Sans, ui-sans-serif, sans-serif", color: "#F7F7F9", display: "flex", flexDirection: "column" }}>
         <header style={{ height: 56, display: "flex", alignItems: "center", padding: "0 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <Link href="/" style={{ textDecoration: "none" }}>{LOGO}</Link>
         </header>
@@ -98,16 +98,16 @@ export default function RequestDemoPage() {
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
               {demoTypes.includes("live")     && <span style={pill("#818CF8")}>Live demo</span>}
               {demoTypes.includes("recorded") && <span style={pill("#34D399")}>Recorded demo</span>}
-              {demoTypes.includes("deck")     && <span style={pill("#F59E0B")}>Slide deck</span>}
+              {demoTypes.includes("deck")     && <span style={pill("#FB923C")}>Slide deck</span>}
             </div>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", lineHeight: 1.7, margin: "0 0 32px" }}>
               A specialist from the Iroko AI team will reach out to <strong style={{ color: "rgba(255,255,255,0.7)" }}>{form.email}</strong> within 24 hours.
             </p>
             <Link href="/" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
-              fontSize: 14, fontWeight: 600, color: "#fff", textDecoration: "none",
+              fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
               padding: "10px 22px", borderRadius: 10,
-              background: "#4A55D4", border: "1px solid rgba(255,255,255,0.12)",
+              background: "#FFCB05",
             }}>
               ← Back to home
             </Link>
@@ -118,28 +118,21 @@ export default function RequestDemoPage() {
   }
 
   return (
-    <div style={{ background: "#080B14", minHeight: "100vh", fontFamily: "DM Sans, ui-sans-serif, sans-serif", color: "#fff" }}>
-
-      {/* Glow */}
-      <div style={{
-        position: "fixed", top: -160, left: "50%", transform: "translateX(-50%)",
-        width: 800, height: 600, borderRadius: "50%", pointerEvents: "none",
-        background: "radial-gradient(circle, rgba(74,85,212,0.18) 0%, transparent 70%)",
-      }} />
+    <div style={{ background: "#0A0A0B", minHeight: "100vh", fontFamily: "DM Sans, ui-sans-serif, sans-serif", color: "#F7F7F9" }}>
 
       {/* Navbar */}
       <header style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
         height: 56, display: "flex", alignItems: "center", padding: "0 24px",
-        background: "rgba(8,11,20,0.9)", backdropFilter: "blur(16px)",
+        background: "rgba(10,10,11,0.9)", backdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
         <div style={{ maxWidth: 1100, width: "100%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/" style={{ textDecoration: "none" }}>{LOGO}</Link>
           <Link href="/login" style={{
-            fontSize: 13, fontWeight: 600, color: "#fff", textDecoration: "none",
+            fontSize: 13, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
             padding: "7px 16px", borderRadius: 8,
-            background: "#4A55D4", border: "1px solid rgba(255,255,255,0.12)",
+            background: "#FFCB05",
           }}>
             Sign in
           </Link>
@@ -154,8 +147,8 @@ export default function RequestDemoPage() {
             <div style={{
               display: "inline-flex", alignItems: "center", gap: 8,
               padding: "5px 12px", borderRadius: 99, marginBottom: 20,
-              background: "rgba(74,85,212,0.12)", border: "1px solid rgba(74,85,212,0.28)",
-              fontSize: 12, fontWeight: 600, color: "#818CF8",
+              background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)",
+              fontSize: 12, fontWeight: 600, color: "#38BDF8",
             }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", display: "inline-block" }} />
               Invite-only · No payment needed
@@ -179,7 +172,7 @@ export default function RequestDemoPage() {
                 </Field>
                 <Field label="Company size">
                   <select name="size" value={form.size} onChange={handleChange}
-                    style={{ ...field, color: form.size ? "#fff" : "rgba(255,255,255,0.35)" }}>
+                    style={{ ...field, color: form.size ? "#F7F7F9" : "#7A7A85" }}>
                     <option value="">Select size</option>
                     <option>1 – 10 employees</option>
                     <option>11 – 50 employees</option>
@@ -191,7 +184,7 @@ export default function RequestDemoPage() {
               </div>
               <Field label="Organisation type">
                 <select name="orgType" value={form.orgType} onChange={handleChange}
-                  style={{ ...field, color: form.orgType ? "#fff" : "rgba(255,255,255,0.35)" }}>
+                  style={{ ...field, color: form.orgType ? "#F7F7F9" : "#7A7A85" }}>
                   <option value="">Select type (optional)</option>
                   <option>Large enterprise — telecom / operations</option>
                   <option>Large enterprise — other</option>
@@ -214,7 +207,7 @@ export default function RequestDemoPage() {
                 </Field>
                 <Field label="Role *">
                   <select required name="role" value={form.role} onChange={handleChange}
-                    style={{ ...field, color: form.role ? "#fff" : "rgba(255,255,255,0.35)" }}>
+                    style={{ ...field, color: form.role ? "#F7F7F9" : "#7A7A85" }}>
                     <option value="" disabled>Select role</option>
                     <option>Head of Operations</option>
                     <option>CIO / CTO / IT Lead</option>
@@ -273,13 +266,13 @@ export default function RequestDemoPage() {
                   onToggle={() => toggle("deck")}
                   icon={
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <rect x="2" y="2.5" width="14" height="13" rx="2" stroke="#F59E0B" strokeWidth="1.4"/>
-                      <path d="M5 7h8M5 10h6M5 13h4" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round"/>
+                      <rect x="2" y="2.5" width="14" height="13" rx="2" stroke="#FB923C" strokeWidth="1.4"/>
+                      <path d="M5 7h8M5 10h6M5 13h4" stroke="#FB923C" strokeWidth="1.4" strokeLinecap="round"/>
                     </svg>
                   }
                   title="Slide deck"
                   desc="Download our product overview and capability deck — shareable with your leadership team."
-                  color="#F59E0B"
+                  color="#FB923C"
                 />
               </div>
               {demoTypes.length === 0 && (
@@ -303,11 +296,10 @@ export default function RequestDemoPage() {
               disabled={loading || demoTypes.length === 0}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                fontSize: 15, fontWeight: 700, color: "#fff",
+                fontSize: 15, fontWeight: 700, color: "#0A0A0B",
                 padding: "14px 24px", borderRadius: 10, width: "100%",
-                background: (loading || demoTypes.length === 0) ? "rgba(74,85,212,0.45)" : "#4A55D4",
-                border: "1px solid rgba(255,255,255,0.12)",
-                boxShadow: demoTypes.length > 0 ? "0 0 28px rgba(74,85,212,0.35)" : "none",
+                background: (loading || demoTypes.length === 0) ? "rgba(255,203,5,0.4)" : "#FFCB05",
+                border: "none",
                 cursor: (loading || demoTypes.length === 0) ? "not-allowed" : "pointer",
                 marginTop: 8,
               }}
@@ -385,7 +377,7 @@ function DemoOption({
       style={{
         display: "flex", alignItems: "flex-start", gap: 14,
         padding: "16px 18px", borderRadius: 12, cursor: "pointer",
-        background: active ? `${color}10` : "#0F1420",
+        background: active ? `${color}10` : "#131316",
         border: active ? `1.5px solid ${color}55` : "1.5px solid rgba(255,255,255,0.09)",
         textAlign: "left", width: "100%",
         transition: "border-color 0.15s, background 0.15s",
@@ -415,7 +407,7 @@ function DemoOption({
       </div>
       {/* Text */}
       <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>{title}</p>
+        <p style={{ fontSize: 14, fontWeight: 700, color: "#F7F7F9", margin: "0 0 4px" }}>{title}</p>
         <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0, lineHeight: 1.55 }}>{desc}</p>
       </div>
     </button>

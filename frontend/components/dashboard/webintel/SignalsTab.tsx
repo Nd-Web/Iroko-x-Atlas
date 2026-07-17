@@ -25,13 +25,13 @@ const SignalCard: FC<{ signal: Signal; category: SignalCategory }> = ({
 
   return (
     <div
-      className={`group relative rounded-xl p-4 transition-all duration-200 hover:translate-y-[-1px] bg-[#141824] border border-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.3)] border-l-[3px] ${meta.leftBorder}`}
+      className={`group relative rounded-xl p-4 transition-all duration-200 hover:translate-y-[-1px] bg-gray-50 border border-border-default shadow-[0_2px_8px_rgba(0,0,0,0.3)] border-l-[3px] ${meta.leftBorder}`}
     >
       {/* Header row */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <PulsingDot dotClass={meta.dot} />
-          <p className="text-[13px] font-semibold leading-snug line-clamp-2 text-[#E5E7EB]">
+          <p className="text-[13px] font-semibold leading-snug line-clamp-2 text-gray-800">
             {signal.title}
           </p>
         </div>
@@ -46,7 +46,7 @@ const SignalCard: FC<{ signal: Signal; category: SignalCategory }> = ({
 
       {/* Snippet */}
       {snippet && (
-        <p className="text-[12px] leading-relaxed mb-3 text-[#6B7280]">
+        <p className="text-[12px] leading-relaxed mb-3 text-gray-400">
           {truncate(snippet, 120)}
         </p>
       )}
@@ -55,7 +55,7 @@ const SignalCard: FC<{ signal: Signal; category: SignalCategory }> = ({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           {signal.source && (
-            <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-white/[0.05] border border-white/[0.08] text-[#9CA3AF]">
+            <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-white/[0.05] border border-border-default text-gray-500">
               {truncate(signal.source, 24)}
             </span>
           )}
@@ -68,7 +68,7 @@ const SignalCard: FC<{ signal: Signal; category: SignalCategory }> = ({
         <div className="flex items-center gap-3">
           <Link
             href={`/chat?q=${encodeURIComponent(`Tell me about this web signal: ${signal.title}`)}`}
-            className="text-[10px] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-400 hover:text-emerald-300"
+            className="text-[10px] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-info-500 hover:text-info-700"
           >
             Chat
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -80,7 +80,7 @@ const SignalCard: FC<{ signal: Signal; category: SignalCategory }> = ({
               href={signal.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-[#3B7BF6]"
+              className="text-[10px] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-info-500 hover:text-info-700"
             >
               Source
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -93,7 +93,7 @@ const SignalCard: FC<{ signal: Signal; category: SignalCategory }> = ({
 
       {/* Detected at */}
       {signal.detected_at && (
-        <p className="text-[10px] mt-2 pt-2 border-t border-white/[0.04] text-[#4B5563]">
+        <p className="text-[10px] mt-2 pt-2 border-t border-white/[0.04] text-gray-400">
           {formatTime(signal.detected_at)}
         </p>
       )}
@@ -123,7 +123,7 @@ const CategoryColumn: FC<{
   return (
     <div className="flex flex-col min-w-0">
       {/* Column header */}
-      <div className="flex items-center gap-2 px-1 mb-3 pb-3 border-b border-white/[0.06]">
+      <div className="flex items-center gap-2 px-1 mb-3 pb-3 border-b border-border-default">
         <span className={meta.text} aria-hidden="true">{meta.icon}</span>
         <span className={`text-[12px] font-bold uppercase tracking-wider ${meta.text}`}>
           {meta.label}
@@ -142,9 +142,9 @@ const CategoryColumn: FC<{
             <SkeletonCard />
           </>
         ) : signals.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 rounded-xl gap-2 bg-[#141824] border border-dashed border-white/[0.06]">
+          <div className="flex flex-col items-center justify-center py-10 rounded-xl gap-2 bg-gray-50 border border-dashed border-border-default">
             <span className={`${meta.text} opacity-40`} aria-hidden="true">{meta.icon}</span>
-            <p className="text-[11px] text-[#4B5563]">No signals</p>
+            <p className="text-[11px] text-gray-400">No signals</p>
           </div>
         ) : (
           signals.map((s, i) => (
@@ -189,7 +189,7 @@ const LiveSignalsTab: FC<{
           ) : (
             <LiveBadge />
           )}
-          <p className="text-[13px] text-[#6B7280]">
+          <p className="text-[13px] text-gray-400">
             {loading
               ? "Fetching signals across 5 intelligence domains…"
               : isMock
@@ -200,7 +200,7 @@ const LiveSignalsTab: FC<{
         <button
           onClick={onRefresh}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] bg-[rgba(59,123,246,0.1)] border border-[rgba(59,123,246,0.25)] text-[#3B7BF6] shadow-[0_0_16px_rgba(59,123,246,0.25)] disabled:shadow-none"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] bg-brand-500 hover:bg-brand-400 border border-transparent text-[#0A0A0B]"
         >
           <svg
             width="13" height="13" viewBox="0 0 16 16" fill="none"

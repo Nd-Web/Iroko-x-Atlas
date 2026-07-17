@@ -644,20 +644,20 @@ const ComplianceTab: FC = () => {
               )}
             </button>
           </div>
-          <p className="text-[11px] mt-3 text-[#4B5563]">
+          <p className="text-[11px] mt-3 text-gray-400">
             Pass as{" "}
-            <code className="px-1 py-0.5 rounded text-[10.5px] font-mono bg-[#141824] text-[#3B7BF6]">
+            <code className="px-1 py-0.5 rounded text-[10.5px] font-mono bg-gray-50 text-info-500">
               Authorization: Bearer &lt;key&gt;
             </code>
             . Regenerating immediately invalidates the old key.
           </p>
         </>
       ) : (
-        <p className="text-[12px] text-[#9CA3AF]">
+        <p className="text-[12px] text-gray-500">
           No API key yet.{" "}
           <button
             onClick={handleGenerateKey}
-            className="underline text-[#3B7BF6] bg-transparent border-none cursor-pointer"
+            className="underline text-info-500 bg-transparent border-none cursor-pointer"
           >
             Generate one
           </button>{" "}

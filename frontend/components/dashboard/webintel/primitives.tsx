@@ -22,7 +22,7 @@ export const SkeletonLine: FC<{ w?: string }> = ({ w = "w-full" }) => (
 );
 
 export const SkeletonCard: FC = () => (
-  <div className="rounded-xl p-4 space-y-3 bg-[#141824] border border-white/[0.06]">
+  <div className="rounded-xl p-4 space-y-3 bg-gray-50 border border-border-default">
     <SkeletonLine w="w-3/4" />
     <SkeletonLine w="w-full" />
     <SkeletonLine w="w-1/2" />
@@ -41,7 +41,7 @@ export const ErrorBanner: FC<{ message: string; onDismiss?: () => void }> = ({
     {onDismiss && (
       <button
         onClick={onDismiss}
-        className="text-[#EF4444] hover:text-white transition-colors shrink-0 mt-0.5"
+        className="text-[#EF4444] hover:text-gray-900 transition-colors shrink-0 mt-0.5"
         aria-label="Dismiss error"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -70,22 +70,22 @@ export const TabButton: FC<{
 }> = ({ active, onClick, icon, label, count }) => (
   <button
     onClick={onClick}
-    className={`relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B7BF6] border-b-2 ${
+    className={`relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 border-b-2 ${
       active
-        ? "text-[#E5E7EB] border-[#3B7BF6]"
-        : "text-[#6B7280] border-transparent"
+        ? "text-gray-900 border-brand-500"
+        : "text-gray-400 border-transparent"
     }`}
     aria-selected={active}
     role="tab"
   >
-    <span className={active ? "text-[#3B7BF6]" : "text-[#6B7280]"} aria-hidden="true">
+    <span className={active ? "text-brand-500" : "text-gray-400"} aria-hidden="true">
       {icon}
     </span>
     {label}
     {count !== undefined && count > 0 && (
       <span
         className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
-          active ? "bg-[rgba(59,123,246,0.2)] text-[#3B7BF6]" : "bg-white/[0.06] text-[#9CA3AF]"
+          active ? "bg-brand-50 text-brand-500" : "bg-white/[0.06] text-gray-500"
         }`}
       >
         {count}
@@ -100,9 +100,9 @@ export const StatPill: FC<{
   value: string | number;
   valueClass?: string;
   loading: boolean;
-}> = ({ label, value, valueClass = "text-[#6B7280]", loading }) => (
-  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#141824] border border-white/[0.06]">
-    <span className="text-[10px] font-bold uppercase tracking-wider text-[#4B5563]">
+}> = ({ label, value, valueClass = "text-gray-400", loading }) => (
+  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 border border-border-default">
+    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
       {label}
     </span>
     {loading ? (

@@ -153,7 +153,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   {/* Collapsed tooltip */}
                   {collapsed && (
                     <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-50">
-                      <div className="bg-[#1a1d27] border border-white/10 text-[#E5E7EB] text-xs font-medium px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap">
+                      <div className="bg-[#1A1A1F] border border-border-default text-gray-800 text-xs font-medium px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap">
                         {label}
                       </div>
                     </div>

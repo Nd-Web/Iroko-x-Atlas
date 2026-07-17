@@ -3,18 +3,18 @@ import AppShell from "@/components/layout/AppShell";
 export const metadata = { title: "System Settings" };
 
 const ROUTER = [
-  { label: "Single-fact lookup",       tier: "Standard",   desc: "High volume, low-ambiguity queries",              color: "#17B26A" },
-  { label: "Synthesis (3–10 chunks)",  tier: "Advanced",   desc: "Multi-source answers requiring reasoning",         color: "#4A55D4" },
-  { label: "High-stakes / compliance", tier: "Compliance", desc: "Regulator-facing, dual-model critique applied",   color: "#F79009" },
-  { label: "Multilingual generation",  tier: "Advanced",   desc: "Pidgin, Yoruba, Hausa, Igbo outputs",             color: "#4A55D4" },
+  { label: "Single-fact lookup",       tier: "Standard",   desc: "High volume, low-ambiguity queries",              color: "#34D399" },
+  { label: "Synthesis (3–10 chunks)",  tier: "Advanced",   desc: "Multi-source answers requiring reasoning",         color: "#38BDF8" },
+  { label: "High-stakes / compliance", tier: "Compliance", desc: "Regulator-facing, dual-model critique applied",   color: "#FB923C" },
+  { label: "Multilingual generation",  tier: "Advanced",   desc: "Pidgin, Yoruba, Hausa, Igbo outputs",             color: "#38BDF8" },
 ];
 
 const ATLAS_AGENTS = [
-  { name: "Strategist", role: "Orchestrator",   desc: "Decomposes complex queries and synthesises responses", color: "#4A55D4" },
-  { name: "Researcher", role: "Retrieval",      desc: "Executes hybrid search across Azure AI Search",         color: "#2E90FA" },
-  { name: "Analyst",    role: "Data Analysis",  desc: "Extracts quantitative insights and identifies patterns", color: "#17B26A" },
-  { name: "Scribe",     role: "Generation",     desc: "Produces cited reports and compliance drafts",         color: "#F79009" },
-  { name: "Watchdog",   role: "Hallucination",  desc: "Verifies citation coverage and retrieval confidence",   color: "#F04438" },
+  { name: "Strategist", role: "Orchestrator",   desc: "Decomposes complex queries and synthesises responses", color: "#818CF8" },
+  { name: "Researcher", role: "Retrieval",      desc: "Executes hybrid search across Azure AI Search",         color: "#38BDF8" },
+  { name: "Analyst",    role: "Data Analysis",  desc: "Extracts quantitative insights and identifies patterns", color: "#34D399" },
+  { name: "Scribe",     role: "Generation",     desc: "Produces cited reports and compliance drafts",         color: "#FB923C" },
+  { name: "Watchdog",   role: "Hallucination",  desc: "Verifies citation coverage and retrieval confidence",   color: "#F87171" },
 ];
 
 const SOVEREIGNTY = [

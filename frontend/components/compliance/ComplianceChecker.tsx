@@ -18,38 +18,38 @@ interface ComplianceResult {
 
 const VERDICT_CONFIG = {
   "GO": {
-    border: "#067647",
-    bg: "#ECFDF3",
-    badgeBg: "#DCFAE6",
-    badgeText: "#067647",
+    border: "#22C55E",
+    bg: "rgba(34, 197, 94, 0.08)",
+    badgeBg: "rgba(34, 197, 94, 0.16)",
+    badgeText: "#4ADE80",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke="#067647" strokeWidth="1.5" />
-        <path d="M6.5 10l2.5 2.5 4.5-5" stroke="#067647" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="10" cy="10" r="9" stroke="#4ADE80" strokeWidth="1.5" />
+        <path d="M6.5 10l2.5 2.5 4.5-5" stroke="#4ADE80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
   "NO-GO": {
-    border: "#B42318",
-    bg: "#FFF1F3",
-    badgeBg: "#FFE4E8",
-    badgeText: "#B42318",
+    border: "#EF4444",
+    bg: "rgba(239, 68, 68, 0.08)",
+    badgeBg: "rgba(239, 68, 68, 0.16)",
+    badgeText: "#F87171",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke="#B42318" strokeWidth="1.5" />
-        <path d="M7 7l6 6M13 7l-6 6" stroke="#B42318" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="10" cy="10" r="9" stroke="#F87171" strokeWidth="1.5" />
+        <path d="M7 7l6 6M13 7l-6 6" stroke="#F87171" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
   },
   "MONITOR": {
-    border: "#B54708",
-    bg: "#FFFAEB",
-    badgeBg: "#FEF0C7",
-    badgeText: "#B54708",
+    border: "#F59E0B",
+    bg: "rgba(245, 158, 11, 0.08)",
+    badgeBg: "rgba(245, 158, 11, 0.16)",
+    badgeText: "#FBBF24",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M10 2L18.5 17H1.5L10 2Z" stroke="#B54708" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M10 8v4M10 14.5v.5" stroke="#B54708" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M10 2L18.5 17H1.5L10 2Z" stroke="#FBBF24" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M10 8v4M10 14.5v.5" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -115,7 +115,7 @@ export default function ComplianceChecker() {
   // Still hydrating — show nothing rather than a false "please log in"
   if (userLoading) {
     return (
-      <div className="rounded-xl border border-border-default bg-white shadow-sm px-6 py-8">
+      <div className="rounded-xl border border-border-default bg-surface-card shadow-sm px-6 py-8">
         <div className="h-4 w-48 rounded bg-gray-100 animate-pulse" />
       </div>
     );
@@ -123,7 +123,7 @@ export default function ComplianceChecker() {
 
   if (!user) {
     return (
-      <div className="rounded-xl border border-border-default bg-white shadow-sm px-6 py-8 text-center">
+      <div className="rounded-xl border border-border-default bg-surface-card shadow-sm px-6 py-8 text-center">
         <p className="text-sm text-gray-500">Please log in to run compliance checks.</p>
       </div>
     );
@@ -132,7 +132,7 @@ export default function ComplianceChecker() {
   const cfg = result ? VERDICT_CONFIG[result.verdict] : null;
 
   return (
-    <div className="rounded-xl border border-border-default bg-white shadow-sm px-6 py-6 flex flex-col gap-5">
+    <div className="rounded-xl border border-border-default bg-surface-card shadow-sm px-6 py-6 flex flex-col gap-5">
       {/* Input */}
       <textarea
         rows={4}
@@ -152,7 +152,7 @@ export default function ComplianceChecker() {
             <button
               key={q}
               onClick={() => { setInputText(q); setResult(null); setError(null); }}
-              className="text-[12px] text-brand-700 bg-brand-50 border border-brand-100 rounded-full px-3 py-[5px] hover:bg-brand-100 transition-colors text-left"
+              className="text-[12px] text-gray-600 bg-gray-50 border border-border-default rounded-full px-3 py-[5px] hover:bg-gray-100 hover:text-gray-800 transition-colors text-left"
             >
               {q}
             </button>
@@ -255,7 +255,7 @@ export default function ComplianceChecker() {
           <button
             onClick={handleSeal}
             disabled={sealed}
-            className={`self-start text-[12.5px] font-semibold px-4 py-[7px] rounded-lg border transition-colors ${sealed ? "text-success-700 bg-success-50 border-success-100 cursor-default" : "text-brand-700 bg-white border-brand-200 hover:bg-brand-50"}`}
+            className={`self-start text-[12.5px] font-semibold px-4 py-[7px] rounded-lg border transition-colors ${sealed ? "text-success-700 bg-success-50 border-success-100 cursor-default" : "text-brand-500 bg-surface-card border-brand-200 hover:bg-brand-50"}`}
           >
             {sealed ? "✓ Sealed in audit trail" : "Seal in Audit Trail"}
           </button>

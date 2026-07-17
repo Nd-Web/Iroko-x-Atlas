@@ -183,9 +183,9 @@ export default function PendingInvitesContent() {
           className="fixed inset-0 z-50 flex items-center justify-center p-6"
           onClick={() => !revoke.isPending && setRevokeTarget(null)}
         >
-          <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
           <div
-            className="relative bg-white rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
+            className="relative bg-[#1A1A1F] rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
             style={{ maxWidth: "400px" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -224,7 +224,7 @@ export default function PendingInvitesContent() {
                 Cancel
               </button>
               <button
-                className="bg-danger-600 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-danger-700 transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="bg-danger-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-danger-600 transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                 onClick={handleRevoke}
                 disabled={revoke.isPending}
               >

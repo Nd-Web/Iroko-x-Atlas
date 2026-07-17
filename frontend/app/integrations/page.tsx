@@ -40,7 +40,7 @@ const CONNECTOR_TYPES: {
     name: "OneDrive",
     description: "Sync files and documents from Microsoft OneDrive",
     color: "#0078D4",
-    bg: "#EBF4FF",
+    bg: "rgba(0, 120, 212, 0.12)",
     icon: (
       // OneDrive logo — two overlapping clouds in Microsoft blue
       <svg width="22" height="16" viewBox="0 0 21 14" fill="none">
@@ -56,7 +56,7 @@ const CONNECTOR_TYPES: {
     name: "SharePoint",
     description: "Connect to SharePoint sites and document libraries",
     color: "#038387",
-    bg: "#E6F7F7",
+    bg: "rgba(27, 187, 187, 0.12)",
     icon: (
       // SharePoint logo — two overlapping circles with S cutout
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -72,7 +72,7 @@ const CONNECTOR_TYPES: {
     name: "Microsoft Teams",
     description: "Import conversations and files from Teams channels",
     color: "#5558AF",
-    bg: "#EEEEF7",
+    bg: "rgba(123, 131, 235, 0.14)",
     icon: (
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
         <rect x="2" y="8" width="12" height="11" rx="2.5" fill="#5558AF"/>
@@ -88,7 +88,7 @@ const CONNECTOR_TYPES: {
     name: "Slack",
     description: "Sync messages and files from Slack channels and workspaces",
     color: "#4A154B",
-    bg: "#FDF0FF",
+    bg: "rgba(255, 255, 255, 0.06)",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52z" fill="#E01E5A"/>
@@ -112,7 +112,7 @@ function statusBadge(status: ConnectorStatus) {
   const map: Record<ConnectorStatus, { label: string; cls: string }> = {
     active:       { label: "Active",       cls: "bg-success-50 text-success-700" },
     pending:      { label: "Pending",      cls: "bg-warning-50 text-warning-700" },
-    syncing:      { label: "Syncing",      cls: "bg-brand-50 text-brand-700" },
+    syncing:      { label: "Syncing",      cls: "bg-info-50 text-info-700" },
     error:        { label: "Error",        cls: "bg-danger-50 text-danger-700" },
     disconnected: { label: "Disconnected", cls: "bg-gray-100 text-gray-500" },
   };
@@ -225,10 +225,10 @@ export default function IntegrationsPage() {
   const totalDocs  = connectors.reduce((s, c) => s + (c.document_count ?? 0), 0);
 
   const stats = [
-    { label: "Connected sources", value: total,                    accent: "#4A55D4" },
-    { label: "Active",            value: active,                   accent: "#17B26A" },
-    { label: "Pending",           value: pending,                  accent: "#F79009" },
-    { label: "Documents ingested",value: totalDocs.toLocaleString(), accent: "#2E90FA" },
+    { label: "Connected sources", value: total,                    accent: "#FFCB05" },
+    { label: "Active",            value: active,                   accent: "#22C55E" },
+    { label: "Pending",           value: pending,                  accent: "#F59E0B" },
+    { label: "Documents ingested",value: totalDocs.toLocaleString(), accent: "#38BDF8" },
   ];
 
   const connectedTypes = new Set(connectors.map((c) => c.connector_type));
@@ -278,7 +278,7 @@ export default function IntegrationsPage() {
           <div className="px-5 py-10 text-center">
             <div className="size-10 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2v5M9 11v5M2 9h5m6 0h3" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M9 2v5M9 11v5M2 9h5m6 0h3" stroke="#4A4A54" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
             </div>
             <p className="text-[13px] text-gray-400">No integrations connected yet</p>
@@ -388,9 +388,9 @@ export default function IntegrationsPage() {
       {/* Disconnect confirm modal */}
       {confirmDisconnect && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setConfirmDisconnect(null)}>
-          <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
           <div
-            className="relative bg-white rounded-xl shadow-lg border border-border-default w-full max-w-sm p-6"
+            className="relative bg-[#1A1A1F] rounded-xl shadow-lg border border-border-default w-full max-w-sm p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-[15px] font-semibold text-gray-900 mb-2">Disconnect integration?</h2>
@@ -406,7 +406,7 @@ export default function IntegrationsPage() {
                 Cancel
               </button>
               <button
-                className="flex-1 py-2 px-4 rounded-lg bg-danger-600 text-white text-[13px] font-semibold hover:bg-danger-700 transition-colors"
+                className="flex-1 py-2 px-4 rounded-lg btn-danger text-[13px] font-semibold transition-colors"
                 onClick={() => handleDisconnect(confirmDisconnect)}
               >
                 Disconnect

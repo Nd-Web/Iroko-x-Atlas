@@ -61,7 +61,7 @@ function SLAGauge({ sla }: { sla: typeof SLA_INDICATORS[0] }) {
       <div className="flex items-center justify-between mb-3">
         <span className="text-[11px] text-gray-500 font-medium">{sla.name}</span>
         <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", passing ? "text-emerald-400 bg-emerald-400/10" : "text-red-400 bg-red-400/10")}>
-          {passing ? "✓ PASS" : "✗ BREACH"}
+          {passing ? "PASS" : "BREACH"}
         </span>
       </div>
       <div className="flex items-baseline gap-1.5 mb-2">
@@ -221,7 +221,7 @@ export default function NOCPage() {
                     </div>
                     <div className="flex flex-col gap-1.5 shrink-0">
                       {alert.status === "resolved" ? (
-                        <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg text-emerald-400 bg-emerald-400/10 border border-emerald-400/20">✓ Resolved</span>
+                        <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg text-emerald-400 bg-emerald-400/10 border border-emerald-400/20">Resolved</span>
                       ) : (
                         <button onClick={() => advanceAlert(alert)}
                           className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg text-brand-500 border border-brand-200 hover:bg-brand-50 transition-all">

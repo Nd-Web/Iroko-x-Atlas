@@ -62,7 +62,7 @@ const VENDOR_WATCH = [
   { id: "v3", title: "Julius Berger — Kano-Kaduna fibre Phase 1 SLA milestone at risk",            sev: "info",     age: "2h" },
 ];
 
-const SEV_COL: Record<string, string> = { critical: "#EF4444", major: "#F97316", warning: "#F59E0B", minor: "#3B7BF6", info: "#3B7BF6" };
+const SEV_COL: Record<string, string> = { critical: "#EF4444", major: "#F97316", warning: "#F59E0B", minor: "#38BDF8", info: "#38BDF8" };
 const STATUS_COL = (s: string) => s === "operational" ? "#10B981" : s === "degraded" ? "#F59E0B" : "#EF4444";
 
 const geoUrl = "/nigeria-states.json";
@@ -97,7 +97,7 @@ function HealthGauge({ score }: { score: number }) {
   const pct = score / 100;
   const col = score >= 90 ? "#10B981" : score >= 75 ? "#F59E0B" : "#EF4444";
   return (
-    <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-white/[0.06]" style={{ background: "#0F1320" }}>
+    <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-border-default bg-surface-card">
       <svg width="140" height="140" viewBox="0 0 140 140" className="-rotate-90">
         <circle cx="70" cy="70" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
         <circle cx="70" cy="70" r={r} fill="none" stroke={col} strokeWidth="10"
@@ -106,13 +106,13 @@ function HealthGauge({ score }: { score: number }) {
       </svg>
       <div className="-mt-20 text-center">
         <div className="text-4xl font-black" style={{ color: col }}>{score.toFixed(1)}</div>
-        <div className="text-[11px] text-[#6B7280] mt-0.5">Network Health</div>
+        <div className="text-[11px] text-gray-400 mt-0.5">Network Health</div>
       </div>
       <div className="grid grid-cols-3 gap-3 mt-6 w-full">
         {[["Ikeja Avail", "82.7%", "#EF4444"], ["NCC Min", "95%", "#F59E0B"], ["Drop-call", "12.4%", "#EF4444"]].map(([k, v, c]) => (
           <div key={k as string} className="text-center">
             <div className="text-[16px] font-black" style={{ color: c as string }}>{v}</div>
-            <div className="text-[10px] text-[#6B7280]">{k}</div>
+            <div className="text-[10px] text-gray-400">{k}</div>
           </div>
         ))}
       </div>
@@ -131,13 +131,13 @@ function NetworkMap({
 }) {
   const [tooltip, setTooltip] = useState<RegionInfo | null>(null);
   return (
-    <div className="rounded-2xl border border-white/[0.06] overflow-hidden flex flex-col" style={{ background: "#0F1320" }}>
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] shrink-0">
-        <h2 className="text-[14px] font-semibold text-[#E5E7EB]">Nigeria Network Health Map</h2>
+    <div className="rounded-2xl border border-border-default bg-surface-card overflow-hidden flex flex-col">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-default shrink-0">
+        <h2 className="text-[14px] font-semibold text-gray-800">Nigeria Network Health Map</h2>
         <div className="flex items-center gap-3 text-[10px]">
           {[["#10B981","Operational"],["#F59E0B","Degraded"],["#EF4444","Down"]].map(([c,l]) => (
             <span key={l as string} className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full" style={{ background: c as string }} /><span className="text-[#6B7280]">{l}</span>
+              <span className="w-2 h-2 rounded-full" style={{ background: c as string }} /><span className="text-gray-400">{l}</span>
             </span>
           ))}
         </div>
@@ -157,12 +157,12 @@ function NetworkMap({
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  fill="#131625"
-                  stroke="#2D3250"
+                  fill="#17171A"
+                  stroke="#2A2A31"
                   strokeWidth={0.5}
                   style={{
                     default: { outline: "none" },
-                    hover: { outline: "none", fill: "#1a1e32" },
+                    hover: { outline: "none", fill: "#1E1E23" },
                     pressed: { outline: "none" }
                   }}
                 />
@@ -205,7 +205,7 @@ function NetworkMap({
                 <text
                   textAnchor="middle"
                   y={-rad - 4}
-                  style={{ fontSize: "8px", fill: "#E5E7EB", fontWeight: 700 }}
+                  style={{ fontSize: "8px", fill: "#EBEBEF", fontWeight: 700 }}
                 >
                   {r.name}
                 </text>
@@ -223,10 +223,10 @@ function NetworkMap({
 
         {tooltip && (
           <div className="absolute bottom-6 left-6 px-4 py-3 rounded-xl text-xs pointer-events-none z-10 shadow-lg"
-            style={{ background: "#1a1d27", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <div className="font-bold text-[#E5E7EB] mb-0.5">{tooltip.name}</div>
-            <div className="text-[9px] text-amber-400 mb-1">{tooltip.label}</div>
-            <div className="text-[#6B7280] space-y-0.5">
+            style={{ background: "#1A1A1F", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div className="font-bold text-gray-800 mb-0.5">{tooltip.name}</div>
+            <div className="text-[9px] text-info-500 mb-1">{tooltip.label}</div>
+            <div className="text-gray-400 space-y-0.5">
               <div>Availability: <span style={{ color: STATUS_COL(tooltip.status) }}>{tooltip.score}%</span></div>
               <div>Sites: {tooltip.sites}</div>
               <div>Active incidents: <span className={tooltip.incidents > 0 ? "text-red-400" : "text-emerald-400"}>{tooltip.incidents}</span></div>
@@ -328,12 +328,12 @@ export default function NetworkIntelligencePage() {
           <HealthGauge score={overallScore} />
 
           {/* Network incident feed */}
-          <div className="rounded-2xl border border-white/[0.06] overflow-hidden" style={{ background: "#0F1320" }}>
-            <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold text-[#E5E7EB]">
+          <div className="rounded-2xl border border-border-default bg-surface-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-border-default flex items-center justify-between">
+              <h3 className="text-[13px] font-semibold text-gray-800">
                 {selectedRegion ? `Incidents — ${selectedRegion}` : "Network Incidents"}
                 {selectedRegion && (
-                  <button onClick={() => setSelectedRegion(null)} className="ml-3 text-[10px] text-gray-400 hover:text-white underline">
+                  <button onClick={() => setSelectedRegion(null)} className="ml-3 text-[10px] text-gray-400 hover:text-gray-900 underline">
                     Clear
                   </button>
                 )}
@@ -342,29 +342,29 @@ export default function NetworkIntelligencePage() {
                 {incidents.filter(i => i.sev === "critical" && (!selectedRegion || inRegion(i.region, selectedRegion))).length} critical
               </span>
             </div>
-            <div className="divide-y divide-white/[0.04]">
+            <div className="divide-y divide-border-default">
               {incidents.filter(i => !selectedRegion || inRegion(i.region, selectedRegion)).map(inc => {
                 const c = SEV_COL[inc.sev] ?? SEV_COL.info;
                 return (
                   <div
                     key={inc.id}
                     onClick={() => router.push(`/chat?q=${encodeURIComponent('Tell me about this network incident: ' + inc.title)}`)}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-white/[0.06] transition-colors cursor-pointer"
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
                     style={{ borderLeft: `3px solid ${c}` }}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-[9px] font-bold text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded-full border border-blue-400/20">NOC</span>
+                        <span className="text-[9px] font-bold text-info-500 bg-info-50 px-1.5 py-0.5 rounded-full border border-info-100">NOC</span>
                         {inc.priority && (
-                          <span className="text-[9px] font-bold text-purple-400 bg-purple-400/10 px-1.5 py-0.5 rounded-full border border-purple-400/20">{inc.priority}</span>
+                          <span className="text-[9px] font-bold text-info-500 bg-info-50 px-1.5 py-0.5 rounded-full border border-info-100">{inc.priority}</span>
                         )}
                       </div>
-                      <p className="text-[12px] text-[#D1D5DB] font-medium truncate hover:text-white">{inc.title}</p>
+                      <p className="text-[12px] text-gray-800 font-medium truncate hover:text-gray-900">{inc.title}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full" style={{ color: c, background: `${c}15` }}>{inc.sev}</span>
-                        {inc.status && <span className="text-[9.5px] font-bold uppercase text-gray-400 bg-white/[0.06] px-1.5 py-0.5 rounded-full">{inc.status}</span>}
-                        {inc.sla && <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-full">SLA breach</span>}
-                        <span className="text-[10px] text-[#4B5563]">{inc.age} ago</span>
+                        {inc.status && <span className="text-[9.5px] font-bold uppercase text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{inc.status}</span>}
+                        {inc.sla && <span className="text-[9px] font-bold text-warning-700 bg-warning-50 px-1.5 py-0.5 rounded-full">SLA breach</span>}
+                        <span className="text-[10px] text-gray-300">{inc.age} ago</span>
                       </div>
                     </div>
                   </div>
@@ -374,29 +374,29 @@ export default function NetworkIntelligencePage() {
           </div>
 
           {/* Vendor SLA watch section */}
-          <div className="rounded-2xl border border-orange-400/20 overflow-hidden" style={{ background: "#0F1320" }}>
+          <div className="rounded-2xl border border-orange-400/20 bg-surface-card overflow-hidden">
             <div className="px-4 py-3 border-b border-orange-400/20 flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold text-[#E5E7EB]">Vendor SLA Watch</h3>
+              <h3 className="text-[13px] font-semibold text-gray-800">Vendor SLA Watch</h3>
               <span className="text-[9.5px] font-bold text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full border border-orange-400/20">Contract Watch</span>
             </div>
-            <div className="divide-y divide-white/[0.04]">
+            <div className="divide-y divide-border-default">
               {VENDOR_WATCH.map(inc => {
                 const c = SEV_COL[inc.sev] ?? SEV_COL.info;
                 return (
                   <div
                     key={inc.id}
                     onClick={() => router.push(`/chat?q=${encodeURIComponent('Tell me about this vendor SLA item: ' + inc.title)}`)}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-white/[0.04] transition-colors cursor-pointer"
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
                     style={{ borderLeft: `3px solid #F97316` }}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <span className="text-[9px] font-bold text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded-full border border-orange-400/20">Vendor SLA</span>
                       </div>
-                      <p className="text-[12px] text-[#D1D5DB] font-medium truncate hover:text-white">{inc.title}</p>
+                      <p className="text-[12px] text-gray-800 font-medium truncate hover:text-gray-900">{inc.title}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full" style={{ color: c, background: `${c}15` }}>{inc.sev}</span>
-                        <span className="text-[10px] text-[#4B5563]">{inc.age} ago</span>
+                        <span className="text-[10px] text-gray-300">{inc.age} ago</span>
                       </div>
                     </div>
                   </div>
@@ -410,9 +410,9 @@ export default function NetworkIntelligencePage() {
         <div className="xl:col-span-2 space-y-4">
           <NetworkMap regions={regions} selectedRegion={selectedRegion} onSelectRegion={setSelectedRegion} />
           {/* NOC Chat */}
-          <div className="rounded-2xl border border-white/[0.06] flex flex-col overflow-hidden" style={{ background: "#0F1320", minHeight: 280 }}>
-            <div className="px-4 py-3 border-b border-white/[0.06]">
-              <h3 className="text-[13px] font-bold text-[#E5E7EB]">📡 Ask Iroko — Network Intelligence</h3>
+          <div className="rounded-2xl border border-border-default bg-surface-card flex flex-col overflow-hidden" style={{ minHeight: 280 }}>
+            <div className="px-4 py-3 border-b border-border-default">
+              <h3 className="text-[13px] font-bold text-gray-800">Ask Iroko — Network Intelligence</h3>
             </div>
             <div className="flex-1 min-h-0">
               <ChatWindow conversationId="net" messages={chatMessages} isStreaming={isLoading} />

@@ -60,13 +60,13 @@ export default function Modal({ open, onClose, title, children, maxWidth = "520p
       className="fixed inset-0 z-50 flex items-center justify-center p-6"
       onClick={onClose}
     >
-      <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" aria-hidden="true" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" aria-hidden="true" />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative bg-white rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
+        className="relative bg-[#1A1A1F] rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
         style={{ maxWidth }}
         onClick={(e) => e.stopPropagation()}
       >

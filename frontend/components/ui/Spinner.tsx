@@ -14,8 +14,8 @@ type NamedColor = "white" | "blue" | "amber";
 const NAMED_SIZES: Record<NamedSize, number> = { sm: 16, md: 24, lg: 40 };
 const NAMED_COLORS: Record<NamedColor, string> = {
   white: "text-white",
-  blue: "text-[#3B7BF6]",
-  amber: "text-[#F59E0B]",
+  blue: "text-info-500",
+  amber: "text-warning-500",
 };
 
 interface SpinnerProps {

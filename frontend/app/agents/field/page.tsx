@@ -2,10 +2,10 @@ import AppShell from "@/components/layout/AppShell";
 import Link from "next/link";
 
 const STATS = [
-  { label: "Monitored clusters",    value: "5",     sub: "Ikeja · Kano · PH · Abuja",  accent: "#4A55D4", color: "#4A55D4" },
-  { label: "Site visits in progress", value: "3",   sub: "IKJ-004 · PHC-001 · Km 142", accent: "#0BA5EC", color: "#0BA5EC" },
-  { label: "Network alerts",        value: "9",     sub: "this month",                 accent: "#F04438", color: "#F04438" },
-  { label: "Offline bundles",       value: "14",    sub: "field engineer downloads",   accent: "#17B26A", color: "#17B26A" },
+  { label: "Monitored clusters",    value: "5",     sub: "Ikeja · Kano · PH · Abuja",  accent: "#38BDF8", color: "#38BDF8" },
+  { label: "Site visits in progress", value: "3",   sub: "IKJ-004 · PHC-001 · Km 142", accent: "#60A5FA", color: "#60A5FA" },
+  { label: "Network alerts",        value: "9",     sub: "this month",                 accent: "#EF4444", color: "#EF4444" },
+  { label: "Offline bundles",       value: "14",    sub: "field engineer downloads",   accent: "#22C55E", color: "#22C55E" },
 ];
 
 const SITES = [

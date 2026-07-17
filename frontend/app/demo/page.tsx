@@ -15,17 +15,17 @@ import Link from "next/link";
 // ─── Design tokens ───────────────────────────────────────────────────────────
 
 const C = {
-  bg:         "#080C18",
-  surface:    "#0F1320",
-  border:     "rgba(255,255,255,0.07)",
-  brand:      "#4A55D4",
-  brandLight: "#818CF8",
+  bg:         "#0A0A0B",
+  surface:    "#131316",
+  border:     "rgba(255,255,255,0.08)",
+  brand:      "#FFCB05",
+  brandLight: "#38BDF8",
   green:      "#10B981",
   amber:      "#F59E0B",
   red:        "#EF4444",
-  muted:      "rgba(255,255,255,0.45)",
-  sub:        "rgba(255,255,255,0.28)",
-  white:      "#E5E7EB",
+  muted:      "#9C9CA6",
+  sub:        "#7A7A85",
+  white:      "#EBEBEF",
 };
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ function LiveLink({ href, children }: { href: string; children: React.ReactNode 
       display: "inline-flex", alignItems: "center", gap: 6,
       fontSize: 12, fontWeight: 700, color: C.brandLight,
       textDecoration: "none", padding: "5px 12px", borderRadius: 8,
-      background: `${C.brand}18`, border: `1px solid ${C.brand}35`,
+      background: `${C.brandLight}15`, border: `1px solid ${C.brandLight}30`,
       transition: "background 0.15s",
     }}>
       <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.green, display: "inline-block", boxShadow: `0 0 6px ${C.green}` }} />
@@ -107,7 +107,7 @@ function Slide0() {
   return (
     <div style={{ maxWidth: 760, margin: "0 auto" }}>
       <Tag color={C.red}>The Problem</Tag>
-      <h1 style={{ fontSize: "clamp(28px,4vw,46px)", fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.03em", margin: "20px 0 18px", color: "#fff" }}>
+      <h1 style={{ fontSize: "clamp(28px,4vw,46px)", fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.03em", margin: "20px 0 18px", color: "#F7F7F9" }}>
         Your answers exist. They&apos;re buried<br />in a thousand documents.
       </h1>
       <p style={{ fontSize: 17, color: C.muted, lineHeight: 1.7, marginBottom: 48 }}>
@@ -134,7 +134,7 @@ function Slide0() {
         <p style={{ margin: 0, fontSize: 14, color: C.white, lineHeight: 1.7 }}>
           <strong style={{ color: C.red }}>The real cost:</strong> a missed contract deadline, an SLA breach
           nobody spotted, or a regulatory filing built on stale data doesn&apos;t just waste hours — it costs
-          real money and, in regulated industries, your <strong style={{ color: "#fff" }}>licence</strong>.
+          real money and, in regulated industries, your <strong style={{ color: "#F7F7F9" }}>licence</strong>.
           Iroko exists to make sure that never happens.
         </p>
       </Card>
@@ -144,17 +144,17 @@ function Slide0() {
 
 function Slide1() {
   const agents = [
-    { icon: "📥", name: "Ingestion", color: C.brandLight, desc: "Pulls documents from wherever they live — SharePoint, drives, email, core systems — into one indexed corpus." },
-    { icon: "📚", name: "Understanding", color: C.green, desc: "Parses and extracts meaning regardless of format: PDFs, scans, spreadsheets, contracts. Nothing stays unreadable." },
-    { icon: "📊", name: "Analytics", color: C.amber, desc: "Real-time dashboards and insight generation — trends, anomalies and exposure surface before anyone asks." },
-    { icon: "🔍", name: "Contextual Q&A", color: C.brand, desc: "Staff ask questions in plain language and get answers sourced from the right document — with citations." },
-    { icon: "🛡️", name: "Compliance", color: C.red, desc: "The same engine configured for regulatory document workflows — deadlines, thresholds and audit-grade logging." },
+    { name: "Ingestion", color: C.brandLight, desc: "Pulls documents from wherever they live — SharePoint, drives, email, core systems — into one indexed corpus." },
+    { name: "Understanding", color: C.green, desc: "Parses and extracts meaning regardless of format: PDFs, scans, spreadsheets, contracts. Nothing stays unreadable." },
+    { name: "Analytics", color: "#FB923C", desc: "Real-time dashboards and insight generation — trends, anomalies and exposure surface before anyone asks." },
+    { name: "Contextual Q&A", color: "#60A5FA", desc: "Staff ask questions in plain language and get answers sourced from the right document — with citations." },
+    { name: "Compliance", color: C.red, desc: "The same engine configured for regulatory document workflows — deadlines, thresholds and audit-grade logging." },
   ];
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto" }}>
       <Tag color={C.brand}>Meet Iroko AI</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         Five agents. One platform.<br />Every document, working for you.
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 36 }}>
@@ -165,7 +165,6 @@ function Slide1() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14, marginBottom: 32 }}>
         {agents.map(a => (
           <Card key={a.name} style={{ padding: "20px", borderTop: `2px solid ${a.color}` }}>
-            <div style={{ fontSize: 26, marginBottom: 10 }}>{a.icon}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: a.color, marginBottom: 6 }}>{a.name} Agent</div>
             <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, margin: 0 }}>{a.desc}</p>
           </Card>
@@ -192,7 +191,7 @@ function Slide2() {
   return (
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
       <Tag color={C.brandLight}>Live Dashboard</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         Your entire operation&apos;s knowledge on one screen
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 36 }}>
@@ -201,7 +200,7 @@ function Slide2() {
 
       {/* Mock dashboard preview */}
       <Card style={{ padding: 0, overflow: "hidden", marginBottom: 28 }}>
-        <div style={{ background: "#060910", padding: "14px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ background: "#0A0A0B", padding: "14px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.white }}>Web Intelligence Dashboard</div>
           <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
             {["Regulatory", "Competitor", "Fraud", "Market"].map(t => (
@@ -218,7 +217,7 @@ function Slide2() {
           ].map(s => {
             const col = s.sev >= 8 ? C.red : s.sev >= 6 ? C.amber : C.brandLight;
             return (
-              <div key={s.title} style={{ background: "#0A0D18", borderRadius: 10, padding: "12px 14px", borderLeft: `3px solid ${col}` }}>
+              <div key={s.title} style={{ background: "#0A0A0B", borderRadius: 10, padding: "12px 14px", borderLeft: `3px solid ${col}` }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: col, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>{s.cat} · {s.sev}/10</div>
                 <div style={{ fontSize: 12, color: C.white, fontWeight: 500 }}>{s.title}</div>
               </div>
@@ -245,7 +244,7 @@ function Slide3() {
   return (
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
       <Tag color={C.green}>The Compliance Configuration</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         GO · MONITOR · NO-GO in under 2 seconds
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 32 }}>
@@ -261,14 +260,14 @@ function Slide3() {
               <p style={{ margin: 0, fontSize: 13, color: C.white, fontWeight: 500, lineHeight: 1.5, flex: 1 }}>"{c.q}"</p>
               <span style={{ fontSize: 11, fontWeight: 800, color: c.color, background: `${c.color}18`, border: `1px solid ${c.color}35`, borderRadius: 6, padding: "3px 10px", whiteSpace: "nowrap", flexShrink: 0 }}>{c.verdict}</span>
             </div>
-            <p style={{ margin: 0, fontSize: 11, color: C.sub, lineHeight: 1.5 }}>📋 {c.reg}</p>
+            <p style={{ margin: 0, fontSize: 11, color: C.sub, lineHeight: 1.5 }}>{c.reg}</p>
           </Card>
         ))}
       </div>
 
       <Card style={{ background: `${C.brand}12`, border: `1px solid ${C.brand}30`, padding: "16px 20px", marginBottom: 24 }}>
         <p style={{ margin: 0, fontSize: 13, color: C.white, lineHeight: 1.7 }}>
-          Every verdict is <strong style={{ color: C.brandLight }}>SHA-256 sealed</strong> to the audit trail with the regulation section, confidence score, and timestamp — ready for CBN examination in 60 seconds.
+          Every verdict is <strong style={{ color: C.brand }}>SHA-256 sealed</strong> to the audit trail with the regulation section, confidence score, and timestamp — ready for CBN examination in 60 seconds.
         </p>
       </Card>
 
@@ -288,7 +287,7 @@ function Slide4() {
   return (
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
       <Tag color={C.red}>Fintech Risk Operations Centre</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         Real-time CBN threshold monitoring — no spreadsheets
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 32 }}>
@@ -342,7 +341,7 @@ function Slide5() {
   return (
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
       <Tag color={C.amber}>Fraud & AML</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         Catch fraud before it becomes a regulatory breach
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 32 }}>
@@ -395,7 +394,7 @@ function Slide6() {
   return (
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
       <Tag color={C.brandLight}>Regulatory Filings</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         Never miss a CBN filing deadline again
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 32 }}>
@@ -447,7 +446,7 @@ function Slide7() {
   return (
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
       <Tag color={C.green}>Audit Trail</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         Tamper-proof. CBN-verifiable in 60 seconds.
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 32 }}>
@@ -503,7 +502,7 @@ function Slide8() {
   return (
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
       <Tag color={C.amber}>Market Intelligence</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         Know what your competitors are missing — before they do
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 32 }}>
@@ -557,7 +556,7 @@ function Slide9() {
   return (
     <div style={{ maxWidth: 780, margin: "0 auto" }}>
       <Tag color={C.brand}>Onboarding</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         Live in one week. No implementation project.
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 32 }}>
@@ -569,7 +568,7 @@ function Slide9() {
         {steps.map((s, i) => (
           <div key={s.title} style={{ display: "flex", gap: 16 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-              <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#fff", flexShrink: 0 }}>{i + 1}</div>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#0A0A0B", flexShrink: 0 }}>{i + 1}</div>
               {i < steps.length - 1 && <div style={{ width: 1, flex: 1, background: C.border, marginTop: 4 }} />}
             </div>
             <Card style={{ flex: 1, padding: "16px 18px", marginBottom: i < steps.length - 1 ? 0 : 0 }}>
@@ -592,7 +591,7 @@ function Slide10() {
       name: "Growth",
       price: "₦350K",
       period: "/month",
-      color: C.brand,
+      color: C.brandLight,
       features: [
         "1 institution",
         "Compliance Engine — unlimited checks",
@@ -624,7 +623,7 @@ function Slide10() {
       name: "Enterprise",
       price: "Custom",
       period: "",
-      color: C.amber,
+      color: "#A78BFA",
       features: [
         "Multi-institution / holding group",
         "Custom agent training on your corpus",
@@ -640,7 +639,7 @@ function Slide10() {
   return (
     <div style={{ maxWidth: 900, margin: "0 auto" }}>
       <Tag color={C.brandLight}>Pricing & Next Steps</Tag>
-      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#fff" }}>
+      <h2 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "18px 0 12px", color: "#F7F7F9" }}>
         Priced for the problem you&apos;re solving
       </h2>
       <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 36 }}>
@@ -657,7 +656,7 @@ function Slide10() {
         <div style={{ maxWidth: 560 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.brandLight, marginBottom: 8 }}>Enterprise document intelligence</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
-            <span style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>Custom-quoted</span>
+            <span style={{ fontSize: 28, fontWeight: 800, color: "#F7F7F9", letterSpacing: "-0.04em" }}>Custom-quoted</span>
             <span style={{ fontSize: 12, color: C.sub }}>for large organisations</span>
           </div>
           <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.65 }}>
@@ -667,7 +666,7 @@ function Slide10() {
           </p>
         </div>
         <Link href="/request-demo" style={{
-          fontSize: 14, fontWeight: 700, color: "#fff", textDecoration: "none",
+          fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
           padding: "13px 28px", borderRadius: 10, background: C.brand,
           display: "inline-block", flexShrink: 0,
         }}>
@@ -688,16 +687,16 @@ function Slide10() {
           <div key={t.name} style={{
             background: C.surface, border: `1px solid ${t.color}40`,
             borderRadius: 16, padding: "24px 22px", position: "relative",
-            boxShadow: t.badge ? `0 0 32px ${t.color}18` : "none",
+            boxShadow: "none",
           }}>
             {t.badge && (
-              <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", fontSize: 10, fontWeight: 700, color: "#fff", background: t.color, padding: "3px 12px", borderRadius: 999, whiteSpace: "nowrap" }}>
+              <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", fontSize: 10, fontWeight: 700, color: "#F7F7F9", background: t.color, padding: "3px 12px", borderRadius: 999, whiteSpace: "nowrap" }}>
                 {t.badge}
               </div>
             )}
             <div style={{ fontSize: 13, fontWeight: 700, color: t.color, marginBottom: 10 }}>{t.name}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 20 }}>
-              <span style={{ fontSize: 30, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>{t.price}</span>
+              <span style={{ fontSize: 30, fontWeight: 800, color: "#F7F7F9", letterSpacing: "-0.04em" }}>{t.price}</span>
               <span style={{ fontSize: 12, color: C.sub }}>{t.period}</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -714,7 +713,7 @@ function Slide10() {
 
       {/* CTA */}
       <div style={{ background: `${C.brand}14`, border: `1px solid ${C.brand}30`, borderRadius: 16, padding: "32px 36px", textAlign: "center" }}>
-        <h3 style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", margin: "0 0 10px" }}>
+        <h3 style={{ fontSize: 22, fontWeight: 800, color: "#F7F7F9", letterSpacing: "-0.02em", margin: "0 0 10px" }}>
           Start your 30-day pilot — free
         </h3>
         <p style={{ fontSize: 14, color: C.muted, margin: "0 0 24px", lineHeight: 1.65 }}>
@@ -722,7 +721,7 @@ function Slide10() {
           No payment until you're satisfied. No sales pressure.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/compliance/reports" style={{ fontSize: 14, fontWeight: 700, color: "#fff", textDecoration: "none", padding: "13px 28px", borderRadius: 10, background: C.brand, display: "inline-block" }}>
+          <Link href="/compliance/reports" style={{ fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none", padding: "13px 28px", borderRadius: 10, background: C.brand, display: "inline-block" }}>
             Run a Live Compliance Check →
           </Link>
           <Link href="/dashboard" style={{ fontSize: 14, fontWeight: 700, color: C.white, textDecoration: "none", padding: "13px 28px", borderRadius: 10, border: `1.5px solid ${C.border}`, display: "inline-block" }}>
@@ -746,20 +745,20 @@ export default function DemoPage() {
   const SlideComp = SLIDE_COMPONENTS[step];
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: "#fff", fontFamily: "system-ui,-apple-system,sans-serif" }}>
+    <div style={{ background: C.bg, minHeight: "100vh", color: "#F7F7F9", fontFamily: "system-ui,-apple-system,sans-serif" }}>
 
       {/* Top nav */}
-      <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(8,12,24,0.92)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${C.border}`, padding: "0 24px" }}>
+      <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,10,11,0.92)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${C.border}`, padding: "0 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", height: 56, display: "flex", alignItems: "center", gap: 16 }}>
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             <div style={{ width: 30, height: 30, background: C.brand, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 22 22" fill="none">
-                <path d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
-                <circle cx="11" cy="10.5" r="2.25" fill="white" />
+                <path d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z" stroke="#0A0A0B" strokeWidth="1.5" strokeLinejoin="round" />
+                <circle cx="11" cy="10.5" r="2.25" fill="#0A0A0B" />
               </svg>
             </div>
-            <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>Iroko AI</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: "#F7F7F9", letterSpacing: "-0.01em" }}>Iroko AI</span>
             <span style={{ fontSize: 10, fontWeight: 600, color: C.sub, background: C.border, padding: "2px 7px", borderRadius: 999, marginLeft: 2 }}>Product Demo</span>
           </div>
 
@@ -770,7 +769,7 @@ export default function DemoPage() {
                 flexShrink: 0, fontSize: 11, fontWeight: 600, padding: "5px 11px", borderRadius: 7,
                 border: "none", cursor: "pointer", transition: "all 0.15s",
                 background: step === s.id ? C.brand : "transparent",
-                color: step === s.id ? "#fff" : C.sub,
+                color: step === s.id ? "#0A0A0B" : C.sub,
                 outline: "none",
               }}>
                 {s.label}
@@ -779,7 +778,7 @@ export default function DemoPage() {
           </div>
 
           {/* Live app link */}
-          <Link href="/dashboard" style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#fff", textDecoration: "none", padding: "6px 14px", borderRadius: 8, background: C.brand, display: "none" }}>
+          <Link href="/dashboard" style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#0A0A0B", textDecoration: "none", padding: "6px 14px", borderRadius: 8, background: C.brand, display: "none" }}>
             Live App →
           </Link>
         </div>
@@ -796,7 +795,7 @@ export default function DemoPage() {
       </main>
 
       {/* Bottom navigation */}
-      <div style={{ position: "sticky", bottom: 0, background: "rgba(8,12,24,0.95)", backdropFilter: "blur(12px)", borderTop: `1px solid ${C.border}`, padding: "14px 24px" }}>
+      <div style={{ position: "sticky", bottom: 0, background: "rgba(10,10,11,0.95)", backdropFilter: "blur(12px)", borderTop: `1px solid ${C.border}`, padding: "14px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
             onClick={() => setStep(s => Math.max(0, s - 1))}
@@ -819,12 +818,12 @@ export default function DemoPage() {
           {step < STEPS.length - 1 ? (
             <button
               onClick={() => setStep(s => Math.min(STEPS.length - 1, s + 1))}
-              style={{ fontSize: 13, fontWeight: 700, color: "#fff", background: C.brand, border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer" }}
+              style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0B", background: C.brand, border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer" }}
             >
               Next →
             </button>
           ) : (
-            <Link href="/compliance/reports" style={{ fontSize: 13, fontWeight: 700, color: "#fff", background: C.green, textDecoration: "none", borderRadius: 8, padding: "8px 18px" }}>
+            <Link href="/compliance/reports" style={{ fontSize: 13, fontWeight: 700, color: "#F7F7F9", background: C.green, textDecoration: "none", borderRadius: 8, padding: "8px 18px" }}>
               Run Live Check →
             </Link>
           )}

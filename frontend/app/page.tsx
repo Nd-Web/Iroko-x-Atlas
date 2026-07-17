@@ -8,13 +8,13 @@ const LOGO = (
     <div
       className="size-9 rounded-[10px] flex items-center justify-center shrink-0"
       style={{
-        background: "#4A55D4",
-        boxShadow: "0 0 0 1px rgba(255,255,255,0.12), 0 4px 12px rgba(74,85,212,0.4)",
+        background: "#FFCB05",
+        boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
       }}
     >
       <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-        <path d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
-        <circle cx="11" cy="10.5" r="2.25" fill="white" />
+        <path d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z" stroke="#0A0A0B" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
+        <circle cx="11" cy="10.5" r="2.25" fill="#0A0A0B" />
       </svg>
     </div>
     <div>
@@ -35,7 +35,7 @@ export default function HomePage() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div style={{ background: "#080B14", minHeight: "100vh", fontFamily: "DM Sans, ui-sans-serif, sans-serif", color: "#fff" }}>
+    <div style={{ background: "#0A0A0B", minHeight: "100vh", fontFamily: "DM Sans, ui-sans-serif, sans-serif", color: "#F7F7F9" }}>
 
       {/* ── Navbar ── */}
       <header style={{
@@ -43,7 +43,7 @@ export default function HomePage() {
         height: 56,
         display: "flex", alignItems: "center",
         padding: "0 24px",
-        background: "rgba(8,11,20,0.8)",
+        background: "rgba(10,10,11,0.85)",
         backdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
@@ -66,9 +66,9 @@ export default function HomePage() {
               Sign in
             </Link>
             <Link href="/login" style={{
-              fontSize: 13, fontWeight: 600, color: "#fff", textDecoration: "none",
+              fontSize: 13, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
               padding: "7px 16px", borderRadius: 8,
-              background: "#4A55D4", border: "1px solid rgba(255,255,255,0.12)",
+              background: "#FFCB05",
             }}>
               Request access
             </Link>
@@ -89,7 +89,7 @@ export default function HomePage() {
       {open && (
         <div style={{
           position: "fixed", top: 56, left: 0, right: 0, zIndex: 40,
-          background: "#0C111D", borderBottom: "1px solid rgba(255,255,255,0.07)",
+          background: "#131316", borderBottom: "1px solid rgba(255,255,255,0.08)",
           padding: 16, display: "flex", flexDirection: "column", gap: 4,
         }} className="md:hidden">
           {NAV_LINKS.map(({ label, href }) => (
@@ -100,7 +100,7 @@ export default function HomePage() {
           ))}
           <div style={{ marginTop: 8, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 8 }}>
             <Link href="/login" style={{ textAlign: "center", fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", textDecoration: "none", padding: "10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>Sign in</Link>
-            <Link href="/login" style={{ textAlign: "center", fontSize: 14, fontWeight: 600, color: "#fff", textDecoration: "none", padding: "10px", borderRadius: 8, background: "#4A55D4" }}>Request access</Link>
+            <Link href="/login" style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none", padding: "10px", borderRadius: 8, background: "#FFCB05" }}>Request access</Link>
           </div>
         </div>
       )}
@@ -114,21 +114,13 @@ export default function HomePage() {
           backgroundSize: "72px 72px",
           maskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 100%)",
         }} />
-        {/* Glow */}
-        <div style={{
-          position: "absolute", top: -100, left: "50%", transform: "translateX(-50%)",
-          width: 800, height: 500, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(74,85,212,0.3) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
-
         <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
           {/* Badge */}
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             padding: "5px 12px", borderRadius: 99, marginBottom: 24,
-            background: "rgba(74,85,212,0.12)", border: "1px solid rgba(74,85,212,0.28)",
-            fontSize: 12, fontWeight: 600, color: "#818CF8",
+            background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)",
+            fontSize: 12, fontWeight: 600, color: "#38BDF8",
           }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", flexShrink: 0, animation: "pulse 2s ease infinite" }} />
             Five AI agents · Real-time enterprise document intelligence
@@ -141,10 +133,7 @@ export default function HomePage() {
             margin: "0 0 20px", maxWidth: 720,
           }}>
             Turn scattered documents into{" "}
-            <span style={{
-              background: "linear-gradient(135deg, #818CF8 0%, #4A55D4 100%)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            }}>
+            <span style={{ color: "#FFCB05" }}>
               real-time answers.
             </span>
           </h1>
@@ -158,10 +147,9 @@ export default function HomePage() {
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link href="/login" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
-              fontSize: 14, fontWeight: 600, color: "#fff", textDecoration: "none",
+              fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
               padding: "11px 22px", borderRadius: 10,
-              background: "#4A55D4", border: "1px solid rgba(255,255,255,0.12)",
-              boxShadow: "0 0 32px rgba(74,85,212,0.35)",
+              background: "#FFCB05",
             }}>
               Request access
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -192,7 +180,7 @@ export default function HomePage() {
               { n: "98%",  label: "Detection accuracy" },
               { n: "24/7", label: "Real-time monitoring" },
             ].map(({ n, label }) => (
-              <div key={label} style={{ padding: "20px 24px", background: "#0C111D" }}>
+              <div key={label} style={{ padding: "20px 24px", background: "#131316" }}>
                 <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1 }}>{n}</div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>{label}</div>
               </div>
@@ -207,7 +195,7 @@ export default function HomePage() {
           }}>
             {/* Browser chrome */}
             <div style={{
-              background: "#131825", padding: "10px 14px",
+              background: "#1A1A1F", padding: "10px 14px",
               borderBottom: "1px solid rgba(255,255,255,0.06)",
               display: "flex", alignItems: "center", gap: 6,
             }}>
@@ -224,11 +212,11 @@ export default function HomePage() {
               </div>
             </div>
             {/* Mock UI */}
-            <div style={{ background: "#080B14", padding: 20, display: "flex", gap: 14, minHeight: 240 }}>
+            <div style={{ background: "#0A0A0B", padding: 20, display: "flex", gap: 14, minHeight: 240 }}>
               {/* Sidebar mock */}
               <div style={{ width: 44, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                 {[0.9, 0.4, 0.4, 0.4, 0.4, 0.4].map((o, i) => (
-                  <div key={i} style={{ height: 8, borderRadius: 4, background: `rgba(74,85,212,${o})` }} />
+                  <div key={i} style={{ height: 8, borderRadius: 4, background: o > 0.5 ? "#FFCB05" : "rgba(255,255,255,0.12)" }} />
                 ))}
               </div>
               {/* Main content mock */}
@@ -243,7 +231,7 @@ export default function HomePage() {
                   ].map(({ label, value, color }) => (
                     <div key={label} style={{
                       borderRadius: 10, padding: "12px 14px",
-                      background: "#0F1320", border: "1px solid rgba(255,255,255,0.07)",
+                      background: "#131316", border: "1px solid rgba(255,255,255,0.07)",
                     }}>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>{label}</div>
                       <div style={{ fontSize: 20, fontWeight: 800, color, letterSpacing: "-0.02em" }}>{value}</div>
@@ -252,16 +240,16 @@ export default function HomePage() {
                 </div>
                 {/* Chart mock + incident list */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, flex: 1 }}>
-                  <div style={{ borderRadius: 10, background: "#0F1320", border: "1px solid rgba(255,255,255,0.07)", padding: 14 }}>
+                  <div style={{ borderRadius: 10, background: "#131316", border: "1px solid rgba(255,255,255,0.07)", padding: 14 }}>
                     <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Operational Health</div>
                     {/* Mini bar chart */}
                     <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 60 }}>
                       {[65, 80, 72, 88, 76, 94, 90, 85].map((h, i) => (
-                        <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 3, background: i === 5 ? "#4A55D4" : "rgba(74,85,212,0.3)" }} />
+                        <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 3, background: i === 5 ? "#38BDF8" : "rgba(56,189,248,0.28)" }} />
                       ))}
                     </div>
                   </div>
-                  <div style={{ borderRadius: 10, background: "#0F1320", border: "1px solid rgba(255,255,255,0.07)", padding: 14 }}>
+                  <div style={{ borderRadius: 10, background: "#131316", border: "1px solid rgba(255,255,255,0.07)", padding: 14 }}>
                     <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Active Incidents</div>
                     {[
                       { label: "Cluster availability below SLA",   color: "#EF4444" },
@@ -289,7 +277,7 @@ export default function HomePage() {
             background: "rgba(255,255,255,0.02)",
             border: "1px solid rgba(255,255,255,0.07)",
           }}>
-            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A55D4", marginBottom: 12 }}>The problem</p>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#FFCB05", marginBottom: 12 }}>The problem</p>
             <h2 style={{ fontSize: "clamp(22px,3vw,30px)", fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1.2, margin: "0 0 16px", maxWidth: 560 }}>
               Your organisation&apos;s answers exist. They&apos;re just buried in a thousand documents.
             </h2>
@@ -308,7 +296,7 @@ export default function HomePage() {
       <section id="features" style={{ padding: "96px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ marginBottom: 48 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A55D4", marginBottom: 12 }}>How it works</p>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#FFCB05", marginBottom: 12 }}>How it works</p>
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
               <h2 style={{ fontSize: "clamp(24px,3vw,34px)", fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1.15, margin: 0, maxWidth: 460 }}>
                 Five agents turn documents into decisions
@@ -349,9 +337,9 @@ export default function HomePage() {
       </section>
 
       {/* ── Verticals ── */}
-      <section id="use-cases" style={{ padding: "96px 24px", background: "#060910" }}>
+      <section id="use-cases" style={{ padding: "96px 24px", background: "#070708" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A55D4", marginBottom: 12 }}>Where Iroko runs</p>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#FFCB05", marginBottom: 12 }}>Where Iroko runs</p>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 40 }}>
             <h2 style={{ fontSize: "clamp(24px,3vw,34px)", fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1.15, margin: 0 }}>
               Built for organisations that run on documents
@@ -362,13 +350,13 @@ export default function HomePage() {
             {/* Primary vertical */}
             <div style={{
               borderRadius: 14, padding: "26px",
-              background: "linear-gradient(135deg, rgba(74,85,212,0.12) 0%, rgba(74,85,212,0.03) 100%)",
-              border: "1px solid rgba(74,85,212,0.3)",
+              background: "rgba(255,203,5,0.05)",
+              border: "1px solid rgba(255,203,5,0.25)",
             }}>
               <div style={{
                 display: "inline-flex", fontSize: 12, fontWeight: 700,
                 padding: "4px 10px", borderRadius: 99, marginBottom: 14,
-                background: "rgba(129,140,248,0.15)", color: "#818CF8", border: "1px solid rgba(129,140,248,0.28)",
+                background: "rgba(255,203,5,0.1)", color: "#FFCB05", border: "1px solid rgba(255,203,5,0.25)",
               }}>
                 Enterprise document intelligence
               </div>
@@ -380,7 +368,7 @@ export default function HomePage() {
                 {["Real-time workflow analytics across departments", "Plain-language Q&A over contracts, reports and returns", "Vendor SLA and contract-expiry monitoring", "Incident and complaint-trend correlation", "Audit-grade trace of every answer"].map((item) => (
                   <li key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                      <path d="M2.5 7l3 3 6-6" stroke="#818CF8" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M2.5 7l3 3 6-6" stroke="#FFCB05" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     {item}
                   </li>
@@ -431,12 +419,12 @@ export default function HomePage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{
             borderRadius: 20, padding: "48px",
-            background: "linear-gradient(135deg, rgba(74,85,212,0.1) 0%, rgba(74,85,212,0.03) 100%)",
-            border: "1px solid rgba(74,85,212,0.22)",
+            background: "rgba(255,203,5,0.05)",
+            border: "1px solid rgba(255,203,5,0.22)",
             display: "grid", gridTemplateColumns: "1fr auto", gap: 48, alignItems: "center",
           }} className="flex-wrap-reverse">
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#818CF8", marginBottom: 16 }}>The compliance configuration</p>
+              <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#FFCB05", marginBottom: 16 }}>The compliance configuration</p>
               <h2 style={{ fontSize: "clamp(22px,3vw,30px)", fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1.2, margin: "0 0 16px", maxWidth: 440 }}>
                 The same engine, ready for CBN &amp; NDPA inspection
               </h2>
@@ -450,7 +438,7 @@ export default function HomePage() {
                 {["CBN MFB Guidelines", "SEC Nigeria", "NDPA 2023", "FCCPC", "NCC Directives"].map((tag) => (
                   <span key={tag} style={{
                     fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 99,
-                    background: "rgba(74,85,212,0.12)", color: "#818CF8", border: "1px solid rgba(74,85,212,0.22)",
+                    background: "rgba(255,203,5,0.1)", color: "#FFCB05", border: "1px solid rgba(255,203,5,0.22)",
                   }}>
                     {tag}
                   </span>
@@ -459,16 +447,16 @@ export default function HomePage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, minWidth: 220 }}>
               {[
-                { label: "Immutable audit logs",  icon: "📋", color: "#818CF8" },
-                { label: "Role-based access",      icon: "🔐", color: "#34D399" },
-                { label: "Data residency",         icon: "🌍", color: "#60A5FA" },
-                { label: "Token-level tracing",    icon: "🔗", color: "#F59E0B" },
-              ].map(({ label, icon, color }) => (
+                { label: "Immutable audit logs",  color: "#818CF8" },
+                { label: "Role-based access",      color: "#34D399" },
+                { label: "Data residency",         color: "#60A5FA" },
+                { label: "Token-level tracing",    color: "#FB923C" },
+              ].map(({ label, color }) => (
                 <div key={label} style={{
                   borderRadius: 12, padding: "16px",
                   background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
                 }}>
-                  <div style={{ fontSize: 20, marginBottom: 8 }}>{icon}</div>
+                  <div style={{ width: 24, height: 3, borderRadius: 2, background: color, marginBottom: 10 }} />
                   <div style={{ fontSize: 11, fontWeight: 600, color, lineHeight: 1.4 }}>{label}</div>
                 </div>
               ))}
@@ -480,7 +468,7 @@ export default function HomePage() {
       {/* ── Credibility ── */}
       <section style={{ padding: "0 24px 96px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A55D4", marginBottom: 12 }}>Proven, not promised</p>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#FFCB05", marginBottom: 12 }}>Proven, not promised</p>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 32 }}>
             <h2 style={{ fontSize: "clamp(24px,3vw,34px)", fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1.15, margin: 0, maxWidth: 520 }}>
               The engine has already been tested against the field
@@ -509,9 +497,9 @@ export default function HomePage() {
       </section>
 
       {/* ── Pricing ── */}
-      <section id="pricing" style={{ padding: "96px 24px", background: "#060910" }}>
+      <section id="pricing" style={{ padding: "96px 24px", background: "#070708" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A55D4", marginBottom: 12 }}>Pricing</p>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#FFCB05", marginBottom: 12 }}>Pricing</p>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 40 }}>
             <h2 style={{ fontSize: "clamp(24px,3vw,34px)", fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1.15, margin: 0 }}>
               Priced for the problem you&apos;re solving
@@ -522,11 +510,11 @@ export default function HomePage() {
             {/* Enterprise — primary */}
             <div style={{
               borderRadius: 14, padding: "28px",
-              background: "linear-gradient(135deg, rgba(74,85,212,0.12) 0%, rgba(74,85,212,0.03) 100%)",
-              border: "1px solid rgba(74,85,212,0.3)",
+              background: "rgba(255,203,5,0.05)",
+              border: "1px solid rgba(255,203,5,0.25)",
               display: "flex", flexDirection: "column",
             }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#818CF8", marginBottom: 10 }}>Enterprise document intelligence</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#FFCB05", marginBottom: 10 }}>Enterprise document intelligence</div>
               <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", marginBottom: 6 }}>Custom-quoted</div>
               <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.42)", lineHeight: 1.7, margin: "0 0 20px" }}>
                 Scoped to your organisation — document volume, systems to connect, departments to
@@ -536,7 +524,7 @@ export default function HomePage() {
                 {["All five agents + knowledge graph", "Connectors to your existing systems", "Real-time analytics dashboards", "On-prem or private-cloud options", "Dedicated onboarding team"].map((item) => (
                   <li key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                      <path d="M2.5 7l3 3 6-6" stroke="#818CF8" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M2.5 7l3 3 6-6" stroke="#FFCB05" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     {item}
                   </li>
@@ -544,10 +532,9 @@ export default function HomePage() {
               </ul>
               <Link href="/request-demo" style={{
                 marginTop: "auto", textAlign: "center",
-                fontSize: 14, fontWeight: 600, color: "#fff", textDecoration: "none",
+                fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
                 padding: "11px 22px", borderRadius: 10,
-                background: "#4A55D4", border: "1px solid rgba(255,255,255,0.12)",
-                boxShadow: "0 0 24px rgba(74,85,212,0.3)",
+                background: "#FFCB05",
               }}>
                 Book a call
               </Link>
@@ -593,19 +580,13 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA ── */}
-      <section style={{ padding: "96px 24px", background: "#060910" }}>
+      <section style={{ padding: "96px 24px", background: "#070708" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{
             borderRadius: 20, padding: "64px 48px", textAlign: "center",
-            background: "#0C111D", border: "1px solid rgba(255,255,255,0.07)",
+            background: "#131316", border: "1px solid rgba(255,255,255,0.08)",
             position: "relative", overflow: "hidden",
           }}>
-            <div style={{
-              position: "absolute", top: -100, left: "50%", transform: "translateX(-50%)",
-              width: 600, height: 400, borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(74,85,212,0.18) 0%, transparent 70%)",
-              pointerEvents: "none",
-            }} />
             <div style={{ position: "relative" }}>
               <h2 style={{ fontSize: "clamp(26px,4vw,42px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, margin: "0 0 16px" }}>
                 Ready to give your team real-time answers?
@@ -617,10 +598,9 @@ export default function HomePage() {
               <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
                 <Link href="/login" style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
-                  fontSize: 14, fontWeight: 600, color: "#fff", textDecoration: "none",
+                  fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
                   padding: "11px 24px", borderRadius: 10,
-                  background: "#4A55D4", border: "1px solid rgba(255,255,255,0.12)",
-                  boxShadow: "0 0 28px rgba(74,85,212,0.3)",
+                  background: "#FFCB05",
                 }}>
                   Request access
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>

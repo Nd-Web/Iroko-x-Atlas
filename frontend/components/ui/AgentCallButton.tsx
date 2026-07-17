@@ -21,14 +21,14 @@ export default function AgentCallButton({
         disabled
         className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[12.5px] font-semibold opacity-70 cursor-not-allowed ${className}`}
         style={{
-          background: "rgba(139,92,246,0.1)",
-          border:     "1px solid rgba(139,92,246,0.25)",
-          color:      "#8B5CF6",
+          background: "rgba(255,203,5,0.08)",
+          border:     "1px solid rgba(255,203,5,0.28)",
+          color:      "#FFCB05",
         }}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="animate-spin">
-          <circle cx="7" cy="7" r="5.5" stroke="rgba(139,92,246,0.25)" strokeWidth="2"/>
-          <path d="M7 1.5a5.5 5.5 0 0 1 5.5 5.5" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round"/>
+          <circle cx="7" cy="7" r="5.5" stroke="rgba(255,203,5,0.28)" strokeWidth="2"/>
+          <path d="M7 1.5a5.5 5.5 0 0 1 5.5 5.5" stroke="#FFCB05" strokeWidth="2" strokeLinecap="round"/>
         </svg>
         Connecting…
       </button>
@@ -70,7 +70,7 @@ export default function AgentCallButton({
         style={{
           background: "rgba(255,255,255,0.04)",
           border:     "1px solid rgba(255,255,255,0.08)",
-          color:      "#9CA3AF",
+          color:      "#9C9CA6",
         }}
       >
         Ending…
@@ -84,9 +84,9 @@ export default function AgentCallButton({
       onClick={onStart}
       className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[12.5px] font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${className}`}
       style={{
-        background: "rgba(139,92,246,0.1)",
-        border:     "1px solid rgba(139,92,246,0.3)",
-        color:      "#8B5CF6",
+        background: "rgba(255,203,5,0.08)",
+        border:     "1px solid rgba(255,203,5,0.28)",
+        color:      "#FFCB05",
       }}
     >
       {/* Phone icon */}

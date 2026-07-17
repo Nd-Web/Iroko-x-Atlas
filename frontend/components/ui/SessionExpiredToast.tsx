@@ -51,13 +51,13 @@ export default function SessionExpiredToast() {
   return (
     <>
       {/* Semi-transparent backdrop so the user knows the page is locked */}
-      <div className="fixed inset-0 z-[9998] bg-black/10 backdrop-blur-[1px]" />
+      <div className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-[1px]" />
 
       {/* Toast card */}
       <div
         role="alertdialog"
         aria-live="assertive"
-        className="fixed bottom-5 right-5 z-[9999] w-[calc(100vw-40px)] max-w-[360px] bg-white border border-border-default rounded-xl shadow-xl overflow-hidden"
+        className="fixed bottom-5 right-5 z-[9999] w-[calc(100vw-40px)] max-w-[360px] bg-[#1A1A1F] border border-border-default rounded-xl shadow-xl overflow-hidden"
       >
         {/* Animated progress bar — drains over COUNTDOWN_SECONDS */}
         <div className="h-[3px] bg-gray-100">
@@ -75,7 +75,7 @@ export default function SessionExpiredToast() {
           <div className="flex items-start gap-3">
             {/* Warning icon */}
             <div className="size-9 rounded-lg bg-warning-50 border border-warning-100 flex items-center justify-center shrink-0 mt-[1px]">
-              <svg width="17" height="17" viewBox="0 0 17 17" fill="none" className="text-warning-600">
+              <svg width="17" height="17" viewBox="0 0 17 17" fill="none" className="text-warning-500">
                 <path
                   d="M8.5 2L1.5 14h14L8.5 2Z"
                   stroke="currentColor"

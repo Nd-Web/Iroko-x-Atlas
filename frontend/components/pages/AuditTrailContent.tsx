@@ -12,11 +12,11 @@ const ENTRIES = [
 ];
 
 const AGENT_COLORS: Record<string, string> = {
-  Strategist: "#4A55D4",
-  Researcher: "#2E90FA",
-  Analyst:    "#17B26A",
-  Scribe:     "#F79009",
-  Watchdog:   "#F04438",
+  Strategist: "#818CF8",
+  Researcher: "#38BDF8",
+  Analyst:    "#34D399",
+  Scribe:     "#FB923C",
+  Watchdog:   "#F87171",
 };
 
 const SOURCES: Record<string, string[]> = {
@@ -29,10 +29,10 @@ const SOURCES: Record<string, string[]> = {
 };
 
 const STATS = [
-  { label: "Queries today",       value: "1,284", sub: "100% cited",                  accent: "#4A55D4" },
-  { label: "Unique users",        value: "6",     sub: "across all roles",             accent: "#17B26A" },
-  { label: "High-stakes queries", value: "14",    sub: "priority processing",          accent: "#F79009" },
-  { label: "Refused queries",     value: "2",     sub: "policy guardrail triggered",   accent: "#F04438" },
+  { label: "Queries today",       value: "1,284", sub: "100% cited",                  accent: "#38BDF8" },
+  { label: "Unique users",        value: "6",     sub: "across all roles",             accent: "#22C55E" },
+  { label: "High-stakes queries", value: "14",    sub: "priority processing",          accent: "#F59E0B" },
+  { label: "Refused queries",     value: "2",     sub: "policy guardrail triggered",   accent: "#EF4444" },
 ];
 
 const COL = "110px 130px 1fr 90px 60px 80px 70px";
@@ -194,10 +194,10 @@ export default function AuditTrailContent() {
                 className="grid items-center py-3 px-5 gap-3 border-b border-border-default cursor-pointer hover:bg-gray-50 transition-colors"
                 style={{ gridTemplateColumns: COL }}
               >
-                <span className="font-mono text-[11px] text-brand-700 font-semibold">{e.id}</span>
+                <span className="font-mono text-[11px] text-info-500 font-semibold">{e.id}</span>
                 <span className="text-xs text-gray-600">{shortName(e.user)}</span>
                 <span className="text-[13px] text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">{e.query}</span>
-                <span className="text-[11px] font-semibold px-2 py-[2px] rounded-full w-fit" style={{ color: AGENT_COLORS[e.agent], background: `${AGENT_COLORS[e.agent]}14` }}>{e.agent}</span>
+                <span className="text-[11px] font-semibold px-2 py-[2px] rounded-full w-fit" style={{ color: AGENT_COLORS[e.agent], background: `${AGENT_COLORS[e.agent]}1F` }}>{e.agent}</span>
                 <span className="text-[13px] text-gray-500 text-center">{e.chunks}</span>
                 <span className="font-mono text-xs text-gray-400">{e.latency}</span>
                 <span className="text-[11.5px] text-gray-300 font-mono">{e.time}</span>
@@ -210,8 +210,8 @@ export default function AuditTrailContent() {
       {/* Audit entry detail modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" onClick={() => setSelected(null)}>
-          <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" />
-          <div className="relative bg-white rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden" style={{ maxWidth: "560px" }} onClick={e => e.stopPropagation()}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+          <div className="relative bg-[#1A1A1F] rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden" style={{ maxWidth: "560px" }} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border-default shrink-0">
               <div className="min-w-0">
                 <h2 className="text-sm font-semibold text-gray-900">Query trace</h2>
@@ -231,7 +231,7 @@ export default function AuditTrailContent() {
                   <span className="text-[13px] font-semibold text-gray-800 block truncate">{selected.user}</span>
                   <span className="text-[11.5px] text-gray-400 font-mono">{selected.time}</span>
                 </div>
-                <span className="ml-auto text-[11px] font-semibold px-2 py-[2px] rounded-full" style={{ color: AGENT_COLORS[selected.agent], background: `${AGENT_COLORS[selected.agent]}14` }}>{selected.agent}</span>
+                <span className="ml-auto text-[11px] font-semibold px-2 py-[2px] rounded-full" style={{ color: AGENT_COLORS[selected.agent], background: `${AGENT_COLORS[selected.agent]}1F` }}>{selected.agent}</span>
               </div>
 
               {/* Query */}

@@ -20,28 +20,23 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<Variant, string> = {
   primary: [
-    "bg-gradient-to-r from-[#3B7BF6] to-[#2563EB]",
-    "text-white border border-[#1D4ED8]",
-    "hover:from-[#2563EB] hover:to-[#1D4ED8]",
-    "shadow-[0_0_20px_rgba(59,123,246,0.25)]",
-    "hover:shadow-[0_0_28px_rgba(59,123,246,0.4)]",
-    "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
+    "bg-brand-500 text-[#0A0A0B] font-bold border border-brand-800",
+    "hover:bg-brand-400",
+    "disabled:opacity-50 disabled:cursor-not-allowed",
   ].join(" "),
   secondary: [
-    "bg-[#1a1d27] text-[#E5E7EB] border border-white/10",
-    "hover:bg-[#22263a] hover:border-white/20",
+    "bg-surface-card text-gray-800 border border-border-default",
+    "hover:bg-gray-50 hover:border-border-strong",
     "disabled:opacity-50 disabled:cursor-not-allowed",
   ].join(" "),
   danger: [
     "bg-[#EF4444] text-white border border-[#DC2626]",
     "hover:bg-[#DC2626]",
-    "shadow-[0_0_12px_rgba(239,68,68,0.2)]",
-    "hover:shadow-[0_0_20px_rgba(239,68,68,0.35)]",
     "disabled:opacity-50 disabled:cursor-not-allowed",
   ].join(" "),
   ghost: [
-    "bg-transparent text-[#9CA3AF] border border-transparent",
-    "hover:bg-white/5 hover:text-[#E5E7EB]",
+    "bg-transparent text-gray-500 border border-transparent",
+    "hover:bg-white/5 hover:text-gray-800",
     "disabled:opacity-50 disabled:cursor-not-allowed",
   ].join(" "),
 };
@@ -69,7 +64,7 @@ export default function Button({
       disabled={isDisabled}
       className={cn(
         "inline-flex items-center justify-center font-semibold transition-all duration-200 ease-out",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B7BF6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#080B14]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-page",
         variantStyles[variant],
         sizeStyles[size],
         className,
@@ -77,7 +72,7 @@ export default function Button({
       {...props}
     >
       {loading ? (
-        <Spinner size="sm" color={variant === "primary" || variant === "danger" ? "white" : "blue"} />
+        <Spinner size="sm" color={variant === "danger" ? "white" : variant === "primary" ? undefined : "blue"} />
       ) : leftIcon}
       {children}
       {!loading && rightIcon}

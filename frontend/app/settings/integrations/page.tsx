@@ -76,8 +76,8 @@ const INTEGRATIONS = [
     category: "AI",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="8" stroke="#6366F1" strokeWidth="1.5"/>
-        <path d="M7 10l2 2 4-4" stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="10" cy="10" r="8" stroke="#818CF8" strokeWidth="1.5"/>
+        <path d="M7 10l2 2 4-4" stroke="#818CF8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
   },
@@ -135,9 +135,9 @@ export default function IntegrationsPage() {
 
       {activeIntegration && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" onClick={() => setActiveIntegration(null)}>
-          <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
           <div
-            className="relative bg-white rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
+            className="relative bg-[#1A1A1F] rounded-xl shadow-lg border border-border-default flex flex-col w-full max-h-[88vh] overflow-hidden"
             style={{ maxWidth: "480px" }}
             onClick={e => e.stopPropagation()}
           >
