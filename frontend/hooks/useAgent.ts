@@ -2,17 +2,19 @@
 
 import { useRef, useState, useCallback } from "react";
 import {
-  createAgentSession,
-  sendOffer,
-  sendIceCandidates,
-  endAgentSession,
+  getRealtimeSession,
+  negotiateWebRTC,
+  runComplianceCheck,
+  type ComplianceVerdict,
 } from "@/lib/agent";
 
 export type AgentCallStatus = "idle" | "connecting" | "active" | "ending";
 
 interface UseAgentOptions {
-  agentId: string;
-  onError?: (msg: string) => void;
+  instructions?: string;
+  onError?:      (msg: string) => void;
+  /** Fires when the agent runs a compliance check, so the UI can show the verdict card. */
+  onVerdict?:    (verdict: ComplianceVerdict) => void;
 }
 
 interface UseAgentReturn {
@@ -22,40 +24,24 @@ interface UseAgentReturn {
 }
 
 export function useAgent({
-  agentId,
+  instructions = "",
   onError,
+  onVerdict,
 }: UseAgentOptions): UseAgentReturn {
   const [status, setStatus] = useState<AgentCallStatus>("idle");
 
-  const pcRef         = useRef<RTCPeerConnection | null>(null);
-  const sessionIdRef  = useRef<string>("");
-  const pcIdRef       = useRef<string>("");
-  const pendingRef    = useRef<RTCIceCandidateInit[]>([]);
-  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const flushCandidates = useCallback(async () => {
-    if (!pendingRef.current.length || !sessionIdRef.current || !pcIdRef.current) return;
-    const batch = [...pendingRef.current];
-    pendingRef.current = [];
-    await sendIceCandidates(sessionIdRef.current, pcIdRef.current, batch).catch(() => {});
-  }, []);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const dcRef = useRef<RTCDataChannel | null>(null);
 
   const endCall = useCallback(async () => {
     if (status === "idle") return;
     setStatus("ending");
 
-    if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
-
-    try {
-      pcRef.current?.close();
-      pcRef.current = null;
-      if (sessionIdRef.current) await endAgentSession(sessionIdRef.current);
-    } finally {
-      sessionIdRef.current = "";
-      pcIdRef.current      = "";
-      pendingRef.current   = [];
-      setStatus("idle");
-    }
+    dcRef.current?.close();
+    dcRef.current = null;
+    pcRef.current?.close();
+    pcRef.current = null;
+    setStatus("idle");
   }, [status]);
 
   const startCall = useCallback(async () => {
@@ -63,10 +49,9 @@ export function useAgent({
     setStatus("connecting");
 
     try {
-      const { session_id, ice_config } = await createAgentSession(agentId);
-      sessionIdRef.current = session_id;
+      const { clientSecret, callsUrl, greeting } = await getRealtimeSession(instructions);
 
-      const pc = new RTCPeerConnection({ iceServers: ice_config.iceServers });
+      const pc = new RTCPeerConnection();
       pcRef.current = pc;
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -78,43 +63,71 @@ export function useAgent({
         audio.play().catch(() => {});
       };
 
-      pc.onicecandidate = (evt) => {
-        if (!evt.candidate) return;
-        pendingRef.current.push({
-          candidate:     evt.candidate.candidate,
-          sdpMid:        evt.candidate.sdpMid        ?? "0",
-          sdpMLineIndex: evt.candidate.sdpMLineIndex ?? 0,
-        });
-        if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
-        flushTimerRef.current = setTimeout(flushCandidates, 150);
-      };
-
       pc.onconnectionstatechange = () => {
         const s = pc.connectionState;
         if (s === "connected")                                         setStatus("active");
         if (s === "disconnected" || s === "failed" || s === "closed") setStatus("idle");
       };
 
+      // Must exist before the offer so Azure negotiates it into the SDP.
+      const dc = pc.createDataChannel("realtime-channel");
+      dcRef.current = dc;
+
+      dc.addEventListener("open", () => {
+        if (!greeting) return;
+        dc.send(JSON.stringify({
+          type: "response.create",
+          response: { instructions: `Greet the caller by saying exactly: ${greeting}` },
+        }));
+      });
+
+      dc.addEventListener("message", async (evt) => {
+        let event: { type?: string; name?: string; call_id?: string; arguments?: string };
+        try {
+          event = JSON.parse(evt.data);
+        } catch {
+          return;
+        }
+        if (event.type !== "response.function_call_arguments.done") return;
+        if (event.name !== "check_compliance" || !event.call_id) return;
+
+        let output: string;
+        try {
+          const args = JSON.parse(event.arguments ?? "{}") as {
+            text?: string;
+            sector?: "network" | "financial";
+          };
+          const verdict = await runComplianceCheck(args.text ?? "", args.sector ?? "network");
+          onVerdict?.(verdict);
+          output = JSON.stringify(verdict);
+        } catch (err) {
+          output = JSON.stringify({ error: (err as Error).message ?? "Compliance check failed" });
+        }
+
+        // Hand the result back and let the agent speak it.
+        dc.send(JSON.stringify({
+          type: "conversation.item.create",
+          item: { type: "function_call_output", call_id: event.call_id, output },
+        }));
+        dc.send(JSON.stringify({ type: "response.create" }));
+      });
+
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      const answer = await sendOffer(session_id, offer.sdp!);
-      pcIdRef.current = answer.pc_id;
-
-      await pc.setRemoteDescription({ type: answer.type, sdp: answer.sdp });
-      await flushCandidates();
+      const answerSdp = await negotiateWebRTC(callsUrl, clientSecret, offer.sdp!);
+      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
 
     } catch (err) {
       const msg = (err as Error).message ?? "Failed to start voice call";
       onError?.(msg);
+      dcRef.current?.close();
+      dcRef.current = null;
       pcRef.current?.close();
-      pcRef.current        = null;
-      sessionIdRef.current = "";
-      pcIdRef.current      = "";
-      pendingRef.current   = [];
+      pcRef.current = null;
       setStatus("idle");
     }
-  }, [agentId, status, flushCandidates, onError]);
+  }, [instructions, status, onError, onVerdict]);
 
   return { status, startCall, endCall };
 }

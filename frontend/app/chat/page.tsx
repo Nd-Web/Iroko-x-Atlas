@@ -122,7 +122,7 @@ function ReasoningPanel({ query, open, onClose, recentInsights }: {
 
 // Canonical starter question per agent for "/chat?agent=…" deep links.
 const AGENT_PROMPTS: Record<string, string> = {
-  compliance: "Are we ready to submit the NCC QoS return for Q1 2026?",
+  compliance: "Are we ready to submit the CBN prudential return for Q1 2026?",
   watchdog: "Give me a summary of all active alerts generated today",
   noc: "What network incidents or outages have been reported today?",
   contracts: "Which vendor contracts expire in the next 90 days?",

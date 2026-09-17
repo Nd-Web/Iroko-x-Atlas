@@ -33,54 +33,63 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://irokoai.site"),
   title: {
-    default: "Iroko AI · Enterprise Document Intelligence & Real-Time Workflow Analytics",
+    default: "Iroko AI · MFB & Fintech Regulatory Compliance (CBN/SEC)",
     template: "%s · Iroko AI",
   },
   description:
-    "Iroko AI turns your organisation's scattered documents into real-time answers and insight — five AI agents that ingest, understand and analyse enterprise documents, with plain-language Q&A and live workflow analytics. Also available configured for fintech/MFB regulatory compliance (CBN/SEC).",
+    "Iroko AI turns your microfinance bank or fintech's scattered documents into real-time CBN/SEC/NDPA compliance answers and insight — five AI agents that ingest, understand and analyse regulatory documents, with plain-language Q&A, AML/CFT monitoring and live workflow analytics. Also available configured for general enterprise document intelligence.",
   keywords: [
-    // Primary cluster — enterprise document intelligence
-    "enterprise document intelligence",
-    "AI workflow analytics",
-    "real-time document insights",
-    "multi-agent AI Nigeria",
-    "enterprise AI document search",
-    // Secondary cluster — fintech/regulatory compliance (retained)
+    // Primary cluster — fintech/regulatory compliance
     "CBN compliance software",
     "SEC Nigeria compliance",
     "fintech regulatory compliance Nigeria",
     "microfinance bank compliance",
     "AML CFT monitoring",
+    // Secondary cluster — enterprise document intelligence (retained)
+    "enterprise document intelligence",
+    "AI workflow analytics",
+    "real-time document insights",
+    "multi-agent AI Nigeria",
+    "enterprise AI document search",
   ],
   openGraph: {
     type: "website",
     siteName: "Iroko AI",
-    title: "Iroko AI · Enterprise Document Intelligence",
+    title: "Iroko AI · MFB & Fintech Regulatory Compliance",
     description:
-      "Turn scattered documents into real-time answers. Five AI agents ingest, understand and analyse your organisation's documents — with cited answers and live workflow analytics.",
+      "Turn scattered regulatory documents into real-time CBN/SEC/NDPA compliance answers. Five AI agents ingest, understand and analyse your microfinance bank's documents — with cited answers and live compliance analytics.",
     url: "https://irokoai.site",
   },
   twitter: {
     card: "summary",
-    title: "Iroko AI · Enterprise Document Intelligence",
+    title: "Iroko AI · MFB & Fintech Regulatory Compliance",
     description:
-      "Turn scattered documents into real-time answers. Five AI agents ingest, understand and analyse your organisation's documents — with cited answers and live workflow analytics.",
+      "Turn scattered regulatory documents into real-time CBN/SEC/NDPA compliance answers. Five AI agents ingest, understand and analyse your microfinance bank's documents — with cited answers and live compliance analytics.",
   },
   icons: {
     icon: "/icon.png",
   },
 };
 
-// Organization structured data — document intelligence leads; compliance is
-// listed as an additional offering (not the primary description).
+// Organization structured data — MFB/fintech compliance leads; general
+// enterprise document intelligence is listed as an additional offering.
 const ORG_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Iroko AI",
   url: "https://irokoai.site",
   description:
-    "Iroko AI is an enterprise document intelligence and real-time workflow analytics platform. Five AI agents ingest, understand and analyse an organisation's documents, answering staff questions in plain language with cited evidence.",
+    "Iroko AI is a regulatory compliance and document intelligence platform for Nigerian microfinance banks and fintechs. Five AI agents ingest, understand and analyse regulatory documents, answering staff questions in plain language with cited CBN/SEC/NDPA evidence.",
   makesOffer: [
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "MFB & fintech regulatory compliance (CBN/SEC)",
+        description:
+          "Regulatory monitoring, filings, AML/CFT & KYC checks, and audit-grade logging for Nigerian microfinance banks and fintechs.",
+      },
+    },
     {
       "@type": "Offer",
       itemOffered: {
@@ -88,15 +97,6 @@ const ORG_JSON_LD = {
         name: "Enterprise document intelligence & workflow analytics",
         description:
           "Document ingestion, understanding, real-time analytics and contextual Q&A for large organisations.",
-      },
-    },
-    {
-      "@type": "Offer",
-      itemOffered: {
-        "@type": "Service",
-        name: "Fintech & MFB regulatory compliance (CBN/SEC)",
-        description:
-          "The compliance configuration of the engine for Nigerian microfinance banks and fintechs — regulatory monitoring, filings and audit-grade logging.",
       },
     },
   ],

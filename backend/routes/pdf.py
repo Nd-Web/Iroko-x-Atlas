@@ -39,7 +39,7 @@ async def generate_detailed_pdf(request: PdfGenerateRequest):
         # 1. Summarise the response using Azure OpenAI — short, plain, clear.
         prompt = f"""
         You are an analyst at Iroko AI. Write a SHORT, plain, clear summary of the analysis below
-        for a telecom operator — NOT a long report. Keep it to about one page and skip all filler.
+        for a microfinance bank / fintech compliance team — NOT a long report. Keep it to about one page and skip all filler.
 
         User Question:
         {request.query or "N/A"}

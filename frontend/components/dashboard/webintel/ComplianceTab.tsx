@@ -2,7 +2,7 @@
 /**
  * components/dashboard/webintel/ComplianceTab.tsx
  *
- * Tab 2 — Verdict & Compliance: NCC/NDPA compliance checker,
+ * Tab 2 — Verdict & Compliance: CBN/SEC/NDPA compliance checker,
  * verdict output card, PDF brief download, and the API key panel.
  */
 
@@ -71,11 +71,11 @@ const VerdictCard: FC<{ output: VerdictOutput }> = ({ output }) => {
           </div>
         )}
 
-        {/* NCC/NDPA References */}
+        {/* CBN/SEC/NDPA References */}
         {nccRefs.length > 0 && (
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider mb-2 text-gray-400">
-              NCC/NDPA Regulation References
+              CBN/SEC/NDPA Regulation References
             </p>
             <div className="flex flex-wrap gap-2">
               {nccRefs.map((ref, i) => (
@@ -220,11 +220,11 @@ const ComplianceTab: FC = () => {
     }
   }, [transcript]);
 
-  // ── AethexAI live voice agent ──────────────────────────────────────────────
+  // ── Azure Realtime live voice agent ─────────────────────────────────────────
   const [agentError, setAgentError] = useState<string | null>(null);
   const { status: agentStatus, startCall, endCall } = useAgent({
-    agentId: process.env.NEXT_PUBLIC_IROKO_AGENT_ID ?? "9aad19b0-5d6e-4306-ac66-cbc8e2486cae",
-    onError: (msg) => setAgentError(msg),
+    onError:   (msg) => setAgentError(msg),
+    onVerdict: handleVoiceVerdict,
   });
 
   // ── API key state ──────────────────────────────────────────────────────────
@@ -350,7 +350,7 @@ const ComplianceTab: FC = () => {
             ncc_refs:            activeVerdict.ncc_refs ?? [],
             decision_text:       activeDecision,
             summary:             activeVerdict.finding?.summary ?? "",
-            workspace_name:      "Enterprise Telecom Operations",
+            workspace_name:      "MFB Compliance Operations",
           }),
         });
         if (!res.ok) {
@@ -408,10 +408,10 @@ const ComplianceTab: FC = () => {
             </div>
             <div>
               <h3 className="text-[14px] font-bold text-gray-800">
-                NCC/NDPA Compliance Check
+                CBN/SEC/NDPA Compliance Check
               </h3>
               <p className="text-[11px] mt-0.5 text-gray-400">
-                Evaluate a decision against the live NCC/NDPA regulatory corpus
+                Evaluate a decision against the live CBN/SEC/NDPA regulatory corpus
               </p>
             </div>
           </div>
@@ -442,7 +442,7 @@ const ComplianceTab: FC = () => {
               ref={textareaRef}
               value={decisionText}
               onChange={handleInput}
-              placeholder="Describe a decision or planned action for compliance review…&#10;&#10;e.g. &quot;We plan to launch a new analytics pipeline on MoMo transaction data next quarter — what NDPA obligations apply?&quot;"
+              placeholder="Describe a decision or planned action for compliance review…&#10;&#10;e.g. &quot;We plan to launch a new loan analytics pipeline next quarter — what CBN and NDPA obligations apply?&quot;"
               className="w-full resize-none rounded-xl text-[13px] leading-relaxed transition-all duration-200 min-h-[140px] px-4 py-3.5 bg-gray-50 border border-border-default text-gray-800 caret-brand-500 placeholder:text-gray-300 focus:outline-none focus:border-[rgba(255,203,5,0.5)] focus:ring-[3px] focus:ring-[rgba(255,203,5,0.12)]"
             />
             {decisionText.length > 0 && (
@@ -474,7 +474,7 @@ const ComplianceTab: FC = () => {
                     <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="2" className="opacity-30"/>
                     <path d="M7 1.5a5.5 5.5 0 0 1 5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
-                  Analysing against NCC/NDPA corpus…
+                  Analysing against CBN/SEC/NDPA corpus…
                 </>
               ) : (
                 <>

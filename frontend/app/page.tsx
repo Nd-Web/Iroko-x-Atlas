@@ -19,7 +19,7 @@ const LOGO = (
     </div>
     <div>
       <p className="text-[15px] font-bold text-white tracking-tight leading-none">Iroko AI</p>
-      <p className="text-[10px] text-white/40 leading-none mt-0.5">Document Intelligence</p>
+      <p className="text-[10px] text-white/40 leading-none mt-0.5">MFB Compliance Intelligence</p>
     </div>
   </div>
 );
@@ -123,7 +123,7 @@ export default function HomePage() {
             fontSize: 12, fontWeight: 600, color: "#38BDF8",
           }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", flexShrink: 0, animation: "pulse 2s ease infinite" }} />
-            Five AI agents · Real-time enterprise document intelligence
+            Five AI agents · Real-time CBN/SEC/NDPA compliance intelligence
           </div>
 
           {/* Headline */}
@@ -358,14 +358,14 @@ export default function HomePage() {
                 padding: "4px 10px", borderRadius: 99, marginBottom: 14,
                 background: "rgba(255,203,5,0.1)", color: "#FFCB05", border: "1px solid rgba(255,203,5,0.25)",
               }}>
-                Enterprise document intelligence
+                Microfinance bank &amp; fintech compliance
               </div>
               <p style={{ fontSize: 14.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, margin: "0 0 18px" }}>
-                For large organisations — telecoms, utilities, logistics, any operations-heavy business —
-                where critical knowledge lives in fragmented documents and slow answers cost real money.
+                Purpose-built for Nigerian microfinance banks and fintechs regulated by the CBN and SEC —
+                where regulatory obligations live in fragmented documents and a missed deadline costs real money.
               </p>
               <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-                {["Real-time workflow analytics across departments", "Plain-language Q&A over contracts, reports and returns", "Vendor SLA and contract-expiry monitoring", "Incident and complaint-trend correlation", "Audit-grade trace of every answer"].map((item) => (
+                {["CBN lending & exposure limit breach alerts", "KYC / AML-CFT gap detection", "Regulatory deadline tracker", "SAR filing reminders", "Capital adequacy & CRR monitoring"].map((item) => (
                   <li key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
                       <path d="M2.5 7l3 3 6-6" stroke="#FFCB05" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -375,7 +375,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.6, margin: "18px 0 0", paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                The same engine can also be configured for mobile-money-style regulatory document handling.
+                See <a href="#compliance" style={{ color: "#FFCB05", textDecoration: "none" }}>compliance architecture</a> and <a href="#pricing" style={{ color: "#FFCB05", textDecoration: "none" }}>MFB pricing</a> below.
               </p>
             </div>
 
@@ -390,14 +390,14 @@ export default function HomePage() {
                 padding: "4px 10px", borderRadius: 99, marginBottom: 14,
                 background: "rgba(52,211,153,0.12)", color: "#34D399", border: "1px solid rgba(52,211,153,0.25)",
               }}>
-                Fintech &amp; MFB regulatory compliance
+                Enterprise document intelligence
               </div>
               <p style={{ fontSize: 14.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, margin: "0 0 18px" }}>
-                The compliance configuration of the engine — purpose-built for Nigerian microfinance
-                banks and fintechs regulated by the CBN and SEC.
+                The same engine, generalised for any operations-heavy organisation — telecoms, utilities,
+                logistics — where critical knowledge lives in fragmented documents.
               </p>
               <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-                {["CBN lending limit breach alerts", "KYC / AML gap detection", "Regulatory deadline tracker", "SAR filing reminders", "Capital adequacy monitoring"].map((item) => (
+                {["Real-time workflow analytics across departments", "Plain-language Q&A over contracts, reports and returns", "Vendor SLA and contract-expiry monitoring", "Incident and complaint-trend correlation", "Audit-grade trace of every answer"].map((item) => (
                   <li key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
                       <path d="M2.5 7l3 3 6-6" stroke="#34D399" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -407,7 +407,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.6, margin: "18px 0 0", paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                See <a href="#compliance" style={{ color: "#34D399", textDecoration: "none" }}>compliance architecture</a> and <a href="#pricing" style={{ color: "#34D399", textDecoration: "none" }}>fintech pricing</a> below.
+                The same engine can also be configured for network-operator regulatory document handling.
               </p>
             </div>
           </div>
@@ -507,47 +507,14 @@ export default function HomePage() {
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 12 }}>
-            {/* Enterprise — primary */}
+            {/* MFB / fintech — primary */}
             <div style={{
               borderRadius: 14, padding: "28px",
               background: "rgba(255,203,5,0.05)",
               border: "1px solid rgba(255,203,5,0.25)",
               display: "flex", flexDirection: "column",
             }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#FFCB05", marginBottom: 10 }}>Enterprise document intelligence</div>
-              <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", marginBottom: 6 }}>Custom-quoted</div>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.42)", lineHeight: 1.7, margin: "0 0 20px" }}>
-                Scoped to your organisation — document volume, systems to connect, departments to
-                onboard, and deployment model. Every engagement starts with a working pilot.
-              </p>
-              <ul style={{ listStyle: "none", margin: "0 0 24px", padding: 0, display: "flex", flexDirection: "column", gap: 9 }}>
-                {["All five agents + knowledge graph", "Connectors to your existing systems", "Real-time analytics dashboards", "On-prem or private-cloud options", "Dedicated onboarding team"].map((item) => (
-                  <li key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                      <path d="M2.5 7l3 3 6-6" stroke="#FFCB05" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/request-demo" style={{
-                marginTop: "auto", textAlign: "center",
-                fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
-                padding: "11px 22px", borderRadius: 10,
-                background: "#FFCB05",
-              }}>
-                Book a call
-              </Link>
-            </div>
-
-            {/* Fintech — secondary vertical */}
-            <div style={{
-              borderRadius: 14, padding: "28px",
-              background: "rgba(255,255,255,0.025)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              display: "flex", flexDirection: "column",
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#34D399", marginBottom: 10 }}>Fintech &amp; MFB compliance</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#FFCB05", marginBottom: 10 }}>MFB &amp; fintech compliance</div>
               <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", marginBottom: 6 }}>
                 From ₦350K<span style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.35)" }}>/month</span>
               </div>
@@ -560,7 +527,7 @@ export default function HomePage() {
                 {["Unlimited compliance checks", "Live CBN KPI monitoring (Pro)", "AML/CFT filing automation (Pro)", "Audit trail — 12 to 36 months", "30-day free pilot"].map((item) => (
                   <li key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                      <path d="M2.5 7l3 3 6-6" stroke="#34D399" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M2.5 7l3 3 6-6" stroke="#FFCB05" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     {item}
                   </li>
@@ -568,11 +535,44 @@ export default function HomePage() {
               </ul>
               <Link href="/demo" style={{
                 marginTop: "auto", textAlign: "center",
+                fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
+                padding: "11px 22px", borderRadius: 10,
+                background: "#FFCB05",
+              }}>
+                See the full tier breakdown
+              </Link>
+            </div>
+
+            {/* Enterprise — secondary vertical */}
+            <div style={{
+              borderRadius: 14, padding: "28px",
+              background: "rgba(255,255,255,0.025)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              display: "flex", flexDirection: "column",
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#34D399", marginBottom: 10 }}>Enterprise document intelligence</div>
+              <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", marginBottom: 6 }}>Custom-quoted</div>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.42)", lineHeight: 1.7, margin: "0 0 20px" }}>
+                Scoped to your organisation — document volume, systems to connect, departments to
+                onboard, and deployment model. Every engagement starts with a working pilot.
+              </p>
+              <ul style={{ listStyle: "none", margin: "0 0 24px", padding: 0, display: "flex", flexDirection: "column", gap: 9 }}>
+                {["All five agents + knowledge graph", "Connectors to your existing systems", "Real-time analytics dashboards", "On-prem or private-cloud options", "Dedicated onboarding team"].map((item) => (
+                  <li key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+                      <path d="M2.5 7l3 3 6-6" stroke="#34D399" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/request-demo" style={{
+                marginTop: "auto", textAlign: "center",
                 fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)", textDecoration: "none",
                 padding: "11px 22px", borderRadius: 10,
                 background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)",
               }}>
-                See the full tier breakdown
+                Book a call
               </Link>
             </div>
           </div>

@@ -7,8 +7,8 @@ Meeting Route — send Iroko into a live meeting and let it answer aloud.
   POST /api/meeting/leave   {bot_id}               → bot leaves
 
 Answers come from the same multi-agent brain as the chat (StrategistAgent),
-condensed to a few spoken sentences, then voiced via Aethex and played into
-the meeting by the Recall bot.
+condensed to a few spoken sentences, then voiced via Azure OpenAI Realtime
+and played into the meeting by the Recall bot.
 """
 import asyncio
 import json

@@ -117,9 +117,43 @@ async def sk_invoke(kernel, plugin_name: str, function_name: str, **kwargs) -> s
 
 
 # ── Standalone LLM completion (used by Strategist) ──────────────────────────
+#
+# Backed by the Azure AI Foundry Responses API (unified /openai/v1/ surface,
+# no api-version query param) rather than Chat Completions. The Foundry
+# resource behind this only has one text deployment (AZURE_OPENAI_RESPONSES_
+# DEPLOYMENT, default gpt-5.6-sol) — unlike the old flagship/gpt4o/nano
+# three-tier split, every service_id now resolves to that same deployment.
+# Falls back to the old Chat Completions resource if the Responses API isn't
+# configured.
 
 _LLM_MAX_RETRIES = 3
 _LLM_RETRY_BASE_DELAY = 1.0  # seconds; doubles on each attempt
+
+
+def _responses_configured() -> bool:
+    return bool(os.getenv("AZURE_OPENAI_RESPONSES_ENDPOINT") and os.getenv("AZURE_OPENAI_RESPONSES_API_KEY"))
+
+
+def _responses_client():
+    from openai import AsyncOpenAI
+    endpoint = os.getenv("AZURE_OPENAI_RESPONSES_ENDPOINT", "").rstrip("/")
+    return AsyncOpenAI(
+        api_key=os.getenv("AZURE_OPENAI_RESPONSES_API_KEY"),
+        base_url=f"{endpoint}/openai/v1/",
+    )
+
+
+def _responses_deployment() -> str:
+    return os.getenv("AZURE_OPENAI_RESPONSES_DEPLOYMENT", "gpt-5.6-sol")
+
+
+def _chat_completions_client():
+    from openai import AsyncAzureOpenAI
+    return AsyncAzureOpenAI(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview"),
+    )
 
 
 async def llm_complete(
@@ -131,48 +165,55 @@ async def llm_complete(
     system_prompt: str = "",
 ) -> str:
     """
-    Call Azure OpenAI chat completion with exponential-backoff retry.
+    Call the main LLM with exponential-backoff retry.
     Retries up to _LLM_MAX_RETRIES times (delays: 1s, 2s, 4s).
     Raises RuntimeError after all retries are exhausted so callers can
     handle the failure explicitly instead of receiving a silent empty string.
-    Returns "" immediately when Azure OpenAI is not configured at all.
+    Returns "" immediately when neither backend is configured.
     """
     import asyncio
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
 
-    if not endpoint or not api_key:
-        logger.warning("Azure OpenAI not configured — llm_complete unavailable.")
+    use_responses = _responses_configured()
+    if not use_responses and not (os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY")):
+        logger.warning("No LLM backend configured — llm_complete unavailable.")
         return ""
-
-    deployment_map = {
-        "flagship": os.getenv("AZURE_OPENAI_FLAGSHIP_DEPLOYMENT", "gpt-5.6-sol"),
-        "gpt4o":    os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT",    "gpt-5.6-terra"),
-        "nano":     os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT",     "gpt-5.6-luna"),
-    }
-    deployment = deployment_map.get(service_id, deployment_map["gpt4o"])
-
-    from openai import AsyncAzureOpenAI, RateLimitError, APITimeoutError, APIConnectionError
-    client = AsyncAzureOpenAI(
-        azure_endpoint=endpoint,
-        api_key=api_key,
-        api_version=api_version,
-    )
 
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
 
+    from openai import RateLimitError, APITimeoutError, APIConnectionError
+
+    if use_responses:
+        client = _responses_client()
+        deployment = _responses_deployment()
+    else:
+        client = _chat_completions_client()
+        deployment_map = {
+            "flagship": os.getenv("AZURE_OPENAI_FLAGSHIP_DEPLOYMENT", "gpt-5.6-sol"),
+            "gpt4o":    os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT",    "gpt-5.6-terra"),
+            "nano":     os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT",     "gpt-5.6-luna"),
+        }
+        deployment = deployment_map.get(service_id, deployment_map["gpt4o"])
+
     last_error: Exception = RuntimeError("llm_complete: no attempts made")
     for attempt in range(1, _LLM_MAX_RETRIES + 1):
         try:
             # NOTE: GPT-5.x models only support the default temperature (1);
             # sending any other value returns a 400, so we do not forward it.
-            # reasoning_effort="none" makes these reasoning models count tokens as
-            # output-only (like GPT-4o). Without it, reasoning tokens silently
-            # consume max_completion_tokens and the visible answer comes back empty.
+            # reasoning={"effort": "none"} (Responses) / reasoning_effort="none"
+            # (Chat Completions) makes these reasoning models count tokens as
+            # output-only. Without it, reasoning tokens silently consume the
+            # budget and the visible answer comes back empty.
+            if use_responses:
+                response = await client.responses.create(
+                    model=deployment,
+                    input=messages,
+                    max_output_tokens=max_tokens,
+                    reasoning={"effort": "none"},
+                )
+                return response.output_text or ""
             response = await client.chat.completions.create(
                 model=deployment,
                 messages=messages,
@@ -212,52 +253,62 @@ async def llm_complete_stream(
 ):
     """
     Streaming version of llm_complete with exponential-backoff retry.
-    Yields string chunks as they arrive from Azure OpenAI.
+    Yields string chunks as they arrive.
     On transient errors, retries up to _LLM_MAX_RETRIES times before raising.
     Raises RuntimeError on non-retryable or exhausted errors so the SSE
     caller can emit a structured error event instead of silently closing.
     """
     import asyncio
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
 
-    if not endpoint or not api_key:
-        logger.warning("Azure OpenAI not configured — llm_complete_stream unavailable.")
+    use_responses = _responses_configured()
+    if not use_responses and not (os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY")):
+        logger.warning("No LLM backend configured — llm_complete_stream unavailable.")
         return  # caller treats zero tokens as unconfigured
-
-    deployment_map = {
-        "flagship": os.getenv("AZURE_OPENAI_FLAGSHIP_DEPLOYMENT", "gpt-5.6-sol"),
-        "gpt4o":    os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT",    "gpt-5.6-terra"),
-        "nano":     os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT",     "gpt-5.6-luna"),
-    }
-    deployment = deployment_map.get(service_id, deployment_map["gpt4o"])
-
-    from openai import AsyncAzureOpenAI, RateLimitError, APITimeoutError, APIConnectionError
-    client = AsyncAzureOpenAI(
-        azure_endpoint=endpoint,
-        api_key=api_key,
-        api_version=api_version,
-    )
 
     stream_messages = []
     if system_prompt:
         stream_messages.append({"role": "system", "content": system_prompt})
     stream_messages.append({"role": "user", "content": prompt})
 
+    from openai import RateLimitError, APITimeoutError, APIConnectionError
+
+    if use_responses:
+        client = _responses_client()
+        deployment = _responses_deployment()
+    else:
+        client = _chat_completions_client()
+        deployment_map = {
+            "flagship": os.getenv("AZURE_OPENAI_FLAGSHIP_DEPLOYMENT", "gpt-5.6-sol"),
+            "gpt4o":    os.getenv("AZURE_OPENAI_GPT4O_DEPLOYMENT",    "gpt-5.6-terra"),
+            "nano":     os.getenv("AZURE_OPENAI_NANO_DEPLOYMENT",     "gpt-5.6-luna"),
+        }
+        deployment = deployment_map.get(service_id, deployment_map["gpt4o"])
+
     last_error: Exception = RuntimeError("llm_complete_stream: no attempts made")
     for attempt in range(1, _LLM_MAX_RETRIES + 1):
         try:
+            if use_responses:
+                stream = await client.responses.create(
+                    model=deployment,
+                    input=stream_messages,
+                    max_output_tokens=max_tokens,
+                    reasoning={"effort": "none"},
+                    stream=True,
+                )
+                async for event in stream:
+                    if event.type == "response.output_text.delta" and event.delta:
+                        yield event.delta
+                return
             # GPT-5.x: default temperature only; reasoning_effort="none" so reasoning
             # tokens don't consume the budget and leave the stream empty.
-            stream = await client.chat.completions.create(
+            chat_stream = await client.chat.completions.create(
                 model=deployment,
                 messages=stream_messages,
                 max_completion_tokens=max_tokens,
                 stream=True,
                 extra_body={"reasoning_effort": "none"},
             )
-            async for chunk in stream:
+            async for chunk in chat_stream:
                 if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
             return  # stream completed successfully

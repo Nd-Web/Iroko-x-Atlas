@@ -10,10 +10,9 @@ Sends an "Iroko AI" bot into a meeting, then makes Iroko answer questions
     on its own when it hears "Iroko, …?".
 
 Pipeline:  Recall bot (in the meeting)  →  your question  →  Iroko backend
-(/api/atlas/ask, grounded answer)  →  Aethex TTS (Nigerian voice → mp3)
-→  Recall output_audio  →  the bot speaks it in the meeting.
-
-Prereqs: ffmpeg on PATH; the backend venv Python.
+(/api/atlas/ask, grounded answer)  →  Iroko backend /api/voice/tts
+(Azure OpenAI Realtime → mp3)  →  Recall output_audio  →  the bot speaks it
+in the meeting.
 
 Run (from the backend directory):
     RECALL_API_KEY=xxx MEETING_URL="https://teams.live.com/meet/..." \
@@ -27,8 +26,6 @@ Config via env (all have sensible defaults except the two marked *required*):
   IROKO_BASE       default https://iroko-x-atlas.onrender.com
   IROKO_EMAIL      default admin@mtn.ng
   IROKO_PASSWORD   default AtlasAdmin2026!
-  AETHEX_API_KEY   default read from ../frontend/.env.local
-  VOICE_ID         default 354d8730-... (Ada, Nigerian English)
 """
 from __future__ import annotations
 
@@ -37,7 +34,6 @@ import base64
 import json
 import os
 import re
-import subprocess
 import sys
 import threading
 import time
@@ -52,26 +48,8 @@ RECALL_KEY = os.getenv("RECALL_API_KEY", "")
 IROKO_BASE = os.getenv("IROKO_BASE", "https://iroko-x-atlas.onrender.com").rstrip("/")
 IROKO_EMAIL = os.getenv("IROKO_EMAIL", "admin@mtn.ng")
 IROKO_PASSWORD = os.getenv("IROKO_PASSWORD", "AtlasAdmin2026!")
-VOICE_ID = os.getenv("VOICE_ID", "354d8730-388b-5d94-a7e8-9f8bc87dc4fc")
 
-
-def _aethex_key() -> str:
-    k = os.getenv("AETHEX_API_KEY")
-    if k:
-        return k
-    # Fall back to the frontend env file
-    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    envp = os.path.join(here, "..", "frontend", ".env.local")
-    try:
-        for line in open(envp, encoding="utf-8"):
-            if line.startswith("IROKO_AGENT_API_KEY="):
-                return line.split("=", 1)[1].strip()
-    except Exception:
-        pass
-    return ""
-
-
-AETHEX_KEY = _aethex_key()
+_TOKEN = ""  # set in main() after login; tts_mp3_b64() speaks through the Iroko backend
 
 GREETING = ("Hello, this is Iroko AI. I have joined the meeting and I'm ready to "
             "answer your telecom and compliance questions.")
@@ -147,18 +125,21 @@ def _speechify(text: str) -> str:
     return " ".join(out)
 
 
-# ── Voice: Aethex TTS → mp3 → the bot speaks ──────────────────────────────────
+# ── Voice: Iroko backend TTS (Azure Realtime) → mp3 → the bot speaks ──────────
 
-def tts_mp3_b64(text: str) -> str:
-    wav = _req("https://api.aethexai.com/api/v1/tts", "POST",
-               {"X-API-Key": AETHEX_KEY, "Content-Type": "application/json"},
-               {"text": text, "voice_id": VOICE_ID}, raw_response=True, timeout=90)
-    # WAV bytes → mp3 via ffmpeg (stdin→stdout)
-    proc = subprocess.run(
-        ["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", "pipe:0",
-         "-f", "mp3", "-codec:a", "libmp3lame", "-b:a", "128k", "pipe:1"],
-        input=wav, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-    return base64.b64encode(proc.stdout).decode()
+def tts_mp3_b64(text: str, _retry: bool = True) -> str:
+    """mp3 already comes back from the backend — just base64 it for Recall."""
+    global _TOKEN
+    try:
+        mp3 = _req(f"{IROKO_BASE}/api/voice/tts", "POST",
+                   {"Authorization": f"Bearer {_TOKEN}", "Content-Type": "application/json"},
+                   {"text": text}, raw_response=True, timeout=90)
+    except urllib.error.HTTPError as e:
+        if e.code == 401 and _retry:
+            _TOKEN = iroko_login()
+            return tts_mp3_b64(text, _retry=False)
+        raise
+    return base64.b64encode(mp3).decode()
 
 
 def speak(bot_id: str, text: str) -> None:
@@ -277,15 +258,16 @@ def main():
     ap.add_argument("--no-greeting", action="store_true")
     args = ap.parse_args()
 
+    global _TOKEN
+
     if not RECALL_KEY:
         sys.exit("Set RECALL_API_KEY.")
     if not args.meeting:
         sys.exit("Set MEETING_URL or pass --meeting.")
-    if not AETHEX_KEY:
-        sys.exit("No Aethex key (set AETHEX_API_KEY or ensure frontend/.env.local has IROKO_AGENT_API_KEY).")
 
     print(f"Logging in to Iroko ({IROKO_BASE})…")
     token = iroko_login()
+    _TOKEN = token
     print("Sending 'Iroko AI' into the meeting…")
     bot_id = create_bot(args.meeting, transcribe=args.auto)
     print(f"  bot id: {bot_id}")

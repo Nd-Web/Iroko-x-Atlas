@@ -48,7 +48,7 @@ function SkeletonCard() {
   );
 }
 
-const STARTERS = ["Ikeja cluster outage root cause", "IHS diesel backup SLA penalties", "NCC QoS return requirements", "MoMo deduction complaints Q1"];
+const STARTERS = ["CBN capital adequacy requirements", "AML/CFT filing deadlines", "CBN prudential return requirements", "Loan deduction complaints Q1"];
 
 export default function SearchPage() {
   const [q, setQ] = useState("");

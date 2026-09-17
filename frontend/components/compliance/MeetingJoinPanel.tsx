@@ -79,7 +79,7 @@ export default function MeetingJoinPanel() {
         {enabled === false && (
           <p className="text-xs text-warning-700 bg-warning-50 border border-[rgba(245,158,11,0.25)] rounded-md px-3 py-2">
             Meeting integration isn't switched on for this deployment yet — set{" "}
-            {(missing.length ? missing : ["RECALL_API_KEY", "AETHEX_API_KEY"]).map((k, i) => (
+            {(missing.length ? missing : ["RECALL_API_KEY", "AZURE_OPENAI_REALTIME_API_KEY"]).map((k, i) => (
               <span key={k}>
                 {i > 0 && " and "}
                 <code className="font-mono">{k}</code>

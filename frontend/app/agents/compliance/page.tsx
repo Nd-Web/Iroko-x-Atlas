@@ -4,17 +4,17 @@ import MeetingJoinPanel from "@/components/compliance/MeetingJoinPanel";
 import { REGULATORY_FILINGS, STATUS_LABELS } from "@/lib/filings-data";
 
 const STATS = [
-  { label: "Open DSRs",           value: "3",     sub: "subscriber data requests",     accent: "#F59E0B", color: "#F59E0B" },
+  { label: "Open DSRs",           value: "3",     sub: "customer data requests",       accent: "#F59E0B", color: "#F59E0B" },
   { label: "Pending DPIAs",       value: "2",     sub: "awaiting DPO sign-off",        accent: "#38BDF8", color: "#38BDF8" },
-  { label: "NCC filings due 30d", value: "2",     sub: "QoS & incident returns due",   accent: "#EF4444", color: "#EF4444" },
-  { label: "Ikeja availability",  value: "82.7%", sub: "vs NCC minimum 95%",           accent: "#22C55E", color: "#22C55E" },
+  { label: "CBN filings due 30d", value: "2",     sub: "Prudential & AML/CFT returns due", accent: "#EF4444", color: "#EF4444" },
+  { label: "Capital adequacy",    value: "9.1%",  sub: "vs CBN minimum 10%",           accent: "#22C55E", color: "#22C55E" },
 ];
 
 export default function ComplianceAgentPage() {
   return (
     <AppShell
       title="Regulatory Compliance Agent"
-      subtitle="NCC · NDPA · FCCPC · DPO console · DPIA wizard · filing history"
+      subtitle="CBN · SEC · NDPA · DPO console · DPIA wizard · filing history"
       actions={
         <Link href="/chat?agent=Compliance" className="btn-primary py-2 px-[14px] text-[13px] no-underline">
           Ask Compliance Agent →
@@ -78,9 +78,9 @@ export default function ComplianceAgentPage() {
           </div>
           <div className="py-2">
             {[
-              { name: "MoMo Analytics Pipeline v3",           lawful: "Legitimate interest", risk: "High",   status: "in-review" },
-              { name: "SIM Registration Biometric Flow",       lawful: "Legal obligation",    risk: "High",   status: "draft"     },
-              { name: "Subscriber Usage Behaviour Model",      lawful: "Contract",            risk: "Medium", status: "approved"  },
+              { name: "Loan Analytics Pipeline v3",            lawful: "Legitimate interest", risk: "High",   status: "in-review" },
+              { name: "Customer KYC Biometric Flow",           lawful: "Legal obligation",    risk: "High",   status: "draft"     },
+              { name: "Customer Credit Behaviour Model",       lawful: "Contract",            risk: "Medium", status: "approved"  },
               { name: "CX Complaints Dashboard v2",            lawful: "Legitimate interest", risk: "Low",    status: "approved"  },
             ].map((d, i, arr) => {
               const st = {
@@ -124,9 +124,9 @@ export default function ComplianceAgentPage() {
               ))}
             </div>
             {[
-              { ref: "DSR-0041", req: "Right to access — call & MoMo transaction history export", subject: "Subscriber", type: "Access",        received: "Apr 30", sla: "1 day left", urgent: true  },
-              { ref: "DSR-0040", req: "Right to erasure — subscriber profile and usage data",     subject: "Subscriber", type: "Erasure",       received: "Apr 28", sla: "3 days",     urgent: false },
-              { ref: "DSR-0039", req: "Right to rectification — incorrect NIN on SIM record",     subject: "Enterprise", type: "Rectification", received: "Apr 27", sla: "4 days",     urgent: false },
+              { ref: "DSR-0041", req: "Right to access — loan & transaction history export",     subject: "Customer",   type: "Access",        received: "Apr 30", sla: "1 day left", urgent: true  },
+              { ref: "DSR-0040", req: "Right to erasure — customer profile and usage data",       subject: "Customer",   type: "Erasure",       received: "Apr 28", sla: "3 days",     urgent: false },
+              { ref: "DSR-0039", req: "Right to rectification — incorrect BVN on KYC record",     subject: "Enterprise", type: "Rectification", received: "Apr 27", sla: "4 days",     urgent: false },
             ].map((dsr, i, arr) => (
               <div
                 key={dsr.ref}

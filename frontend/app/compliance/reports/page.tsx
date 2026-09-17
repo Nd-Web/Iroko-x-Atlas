@@ -24,7 +24,7 @@ export default function ComplianceReportsPage() {
   }, [modal]);
 
   return (
-    <AppShell title="Compliance reports" subtitle="NCC returns · NDPA audit · FCCPC reports · DPIA tracker · DSR queue">
+    <AppShell title="Compliance reports" subtitle="CBN returns · NDPA audit · SEC filings · DPIA tracker · DSR queue">
       {/* Send Iroko to a live meeting */}
       <div className="mb-8">
         <MeetingJoinPanel />
@@ -35,7 +35,7 @@ export default function ComplianceReportsPage() {
         <div className="mb-4">
           <h2 className="text-[15px] font-semibold text-gray-900 tracking-[-0.01em]">Live Compliance Check</h2>
           <p className="text-[13px] text-gray-400 mt-[3px]">
-            Check any action, product, or policy against NCC · NDPA · FCCPC regulations in real time
+            Check any action, product, or policy against CBN · SEC · NDPA regulations in real time
           </p>
         </div>
         <ComplianceChecker />
@@ -216,7 +216,7 @@ export default function ComplianceReportsPage() {
                   </p>
                   <div>
                     <label className="label-base block mb-1.5">Processing activity</label>
-                    <input type="text" className="input-base w-full" placeholder="e.g. MoMo Analytics Pipeline v2" />
+                    <input type="text" className="input-base w-full" placeholder="e.g. Loan Analytics Pipeline v2" />
                   </div>
                   <div>
                     <label className="label-base block mb-1.5">Owning department</label>

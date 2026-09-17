@@ -28,23 +28,24 @@ from models.database import SessionLocal, Document, Alert, AgentRun
 
 logger = logging.getLogger(__name__)
 
-# Realistic MTN questions for the Strategist query history (drives productivity).
+# Realistic CBN/SEC-regulated MFB questions for the Strategist query history
+# (drives productivity metrics).
 _DEMO_QUERIES = [
-    "What caused the Ikeja cluster outage and what is our SLA exposure?",
+    "Are we meeting the CBN capital adequacy ratio this quarter?",
     "Which vendor contracts expire in the next 90 days?",
-    "Are we ready to submit the NCC QoS return for Q1 2026?",
-    "What is our penalty exposure on the ATC Lagos contract if it lapses?",
-    "Summarise the MoMo deduction complaints trend in Lagos this quarter",
-    "Does storing subscriber CDRs in a US cloud region comply with the NDPA?",
-    "What are the Ericsson RAN maintenance MTTR thresholds under the 2026 SLA?",
-    "Draft the IHS SLA breach notice for the February Ikeja outage",
-    "What is the status and delay risk of the Kano-Kaduna fibre rollout?",
-    "Which enterprise customers carry the highest SLA credit exposure?",
+    "Are we ready to submit the CBN prudential return for Q1 2026?",
+    "What is our exposure if a single-obligor lending limit is breached?",
+    "Summarise the loan-deduction complaints trend this quarter",
+    "Does storing customer KYC data in a US cloud region comply with the NDPA?",
+    "What is the SAR filing status for flagged transactions this month?",
+    "Draft the AML/CFT quarterly return summary",
+    "What is the status and delay risk of the core banking migration?",
+    "Which corporate customers carry the highest exposure concentration?",
     "What is our NDPA Article 24 review status and audit risk?",
-    "How did CSAT and complaint volume trend during the Ikeja incident?",
-    "What is the holdover risk if the ATC towers contract is not renewed?",
-    "Which network clusters are below the NCC 95% availability threshold?",
-    "What data-localization obligations apply to the new analytics pipeline?",
+    "How did CSAT and complaint volume trend during the loan-portal incident?",
+    "What is the penalty exposure if the CBN AML/CFT return is late?",
+    "Which branches are below the CBN liquidity ratio requirement?",
+    "What data-localization obligations apply to the new lending pipeline?",
 ]
 
 

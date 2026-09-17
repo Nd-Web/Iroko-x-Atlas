@@ -75,6 +75,44 @@ class Settings(BaseSettings):
         default="2025-01-01-preview",
         description="Azure OpenAI API version",
     )
+    AZURE_OPENAI_WHISPER_DEPLOYMENT: str = Field(
+        default="whisper",
+        description="Azure OpenAI Whisper deployment name (speech-to-text)",
+    )
+
+    # ── Azure OpenAI Responses API (main chat/text LLM) ──────────────────────
+
+    AZURE_OPENAI_RESPONSES_ENDPOINT: str = Field(
+        default="",
+        description="Azure AI Foundry unified v1 endpoint, e.g. https://{resource}.services.ai.azure.com",
+    )
+    AZURE_OPENAI_RESPONSES_API_KEY: str = Field(
+        default="",
+        description="Azure AI Foundry Responses API key",
+    )
+    AZURE_OPENAI_RESPONSES_DEPLOYMENT: str = Field(
+        default="gpt-5.6-sol",
+        description="Deployment name used for all Responses API calls (StrategistAgent's LLM brain)",
+    )
+
+    # ── Azure OpenAI Realtime (voice) ────────────────────────────────────────
+
+    AZURE_OPENAI_REALTIME_ENDPOINT: str = Field(
+        default="",
+        description="Azure OpenAI Realtime resource endpoint (voice: TTS, STT, WebRTC)",
+    )
+    AZURE_OPENAI_REALTIME_API_KEY: str = Field(
+        default="",
+        description="Azure OpenAI Realtime API key",
+    )
+    AZURE_OPENAI_REALTIME_DEPLOYMENT: str = Field(
+        default="gpt-realtime-2.1",
+        description="Azure OpenAI Realtime deployment name",
+    )
+    AZURE_OPENAI_REALTIME_VOICE: str = Field(
+        default="marin",
+        description="Preset voice for Realtime audio output",
+    )
 
     # ── Azure AI Search ───────────────────────────────────────────────────────
 

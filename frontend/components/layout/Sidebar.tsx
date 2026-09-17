@@ -91,7 +91,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       )}
       style={{ width: w, background: "var(--color-sidebar-bg)", minHeight: "100vh" }}
     >
-      {/* Logo — MTN × Iroko co-brand */}
+      {/* Logo */}
       <div className={cn("flex items-center gap-3 py-4 border-b border-white/[0.06] shrink-0",
         collapsed ? "justify-center px-4" : "px-4")}>
         <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
@@ -104,10 +104,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {!collapsed && (
           <div className="min-w-0">
             <div className="text-[13px] font-bold text-gray-900 tracking-tight leading-tight">
-              MTN <span className="text-gray-400 font-medium">×</span> Iroko AI
+              Iroko AI
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[10px] text-gray-400">Enterprise Intelligence</span>
+              <span className="text-[10px] text-gray-400">MFB Compliance Intelligence</span>
               <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-brand-500 bg-brand-50 border border-brand-200">5 AGENTS</span>
             </div>
           </div>

@@ -186,13 +186,13 @@ export default function RequestDemoPage() {
                 <select name="orgType" value={form.orgType} onChange={handleChange}
                   style={{ ...field, color: form.orgType ? "#F7F7F9" : "#7A7A85" }}>
                   <option value="">Select type (optional)</option>
-                  <option>Large enterprise — telecom / operations</option>
-                  <option>Large enterprise — other</option>
-                  <option>Bank / fintech</option>
                   <option>Unit MFB</option>
                   <option>State MFB</option>
                   <option>National MFB</option>
+                  <option>Bank / fintech</option>
                   <option>PSB / Payment Service Bank</option>
+                  <option>Large enterprise — telecom / operations</option>
+                  <option>Large enterprise — other</option>
                   <option>Public sector / other</option>
                 </select>
               </Field>

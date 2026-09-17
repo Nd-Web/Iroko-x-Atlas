@@ -131,9 +131,9 @@ async def compliance_check(
 
     # ── Compliance engine ─────────────────────────────────────────────────────
     try:
-        sector = (body.sector or "network").lower()
+        sector = (body.sector or "financial").lower()
         if sector not in ("network", "financial"):
-            sector = "network"
+            sector = "financial"
         default_org = "MTN Nigeria" if sector == "network" else "African Fintech Platform"
         org = body.context or default_org
         raw = await _watchdog.find_policy_conflicts(organisation=org, topic=body.text, sector=sector)

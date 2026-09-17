@@ -9,7 +9,12 @@ Stack: FastAPI + Semantic Kernel + Azure OpenAI + Azure AI Search
 """
 
 from dotenv import load_dotenv
-load_dotenv()
+# override=True so .env is authoritative locally. Without it, a stale machine-wide
+# env var (e.g. an old AZURE_OPENAI_API_KEY left in the Windows user profile)
+# silently beats .env and every LLM call 401s — surfacing as raw context dumps
+# instead of AI answers. Safe in production: .env is gitignored and excluded in
+# .dockerignore, so no file exists there and this is a no-op.
+load_dotenv(override=True)
 
 import sys
 import asyncio
@@ -65,6 +70,7 @@ from routes.compliance_api import router as compliance_api_router
 from routes.workflows import router as workflows_router
 from routes.graph import router as graph_router
 from routes.meeting import router as meeting_router
+from routes.voice import router as voice_router
 
 # Database
 from models.database import init_db
@@ -166,9 +172,9 @@ async def lifespan(app: FastAPI):
 # ─── App ─────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="Iroko AI - Enterprise Document Intelligence",
-    description="Iroko AI — enterprise document intelligence & real-time workflow analytics platform for telecom operators. "
-                "Understands contracts, RCA reports, NCC QoS returns, NDPA records, and complaint logs across the organisation. "
+    title="Iroko AI - MFB & Fintech Regulatory Compliance",
+    description="Iroko AI — regulatory compliance & document intelligence platform for CBN/SEC-regulated microfinance banks and fintechs. "
+                "Understands contracts, RCA reports, CBN prudential returns, NDPA records, and complaint logs across the organisation. "
                 "Multi-agent system built on Azure OpenAI + Microsoft Semantic Kernel.",
     version="2.1.0",
     docs_url="/docs",
@@ -217,6 +223,7 @@ app.include_router(compliance_api_router, prefix="/api/v1")
 app.include_router(workflows_router)
 app.include_router(graph_router)
 app.include_router(meeting_router)
+app.include_router(voice_router)
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 
@@ -280,13 +287,13 @@ async def debug_llm(current_user = Depends(get_current_user)):
         test1 = {"ok": False, "error": str(e), "type": type(e).__name__, "traceback": tb.format_exc()}
 
     # Test 2: simulate Strategist reason — large prompt with 2000 token budget
-    long_prompt = ("You are Iroko AI, an enterprise document intelligence assistant for a telecom operator.\n"
+    long_prompt = ("You are Iroko AI, a regulatory compliance assistant for a CBN/SEC-regulated microfinance bank.\n"
                    "Answer the user's question grounded ONLY in the evidence below.\n\n"
-                   "Question: \"What is the minimum network availability required by the NCC quality of service benchmarks?\"\n\n"
-                   "Retrieved Evidence:\nNCC QUALITY OF SERVICE QUARTERLY RETURN — Q4 2025\n"
-                   "Section 2.1 — Network Availability: Operators shall maintain network availability of "
-                   "at least 99.0% and a call setup success rate of at least 95.0% at all times. "
-                   "Quarterly QoS returns must be submitted to the NCC within 45 days of period end.\n\n"
+                   "Question: \"What is the minimum capital adequacy ratio required by the CBN for MFBs?\"\n\n"
+                   "Retrieved Evidence:\nCBN REVISED REGULATORY & SUPERVISORY GUIDELINES FOR MFBs — 2022\n"
+                   "Section 4.1 — Capital Requirements: MFBs shall maintain a minimum capital adequacy ratio of "
+                   "at least 10.0% at all times, with tiered minimum paid-up capital by licence class. "
+                   "Quarterly prudential returns must be submitted to the CBN within 15 days of period end.\n\n"
                    "RULES:\n1. Give a detailed answer\n2. Cite document IDs\n3. Pidgin: False\n\n"
                    "Respond with valid JSON: {\"answer\": \"...\", \"citations\": [], \"suggested_actions\": [], "
                    "\"suggested_followups\": [], \"confidence\": \"high|medium|low\"}")

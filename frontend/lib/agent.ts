@@ -1,10 +1,12 @@
 /**
- * Iroko AI agent client helpers.
- * All calls go through /api/agent/* (server-side proxy) so the API key
- * never leaves the server.
+ * Iroko AI voice client helpers — backed by Azure OpenAI Realtime.
+ * TTS/STT go through /api/voice/* (server-side proxy, cookie-authenticated
+ * like the rest of the app). The WebRTC call path talks to Azure directly
+ * from the browser using a short-lived client_secret minted by the backend
+ * (safe to expose, unlike a real API key).
  */
 
-const PROXY = "/api/agent";
+const PROXY = "/api/voice";
 
 // ─── Transcription ────────────────────────────────────────────────────────────
 
@@ -77,13 +79,13 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
   return text;
 }
 
-// ─── TTS — neural voice ───────────────────────────────────────────────────────
+// ─── TTS — Azure Realtime preset voice ─────────────────────────────────────────
 
-const DEFAULT_VOICE = "354d8730-388b-5d94-a7e8-9f8bc87dc4fc"; // Ada — Nigerian English, dialect-style
+const DEFAULT_VOICE = "marin"; // Azure Realtime preset — no Nigerian-accented voice is available
 
 let _currentAudio: HTMLAudioElement | null = null;
 
-export async function speakText(text: string, voiceId = DEFAULT_VOICE): Promise<void> {
+export async function speakText(text: string, voice = DEFAULT_VOICE): Promise<void> {
   if (typeof window === "undefined") return;
 
   _currentAudio?.pause();
@@ -93,7 +95,7 @@ export async function speakText(text: string, voiceId = DEFAULT_VOICE): Promise<
     const res = await fetch(`${PROXY}/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voice_id: voiceId, streaming: false }),
+      body: JSON.stringify({ text, voice }),
     });
 
     if (!res.ok) throw new Error(`TTS ${res.status}`);
@@ -116,72 +118,78 @@ export async function speakText(text: string, voiceId = DEFAULT_VOICE): Promise<
   }
 }
 
-// ─── Agent WebRTC session helpers ─────────────────────────────────────────────
+// ─── Azure Realtime WebRTC session ──────────────────────────────────────────────
+//
+// GA flow: the backend mints a short-lived client_secret (safe to hand to the
+// browser), then the browser does a single SDP offer/answer round trip
+// directly against Azure — no separate ICE-candidate exchange step.
 
-export interface AgentIceConfig {
-  iceServers: RTCIceServer[];
+export interface RealtimeSession {
+  clientSecret: string;
+  callsUrl:     string;
+  greeting:     string;
 }
 
-export interface AgentSessionResponse {
-  session_id: string;
-  ice_config: AgentIceConfig;
-}
-
-export interface AgentOfferResponse {
-  sdp:   string;
-  type:  RTCSdpType;
-  pc_id: string;
-}
-
-export async function createAgentSession(agentId: string): Promise<AgentSessionResponse> {
-  const res = await fetch(`${PROXY}/conversation/connect`, {
+export async function getRealtimeSession(instructions = ""): Promise<RealtimeSession> {
+  const res = await fetch(`${PROXY}/session`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ agent_id: agentId }),
+    body: JSON.stringify({ instructions }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({})) as { error?: string };
     throw new Error(err.error ?? `Session create failed (${res.status})`);
   }
-  return res.json() as Promise<AgentSessionResponse>;
+  const data = await res.json() as { client_secret: string; calls_url: string; greeting?: string };
+  return {
+    clientSecret: data.client_secret,
+    callsUrl:     data.calls_url,
+    greeting:     data.greeting ?? "",
+  };
 }
 
-export async function sendOffer(
-  sessionId: string,
-  sdp: string
-): Promise<AgentOfferResponse> {
-  const res = await fetch(`${PROXY}/conversation/${sessionId}/offer`, {
+// ─── Compliance engine (the voice agent's check_compliance tool) ───────────────
+
+export interface ComplianceVerdict {
+  verdict:    string;
+  flags:      string[];
+  reasoning:  string;
+  regulation: string;
+  confidence: number;
+  checked_at: string;
+}
+
+export async function runComplianceCheck(
+  text: string,
+  sector: "network" | "financial" = "network"
+): Promise<ComplianceVerdict> {
+  const res = await fetch(`${PROXY}/compliance-check`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sdp, type: "offer" }),
+    body: JSON.stringify({ text, sector }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({})) as { error?: string };
-    throw new Error(err.error ?? `SDP offer failed (${res.status})`);
+    throw new Error(err.error ?? `Compliance check failed (${res.status})`);
   }
-  return res.json() as Promise<AgentOfferResponse>;
+  return res.json() as Promise<ComplianceVerdict>;
 }
 
-export async function sendIceCandidates(
-  sessionId: string,
-  pcId: string,
-  candidates: RTCIceCandidateInit[]
-): Promise<void> {
-  const apiCandidates = candidates.map((c) => ({
-    candidate:       c.candidate,
-    sdp_mid:         c.sdpMid         ?? "0",
-    sdp_mline_index: c.sdpMLineIndex  ?? 0,
-  }));
-  await fetch(`${PROXY}/conversation/${sessionId}/ice`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pc_id: pcId, candidates: apiCandidates }),
-  });
-}
-
-export async function endAgentSession(sessionId: string): Promise<void> {
-  await fetch(`${PROXY}/conversation/${sessionId}/end`, {
+export async function negotiateWebRTC(
+  callsUrl: string,
+  clientSecret: string,
+  sdp: string
+): Promise<string> {
+  const res = await fetch(callsUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-  }).catch(() => {});
+    headers: {
+      Authorization:  `Bearer ${clientSecret}`,
+      "Content-Type": "application/sdp",
+    },
+    body: sdp,
+  });
+  if (!res.ok) {
+    throw new Error(`SDP exchange failed (${res.status})`);
+  }
+  return res.text();
 }

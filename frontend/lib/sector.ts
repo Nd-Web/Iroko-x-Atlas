@@ -14,7 +14,7 @@
 export type Sector = "network" | "financial";
 
 export const SECTORS: Sector[] = ["network", "financial"];
-export const DEFAULT_SECTOR: Sector = "network";
+export const DEFAULT_SECTOR: Sector = "financial";
 export const SECTOR_STORAGE_KEY = "iroko_sector";
 /** Fired on the window when the sector changes, so same-tab consumers re-sync. */
 export const SECTOR_EVENT = "iroko-sector-change";
@@ -54,7 +54,7 @@ export const SECTOR_META: Record<Sector, SectorMeta> = {
   },
   financial: {
     id: "financial",
-    short: "Financial",
+    short: "MFB / Fintech",
     org: "African Fintech Platform",
     agentTitle: "Fintech Compliance Agent",
     agentSubtitle: "CBN · SEC · NDPA · DPO console · DPIA wizard · filing history",

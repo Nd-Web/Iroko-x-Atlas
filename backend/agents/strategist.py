@@ -282,7 +282,7 @@ class StrategistAgent:
         context = await self._retrieve_context(question, depth)
 
         if context.get("knowledge_gap"):
-            return {"answer": f"I searched the document corpus but couldn't find strong coverage for '{question}'. My corpus covers: network incident RCAs, vendor contracts and SLAs, NCC regulatory returns, NDPA processing records, customer complaint data, and enterprise SLA registers. Could you refine your question?", "citations": [], "suggested_followups": ["What caused the Ikeja cluster outage?", "Which filings are due this quarter?", "Which vendor contracts expire soon?"], "confidence": "low"}
+            return {"answer": f"I searched the document corpus but couldn't find strong coverage for '{question}'. My corpus covers: incident RCAs, vendor contracts and SLAs, CBN/SEC regulatory returns, NDPA processing records, customer complaint data, and enterprise SLA registers. Could you refine your question?", "citations": [], "suggested_followups": ["What is our AML/CFT filing status?", "Which filings are due this quarter?", "Which vendor contracts expire soon?"], "confidence": "low"}
 
         prompt = self._build_answer_prompt(question, context, is_pidgin)
         self._log_trace("Strategist", "reason", "GPT reasoning over retrieved evidence")
@@ -298,14 +298,17 @@ class StrategistAgent:
             }
         self._log_trace("Scribe", "format", "Formatting answer with citations")
 
+        clean = response.strip().replace("```json", "").replace("```", "").strip()
         try:
-            clean = response.strip().replace("```json", "").replace("```", "").strip()
             result = json.loads(clean)
             result.setdefault("citations", context.get("citations", []))
             return result
         except json.JSONDecodeError:
+            # GPT-5.x usually returns well-formatted prose (bold headings, cited
+            # sections) rather than strict JSON when it fails to comply. Use that
+            # text directly instead of leaking raw JSON syntax to the user.
             return {
-                "answer": response,
+                "answer": clean or response,
                 "citations": context.get("citations", []),
                 "suggested_followups": ["Tell me more", "What's the financial impact?"],
                 "confidence": "medium",
@@ -485,7 +488,7 @@ class StrategistAgent:
         }
 
     _ANSWER_SYSTEM_PROMPT = (
-        "You are Iroko AI, an enterprise document-intelligence assistant for a large telecom operator — write like a sharp senior analyst. "
+        "You are Iroko AI, a compliance and document-intelligence assistant for a CBN/SEC-regulated microfinance bank or fintech — write like a sharp senior analyst. "
         "Answer questions grounded ONLY in the retrieved evidence. Never invent facts or figures. "
         "Synthesise evidence into a coherent, insight-led answer rather than a raw data dump. "
         "Lead with the most important finding; use bold for key metrics; discard off-topic retrieval noise. "
@@ -522,7 +525,7 @@ Respond with valid JSON:
 {{"answer": "...", "citations": [{{"document_id": "...", "document_title": "...", "excerpt": "..."}}], "suggested_actions": ["..."], "suggested_followups": ["..."], "confidence": "high|medium|low"}}"""
 
     _STREAM_SYSTEM_PROMPT = (
-        "You are Iroko AI, an enterprise document-intelligence assistant for a large telecom operator — write like a sharp senior analyst, "
+        "You are Iroko AI, a compliance and document-intelligence assistant for a CBN/SEC-regulated microfinance bank or fintech — write like a sharp senior analyst, "
         "not a retrieval engine. When answering document queries:\n"
         "• Open with the single most important insight or headline number, then build context.\n"
         "• Synthesise evidence into a flowing narrative with clear section headings; do NOT list raw chunks.\n"
@@ -580,14 +583,14 @@ Retrieved Evidence:
                 for h in self.conversation_history[-3:]
             ])
 
-        prompt = f"""Classify for Iroko AI (enterprise document & network intelligence for a telecom operator):
+        prompt = f"""Classify for Iroko AI (compliance & document intelligence for a CBN/SEC-regulated microfinance bank or fintech):
 - "greeting" -- hello, thanks, bye, casual chat, how body, how far
 - "follow_up" -- continuing previous topic, reactions like "omo", "really?", "and then?", "yes", short affirmations, surprise at a previous answer
-- "network_operations" -- network incidents, outages, site/cluster health, availability, KPIs, alerts, vendor SLA status
-- "customer_complaint" -- customer ticket, MoMo deduction dispute, CSAT, CX, resolution, NPS, complaint trends
-- "fraud_intelligence" -- fraud, SIM-swap, interconnect bypass, suspicious transactions, duplicate invoices, agent collusion, vendor irregularities, procurement fraud
-- "document_query" -- contracts, RCA reports, NCC returns, NDPA records, policy documents, regulatory filings
-- "regulatory_compliance" -- NCC/NDPC/NDPR/NDPA regulatory obligations, data protection & privacy law, data localization/residency, cross-border data transfer, breach notification, QoS/SIM/spectrum/licensing regulations, penalty or fine exposure, AI governance, model explainability, training-data sourcing, automated-decision transparency
+- "network_operations" -- operational incidents, branch/system outages, uptime, KPIs, alerts, vendor SLA status
+- "customer_complaint" -- customer ticket, loan/deduction dispute, CSAT, CX, resolution, NPS, complaint trends
+- "fraud_intelligence" -- fraud, account takeover, suspicious transactions, duplicate invoices, agent collusion, vendor irregularities, procurement fraud
+- "document_query" -- contracts, RCA reports, CBN returns, NDPA records, policy documents, regulatory filings
+- "regulatory_compliance" -- CBN/SEC/NDPA regulatory obligations, capital adequacy, lending/exposure limits, AML/CFT & KYC, SAR filings, data protection & privacy law, data localization/residency, cross-border data transfer, breach notification, licensing regulations, penalty or fine exposure, AI governance, model explainability, training-data sourcing, automated-decision transparency
 - "out_of_domain" -- completely unrelated to the organisation's operations or regulation (weather, sports, jokes, cooking)
 
 Input: "{question}"
@@ -648,16 +651,19 @@ JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
             return {"intent": "fraud_intelligence", "topic": q[:60], "confidence": 0.85}
 
         if any(p in q for p in [
-            "ncc regulation", "ndpc", "ndpa", "ndpr", "data protection act",
-            "nigerian communications act", "nca 2003", "consumer code",
+            "cbn regulation", "sec regulation", "ndpc", "ndpa", "ndpr", "data protection act",
+            "microfinance guideline", "mfb guideline", "consumer code",
             "regulatory framework", "regulatory obligation", "compliance obligation",
-            "regulatory penalty", "regulatory fine", "qos regulation",
-            "sim registration regulation", "spectrum regulation",
+            "regulatory penalty", "regulatory fine",
+            "capital adequacy", "capital requirement", "single obligor",
+            "prudential return", "cash reserve ratio", "liquidity ratio",
+            "aml", "cft", "anti-money laundering", "kyc", "know your customer",
+            "sar filing", "suspicious activity report", "sanctions screening",
             "data breach notification", "breach notification", "72 hour",
             "cross-border data", "cross border data", "cross-border transfer",
             "dpco", "data protection officer",
-            "compliance framework", "regulatory compliance", "ncc fine",
-            "ncc penalty", "regulatory risk", "regulatory exposure",
+            "compliance framework", "regulatory compliance", "cbn fine",
+            "cbn penalty", "sec fine", "sec penalty", "regulatory risk", "regulatory exposure",
             "ndpc fine", "ndpc penalty", "data protection compliance",
             # data-protection / privacy-law / AI-governance signals
             "data localization", "data localisation", "data residency",
@@ -751,16 +757,16 @@ JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
         self._log_trace("Strategist", "greeting", "Generating greeting")
         if not LLM_AVAILABLE:
             return self._fallback_greeting(is_pidgin)
-        prompt = f"""You are Iroko AI, an enterprise document-intelligence assistant for a large telecom operator.
+        prompt = f"""You are Iroko AI, a compliance and document-intelligence assistant for a CBN/SEC-regulated microfinance bank or fintech.
 User said: "{question}" Pidgin: {is_pidgin}
-Respond warmly (2-3 sentences). Mention you help with network incidents, vendor contracts, regulatory filings (NCC, NDPA), customer complaints, and document search.
+Respond warmly (2-3 sentences). Mention you help with regulatory filings (CBN, SEC, NDPA), AML/CFT & KYC checks, vendor contracts, customer complaints, and document search.
 If Pidgin, use Pidgin English."""
         try:
             answer = await llm_complete(prompt, max_tokens=200, temperature=0.7, service_id="nano")
             return {
                 "answer": answer.strip(),
                 "citations": [],
-                "suggested_followups": ["What caused the Ikeja cluster outage?", "Which vendor contracts expire in the next 90 days?", "Are we ready to submit the NCC QoS return?"],
+                "suggested_followups": ["What is our AML/CFT filing status this quarter?", "Which vendor contracts expire in the next 90 days?", "Are we meeting the CBN capital adequacy ratio?"],
                 "confidence": "high",
             }
         except (RuntimeError, Exception) as e:
@@ -797,21 +803,21 @@ Give a helpful follow-up. Pidgin: {is_pidgin}"""
         self._log_trace("Strategist", "decline", f"Out of scope: {topic}")
         if not LLM_AVAILABLE:
             return {"answer": "That's outside my scope. I specialise in your organisation's documents, network operations, and regulatory intelligence.", "citations": [], "confidence": "low"}
-        prompt = f"""You are Iroko AI (enterprise document intelligence for a telecom operator). User asked: "{question}" (out of scope).
-Politely decline, explain your scope (network incidents, vendor contracts, NCC/NDPA regulatory filings, customer complaints, document search).
+        prompt = f"""You are Iroko AI (compliance & document intelligence for a CBN/SEC-regulated microfinance bank or fintech). User asked: "{question}" (out of scope).
+Politely decline, explain your scope (CBN/SEC/NDPA regulatory filings, AML/CFT & KYC, vendor contracts, customer complaints, document search).
 Pidgin: {is_pidgin}"""
         try:
             answer = await llm_complete(prompt, max_tokens=200, temperature=0.6, service_id="nano")
             return {
                 "answer": answer.strip(),
                 "citations": [],
-                "suggested_followups": ["What caused the Ikeja cluster outage?", "Which regulatory filings are due this quarter?"],
+                "suggested_followups": ["What is our AML/CFT filing status this quarter?", "Which regulatory filings are due this quarter?"],
                 "confidence": "low",
             }
         except (RuntimeError, Exception) as e:
             logger.warning(f"LLM decline failed: {e}")
             return {
-                "answer": "That's outside my scope. I specialise in your organisation's documents — network incidents, vendor contracts, NCC/NDPA filings, and customer experience.",
+                "answer": "That's outside my scope. I specialise in your organisation's documents — CBN/SEC/NDPA filings, AML/CFT & KYC checks, vendor contracts, and customer experience.",
                 "citations": [],
                 "confidence": "low",
             }
@@ -1124,7 +1130,7 @@ Respond with valid JSON:
         self._log_trace("Strategist", "reason", "Synthesising regulatory operations answer")
         try:
             response = await llm_complete(prompt, max_tokens=2000, temperature=0.2,
-                                          system_prompt="You are Iroko AI, an enterprise network & document intelligence assistant for a telecom operator. Lead with live operational data. Give specific site/cluster names, incident references, availability figures, contract amounts. Suggest concrete next actions.")
+                                          system_prompt="You are Iroko AI, an operations & document intelligence assistant for a CBN/SEC-regulated microfinance bank or fintech. Lead with live operational data. Give specific branch/system names, incident references, availability figures, contract amounts. Suggest concrete next actions.")
         except RuntimeError as e:
             logger.error(f"LLM network ops reasoning failed after retries: {e}")
             return {
@@ -1132,14 +1138,16 @@ Respond with valid JSON:
                 "citations": [], "confidence": "low",
                 "suggested_followups": ["Show active alerts", "How is the Ikeja cluster performing?", "NCC QoS return status?"],
             }
+        clean = response.strip().replace("```json", "").replace("```", "").strip()
         try:
-            clean = response.strip().replace("```json", "").replace("```", "").strip()
             result = json.loads(clean)
             result.setdefault("citations", doc_context.get("citations", []))
             return result
         except json.JSONDecodeError:
+            # GPT-5.x usually returns well-formatted prose rather than strict JSON
+            # when it fails to comply — use that text instead of leaking raw JSON.
             return {
-                "answer": response or ops_context or "Live operational data is currently unavailable. Please check the Network Intelligence dashboard.",
+                "answer": clean or ops_context or "Live operational data is currently unavailable. Please check the Network Intelligence dashboard.",
                 "citations": doc_context.get("citations", []), "confidence": "medium",
                 "suggested_followups": ["Show active alerts", "How is the Ikeja cluster performing?", "NCC QoS return status?"],
             }
@@ -1158,7 +1166,7 @@ Respond with valid JSON:
             category = "sim_swap"
         elif any(k in q_lower for k in ["momo", "mobile money", "reversal", "agent wallet"]):
             category = "agent_wallet_fraud"
-        elif any(k in q_lower for k in ["compliance", "ncc", "regulatory", "submission"]):
+        elif any(k in q_lower for k in ["compliance", "cbn", "sec", "regulatory", "submission"]):
             category = "compliance"
 
         entities = self._extract_entities(question)
@@ -1193,11 +1201,11 @@ Respond with valid JSON:
             response = await llm_complete(
                 prompt, max_tokens=2000, temperature=0.2,
                 system_prompt=(
-                    "You are Iroko AI, a telecom fraud intelligence assistant. "
+                    "You are Iroko AI, a fraud intelligence assistant for a CBN/SEC-regulated microfinance bank or fintech. "
                     "Write a concise, insight-led fraud risk report. Lead with the highest-risk findings first. "
-                    "Always cite: signal ID, specific amounts in NGN, agent/dealer codes where relevant, region. "
-                    "End with concrete recommended actions: suspend agent codes, escalate to EFCC/ICPC, "
-                    "initiate internal audit, notify CFO/revenue assurance. Never soften fraud findings."
+                    "Always cite: signal ID, specific amounts in NGN, agent/branch codes where relevant, region. "
+                    "End with concrete recommended actions: suspend agent codes, file a SAR with the NFIU, escalate to EFCC/ICPC, "
+                    "initiate internal audit, notify CFO/compliance. Never soften fraud findings."
                 ),
             )
             clean = response.strip().replace("```json", "").replace("```", "").strip()
@@ -1236,11 +1244,11 @@ Respond with valid JSON:
         section numbers, penalties, and enforcement precedents (NCC, NDPA/NDPC)
         into the LLM context before synthesis.
         """
-        self._log_trace("Researcher", "regulatory_lookup", "Loading regulatory corpus (NCC, NDPA)")
+        self._log_trace("Researcher", "regulatory_lookup", "Loading regulatory corpus (CBN, SEC, NDPA)")
         from services.regulatory_service import get_regulatory_summary_text, get_regulatory_context
 
-        reg_text = get_regulatory_summary_text(question, sector="network")
-        ctx = get_regulatory_context(question, sector="network")
+        reg_text = get_regulatory_summary_text(question, sector="financial")
+        ctx = get_regulatory_context(question, sector="financial")
 
         self._log_trace("Analyst", "compliance_analysis",
                         f"Matched {ctx['total_matched']} regulations; building compliance briefing")
@@ -1269,8 +1277,8 @@ Respond with valid JSON:
             response = await llm_complete(
                 prompt, max_tokens=2500, temperature=0.15,
                 system_prompt=(
-                    "You are Iroko AI, a regulatory intelligence assistant for a large telecom operator. "
-                    "Write a precise, well-cited regulatory compliance briefing. "
+                    "You are Iroko AI, a regulatory intelligence assistant for a CBN/SEC-regulated microfinance "
+                    "bank or fintech. Write a precise, well-cited regulatory compliance briefing. "
                     "Always cite: exact regulation name, section number, penalty figure in NGN, and enforcement precedent. "
                     "Structure your answer: (1) which regulations apply, (2) what the organisation's specific obligations are, "
                     "(3) penalty exposure with actual figures, (4) enforcement precedents to illustrate seriousness, "
@@ -1294,8 +1302,8 @@ Respond with valid JSON:
                         "citations": doc_context.get("citations", []),
                         "suggested_followups": [
                             "What are the NDPA 2023 data breach notification requirements?",
-                            "What does the GAID 2025 require for cross-border data transfers?",
-                            "What QoS thresholds does the NCC enforce under NCC-QOS-001?",
+                            "What are the CBN capital adequacy requirements for our licence tier?",
+                            "What AML/CFT obligations apply under CBN-AML-001?",
                         ],
                         "confidence": "high",
                     }
@@ -1303,7 +1311,7 @@ Respond with valid JSON:
         except Exception as e:
             logger.warning(f"Regulatory LLM synthesis failed, using fallback: {e}")
             checklist = ctx.get("compliance_checklist", [])
-            lines = ["**Regulatory Compliance Briefing (NCC, NDPC & FCCPC)**\n"]
+            lines = ["**Regulatory Compliance Briefing (CBN, SEC & NDPA)**\n"]
             for item in checklist:
                 lines.append(
                     f"\n**[{item['risk']}] {item['area']}** — {item['regulator']} | {item['regulation']}\n"
@@ -1315,10 +1323,10 @@ Respond with valid JSON:
                 "citations": [],
                 "suggested_followups": [
                     "What are the NDPA 2023 data breach notification requirements?",
-                    "What is our penalty exposure if the NCC QoS return is late?",
-                    "Do we need a DPIA before launching the MoMo analytics pipeline?",
-                    "What does the GAID 2025 require for cross-border data transfers?",
-                    "What QoS thresholds does the NCC enforce?",
+                    "What is our penalty exposure if the CBN prudential return is late?",
+                    "Do we need a DPIA before launching a new lending analytics pipeline?",
+                    "What AML/CFT obligations apply under CBN-AML-001?",
+                    "What capital adequacy ratio does the CBN require for our licence tier?",
                 ],
                 "confidence": "high",
             }
@@ -1380,7 +1388,7 @@ Respond with valid JSON:
         self._log_trace("Strategist", "reason", "Synthesising CX answer from live data")
         try:
             response = await llm_complete(prompt, max_tokens=1500, temperature=0.2,
-                                          system_prompt="You are Iroko AI, a customer experience intelligence assistant for a telecom operator. Give specific numbers: complaint counts, resolution rates, disputed amounts. Highlight top complaint categories and regions. Link complaints to network incidents where correlation exists.")
+                                          system_prompt="You are Iroko AI, a customer experience intelligence assistant for a CBN/SEC-regulated microfinance bank or fintech. Give specific numbers: complaint counts, resolution rates, disputed amounts. Highlight top complaint categories and regions. Link complaints to operational incidents where correlation exists.")
         except RuntimeError as e:
             logger.error(f"LLM CX reasoning failed after retries: {e}")
             return {
@@ -1388,12 +1396,14 @@ Respond with valid JSON:
                 "citations": [], "confidence": "low",
                 "suggested_followups": ["Top complaint categories?", "Lagos complaint trends?", "MoMo deduction resolution rate?"],
             }
+        clean = response.strip().replace("```json", "").replace("```", "").strip()
         try:
-            clean = response.strip().replace("```json", "").replace("```", "").strip()
             return json.loads(clean)
         except json.JSONDecodeError:
+            # GPT-5.x usually returns well-formatted prose rather than strict JSON
+            # when it fails to comply — use that text instead of leaking raw JSON.
             return {
-                "answer": response or cx_context or "CX data is currently unavailable.",
+                "answer": clean or cx_context or "CX data is currently unavailable.",
                 "citations": [], "confidence": "medium",
                 "suggested_followups": ["Top complaint categories?", "Lagos complaint trends?", "MoMo deduction resolution rate?"],
             }

@@ -91,6 +91,18 @@ def _get_embedding_client() -> AsyncAzureOpenAI:
 
 # ── Chat completion ───────────────────────────────────────────────────────────
 
+def _responses_configured() -> bool:
+    return bool(settings.AZURE_OPENAI_RESPONSES_ENDPOINT and settings.AZURE_OPENAI_RESPONSES_API_KEY)
+
+
+def _get_responses_client():
+    from openai import AsyncOpenAI
+    return AsyncOpenAI(
+        api_key=settings.AZURE_OPENAI_RESPONSES_API_KEY,
+        base_url=f"{settings.AZURE_OPENAI_RESPONSES_ENDPOINT.rstrip('/')}/openai/v1/",
+    )
+
+
 @_azure_retry
 async def get_chat_completion(
     messages: list[dict[str, str]],
@@ -101,17 +113,30 @@ async def get_chat_completion(
     deployment: Optional[str] = None,
 ) -> str:
     """
-    Call Azure OpenAI GPT-4o deployment and return the assistant's response.
+    Call the main LLM and return the assistant's response. Uses the Azure
+    Responses API when configured (default deployment only — `deployment`
+    overrides fall back to the Chat Completions resource, since an explicit
+    override implies a specific named deployment on that resource).
     Automatically retried up to 3 times with exponential backoff + jitter on
     RateLimitError, APITimeoutError, and APIConnectionError.
     """
-    client = _get_client()
-    model = deployment or settings.AZURE_OPENAI_DEPLOYMENT
-
     full_messages = []
     if system_prompt:
         full_messages.append({"role": "system", "content": system_prompt})
     full_messages.extend(messages)
+
+    if deployment is None and _responses_configured():
+        client = _get_responses_client()
+        response = await client.responses.create(
+            model=settings.AZURE_OPENAI_RESPONSES_DEPLOYMENT,
+            input=full_messages,
+            max_output_tokens=max_tokens,
+            reasoning={"effort": "none"},
+        )
+        return response.output_text or ""
+
+    client = _get_client()
+    model = deployment or settings.AZURE_OPENAI_DEPLOYMENT
 
     # GPT-5.x: default temperature only; reasoning_effort="none" so reasoning tokens
     # don't consume the budget and return an empty completion.
@@ -144,6 +169,29 @@ async def get_embedding(
         input=text,
     )
     return response.data[0].embedding
+
+
+# ── Transcription (speech-to-text) ────────────────────────────────────────────
+
+@_azure_retry
+async def transcribe_audio(
+    audio_bytes: bytes,
+    filename: str = "audio.wav",
+    *,
+    deployment: Optional[str] = None,
+) -> str:
+    """
+    Transcribe audio to text using the Azure OpenAI Whisper deployment.
+    Automatically retried up to 3 times with exponential backoff + jitter.
+    """
+    client = _get_client()
+    model = deployment or settings.AZURE_OPENAI_WHISPER_DEPLOYMENT
+
+    response = await client.audio.transcriptions.create(
+        model=model,
+        file=(filename, audio_bytes),
+    )
+    return response.text or ""
 
 
 # ── Streaming (for SSE routes) ────────────────────────────────────────────────
