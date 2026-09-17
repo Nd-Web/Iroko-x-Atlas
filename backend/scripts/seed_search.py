@@ -247,6 +247,24 @@ Financial Institutions, a deduction without a valid, auditable customer mandate 
 an unauthorised debit requiring refund within 48 hours of the complaint plus
 payment of any accrued interest to the customer.
 
+POLICY CONFLICT — REFUND TIMELINE
+
+Internal Complaints Handling Policy v3.1, section 6.4, currently allows the
+disputes team up to 5 working days to refund a disputed deduction, on the basis
+that the mandate audit trail must first be retrieved from the core banking
+platform.
+
+This directly contradicts the CBN Consumer Protection Framework, which requires
+an unauthorised debit to be reversed within 48 hours of the customer's complaint.
+The internal policy therefore authorises a timeline that is itself a breach of
+the regulation, and staff following the policy as written will put the Bank in
+default. Legal and Compliance raised this on 22 February 2026; the policy has not
+yet been amended and remains in force as at the date of this report.
+
+Estimated exposure: 484 disputed-authorisation cases in the quarter, of which 297
+were refunded outside the 48-hour regulatory window while remaining inside the
+5-day internal window.
+
 MONTH-ON-MONTH TREND
 
 January 2026: 3,118 complaints, 1,244 loan deduction disputes

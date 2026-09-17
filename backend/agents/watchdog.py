@@ -263,17 +263,55 @@ Return [] if no spikes detected."""
             results=results,
             extraction_type="policy_conflict",
             extra_context=f"topic={topic or 'general'}",
-            prompt_instruction=self._policy_conflict_prompt(sector),
+            prompt_instruction=self._policy_conflict_prompt(sector, topic),
             sector=sector,
         )
 
         await self._write_org_memory_from_alerts(alerts, organisation)
         return json.dumps({"check": "policy_conflicts", "alerts": alerts, "conflicts": alerts})
 
-    def _policy_conflict_prompt(self, sector: str = "financial") -> str:
-        regulators = "NCC, NDPA, NCA 2003" if sector == "network" else "CBN, SEC, NDPA, FIRS"
-        return f"""Identify conflicts where an internal policy contradicts a law, regulation,
-or regulatory guidance ({regulators}, etc.).
+    def _policy_conflict_prompt(self, sector: str = "financial", topic: str = "") -> str:
+        regulators = "NCC, NDPA, NCA 2003" if sector == "network" else "CBN, SEC, NDPA, NFIU, FIRS"
+
+        if topic:
+            # A topic means a caller (dashboard check, or the voice agent's
+            # check_compliance tool) is asking "may we do THIS?". Without an
+            # explicit instruction the model only looks for contradictions
+            # *between* the documents and reports none when a policy is stated
+            # correctly — returning a clean verdict for a plainly unlawful action.
+            task = f"""A proposed action has been submitted for compliance assessment:
+
+    "{topic}"
+
+Decide whether THAT PROPOSED ACTION is permissible under the laws, regulations,
+regulatory limits and internal policy positions set out in the documents above
+({regulators}, etc.).
+
+Report ONLY problems with the proposed action itself — a rule it would breach, a
+stated limit it would exceed, or a safeguard it would bypass. Quote the specific
+regulation, limit or policy position you rely on. It counts even if the documents
+never mention this particular action, so long as they state the rule it violates.
+
+Do NOT report the organisation's pre-existing problems. These documents describe
+breaches, open findings, overdue items and control gaps that already exist. Those
+are NOT alerts about this action unless the action would directly cause, worsen,
+or perpetuate them. An unrelated existing breach elsewhere in the business is
+irrelevant to whether this action may proceed.
+
+If the proposed action is routine, already required by regulation, or simply
+consistent with the rules stated, return [] — even when the documents happen to
+describe unrelated problems. Submitting a return on time, running mandated
+training, or onboarding a customer with full due diligence are all compliant
+actions and must return [].
+
+Use severity "critical" where the action would breach a law, regulation, or a
+stated regulatory limit; "warning" where it needs documented safeguards or
+approval before it may proceed."""
+        else:
+            task = f"""Identify conflicts where an internal policy contradicts a law, regulation,
+or regulatory guidance ({regulators}, etc.)."""
+
+        return f"""{task}
 
 Return JSON array:
 [{{
