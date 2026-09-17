@@ -97,7 +97,7 @@ export function useAgent({
             text?: string;
             sector?: "network" | "financial";
           };
-          const verdict = await runComplianceCheck(args.text ?? "", args.sector ?? "network");
+          const verdict = await runComplianceCheck(args.text ?? "", args.sector ?? "financial");
           onVerdict?.(verdict);
           output = JSON.stringify(verdict);
         } catch (err) {

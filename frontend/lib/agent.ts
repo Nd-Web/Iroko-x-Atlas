@@ -161,7 +161,7 @@ export interface ComplianceVerdict {
 
 export async function runComplianceCheck(
   text: string,
-  sector: "network" | "financial" = "network"
+  sector: "financial" | "network" = "financial"
 ): Promise<ComplianceVerdict> {
   const res = await fetch(`${PROXY}/compliance-check`, {
     method: "POST",
