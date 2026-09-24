@@ -145,24 +145,24 @@ export default function HomePage() {
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/login" style={{
+            <Link href="/request-demo" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
               fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
               padding: "11px 22px", borderRadius: 10,
               background: "#FFCB05",
             }}>
-              Request access
+              Request free 30-day pilot
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </Link>
-            <Link href="/request-demo" style={{
+            <Link href="/login" style={{
               display: "inline-flex", alignItems: "center",
               fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.55)", textDecoration: "none",
               padding: "11px 22px", borderRadius: 10,
               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)",
             }}>
-              Request free 30-day pilot
+              Request access
             </Link>
           </div>
 
@@ -465,37 +465,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Credibility ── */}
-      <section style={{ padding: "0 24px 96px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#FFCB05", marginBottom: 12 }}>Proven, not promised</p>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 32 }}>
-            <h2 style={{ fontSize: "clamp(24px,3vw,34px)", fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1.15, margin: 0, maxWidth: 520 }}>
-              The engine has already been tested against the field
-            </h2>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", maxWidth: 340, lineHeight: 1.7, margin: 0 }}>
-              The five-agent document-intelligence engine behind Iroko AI has been judged in open competition — twice.
-            </p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 12 }}>
-            {[
-              { n: "4th of 200+ teams", label: "TeKnowledge × Microsoft Agentic AI Hackathon Finale", color: "#818CF8" },
-              { n: "Best Student Award", label: "YPIT Artificial Future Hackathon", color: "#34D399" },
-            ].map(({ n, label, color }) => (
-              <div key={label} style={{
-                borderRadius: 14, padding: "26px",
-                background: "rgba(255,255,255,0.025)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderLeft: `3px solid ${color}`,
-              }}>
-                <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: "-0.02em", color, marginBottom: 8 }}>{n}</div>
-                <div style={{ fontSize: 13.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── Pricing ── */}
       <section id="pricing" style={{ padding: "96px 24px", background: "#070708" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -624,7 +593,7 @@ export default function HomePage() {
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           {LOGO}
           <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", margin: 0 }}>
-            © 2026 Iroko AI · 4th of 200+ teams — TeKnowledge × Microsoft Agentic AI Hackathon Finale
+            © 2026 Iroko AI · Enterprise Document Intelligence
           </p>
           <div style={{ display: "flex", gap: 20 }}>
             {["Privacy", "Terms", "Contact"].map((l) => (
