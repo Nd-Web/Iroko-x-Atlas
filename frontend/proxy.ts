@@ -30,6 +30,7 @@ export function proxy(request: NextRequest) {
   const isInviteRoute         = pathname.startsWith("/invite");
 
   const isHomePage        = pathname === "/";
+  if (pathname.startsWith("/marketing/")) return NextResponse.next();
   const isRequestDemo     = pathname === "/request-demo";
   const isPublicAuthRoute = isLoginRoute || isForgotPasswordRoute || isResetPasswordRoute || isHomePage || isRequestDemo;
 
