@@ -306,6 +306,8 @@ def _add_column_if_missing(conn, table: str, column: str, col_def: str):
 
 
 def init_db():
+    # Import public pilot request model so its table is registered.
+    import models.pilot_request  # noqa: F401
     # Import network models so their tables are registered with Base.metadata
     import models.network_models  # noqa: F401
     # Import audit trail model so its table is registered with Base.metadata

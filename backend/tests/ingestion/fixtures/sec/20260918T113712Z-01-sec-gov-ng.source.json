@@ -1,0 +1,16 @@
+{
+  "url": "https://sec.gov.ng/robots.txt",
+  "request_started_at": "2026-09-18T11:37:12.927837+00:00",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "final_url": "https://sec.gov.ng/robots.txt",
+  "status": 404,
+  "headers": {
+    "content-type": "text/html; charset=UTF-8"
+  },
+  "body_complete": true,
+  "size_bytes": 25,
+  "sha256": "a9aa9ec7ef3ec92e7eb52220a9f0cb578ff2ba0a71cb3e9c1a0b828857529fcc",
+  "response_path": "backend\\tests\\ingestion\\fixtures\\sec\\20260918T113712Z-01-sec-gov-ng.response.bin",
+  "fetched_at": "2026-09-18T11:37:13.875083+00:00",
+  "finished_at": "2026-09-18T11:37:13.875146+00:00"
+}

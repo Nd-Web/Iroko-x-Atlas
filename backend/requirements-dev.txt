@@ -1,0 +1,18 @@
+# Development dependencies for the regulatory ingestion subsystem.
+# Approved by the maintainer on 2026-09-18. All permissive licences.
+#
+#   pip install -r requirements.txt -r requirements-dev.txt
+#   python tasks.py check
+#
+# mypy is deliberately NOT included: type checking is deferred and the codebase
+# is not annotated. See docs/ingestion/README.md.
+
+pytest==9.1.1              # MIT
+pytest-asyncio==1.4.0      # Apache-2.0
+respx==0.23.1              # BSD-3
+ruff==0.16.8               # MIT
+
+# Installed 2026-09-18 for the CBN HTTP/2 diagnostic (decision 1a). HTTP/2 made
+# no difference to the Cloudflare block, so the crawler stays on HTTP/1.1 as the
+# brief specifies. Kept only so that diagnostic can be repeated.
+h2>=4.0                    # MIT

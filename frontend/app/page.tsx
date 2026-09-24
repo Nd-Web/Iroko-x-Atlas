@@ -162,7 +162,7 @@ export default function HomePage() {
               padding: "11px 22px", borderRadius: 10,
               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)",
             }}>
-              Request live demo
+              Request free 30-day pilot
             </Link>
           </div>
 
@@ -572,7 +572,7 @@ export default function HomePage() {
                 padding: "11px 22px", borderRadius: 10,
                 background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)",
               }}>
-                Book a call
+                Request free pilot
               </Link>
             </div>
           </div>

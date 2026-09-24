@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /footer.html
+Disallow: /header.html
+Disallow: /museum/
+Disallow: /*.asp$
+Disallow: /appsettings.json
+
+
+Sitemap: https://www.cbn.gov.ng/sitemap.xml
+
+

@@ -1,0 +1,17 @@
+{
+  "url": "https://home.sec.gov.ng/feeds/circulars.rss",
+  "request_started_at": "2026-09-18T11:35:48.685036+00:00",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "final_url": "https://home.sec.gov.ng/feeds/circulars.rss",
+  "status": 200,
+  "headers": {
+    "content-type": "application/rss+xml; charset=utf-8",
+    "last-modified": "Mon, 14 Sep 2026 00:00:00 GMT"
+  },
+  "body_complete": true,
+  "response_path": "backend\\tests\\ingestion\\fixtures\\sec\\20260918T113545Z-02-home-sec-gov-ng.response.bin",
+  "size_bytes": 49181,
+  "sha256": "472bb80f7d45355066fd7c04792b5175a8098c95c09202c5e1c7161162a7e005",
+  "fetched_at": "2026-09-18T11:35:51.689435+00:00",
+  "finished_at": "2026-09-18T11:35:51.689513+00:00"
+}

@@ -1,0 +1,12 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/documents/ComplianceCirculars.html",
+  "final_url": "https://www.cbn.gov.ng/documents/ComplianceCirculars.html",
+  "status": 200,
+  "content_type": "text/html",
+  "fetched_at": "2026-09-18T11:49:55.850470+00:00",
+  "size_bytes": 7257,
+  "sha256": "5c7d586b47b3e38d640bb5c8cf07886897b357811f0b3f5f3c0b5655098b8541",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-05-compliance.html"
+}

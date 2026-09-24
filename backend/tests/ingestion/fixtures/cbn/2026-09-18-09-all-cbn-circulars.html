@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en-US">
+	<script>
+		function includeHTML() {
+		  var z, i, elmnt, file, xhttp;
+		  /*loop through a collection of all HTML elements:*/
+		  z = document.getElementsByTagName("*");
+		  for (i = 0; i < z.length; i++) {
+			elmnt = z[i];
+			/*search for elements with a certain atrribute:*/
+			file = elmnt.getAttribute("w3-include-html");
+			if (file) {
+			  /*make an HTTP request using the attribute value as the file name:*/
+			  xhttp = new XMLHttpRequest();
+			  xhttp.onreadystatechange = function() {
+				if (this.readyState == 4) {
+				  if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+				  if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+				  /*remove the attribute, and call this function once more:*/
+				  elmnt.removeAttribute("w3-include-html");
+				  includeHTML();
+				}
+			  }      
+			  xhttp.open("GET", file, true);
+			  xhttp.send();
+			  /*exit the function:*/
+			  return;
+			}
+		  }
+		};
+		</script>
+<head>
+<!-- Microsoft Clarity Tracking Code -->	
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "qr41jekh0p");
+</script>	
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N4BDKFWBKH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-N4BDKFWBKH');
+</script>
+	
+	
+
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<meta name="author" content="Central Bank of Nigeria" />
+	<meta name="description" content="Central Bank of Nigeria Circulars" />
+	<meta name="keywords" content=" CBN, Circular, Guideliines, Central Bank of Nigeria" />
+	<meta name="robots" content="index, follow" />
+	
+	 
+    <link href="https://kendo.cdn.telerik.com/themes/7.2.0/default/default-main.css"
+rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-1.12.3.min.js"></script>
+
+<script src="https://kendo.cdn.telerik.com/2024.1.130/mjs/kendo.grid.js" type="module"></script>
+<script src="/kendo-ui-license.js" type="module"></script>
+
+
+	<!-- Stylesheets
+	============================================= -->
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700|Poppins:300,400,500,600,700|PT+Serif:400,400i&display=swap" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
+	<link rel="stylesheet" href="/style.css" type="text/css" />
+	<link rel="stylesheet" href="/css/dark.css" type="text/css" />
+	<link rel="stylesheet" href="/css/font-icons.css" type="text/css" />
+	<link rel="stylesheet" href="/css/animate.css" type="text/css" />
+	<link rel="stylesheet" href="/css/magnific-popup.css" type="text/css" />
+
+	<!-- Bootstrap Select CSS -->
+	<link rel="stylesheet" href="/css/components/bs-select.css" type="text/css" />
+
+	<link rel="stylesheet" href="/css/custom.css" type="text/css" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<!-- Document Title
+	============================================= -->
+	<title>Circulars | Central Bank of Nigeria</title>
+
+	
+		
+
+</head>
+
+<body class="stretched">
+	<!-- Document Wrapper
+		============================================= -->
+	<div id="wrapper" class="clearfix">
+
+		<div w3-include-html="/header.html"></div>
+
+		<!-- Page Title
+		============================================= -->
+		<section id="page-title" style="background: url('/images/Page Titles/Circulars.jpg');">
+
+			<div class="container clearfix" >
+				<h1 style="color: white;">Circulars</h1>
+				<span style="color: white;">Find all your circulars here</span>
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item" ><a href="/" style="color:white;">Home</a></li>
+					<li class="breadcrumb-item" ><a href="/Documents/" style="color:white;">Documents</a></li>
+					<li class="breadcrumb-item active" aria-current="page" style="color: white; font-weight:bold;">Circulars</li>
+				</ol>
+			</div>
+
+		</section><!-- #page-title end -->
+
+		
+
+		<!-- Content
+		============================================= -->
+		<section id="content">
+			<div class="content-wrap">
+				<div class="container clearfix">
+
+					<div class="row gutter-40 col-mb-80">
+						<!-- Post Content
+						============================================= -->
+						<div class="postcontent col-lg-9">						
+							<h2>Circulars</h2>
+							<!--<div w3-include-html="press-subnav.html"></div>-->
+
+						 <div id="grid">
+						</div>
+				  
+						<script>
+						  $(function() {
+							$("#grid").kendoGrid({
+							  dataSource: {   
+								transport: {   
+								  read: {
+									url: "/api/GetAllCirculars",
+									data: {
+									 
+									  format: "json"
+									},
+								   
+								  }
+								},
+								schema: {
+								 
+								  model: {
+									fields: {
+									  
+									}
+								  }
+								}
+							  },
+							  columns: [
+							  
+							  {field: "refNo", title: "Ref.No."},
+							  
+							  {field: "link", title: "Title", template: '<a href="#=link#" target="_blank">#=title#</a>', width: 400},
+							  {field: "documentDate", title: "Date"},
+							  {field: "filesize", title: "Filesize"},
+						   
+							],
+						   
+							  height: 700,
+							  searchable: true,
+							  sortable: true,
+							  //pageable: true,
+							  
+							  pageable: {
+							       position: "top",
+							       pageSizes: true,
+								   pageSize: 10,
+							       info:false,
+							       buttonCount:4,
+							       responsive:false,
+							       messages: {
+								    itemsPerPage: "/page"
+							       }
+							},
+							toolbar: ["search"]
+							});
+
+						  });
+						</script>   
+					
+
+						</div><!-- .postcontent end -->
+
+						<!-- Sidebar
+						============================================= -->
+						<div class="sidebar col-lg-3">
+							<div class="sidebar-widgets-wrap">
+
+								<div class="widget widget_links clearfix">
+
+									<iframe src="/HistoryFacts.html" height="600" width="300" title=""></iframe>
+
+								</div>
+
+
+							</div>
+						</div><!-- .sidebar end -->
+					</div>
+
+				</div>
+			</div>
+		</section><!-- #content end -->
+
+
+		<div w3-include-html="/footer.html"></div>
+		<script>
+			includeHTML();
+		</script>
+
+	</div><!-- #wrapper end -->
+	<!-- Go To Top
+	============================================= -->
+	<div id="gotoTop" class="icon-angle-up"></div>
+
+	<!-- JavaScripts
+	============================================= -->
+
+	<script src="/js/jquery.js"></script>
+
+	<script src="/js/plugins.min.js"></script>
+
+
+
+
+	<!-- Bootstrap Select Plugin -->
+	<script src="/js/components/bs-select.js"></script>
+
+	<!-- Select Splitter Plugin -->
+	<script src="/js/components/selectsplitter.js"></script>
+
+	<!-- Footer Scripts
+	============================================= -->
+	<script src="/js/functions.js"></script>
+	
+</body>
+</html >

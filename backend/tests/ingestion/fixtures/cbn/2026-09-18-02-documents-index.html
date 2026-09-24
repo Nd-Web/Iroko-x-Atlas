@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en-US">
+	<script>
+		function includeHTML() {
+		  var z, i, elmnt, file, xhttp;
+		  /*loop through a collection of all HTML elements:*/
+		  z = document.getElementsByTagName("*");
+		  for (i = 0; i < z.length; i++) {
+			elmnt = z[i];
+			/*search for elements with a certain atrribute:*/
+			file = elmnt.getAttribute("w3-include-html");
+			if (file) {
+			  /*make an HTTP request using the attribute value as the file name:*/
+			  xhttp = new XMLHttpRequest();
+			  xhttp.onreadystatechange = function() {
+				if (this.readyState == 4) {
+				  if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+				  if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+				  /*remove the attribute, and call this function once more:*/
+				  elmnt.removeAttribute("w3-include-html");
+				  includeHTML();
+				}
+			  }      
+			  xhttp.open("GET", file, true);
+			  xhttp.send();
+			  /*exit the function:*/
+			  return;
+			}
+		  }
+		};
+		</script>
+<head>
+<!-- Microsoft Clarity Tracking Code -->	
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "qr41jekh0p");
+</script>	
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N4BDKFWBKH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-N4BDKFWBKH');
+</script>
+	
+	
+
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<meta name="author" content="Central Bank of Nigeria" />
+	<meta name="description" content="Publications and Documents page, with Circulars, Press Releases, Governor's Speeches, Reports, Guidelines etc. " />
+	<meta name="keywords" content="CBN, Central Bank of Nigeria, Circulars, Press Releases, Governor's Speeches, Reports, Guidelines, Documents, Publications" />
+	<meta name="robots" content="index, follow" />
+
+	<!-- Stylesheets
+	============================================= -->
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700|Poppins:300,400,500,600,700|PT+Serif:400,400i&display=swap" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
+	<link rel="stylesheet" href="/style.css" type="text/css" />
+	<link rel="stylesheet" href="/css/dark.css" type="text/css" />
+	<link rel="stylesheet" href="/css/font-icons.css" type="text/css" />
+	<link rel="stylesheet" href="/css/animate.css" type="text/css" />
+	<link rel="stylesheet" href="/css/magnific-popup.css" type="text/css" />
+
+	<!-- Bootstrap Select CSS -->
+	<link rel="stylesheet" href="/css/components/bs-select.css" type="text/css" />
+
+	<link rel="stylesheet" href="/css/custom.css" type="text/css" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<!-- Document Title
+	============================================= -->
+	<title>Publications & Documents | Central Bank of Nigeria</title>
+
+	
+
+	<style>
+        
+        li > ul {
+    padding-left:35px;
+}
+
+		
+
+	</style>
+		
+
+</head>
+
+<body class="stretched">
+	<!-- Document Wrapper
+		============================================= -->
+	<div id="wrapper" class="clearfix">
+
+		
+		<div w3-include-html="/header.html"></div>
+		<!-- Page Title
+		============================================= -->
+		<section id="page-title" style="background: url('/images/Page Titles/Publications.jpg');">
+
+			<div class="container clearfix" >
+				<h1 style="color: white;">All Publications/Documents</h1>
+				<span style="color: white;">Find all your publications here</span>
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item" ><a href="#" style="color:white;">Home</a></li>
+					<li class="breadcrumb-item active" aria-current="page" style="color: white; font-weight:bold;">Documents</li>
+				</ol>
+			</div>
+
+		</section><!-- #page-title end -->
+
+		
+
+		<!-- Content
+		============================================= -->
+		<section id="content">
+			<div class="content-wrap">
+				<div class="container clearfix">
+
+					<div class="row gutter-40 col-mb-80">
+						<!-- Post Content
+						============================================= -->
+						<div class="postcontent col-lg-9" >
+						
+							<h2>Documents</h2>
+<div style="float: left; width: 30%;">
+	<ul>
+ 
+		<li><a href="allDocs.html" target="_self">All Documents</a></li>
+	
+	</ul>	
+
+                            <h3>Circulars</h3>
+                            
+                            
+<ul>
+ 
+	<li><a href="circulars.html" target="_self">All CBN Circulars</a></li>
+
+    
+  <li>
+    <a target="_top" href="authdealerscirculars.html">Authorised Dealers Circulars   </a>
+  </li>
+  <li><a href="BSDCircularsNEW.html" target="_self">Banking Supervision Circulars</a>
+    <ul>
+      <li><a href="BSDGuidelinesNEW.html" target="_self">Banking Supervision Guidelines</a></li>
+    </ul>
+  </li>
+  <li><a href="policycirculars.html" target="_self">CBN Policy Circulars</a></li>
+  <li><a href="ComplianceCirculars.html" target="_self">Compliance Circulars</a></li>
+  <li><a target="_self" href="CSDcirculars.html">Corporate Secretariat Circulars</a></li>
+  <li><a href="DFDCirculars.html" target="_self">Development Finance Circulars</a>
+    <ul>
+      <li><a href="DFDGuidelines.html" target="_self">Development Finance Guidelines</a></li>
+    </ul>
+    </li>  
+    <li><a href="FmdCirculars.html" target="_self">Financial Markets Circulars</a>
+    <ul>
+      <li><a href="FmdNotices.html" target="_self">Financial Markets Auction Notices</a></li>
+    </ul>
+    </li>
+    <li><a href="FPRCircularsNotices.html" target="_self">Financial Policy and Regulation Notices & Circulars</a>
+    <ul>
+      <li><a href="AML-CFT.html" target="_self">Anti-Money Laundering & Combating the Financing of Terrorism Circulars</a></li>
+      <li><a href="AML-CFT-Guidelines.html" target="_self">Anti-Money Laundering & Combating the Financing of Terrorism Guidelines</a></li>
+      <li><a href="FPRGuidelines.html" target="_self">Financial Policy and Regulation Guidelines</a></li>
+    </ul>
+    </li> 
+     <li><a href="ofidcirculars.html" target="_self">Other Financial Institution Supervision Circulars</a></li>
+   <li><a target="_self" href="BODcirculars.html">Payments System Circulars</a>
+     <ul>
+       <li><a target="_self" href="PaymentsSystemGuidelines.html">Payments System Guidelines</a></li>
+    </ul>
+   </li>
+  <li><a target="_self" href="FODcirculars.html">Reserve Management Circulars</a></li>
+ 
+  
+ 
+  <li><a href="bsdcirculars.html" target="_self">Supervision Circulars</a></li>
+  <li><a href="TedCirculars.html" target="_self">Trade And Exchange Circulars</a>	</li>
+  
+</ul>
+
+  
+
+<br>
+<h3>Speeches</h3>
+<ul>
+	<li><a href="/documents/speeches.html">Governor's Speeches</a></li>
+	
+</ul>
+<br>
+<h3>Publications</h3>
+<ul>
+   
+  <li><a href="publications.html" target="_self">All Central Bank of Nigeria Publications </a></li>
+  <!--<li><a target="_top" href="BuyersGuide.html">All Publications &amp; Other Items for Sale
+  </a> </li>-->
+  <li><a href="reports.html" target="_self">All Central Bank of Nigeria Reports</a>
+      
+      <ul>
+           <li><a href="acgsf.html" target="_self">Agricultural Credit Guarantee Scheme Fund (ACGSF) Reports</a></li>
+  <li><a target="_self" href="annualreports.html">Annual Reports </a></li>
+  <li><a target="_self" href="AML-CFT-Reports.html">Anti-Money Laundering & Combating the Financing of Terrorism Reports </a></li>
+          <li><a target="_self" href="bsdreports.html">Banking Supervision Reports </a></li>
+      	<li><a target="_top" href="../documents/Statbulletin.html">Annual Statistical Bulletins</a></li>
+      <li><a target="_self" href="finstmt.html">CBN Consolidated and Separate Financial Statements</a></li>
+	<li><a target="_self" href="cbnannualreports.html">CBN Annual Report and Statement of Accounts</a></li>
+	<li><a target="_self" href="halfyearreports.html">CBN Half Year Economic Reports </a></li>
+	<li><a target="_self" href="finannualreports.html">Financial Inclusion Annual Reports</a></li>	
+  <li><a target="_self" href="financialstabilityreport.html">Financial Stability Reports</a></li>
+	 <li><a target="_self" href="ffsr.html">Flow of Funds Statistics Reports</a></li>	 	
+	<li><a target="_self" href="monthlyreports.html">Monthly  Reports </a></li>
+	
+    <li><a target="_self" href="monthlyecoreports.html">Monthly Economic Reports </a></li>
+  
+ 
+  <li><a href="Microfinance.html" target="_self">Microfinance Reports</a> </li>
+
+      <!--<li><a target="_top" href="../documents/bopsbannually.html">Annual Balance of Payments Statistics Brief</a></li>
+       <li><a target="_top" href="../documents/bopsbquarterly.html">Quarterly Balance of Payments Statistics Brief</a></li>-->
+    <li><a target="_top" href="../documents/NeFFar.html">NeFF Annual Report</a></li>
+    <li><a target="_top" href="../documents/PurchManIndex.html">Purchasing Managers' Index</a></li>
+     <!--<li><a target="_top" href="../documents/TermofTradeBull.html">Terms of Trade Bulletin</a></li>-->
+      
+      <li><a target="_self" href="quarterlyecoreports.html">Quarterly Economic Reports </a></li>
+      <li><a target="_self" href="quarterlyreports.html">Quarterly  Reports </a></li>
+      <li><a target="_top" href="../documents/QuarterlyStatbulletin.html">Quarterly Statistical Bulletins</a></li>
+            <li><a href="smeeis.html" target="_self">Small &amp; Medium Enterprises Equity Investment Scheme (SMEEIS) Reports</a> </li>
+
+    <li><a target="_self" href="../documents/StatExpSurvReports.html">Statistical Expectations Survey Reports</a>
+        <ul>
+            <li><a target="_self" href="BusExpSurvReport.html">Business Expectations Survey Report</a></li>
+            <li><a target="_self" href="ConsExpSurvReport.html">Consumer Expectations Survey Report</a></li>
+            <li><a target="_top" href="CredCondSurvReport.html">Credit Conditions Survey Report</a></li>
+            <li><a target="_top" href="InflAttSurvReport.html">Inflation Attitude Survey Report</a></li>
+	    <li><a target="_top" href="InflExpSurvReport.html">Inflation Expectations Survey Report</a></li>
+        </ul>
+    </li>
+    </ul>
+  </li>
+  <li><a href="alloccassional.html" target="_self">All Occasional Papers</a>
+	<ul>
+        <li><a href="occassionalreports.html" target="_self">Occasional Papers (Research)</a></li>
+
+        </ul>
+ 
+  </li>
+  <li><a href=/documents/BSDPublicationsNEW.html  target=_self>Banking Supervision Publications</a>
+  </li>   
+  <li><a href="/Documents/depositandlending.html">Banks' Deposit and Lending Rates</a></li>
+   <li><a target="_self" href="cbnjas.html">CBN Journal Of Applied Statistics</a></li>
+   <li><a target="_self" href="cbnupdates.html">CBN Update</a></li>
+  <li><a href="/documents/CBNWorkingPaperSeries.html">CBN Working Paper Series</a></li>
+    <li><a href="bullion.html" target="_self">Central Bank of Nigeria  Bullion</a></li>
+    <li><a href="transparency.html" target="_self">Central Bank of Nigeria  Transparency Magazine</a></li>
+   <li><a target="_self" href="CBNBriefs.html">Central Bank of Nigeria Briefs</a></li> 
+  <li><a target="_self" href="CumulativePAIF.html">Cumulative Distribution of Power and Aviation Intervention Fund (PAIF)</a></li>
+
+	
+	<li><a target="_self" href="efr.html">Economic &amp; Financial Review (EFR)</a></li>
+    <li><a target="_self" href="/Documents/finannualreports.html">Financial Inclusion Annual Reports</a></li>
+    <li><a target="_self" href="/Documents/FinIncNewsletter.html">Financial Inclusion Newsletter</a></li>
+<li><a target="_self" href="/Documents/fmdactivityreports.html">Financial Markets Activity Reports</a></li>
+<li><a target="_self" href="/Documents/FXspot.html">Foreign Exchange Spot</a></li>
+<li><a target="_self" href="/Documents/FXrDASwDAS.html">Foreign Exchange WDAS/RDAS</a></li>
+<li><a target="_self" href="/documents/fxu.html">FX Utilization</a></li>
+      <li><a target="_top" href="recession.html">Global Recession Watch</a> </li>
+	<li><a href="idp.html" target="_self">Interest Drawback&nbsp; </a></li>
+	<li><a href="intlbriefs.html">International Economic Briefs</a></li>
+<li><a href="MacroEconomicOutlook.html">Macroeconomic Outlook</a></li>
+    <li><a href="mfbdocs.html">Micro Finance Bank Returns Guide</a></li>
+    <li><a href="microfinewsletter.html" target="_self">Microfinance Newsletters</a></li>
+    <li><a href="Monetarycreditguide.html" target="_self">Monetary, Credit, Foreign Trade and Exchange Policy Guidelines</a></li>
+    <li><a href="/documents/mpc.html" target="_self">Monetary Policy Communique</a></li>
+    <li><a href="/documents/policyreview.html" target="_self">Monetary Policy Review</a></li>
+	<li><a href="consolidation.html" target="_self">Nigerian Bank Consolidation 
+  Resources </a></li>
+ 
+  
+  <li><a href="ofidpublications.html" target="_self">Other Financial Institutions Supervision Publications</a></li>
+    
+     <li><a href="Guidelines.html" target="_self">Policy &amp; Guideline Documents</a></li>
+  <li><a target="_top" href="PressReleases.html">Press Releases</a> </li>
+      <!-- <li><a href="/documents/loanreturns.html">Returns on Interest Rates on Deposits and Loans</a></li> -->
+  <li><a href="bsdpublications.html" target="_self">Supervision Publications</a></li>
+  <li><a href="UMPseries.html" target="_self">Understanding Monetary Policy Series</a></li>
+
+  </ul><br>
+<h3><a href="archives.html" target="_blank">Archives</a></h3>
+</div>
+				<div style="float: right; width: 60%; margin-right: 10%;">
+				  <img src="Documents_image.jpg" />
+				</div>
+ <br>
+
+						</div><!-- .postcontent end -->
+
+						<!-- Sidebar
+						============================================= -->
+						<div class="sidebar col-lg-3">
+							<div class="sidebar-widgets-wrap">
+
+								<div class="widget widget_links clearfix">
+
+									<iframe src="/HistoryFacts.html" height="600" width="300" title=""></iframe>	
+
+								</div>
+
+
+							</div>
+						</div><!-- .sidebar end -->
+					</div>
+
+				</div>
+			</div>
+		</section><!-- #content end -->
+
+
+		<div w3-include-html="/footer.html"></div>
+		<script>
+			includeHTML();
+		</script>
+
+	</div><!-- #wrapper end -->
+	<!-- Go To Top
+	============================================= -->
+	<div id="gotoTop" class="icon-angle-up"></div>
+
+	<!-- JavaScripts
+	============================================= -->
+
+	<script src="/js/jquery.js"></script>
+
+	<script src="/js/plugins.min.js"></script>
+
+
+
+
+	<!-- Bootstrap Select Plugin -->
+	<script src="/js/components/bs-select.js"></script>
+
+	<!-- Select Splitter Plugin -->
+	<script src="/js/components/selectsplitter.js"></script>
+
+	<!-- Footer Scripts
+	============================================= -->
+	<script src="/js/functions.js"></script>
+	
+</body>
+</html >

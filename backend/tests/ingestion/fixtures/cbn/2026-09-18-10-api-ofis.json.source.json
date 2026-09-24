@@ -1,0 +1,13 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/api/GetOFISCirculars",
+  "final_url": "https://www.cbn.gov.ng/api/GetOFISCirculars",
+  "status": 200,
+  "content_type": "application/json; charset=utf-8",
+  "fetched_at": "2026-09-18T11:52:58.605920+00:00",
+  "size_bytes": 40680,
+  "sha256": "276e2558cb262f84a19630a12461a4171fcb0de59885726b8cf643d7739392e7",
+  "record_count": 78,
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-10-api-ofis.json"
+}

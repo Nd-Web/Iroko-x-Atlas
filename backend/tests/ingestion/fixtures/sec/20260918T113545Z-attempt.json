@@ -1,0 +1,935 @@
+{
+  "started_at": "2026-09-18T11:35:46.684473+00:00",
+  "responses": [
+    {
+      "url": "https://home.sec.gov.ng/robots.txt",
+      "request_started_at": "2026-09-18T11:35:46.684661+00:00",
+      "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+      "final_url": "https://home.sec.gov.ng/robots.txt",
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8"
+      },
+      "body_complete": true,
+      "response_path": "backend\\tests\\ingestion\\fixtures\\sec\\20260918T113545Z-01-home-sec-gov-ng.response.bin",
+      "size_bytes": 25,
+      "sha256": "a9aa9ec7ef3ec92e7eb52220a9f0cb578ff2ba0a71cb3e9c1a0b828857529fcc",
+      "fetched_at": "2026-09-18T11:35:47.737025+00:00",
+      "finished_at": "2026-09-18T11:35:47.737112+00:00"
+    },
+    {
+      "url": "https://home.sec.gov.ng/feeds/circulars.rss",
+      "request_started_at": "2026-09-18T11:35:48.685036+00:00",
+      "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+      "final_url": "https://home.sec.gov.ng/feeds/circulars.rss",
+      "status": 200,
+      "headers": {
+        "content-type": "application/rss+xml; charset=utf-8",
+        "last-modified": "Mon, 14 Sep 2026 00:00:00 GMT"
+      },
+      "body_complete": true,
+      "response_path": "backend\\tests\\ingestion\\fixtures\\sec\\20260918T113545Z-02-home-sec-gov-ng.response.bin",
+      "size_bytes": 49181,
+      "sha256": "472bb80f7d45355066fd7c04792b5175a8098c95c09202c5e1c7161162a7e005",
+      "fetched_at": "2026-09-18T11:35:51.689435+00:00",
+      "finished_at": "2026-09-18T11:35:51.689513+00:00"
+    },
+    {
+      "url": "https://sec.gov.ng/robots.txt",
+      "request_started_at": "2026-09-18T11:35:51.693649+00:00",
+      "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+      "final_url": "https://sec.gov.ng/robots.txt",
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8"
+      },
+      "body_complete": true,
+      "response_path": "backend\\tests\\ingestion\\fixtures\\sec\\20260918T113545Z-03-sec-gov-ng.response.bin",
+      "size_bytes": 25,
+      "sha256": "a9aa9ec7ef3ec92e7eb52220a9f0cb578ff2ba0a71cb3e9c1a0b828857529fcc",
+      "fetched_at": "2026-09-18T11:35:53.133610+00:00",
+      "finished_at": "2026-09-18T11:35:53.133663+00:00"
+    },
+    {
+      "url": "https://sec.gov.ng/our-mandate/regulation/rules-and-regulations",
+      "request_started_at": "2026-09-18T11:35:53.693868+00:00",
+      "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+      "final_url": "https://sec.gov.ng/our-mandate/regulation/rules-and-regulations",
+      "status": 301,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "location": "/our-mandate/regulation/rules-and-regulations/"
+      },
+      "body_complete": true,
+      "response_path": "backend\\tests\\ingestion\\fixtures\\sec\\20260918T113545Z-04-sec-gov-ng.response.bin",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fetched_at": "2026-09-18T11:35:54.056044+00:00",
+      "finished_at": "2026-09-18T11:35:54.056095+00:00"
+    },
+    {
+      "url": "https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/",
+      "request_started_at": "2026-09-18T11:35:55.695982+00:00",
+      "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+      "final_url": "https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8"
+      },
+      "body_complete": true,
+      "response_path": "backend\\tests\\ingestion\\fixtures\\sec\\20260918T113545Z-05-sec-gov-ng.response.bin",
+      "size_bytes": 103966,
+      "sha256": "420ba8bee2b89cdc049a1bf971939ab80094f60ca8f05c3439899575635d298e",
+      "fetched_at": "2026-09-18T11:35:57.121496+00:00",
+      "finished_at": "2026-09-18T11:35:57.121609+00:00"
+    }
+  ],
+  "status": "seeds_fetched",
+  "feed_items": [
+    {
+      "title": "Dangote Petroleum Refinery And Petrochemicals Initial Public Offering",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/dangote-petroleum-refinery-and-petrochemicals-initial-public-offering/",
+      "published": "Mon, 14 Sep 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Proposed Rules On Online Forex Trading And Contract For Difference",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/proposed-rules-on-online-forex-trading-and-contract-for-difference/",
+      "published": "Tue, 01 Sep 2026 00:00:00 +0000"
+    },
+    {
+      "title": "IMPLEMENTATION OF FATF STATEMENTS ON HIGH-RISK JURISDICTIONS SUBJECT TO A CALL FOR ACTION AND JURISDICTIONS UNDER INCREASED MONITORING",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/implementation-of-fatf-statements-on-high-risk-jurisdictions-subject-to-a-call-for-action-and-jurisdictions-under-increased-monitoring/",
+      "published": "Fri, 14 Aug 2026 00:00:00 +0000"
+    },
+    {
+      "title": "US Sanctions on 1 Nigerian Citizen and 3 Nigerian Companies",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/us-sanctions-on-1-nigerian-citizen-and-3-nigerian-companies/",
+      "published": "Fri, 14 Aug 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Invitation For Expression Of Interest (EOI) From Qualified Event Management/Organisation Firms For The Planning And Hosting Of The 2027 IOSCO/AMERC Meeting",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/invitation-for-expression-of-interest-eoi-from-qualified-event-managementorganisation-firms-for-the-planning-and-hosting-of-the-2027-ioscoamerc-meeting/",
+      "published": "Thu, 13 Aug 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Designation Of Individuals And Entities By The Nigeria Sanctions Committee (NSC)",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/designation-of-individuals-and-entities-by-the-nigeria-sanctions-committee-nsc/",
+      "published": "Wed, 12 Aug 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Clarification On The Implementation Of The T+1 Settlement Cycle In The Nigerian Capital Market",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/clarification-on-the-implementation-of-the-t1-settlement-cycle-in-the-nigerian-capital-market/",
+      "published": "Wed, 12 Aug 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Commencement Of Full Electronic Registration (E-Registration) On The Commission's ePORTAL",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/commencement-of-full-electronic-registration-e-registration-on-the-commissions-eportal/",
+      "published": "Wed, 29 Jul 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Request for Submission of Q2 2026 Balance of Payments, Capital Flows Returns, and Ownership Structure Information",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/request-for-submission-of-q2-2026-ownership-structure-and-capital-flows-returns/",
+      "published": "Wed, 08 Jul 2026 00:00:00 +0000"
+    },
+    {
+      "title": "SEC Clears further 2 additional VASP’s for Admission into the Accelerated Regulatory Incubation Programme (ARIP)",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/sec-clears-further-2-additional-vasps-for-admission-into-the-accelerated-regulatory-incubation-programme-arip/",
+      "published": "Fri, 03 Jul 2026 00:00:00 +0000"
+    },
+    {
+      "title": "PROPOSED RULES ON CROSS-BORDER SECURITIES TRADING AND CUSTODY",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/proposed-rules-on-cross-border-securities-trading-and-custody/",
+      "published": "Thu, 02 Jul 2026 00:00:00 +0000"
+    },
+    {
+      "title": "SEC Clears Seven New Fintech Firms for Admission into the Accelerated Regulatory Incubation Programme (ARIP)",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/sec-clears-seven-new-fintech-firms-for-admission-into-the-accelerated-regulatory-incubation-programme-arip/",
+      "published": "Thu, 02 Jul 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Cease and Desist Directives on Misleading and Manipulative Solicitations, Promotional, and Pre-marketing Activities Relating to a Purported Securities Offering of Dangote Petroleum Refinery & Petrochemicals FZE",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/cease-and-desist-directives-on-misleading-and-manipulative-solicitations-promotional-and-pre-marketing-activities-relating-to-a-purported-securities-offering-of-dangote-petroleum-refinery-petrochemicals-fze/",
+      "published": "Tue, 23 Jun 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Postponement Of Q2 2026 Pre-Registration Training And Examination For Capital Market Operators",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/postponement-of-q2-2026-pre-registration-training-and-examination-for-capital-market-operators/",
+      "published": "Sun, 07 Jun 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Circular To All Prospective Capital Market Operators On Q2 2026 Pre-Registration Training And Examination",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/circular-to-all-prospective-capital-market-operators-on-q2-2026-pre-registration-training-and-examination/",
+      "published": "Wed, 03 Jun 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Transition To T+1 Settlement Cycle In The Nigerian Capital Market",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/transition-to-t1-settlement-cycle-in-the-nigerian-capital-market/",
+      "published": "Fri, 15 May 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Circular on Mandatory Registration of Collateral Management Companies, Warehouse Operators and Warehouses",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/circular-on-mandatory-registration-of-collateral-management-companies-warehouse-operators-and-warehouses/",
+      "published": "Mon, 11 May 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Public notice - unregistered online investment schemes",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/public-notice-unregistered-online-investment-schemes/",
+      "published": "Thu, 14 May 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Article - Successful ₦4.65 Trillion Banking Recapitalisation",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/successful-465-trillion-banking-recapitalisation/",
+      "published": "Thu, 16 Apr 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Guidelines On Revised Minimum Capital For Regulated Entities",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/guidelines-on-revised-minimum-capital-for-regulated-entities/",
+      "published": "Wed, 18 Mar 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Biannual Regulatory Fintech Clinic",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/biannual-regulatory-fintech-clinic/",
+      "published": "Thu, 05 Mar 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Revocation Of Registration Of Kensington Agro Trading Limited As A Capital Market Operator",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/revocation-of-registration-of-kensington-agro-trading-limited-as-a-capital-market-operator/",
+      "published": "Mon, 02 Mar 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Circular To All Prospective Capital Market Operators On Q1 2026 Pre-Registration Training And Examination",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/circular-to-all-prospective-capital-market-operators-on-q1-2026-pre-registration-training-and-examination/",
+      "published": "Tue, 24 Feb 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Suspected Fraudulent Activities Of Aurum Bot",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/suspected-fraudulent-activities-of-aurum-bot/",
+      "published": "Fri, 30 Jan 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Suspected Fraudulent Activities Of Modmount Services Limited",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/suspected-fraudulent-activities-of-modmount-services-limited/",
+      "published": "Fri, 30 Jan 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Revised Minimum Capital (MC) for Regulated Capital Market Entities",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/revised-minimum-capital-mc-for-regulated-capital-market-entities/",
+      "published": "Fri, 16 Jan 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Suspected Fraudulent Activities of TUNBOSAYO OKEKUNLE STRATEGIC ALPHA FUND (TOSAF)",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/suspected-fraudulent-activities-of-tunbosayo-okekunle-strategic-alpha-fund-tosaf/",
+      "published": "Thu, 15 Jan 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Suspected Fraudulent Activities Of Voya Investment Management (VIM)",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/suspected-fraudulent-activities-of-voya-investment-management-vim/",
+      "published": "Tue, 06 Jan 2026 00:00:00 +0000"
+    },
+    {
+      "title": "Notice to all Capital market Operators (CMOS) on 2026 Renewal of Registration",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/notice-to-all-capital-market-operators-on-2026-renewal-registration/",
+      "published": "Fri, 12 Dec 2025 00:00:00 +0000"
+    },
+    {
+      "title": "SEC Nigeria Launches Regulatory Hub for Stronger Oversight and Inter Agency Correspondence",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/sec-nigeria-launches-regulatory-hub-for-stronger-oversight-and-inter-agency-correspondence/",
+      "published": "Fri, 05 Dec 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Suspected Fraudulent Investment Activities Of Glorious Wealth Fund (GWF)",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/suspected-fraudulent-investment-activities-of-glorious-wealth-fund-gwf/",
+      "published": "Wed, 03 Dec 2025 00:00:00 +0000"
+    },
+    {
+      "title": "List of Approved Commercial Papers as at 23 October 2025",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/list-of-approved-commercial-papers-as-at-23-october-2025/",
+      "published": "Thu, 30 Oct 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Updated Circular To All Prospective Capital Market Operators On Q4 2025 Pre-Registration Training And Examination",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/updated-circular-to-all-prospective-capital-market-operators-on-q4-2025-pre-registration-training-and-examination/",
+      "published": "Thu, 30 Oct 2025 00:00:00 +0000"
+    },
+    {
+      "title": "CIRCULAR TO ALL PROSPECTIVE CAPITAL MARKET OPERATORS ON Q4 2025 PRE-REGISTRATION TRAINING AND EXAMINATION",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/circular-to-all-prospective-capital-market-operators-on-q4-2025-pre-registration-training-and-examination/",
+      "published": "Tue, 28 Oct 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Notification for the Second CMC Meeting in 2025",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/notification-for-the-second-cmc-meeting-in-2025/",
+      "published": "Sat, 18 Oct 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Public Notice – AFRIQUANTUMX",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/public-notice-afriquantumx/",
+      "published": "Tue, 07 Oct 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Interpretative Guidance Note on Private Equity Fund Rules",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/interpretative-guidance-note-on-private-equity-fund-rules/",
+      "published": "Thu, 02 Oct 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Proceedings of the first CMC of 2025",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/proceedings-of-the-first-cmc-of-2025/",
+      "published": "Thu, 11 Sep 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Call for Membership into CMMP Working Groups",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/call-for-membership-into-cmmp-working-groups/",
+      "published": "Thu, 11 Sep 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Launch of the SEC's Redesigned Website",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/launch-of-the-secs-redesigned-website/",
+      "published": "Fri, 29 Aug 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Corporate Governance Crisis In The Tourist Company Of Nigeria (TCN) PLC",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/corporate-governance-crisis-in-the-tourist-company-of-nigeria-tcn-plc/",
+      "published": "Mon, 28 Jul 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Circular To All Prospective Capital Market Operators On Pre-Registration Training And Examination",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/circular-to-all-prospective-capital-market-operators-on-pre-registration-training-and-examination/",
+      "published": "Tue, 01 Jul 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Guidance Note to Capital Market Operators and Public Companies on the Circular Regarding Board Appointments and Director Tenure",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/guidance-note-to-capital-market-operators-and-public-companies-on-the-circular-regarding-board-appointments-and-director-tenure/",
+      "published": "Tue, 01 Jul 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Circular On The Expiration Of The Companies Income Tax (Exemption Of Bonds And Short-Term Government Securities) Order, 2011",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/circular-on-the-expiration-of-the-companies-income-tax-exemption-of-bonds-and-short-term-government-securities-order-2011/",
+      "published": "Tue, 01 Jul 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Circular On Review And Processing Of Applications For Commercial Papers",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/circular-on-review-and-processing-of-applications-for-commercial-papers/",
+      "published": "Wed, 25 Jun 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Illegal Operator – CMTrading",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/illegal-operator-cmtrading/",
+      "published": "Fri, 20 Jun 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Circular To All Public Companies And Capital Market Operators On The Transmutation Of Independent Non-Executive Directors And Tenure Of Directors",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/circular-to-all-public-companies-and-capital-market-operators-on-the-transmutation-of-independent-non-executive-directors-and-tenure-of-directors/",
+      "published": "Thu, 19 Jun 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Illegal Operator Alert – Sapphire Scents Limited",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/illegal-operator-alert-sapphire-scents-limited/",
+      "published": "Thu, 19 Jun 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Illegal Operator Alert – ZugaCoin and Samzuga GPT",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/illegal-operator-alert-zugacoin-and-samzuga-gpt/",
+      "published": "Tue, 17 Jun 2025 00:00:00 +0000"
+    },
+    {
+      "title": "Illegal Operator Alert -CBEX (Crypto Bridge Exchange)-Super Technology-ST Technologies International Ltd",
+      "url": "http://localhost/for-investors/keep-track-of-circulars/illegal-operator-alert-cbex-crypto-bridge-exchange-super-technology-st-technologies-international-ltd/",
+      "published": "Wed, 11 Jun 2025 00:00:00 +0000"
+    }
+  ],
+  "rules_summary": {
+    "title": "\n            \n                \n                    Rules and Regulations\n                \n            \n            \n                \n                - Securities and Exchange Commission, Nigeria\n            \n        ",
+    "tables": 0,
+    "links": [
+      {
+        "url": "https://sec.gov.ng/search/",
+        "label": "\n                    \n                        \n                    \n                    SEARCH\n                "
+      },
+      {
+        "url": "https://sec.gov.ng/",
+        "label": "\n                    \n                "
+      },
+      {
+        "url": "https://www.pebec.gov.ng/reportgov-ng",
+        "label": "\n                    \n                    \n                "
+      },
+      {
+        "url": "https://sec.gov.ng/for-investors/",
+        "label": "For Investors"
+      },
+      {
+        "url": "https://sec.gov.ng/for-investors/find-a-registered-operator/",
+        "label": "Find a Registered Operator"
+      },
+      {
+        "url": "https://sec.gov.ng/for-investors/keep-track-of-circulars/",
+        "label": "Keep Track of Circulars"
+      },
+      {
+        "url": "https://sec.gov.ng/for-investors/whistleblowing/",
+        "label": "Whistleblowing"
+      },
+      {
+        "url": "https://sec.gov.ng/for-investors/known-investment-scams/",
+        "label": "Known Investment Scams"
+      },
+      {
+        "url": "https://sec.gov.ng/for-operators/",
+        "label": "For Operators"
+      },
+      {
+        "url": "https://sec.gov.ng/for-operators/operator-registration/",
+        "label": "Operator Registration"
+      },
+      {
+        "url": "https://sec.gov.ng/for-operators/keep-track-of-capital-market-data/",
+        "label": "Keep Track of Capital Market Data"
+      },
+      {
+        "url": "https://sec.gov.ng/for-operators/keep-track-of-capital-market-data/statistical-bulletin/",
+        "label": "Statistical Bulletin"
+      },
+      {
+        "url": "https://sec.gov.ng/for-operators/keep-track-of-capital-market-data/net-asset-value-data/",
+        "label": "Net Asset Value Data"
+      },
+      {
+        "url": "https://sec.gov.ng/for-operators/keep-track-of-capital-market-data/quarterly-update-on-private-equity-and-infrastructure-funds/",
+        "label": "Quarterly PE & Infra. Funds"
+      },
+      {
+        "url": "https://sec.gov.ng/for-operators/keep-track-of-capital-market-data/executed-transactions/",
+        "label": "Executed Transactions"
+      },
+      {
+        "url": "https://sec.gov.ng/for-operators/keep-track-of-capital-market-data/market-review-and-outlook/",
+        "label": "Market Review and Outlook"
+      },
+      {
+        "url": "https://sec.gov.ng/for-operators/mergers-acquisitions-and-takeovers/",
+        "label": "Mergers, Acquisitions & Takeovers"
+      },
+      {
+        "url": "https://sec.gov.ng/for-businesses/",
+        "label": "For Businesses"
+      },
+      {
+        "url": "https://sec.gov.ng/for-businesses/register-a-company/",
+        "label": "Register a Company"
+      },
+      {
+        "url": "https://sec.gov.ng/for-businesses/become-an-operator/",
+        "label": "Become an Operator"
+      },
+      {
+        "url": "https://sec.gov.ng/for-businesses/raising-capital/",
+        "label": "Raising Capital"
+      },
+      {
+        "url": "https://sec.gov.ng/for-businesses/procurements-and-tenders/",
+        "label": "Procurements and Tenders"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/",
+        "label": "Our Mandate"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/regulation/",
+        "label": "Regulation"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/regulation/acts/",
+        "label": "Acts"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/",
+        "label": "Rules and Regulations"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/regulation/codes-of-conduct/",
+        "label": "Codes of Conduct"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/regulation/guidelines/",
+        "label": "Guidelines"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/regulation/policies/",
+        "label": "Policies"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/development/",
+        "label": "Development"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/development/investor-education/",
+        "label": "Investor Education"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/development/operators-insights/",
+        "label": "Insights for Operators"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/development/business-insights/",
+        "label": "Insights for Businesses"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/the-nigerian-capital-market-master-plan/",
+        "label": "The Capital Market Master Plan"
+      },
+      {
+        "url": "https://sec.gov.ng/enforcements/",
+        "label": "Enforcements"
+      },
+      {
+        "url": "https://sec.gov.ng/enforcements/companies-facing-enforcement-action/",
+        "label": "Cos. Facing Enforcement Action"
+      },
+      {
+        "url": "https://sec.gov.ng/enforcements/referred-cases/",
+        "label": "Referred Cases"
+      },
+      {
+        "url": "https://sec.gov.ng/enforcements/apc-matters/",
+        "label": "A.P.C. Matters"
+      },
+      {
+        "url": "https://sec.gov.ng/enforcements/litigation/",
+        "label": "Litigation"
+      },
+      {
+        "url": "https://sec.gov.ng/enforcements/keep-track-of-enforcement-updates/",
+        "label": "Keep Track of Enforcement Updates"
+      },
+      {
+        "url": "https://sec.gov.ng/enforcements/information-for-harmed-investors/",
+        "label": "Information for Harmed Investors"
+      },
+      {
+        "url": "https://sec.gov.ng/about/",
+        "label": "About"
+      },
+      {
+        "url": "https://sec.gov.ng/about/our-role/",
+        "label": "Our Role"
+      },
+      {
+        "url": "https://sec.gov.ng/about/our-role/who-we-are/",
+        "label": "Who We Are"
+      },
+      {
+        "url": "https://sec.gov.ng/about/our-role/how-we-function/",
+        "label": "How We Function"
+      },
+      {
+        "url": "https://sec.gov.ng/about/our-role/who-we-regulate/",
+        "label": "Who We Regulate"
+      },
+      {
+        "url": "https://sec.gov.ng/about/organizational-chart/",
+        "label": "Organizational Chart"
+      },
+      {
+        "url": "https://sec.gov.ng/about/organizational-chart/board-of-directors/",
+        "label": "Board of Directors"
+      },
+      {
+        "url": "https://sec.gov.ng/about/organizational-chart/divisional-structure/",
+        "label": "Divisional Structure"
+      },
+      {
+        "url": "https://sec.gov.ng/about/organizational-chart/organogram/",
+        "label": "Organogram"
+      },
+      {
+        "url": "https://sec.gov.ng/about/corporate-governance/",
+        "label": "Corporate Governance"
+      },
+      {
+        "url": "https://sec.gov.ng/about/corporate-governance/our-principles/",
+        "label": "Our Principles"
+      },
+      {
+        "url": "https://sec.gov.ng/about/corporate-governance/performance-pledges/",
+        "label": "Performance Pledges"
+      },
+      {
+        "url": "https://sec.gov.ng/about/corporate-governance/independent-panels-and-tribunals/",
+        "label": "Independent Panels and Tribunals"
+      },
+      {
+        "url": "https://sec.gov.ng/about/international-relations/",
+        "label": "International Relations"
+      },
+      {
+        "url": "https://sec.gov.ng/about/international-relations/mou-with-other-countries/",
+        "label": "MOU with Other Countries"
+      },
+      {
+        "url": "https://sec.gov.ng/about/international-relations/sec-and-iosco/",
+        "label": "SEC and IOSCO"
+      },
+      {
+        "url": "https://sec.gov.ng/about/international-relations/sec-and-nigsac/",
+        "label": "SEC and NIGSAC"
+      },
+      {
+        "url": "https://sec.gov.ng/about/international-relations/sec-and-wasra/",
+        "label": "SEC and WASRA"
+      },
+      {
+        "url": "https://sec.gov.ng/about/international-relations/sec-and-fatf/",
+        "label": "SEC and FATF"
+      },
+      {
+        "url": "https://sec.gov.ng/about/international-relations/sec-and-giaba/",
+        "label": "SEC and GIABA"
+      },
+      {
+        "url": "https://sec.gov.ng/about/international-relations/sec-and-ifsb/",
+        "label": "SEC and IFSB"
+      },
+      {
+        "url": "https://sec.gov.ng/about/resources/",
+        "label": "Resources"
+      },
+      {
+        "url": "https://sec.gov.ng/about/resources/checklists/",
+        "label": "Checklists"
+      },
+      {
+        "url": "https://sec.gov.ng/about/resources/forms/",
+        "label": "Forms"
+      },
+      {
+        "url": "https://sec.gov.ng/about/resources/templates/",
+        "label": "Templates"
+      },
+      {
+        "url": "https://sec.gov.ng/about/resources/frequently-asked-questions/",
+        "label": "Frequently Asked Questions"
+      },
+      {
+        "url": "https://sec.gov.ng/about/resources/papers-and-publications/",
+        "label": "Papers and Publications"
+      },
+      {
+        "url": "https://sec.gov.ng/about/resources/annual-reports/",
+        "label": "Annual Reports"
+      },
+      {
+        "url": "https://sec.gov.ng/about/news/",
+        "label": "News"
+      },
+      {
+        "url": "https://sec.gov.ng/about/media-gallery/",
+        "label": "Media Gallery"
+      },
+      {
+        "url": "https://sec.gov.ng/about/careers/",
+        "label": "Careers At SEC"
+      },
+      {
+        "url": "https://sec.gov.ng/about/careers/openings/",
+        "label": "Openings"
+      },
+      {
+        "url": "https://sec.gov.ng/about/careers/working-with-us/",
+        "label": "Working With Us"
+      },
+      {
+        "url": "https://sec.gov.ng/about/careers/talk-to-us/",
+        "label": "Talk to Us"
+      },
+      {
+        "url": "https://sec.gov.ng/about/contact-us/",
+        "label": "Contact Us"
+      },
+      {
+        "url": "https://sec.gov.ng/fintech-and-innovation-hub-finport/",
+        "label": "Fintech and Innovation Hub (FinPort)"
+      },
+      {
+        "url": "https://sec.gov.ng/fintech-and-innovation-hub-finport/about-finport/",
+        "label": "About FinPort"
+      },
+      {
+        "url": "https://sec.gov.ng/fintech-and-innovation-hub-finport/finport-programs-ri-and-arip/",
+        "label": "FinPort Programs (RI and ARIP)"
+      },
+      {
+        "url": "https://sec.gov.ng/fintech-and-innovation-hub-finport/registered-fintech-operators/",
+        "label": "Registered FinTech Operators"
+      },
+      {
+        "url": "https://sec.gov.ng/fintech-and-innovation-hub-finport/checklists-for-fintechs/",
+        "label": "Checklists for Fintechs"
+      },
+      {
+        "url": "https://sec.gov.ng/fintech-and-innovation-hub-finport/faqs-on-fintech-and-innovation-programs/",
+        "label": "FAQs on FinTech and Innovation Programs"
+      },
+      {
+        "url": "https://sec.gov.ng/for-investors/keep-track-of-circulars/commencement-of-full-electronic-registration-e-registration-on-the-commissions-eportal/",
+        "label": "\n                                Full Electronic Registration (e-Registration) now available on the ePortal\n                            "
+      },
+      {
+        "url": "https://sec.gov.ng/for-investors/keep-track-of-circulars/commencement-of-full-electronic-registration-e-registration-on-the-commissions-eportal/",
+        "label": "\n                                Full Electronic Registration (e-Registration) now available on the ePortal\n                            "
+      },
+      {
+        "url": "https://sec.gov.ng/documents/1514/Rules_for_Public_Offering_of_Securities_by_A_Free_Trade_Zone_Entity_FTZE.pdf",
+        "label": "\n        Download Full Document\n        pdf • 208.2 KB\n    "
+      },
+      {
+        "url": "https://sec.gov.ng/documents/1506/Rules_on_Sharia_Advisory_Services.pdf",
+        "label": "\n        Rules On Shariah Advisory Services For Non-Interest Capital Market Products And Services\n        pdf • 241.6 KB\n    "
+      },
+      {
+        "url": "https://sec.gov.ng/documents/1505/Amendment_to_Rules_on_Fund_Portfolio_Management_Operations.pdf",
+        "label": "\n        Download full document\n        pdf • 253.8 KB\n    "
+      },
+      {
+        "url": "https://sec.gov.ng/documents/1385/APPROVED_RULES_ON_CREDIT_ENHANCEMENT_FACILITY_PROVIDERS2_g9yubf1.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/1323/New-Rules-and-sundry-amendments-April-2025.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/1322/Executed-Rules-Dec-2024.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/7/SEC-AMLCFTCPF-REGULATIONS-12-MAY-2022.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/8/Rules-on-Issuance-Offering-and-Custody-of-Digital-Assets.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/9/SEC-NG-Approved-Major-Ammendments-to-Rules-Dec-20-2021_V2.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/10/Social-Bond-Rule-New-October-29-2021.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/11/New-Rules-and-Amendments-_Executed-30-August-2021.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/12/Executed-Rules-May-24-2021.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/13/Major-Amendments-to-the-SEC-NIGERIA-rules-26-April-2021.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/14/Executed-Rules-and-Amendments_22-March-2021.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/15/Jan-2021-Executed-Rules.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/16/New-Rules-and-Sundry-Amendments-as-at-10-September-2020.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/17/SEC-New-Rules-and-Ammendments-23-December-2019.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/1352/New_Rules_and_Sundry_Amendments_August_21_2019.pdf",
+        "label": "Download full document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/18/Rules-For-Upload-October-2019_final.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/19/12-October-2018-SEC-NG-Approved-Rules.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/20/SEC-APPROVED-RULES-NOV-2017_BATCH-B.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/21/RULES-JULY-2017-final-for-execution-11-10-2017.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/22/June-2017-SEC-Executed-Rules-Regulations.pdf",
+        "label": "Download Full Document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/1347/SEC_Consolidated_JUNE2013_SIGNEDWEBSITE_1.pdf",
+        "label": "Download full document"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/23/AMENDMENTS_17415.pdf",
+        "label": "Sundry Amendments to SEC Rules and Regulations - April 13, 2015"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/24/Rules-on-Demutualization-of-Securities-Exchanges-in-Nigeria-April-27-2015.pdf",
+        "label": "Rules for Demutualization of Securities Exchanges in Nigeria - April 27, 2015"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/25/RULES_ON_SECURITIZATION_17415.pdf",
+        "label": "Rules on Securitization - April 13, 2015"
+      },
+      {
+        "url": "https://chat.openai.com/documents",
+        "label": ":"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/26/RULES_ON_TRADING_IN_UNLISTED_SECURITIES_17415.pdf",
+        "label": "Rules on Trading in Unlisted Securities - April 13, 2015"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/27/Rules_on_Complaints_Mgt_Framework_of_NCM_February_12_2015.pdf",
+        "label": "Rules Relating to the Complaints Management Framework of the Nigerian Capital Market - February 12, 2015"
+      },
+      {
+        "url": "https://chat.openai.com/documents",
+        "label": ":"
+      },
+      {
+        "url": "https://sec.gov.ng/documents/28/RULES_ON_INFRASTRUCTURE_FUNDS_and_OTHERS__2014.pdf",
+        "label": "Rules on Infrastructure Funds, Foreign Collective Investment Schemes and Sundry Amendments - May 12, 2014"
+      },
+      {
+        "url": "https://chat.openai.com/documents",
+        "label": ":"
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/sec-rules-for-fintechs/",
+        "label": "\n        SEC Rules For FinTechs\n        Navigate regulatory standards for fintech firms operating in Nigeria’s capital market; uncover licensing criteria, operational requirements, risk management protocols, and consumer protection measures designed to foster innovation while maintaining market integrity\n        \n        \n\n    "
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/sec-rules-related-to-bonds/",
+        "label": "\n        SEC Rules Related to Bonds\n        Delve into guidelines governing bond issuance and trading; learn about compliance steps, disclosure requirements, and safeguards that ensure the integrity and stability of Nigeria’s debt capital market.\n        \n        \n\n    "
+      },
+      {
+        "url": "https://sec.gov.ng/",
+        "label": "\n                            \n                                Back to Home\n                            \n                        "
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/",
+        "label": "\n                            \n                                Our Mandate\n                            \n                        "
+      },
+      {
+        "url": "https://sec.gov.ng/our-mandate/regulation/",
+        "label": "\n                            \n                                Regulation\n                            \n                        "
+      },
+      {
+        "url": "https://twitter.com/intent/tweet?url=https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/&text=",
+        "label": "\n                \n                    \n                \n            "
+      },
+      {
+        "url": "https://www.linkedin.com/sharing/share-offsite/?url=https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/",
+        "label": "\n                \n                    \n                \n            "
+      },
+      {
+        "url": "https://wa.me/?text=%20https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/",
+        "label": "\n                \n                    \n                \n            "
+      },
+      {
+        "url": "https://www.facebook.com/sharer/sharer.php?u=https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/",
+        "label": "\n                \n                    \n                \n            "
+      },
+      {
+        "url": "mailto:?subject=&body=Check out this page: https://sec.gov.ng/our-mandate/regulation/rules-and-regulations/",
+        "label": "\n                \n                    \n                    \n                \n            "
+      },
+      {
+        "url": "tel:+2342094621168",
+        "label": "\n                    \n                        \n                    \n                    +234 209 462 1168 (Landline)\n                "
+      },
+      {
+        "url": "tel:+2349167723240",
+        "label": "\n                    \n                        \n                    \n                    +234 916 772 3240 (Mobile)\n                "
+      },
+      {
+        "url": "https://sec.gov.ng/about/contact-us/",
+        "label": "CONTACT US"
+      },
+      {
+        "url": "https://mail.sec.gov.ng/owa/auth/logon.aspx",
+        "label": "\n                    \n                        \n                    \n                    SEC INTERNAL MAIL\n                "
+      },
+      {
+        "url": "mailto:sec@sec.gov.ng",
+        "label": "\n                    \n                        \n                    \n                    SEC@SEC.GOV.NG\n                "
+      },
+      {
+        "url": "https://revop.gov.ng/payments/generate-bill?org=0220009001000",
+        "label": "\n                \n                CLICK HERE TO MAKE PAYMENTS\n            "
+      },
+      {
+        "url": "https://eportal.sec.gov.ng/non-mandated",
+        "label": "\n                \n                CLICK HERE TO CHECK FOR UNCLAIMED DIVIDENDS\n            "
+      },
+      {
+        "url": "https://facebook.com/people/Securities-and-Exchange-Commission-Nigeria",
+        "label": "\n                    \n                        \n                    \n                "
+      },
+      {
+        "url": "https://twitter.com/secnigeria",
+        "label": "\n                    \n                        \n                    \n                "
+      },
+      {
+        "url": "https://www.instagram.com/secnigeria/",
+        "label": "\n                    \n                        \n                    \n                "
+      },
+      {
+        "url": "https://www.linkedin.com/company/securities-and-exchange-commission-nigeria",
+        "label": "\n                    \n                        \n                    \n                "
+      },
+      {
+        "url": "https://www.youtube.com/@securitiesandexchangecommi7102",
+        "label": "\n                    \n                        \n                    \n                "
+      },
+      {
+        "url": "https://sec.gov.ng/website-privacy-policy/",
+        "label": "Privacy Policy"
+      },
+      {
+        "url": "https://sec.gov.ng/sitemap.html",
+        "label": "Sitemap"
+      },
+      {
+        "url": "https://sec.gov.ng/website-terms-of-use/",
+        "label": "Terms of Use"
+      }
+    ],
+    "feeds": [
+      "https://sec.gov.ng/feeds/news.rss",
+      "https://sec.gov.ng/feeds/events.rss"
+    ]
+  },
+  "finished_at": "2026-09-18T11:35:57.172912+00:00",
+  "robots_evidence": [
+    {
+      "url": "https://home.sec.gov.ng/robots.txt",
+      "status": 404,
+      "sha256": "a9aa9ec7ef3ec92e7eb52220a9f0cb578ff2ba0a71cb3e9c1a0b828857529fcc",
+      "fetched_at": "2026-09-18T11:35:47.739695+00:00",
+      "body": "No input file specified.\n"
+    },
+    {
+      "url": "https://sec.gov.ng/robots.txt",
+      "status": 404,
+      "sha256": "a9aa9ec7ef3ec92e7eb52220a9f0cb578ff2ba0a71cb3e9c1a0b828857529fcc",
+      "fetched_at": "2026-09-18T11:35:53.135600+00:00",
+      "body": "No input file specified.\n"
+    }
+  ]
+}

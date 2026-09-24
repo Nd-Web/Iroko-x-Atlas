@@ -1,0 +1,12 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/documents/AML-CFT.html",
+  "final_url": "https://www.cbn.gov.ng/documents/AML-CFT.html",
+  "status": 200,
+  "content_type": "text/html",
+  "fetched_at": "2026-09-18T11:50:02.457816+00:00",
+  "size_bytes": 7523,
+  "sha256": "d373263ae1db9082aa82c48afaa3a6ca64669726c6d6131ad64c7998450c79ed",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-08-aml-cft.html"
+}

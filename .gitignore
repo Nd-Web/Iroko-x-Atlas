@@ -2,3 +2,14 @@
 # local sqlite test db
 atlas.db
 backend/atlas.db
+
+# Regulatory ingestion: full regulator API captures are large (1.15 MB+) and
+# re-fetchable. The trimmed api-all-sample.json IS committed; see
+# backend/tests/ingestion/fixtures/SOURCES.md for hashes and re-fetch commands.
+backend/tests/ingestion/fixtures/cbn/*-api-all.json
+backend/tests/ingestion/fixtures/**/*.response.bin
+.azurite/
+
+# Python generated files
+__pycache__/
+*.py[cod]

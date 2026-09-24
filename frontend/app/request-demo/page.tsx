@@ -1,422 +1,247 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import styles from "./pilot.module.css";
 
-const LOGO = (
-  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-    <div style={{
-      width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-      background: "#FFCB05",
-      boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
-      <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-        <path d="M11 2.5L17.5 6.5V14.5L11 18.5L4.5 14.5V6.5L11 2.5Z" stroke="#0A0A0B" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
-        <circle cx="11" cy="10.5" r="2.25" fill="#0A0A0B" />
-      </svg>
-    </div>
-    <div>
-      <p style={{ fontSize: 15, fontWeight: 700, color: "#fff", margin: 0 }}>Iroko AI</p>
-      <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", margin: 0 }}>Document Intelligence</p>
-    </div>
-  </div>
-);
+type Availability = {
+  timezone: string;
+  slot_minutes: number;
+  business_hours: string;
+  slots: string[];
+};
 
-type DemoType = "live" | "recorded" | "deck";
+type Booking = {
+  id: string;
+  slot_start: string;
+  slot_end: string;
+  timezone: string;
+};
 
-export default function RequestDemoPage() {
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading]     = useState(false);
-  const [demoTypes, setDemoTypes] = useState<DemoType[]>([]);
-  const [form, setForm] = useState({
-    company:   "",
-    contact:   "",
-    email:     "",
-    phone:     "",
-    role:      "",
-    size:      "",
-    orgType:   "",
-    message:   "",
-  });
+const PHONE_CODES = [
+  ["NG", "+234"], ["GH", "+233"], ["KE", "+254"], ["ZA", "+27"],
+  ["UG", "+256"], ["TZ", "+255"], ["RW", "+250"], ["CM", "+237"],
+  ["CI", "+225"], ["SN", "+221"], ["GB", "+44"], ["US/CA", "+1"],
+  ["AE", "+971"], ["FR", "+33"], ["DE", "+49"], ["Other", "+"],
+];
 
-  function toggle(type: DemoType) {
-    setDemoTypes(prev =>
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    );
+const WAT_DATE = new Intl.DateTimeFormat("en-NG", {
+  timeZone: "Africa/Lagos", weekday: "short", day: "numeric", month: "short",
+});
+const WAT_LONG = new Intl.DateTimeFormat("en-NG", {
+  timeZone: "Africa/Lagos", weekday: "long", day: "numeric", month: "long", year: "numeric",
+  hour: "2-digit", minute: "2-digit", hour12: true,
+});
+const WAT_TIME = new Intl.DateTimeFormat("en-NG", {
+  timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit", hour12: true,
+});
+const dayKey = (iso: string) => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Africa/Lagos", year: "numeric", month: "2-digit", day: "2-digit",
+}).format(new Date(iso));
+
+export default function RequestPilotPage() {
+  const [availability, setAvailability] = useState<Availability | null>(null);
+  const [loadingSlots, setLoadingSlots] = useState(true);
+  const [selectedDay, setSelectedDay] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [phoneCode, setPhoneCode] = useState("+234");
+
+  const loadAvailability = useCallback(async () => {
+    setLoadingSlots(true);
+    try {
+      const response = await fetch("/api/pilot/availability", { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not load available times.");
+      const data: Availability = await response.json();
+      setAvailability(data);
+      const firstDay = data.slots[0] ? dayKey(data.slots[0]) : "";
+      setSelectedDay((current) => current && data.slots.some((slot) => dayKey(slot) === current) ? current : firstDay);
+    } catch {
+      setError("We couldn't load the booking calendar. Please refresh and try again.");
+    } finally {
+      setLoadingSlots(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadAvailability(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadAvailability]);
+
+  const days = useMemo(() => {
+    const grouped = new Map<string, string[]>();
+    for (const slot of availability?.slots ?? []) {
+      const key = dayKey(slot);
+      grouped.set(key, [...(grouped.get(key) ?? []), slot]);
+    }
+    return [...grouped.entries()];
+  }, [availability]);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedSlot) {
+      setError("Please choose an onboarding call time.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    const data = new FormData(event.currentTarget);
+    const localPhone = String(data.get("phone") ?? "").trim();
+    const payload = {
+      full_name: data.get("full_name"),
+      work_email: data.get("work_email"),
+      phone: `${phoneCode}${localPhone.replace(/^0+/, "")}`,
+      company_name: data.get("company_name"),
+      job_title: data.get("job_title"),
+      company_type: data.get("company_type"),
+      country: data.get("country"),
+      pilot_goal: data.get("pilot_goal") || null,
+      consent_to_contact: data.get("consent_to_contact") === "on",
+      slot_start: selectedSlot,
+    };
+
+    try {
+      const response = await fetch("/api/pilot/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const body = await response.json();
+      if (response.status === 409) {
+        setSelectedSlot("");
+        await loadAvailability();
+        throw new Error(body.detail?.message ?? "That time was just booked. Please choose another.");
+      }
+      if (!response.ok) {
+        const detail = Array.isArray(body.detail) ? body.detail[0]?.msg : body.detail;
+        throw new Error(typeof detail === "string" ? detail : "We couldn't submit your request. Please check the form and try again.");
+      }
+      setBooking(body);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (demoTypes.length === 0) return;
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setSubmitted(true); }, 1200);
-  }
-
-  /* ── shared styles ── */
-  const field: React.CSSProperties = {
-    width: "100%", boxSizing: "border-box",
-    background: "#131316",
-    border: "1px solid rgba(255,255,255,0.14)",
-    borderRadius: 10, padding: "12px 14px",
-    fontSize: 14, color: "#F7F7F9",
-    outline: "none",
-    fontFamily: "inherit",
-  };
-  const label: React.CSSProperties = {
-    display: "block", fontSize: 12, fontWeight: 600,
-    color: "rgba(255,255,255,0.55)", marginBottom: 7,
-    textTransform: "uppercase", letterSpacing: "0.05em",
-  };
-
-  /* ── success screen ── */
-  if (submitted) {
+  if (booking) {
     return (
-      <div style={{ background: "#0A0A0B", minHeight: "100vh", fontFamily: "DM Sans, ui-sans-serif, sans-serif", color: "#F7F7F9", display: "flex", flexDirection: "column" }}>
-        <header style={{ height: 56, display: "flex", alignItems: "center", padding: "0 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <Link href="/" style={{ textDecoration: "none" }}>{LOGO}</Link>
-        </header>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <div style={{ textAlign: "center", maxWidth: 440 }}>
-            <div style={{
-              width: 72, height: 72, borderRadius: "50%", margin: "0 auto 28px",
-              background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <path d="M6 16l8 8 12-12" stroke="#34D399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <h1 style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 14px" }}>Request received</h1>
-            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, margin: "0 0 10px" }}>
-              We&apos;ve logged your request for:
-            </p>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
-              {demoTypes.includes("live")     && <span style={pill("#818CF8")}>Live demo</span>}
-              {demoTypes.includes("recorded") && <span style={pill("#34D399")}>Recorded demo</span>}
-              {demoTypes.includes("deck")     && <span style={pill("#FB923C")}>Slide deck</span>}
-            </div>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", lineHeight: 1.7, margin: "0 0 32px" }}>
-              A specialist from the Iroko AI team will reach out to <strong style={{ color: "rgba(255,255,255,0.7)" }}>{form.email}</strong> within 24 hours.
-            </p>
-            <Link href="/" style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              fontSize: 14, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
-              padding: "10px 22px", borderRadius: 10,
-              background: "#FFCB05",
-            }}>
-              ← Back to home
-            </Link>
+      <div className={styles.page}>
+        <Header />
+        <main className={styles.successWrap}>
+          <div className={styles.successIcon}>✓</div>
+          <p className={styles.eyebrow}>Pilot request confirmed</p>
+          <h1>You&apos;re booked.</h1>
+          <p className={styles.successCopy}>We&apos;ve received your request and reserved your onboarding call.</p>
+          <div className={styles.bookingCard}>
+            <span>30-minute onboarding call</span>
+            <strong>{WAT_LONG.format(new Date(booking.slot_start))} WAT</strong>
           </div>
-        </div>
+          <p className={styles.successNote}>Your free 30-day pilot starts from this call. A confirmation has been sent to your work email.</p>
+          <Link className={styles.backLink} href="/">Back to Iroko AI</Link>
+        </main>
       </div>
     );
   }
 
   return (
-    <div style={{ background: "#0A0A0B", minHeight: "100vh", fontFamily: "DM Sans, ui-sans-serif, sans-serif", color: "#F7F7F9" }}>
-
-      {/* Navbar */}
-      <header style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-        height: 56, display: "flex", alignItems: "center", padding: "0 24px",
-        background: "rgba(10,10,11,0.9)", backdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-      }}>
-        <div style={{ maxWidth: 1100, width: "100%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none" }}>{LOGO}</Link>
-          <Link href="/login" style={{
-            fontSize: 13, fontWeight: 700, color: "#0A0A0B", textDecoration: "none",
-            padding: "7px 16px", borderRadius: 8,
-            background: "#FFCB05",
-          }}>
-            Sign in
-          </Link>
-        </div>
-      </header>
-
-      <main style={{ paddingTop: 88, paddingBottom: 80, paddingLeft: 24, paddingRight: 24 }}>
-        <div style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}>
-
-          {/* Page header */}
-          <div style={{ marginBottom: 40, paddingTop: 24 }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "5px 12px", borderRadius: 99, marginBottom: 20,
-              background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)",
-              fontSize: 12, fontWeight: 600, color: "#38BDF8",
-            }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", display: "inline-block" }} />
-              Invite-only · No payment needed
-            </div>
-            <h1 style={{ fontSize: "clamp(28px,4vw,42px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "0 0 14px", lineHeight: 1.1 }}>
-              Request a demo
-            </h1>
-            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, margin: 0, maxWidth: 480 }}>
-              Tell us about your organisation and choose how you&apos;d like to see Iroko AI in action. We&apos;ll follow up within 24 hours.
-            </p>
+    <div className={styles.page}>
+      <Header />
+      <main className={styles.main}>
+        <section className={styles.intro}>
+          <p className={styles.eyebrow}><span /> Free 30-day pilot</p>
+          <h1>Put Iroko AI to work<br />inside your organisation.</h1>
+          <p>Tell us about your team, then reserve a 30-minute onboarding call. Your pilot begins from that call—no payment details required.</p>
+          <div className={styles.benefits}>
+            <div><b>01</b><span>30 days of hands-on access</span></div>
+            <div><b>02</b><span>Guided onboarding with our team</span></div>
+            <div><b>03</b><span>Built around your real use case</span></div>
           </div>
+        </section>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-
-            {/* ── Section 1: Company ── */}
-            <Section label="Company details">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                <Field label="Company / organisation name *">
-                  <input required name="company" value={form.company} onChange={handleChange}
-                    placeholder="Acme Group Plc" style={field} />
-                </Field>
-                <Field label="Company size">
-                  <select name="size" value={form.size} onChange={handleChange}
-                    style={{ ...field, color: form.size ? "#F7F7F9" : "#7A7A85" }}>
-                    <option value="">Select size</option>
-                    <option>1 – 10 employees</option>
-                    <option>11 – 50 employees</option>
-                    <option>51 – 200 employees</option>
-                    <option>201 – 500 employees</option>
-                    <option>500+ employees</option>
+        <form className={styles.formCard} onSubmit={submit}>
+          <Section number="01" title="About you">
+            <div className={styles.twoCols}>
+              <Field label="Full name"><input name="full_name" autoComplete="name" required minLength={2} placeholder="Ada Okonkwo" /></Field>
+              <Field label="Work email"><input name="work_email" type="email" autoComplete="email" required placeholder="ada@company.com" /></Field>
+            </div>
+            <div className={styles.twoCols}>
+              <Field label="Phone number">
+                <div className={styles.phoneField}>
+                  <select aria-label="Country calling code" value={phoneCode} onChange={(event) => setPhoneCode(event.target.value)}>
+                    {PHONE_CODES.map(([country, code]) => <option key={`${country}-${code}`} value={code}>{country} {code}</option>)}
                   </select>
-                </Field>
-              </div>
-              <Field label="Organisation type">
-                <select name="orgType" value={form.orgType} onChange={handleChange}
-                  style={{ ...field, color: form.orgType ? "#F7F7F9" : "#7A7A85" }}>
-                  <option value="">Select type (optional)</option>
-                  <option>Unit MFB</option>
-                  <option>State MFB</option>
-                  <option>National MFB</option>
-                  <option>Bank / fintech</option>
-                  <option>PSB / Payment Service Bank</option>
-                  <option>Large enterprise — telecom / operations</option>
-                  <option>Large enterprise — other</option>
-                  <option>Public sector / other</option>
-                </select>
+                  <input name="phone" type="tel" autoComplete="tel-national" required minLength={7} placeholder="801 234 5678" />
+                </div>
               </Field>
-            </Section>
+              <Field label="Job title"><input name="job_title" autoComplete="organization-title" required minLength={2} placeholder="Head of Compliance" /></Field>
+            </div>
+          </Section>
 
-            {/* ── Section 2: Contact ── */}
-            <Section label="Your contact details">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                <Field label="Full name *">
-                  <input required name="contact" value={form.contact} onChange={handleChange}
-                    placeholder="Ada Okonkwo" style={field} />
-                </Field>
-                <Field label="Role *">
-                  <select required name="role" value={form.role} onChange={handleChange}
-                    style={{ ...field, color: form.role ? "#F7F7F9" : "#7A7A85" }}>
-                    <option value="" disabled>Select role</option>
-                    <option>Head of Operations</option>
-                    <option>CIO / CTO / IT Lead</option>
-                    <option>Head of Data / Analytics</option>
-                    <option>Chief Compliance Officer</option>
-                    <option>Compliance Manager</option>
-                    <option>Legal & Risk</option>
-                    <option>CEO / MD</option>
-                    <option>Other</option>
-                  </select>
-                </Field>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                <Field label="Work email *">
-                  <input required type="email" name="email" value={form.email} onChange={handleChange}
-                    placeholder="ada@company.com" style={field} />
-                </Field>
-                <Field label="Phone number">
-                  <input type="tel" name="phone" value={form.phone} onChange={handleChange}
-                    placeholder="+234 801 000 0000" style={field} />
-                </Field>
-              </div>
-            </Section>
+          <Section number="02" title="Your company">
+            <div className={styles.twoCols}>
+              <Field label="Company name"><input name="company_name" autoComplete="organization" required minLength={2} placeholder="Your organisation" /></Field>
+              <Field label="Company type">
+                <select name="company_type" required defaultValue=""><option value="" disabled>Select company type</option><option>Microfinance Bank</option><option>Fintech</option><option>Other</option></select>
+              </Field>
+            </div>
+            <Field label="Country"><input name="country" autoComplete="country-name" required minLength={2} placeholder="Nigeria" /></Field>
+            <Field label="What would you like the pilot to help you solve?" optional>
+              <textarea name="pilot_goal" maxLength={1000} rows={4} placeholder="Briefly describe the workflow, documents, or compliance challenge you want to explore." />
+            </Field>
+          </Section>
 
-            {/* ── Section 3: Demo type ── */}
-            <Section label="What would you like to receive? *">
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <DemoOption
-                  active={demoTypes.includes("live")}
-                  onToggle={() => toggle("live")}
-                  icon={
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <circle cx="9" cy="9" r="7.5" stroke="#818CF8" strokeWidth="1.4"/>
-                      <path d="M7 6.5l5 2.5-5 2.5V6.5Z" fill="#818CF8"/>
-                    </svg>
-                  }
-                  title="Live demo"
-                  desc="A tailored 30-minute walkthrough with our team — your documents, your workflows."
-                  color="#818CF8"
-                />
-                <DemoOption
-                  active={demoTypes.includes("recorded")}
-                  onToggle={() => toggle("recorded")}
-                  icon={
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <rect x="1.5" y="4" width="11" height="10" rx="2" stroke="#34D399" strokeWidth="1.4"/>
-                      <path d="M12.5 7l4-2v8l-4-2V7Z" stroke="#34D399" strokeWidth="1.4" strokeLinejoin="round"/>
-                    </svg>
-                  }
-                  title="Recorded demo"
-                  desc="Watch a full product walkthrough on your own schedule — sent directly to your inbox."
-                  color="#34D399"
-                />
-                <DemoOption
-                  active={demoTypes.includes("deck")}
-                  onToggle={() => toggle("deck")}
-                  icon={
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <rect x="2" y="2.5" width="14" height="13" rx="2" stroke="#FB923C" strokeWidth="1.4"/>
-                      <path d="M5 7h8M5 10h6M5 13h4" stroke="#FB923C" strokeWidth="1.4" strokeLinecap="round"/>
-                    </svg>
-                  }
-                  title="Slide deck"
-                  desc="Download our product overview and capability deck — shareable with your leadership team."
-                  color="#FB923C"
-                />
-              </div>
-              {demoTypes.length === 0 && (
-                <p style={{ fontSize: 12, color: "#EF4444", marginTop: 8 }}>Please select at least one option.</p>
-              )}
-            </Section>
+          <Section number="03" title="Book your onboarding call" last>
+            <div className={styles.calendarMeta}><span>30 minutes</span><span>Mon–Fri</span><span>{availability?.business_hours ?? "09:00–17:00"} WAT</span></div>
+            {loadingSlots ? <div className={styles.calendarState}>Loading available times…</div> : days.length === 0 ? (
+              <div className={styles.calendarState}>No times are currently available. Please check again shortly.</div>
+            ) : (
+              <>
+                <div className={styles.dayList} aria-label="Available dates">
+                  {days.map(([key, slots]) => (
+                    <button key={key} type="button" className={selectedDay === key ? styles.dayActive : ""} onClick={() => { setSelectedDay(key); setSelectedSlot(""); }}>
+                      {WAT_DATE.format(new Date(slots[0]))}
+                    </button>
+                  ))}
+                </div>
+                <div className={styles.timeGrid} aria-label="Available times">
+                  {(days.find(([key]) => key === selectedDay)?.[1] ?? []).map((slot) => (
+                    <button key={slot} type="button" className={selectedSlot === slot ? styles.timeActive : ""} onClick={() => { setSelectedSlot(slot); setError(""); }}>
+                      {WAT_TIME.format(new Date(slot))}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            <p className={styles.notice}>Times are shown in West Africa Time (UTC+1). Booking requires at least 24 hours&apos; notice.</p>
+          </Section>
 
-            {/* ── Section 4: Message ── */}
-            <Section label="Anything specific you'd like covered?" last>
-              <textarea
-                name="message" value={form.message} onChange={handleChange}
-                placeholder="e.g. We want to see how Iroko answers questions across our contract archive, or how the compliance configuration handles CBN filing deadlines…"
-                rows={4}
-                style={{ ...field, resize: "vertical", lineHeight: 1.65 }}
-              />
-            </Section>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || demoTypes.length === 0}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                fontSize: 15, fontWeight: 700, color: "#0A0A0B",
-                padding: "14px 24px", borderRadius: 10, width: "100%",
-                background: (loading || demoTypes.length === 0) ? "rgba(255,203,5,0.4)" : "#FFCB05",
-                border: "none",
-                cursor: (loading || demoTypes.length === 0) ? "not-allowed" : "pointer",
-                marginTop: 8,
-              }}
-            >
-              {loading ? "Submitting…" : (
-                <>
-                  Submit request
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </>
-              )}
-            </button>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.22)", textAlign: "center", marginTop: 14 }}>
-              No credit card required · Iroko AI is invite-only
-            </p>
-
-          </form>
-        </div>
+          <label className={styles.consent}>
+            <input name="consent_to_contact" type="checkbox" required />
+            <span>I agree to be contacted by Iroko AI about this pilot request.</span>
+          </label>
+          {error && <div className={styles.error} role="alert">{error}</div>}
+          <button className={styles.submit} type="submit" disabled={submitting || loadingSlots || !selectedSlot}>
+            {submitting ? "Booking your call…" : "Request free 30-day pilot"}<span>→</span>
+          </button>
+          <p className={styles.secure}>Your details are used only to arrange and support your pilot.</p>
+        </form>
       </main>
     </div>
   );
 }
 
-/* ── helper components ── */
-
-function Section({ label, children, last }: { label: string; children: React.ReactNode; last?: boolean }) {
-  return (
-    <div style={{
-      borderBottom: last ? "none" : "1px solid rgba(255,255,255,0.07)",
-      paddingBottom: 28, marginBottom: 28,
-    }}>
-      <p style={{
-        fontSize: 11, fontWeight: 700, textTransform: "uppercase",
-        letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)",
-        margin: "0 0 18px",
-      }}>
-        {label}
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {children}
-      </div>
-    </div>
-  );
+function Header() {
+  return <header className={styles.header}><div className={styles.headerInner}><Link href="/" className={styles.brand}><span className={styles.mark}>I</span><span>Iroko AI<small>Document Intelligence</small></span></Link><Link href="/login" className={styles.signIn}>Sign in</Link></div></header>;
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label style={{
-        display: "block", fontSize: 12, fontWeight: 600,
-        color: "rgba(255,255,255,0.55)", marginBottom: 7,
-      }}>
-        {label}
-      </label>
-      {children}
-    </div>
-  );
+function Section({ number, title, children, last = false }: { number: string; title: string; children: React.ReactNode; last?: boolean }) {
+  return <section className={`${styles.section} ${last ? styles.last : ""}`}><div className={styles.sectionTitle}><span>{number}</span><h2>{title}</h2></div><div className={styles.sectionBody}>{children}</div></section>;
 }
 
-function DemoOption({
-  active, onToggle, icon, title, desc, color,
-}: {
-  active: boolean;
-  onToggle: () => void;
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-  color: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      style={{
-        display: "flex", alignItems: "flex-start", gap: 14,
-        padding: "16px 18px", borderRadius: 12, cursor: "pointer",
-        background: active ? `${color}10` : "#131316",
-        border: active ? `1.5px solid ${color}55` : "1.5px solid rgba(255,255,255,0.09)",
-        textAlign: "left", width: "100%",
-        transition: "border-color 0.15s, background 0.15s",
-      }}
-    >
-      {/* Checkbox */}
-      <div style={{
-        width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
-        border: active ? `2px solid ${color}` : "2px solid rgba(255,255,255,0.2)",
-        background: active ? color : "transparent",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        transition: "all 0.15s",
-      }}>
-        {active && (
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-            <path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-      </div>
-      {/* Icon */}
-      <div style={{
-        width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-        background: `${color}12`, border: `1px solid ${color}25`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        {icon}
-      </div>
-      {/* Text */}
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: "#F7F7F9", margin: "0 0 4px" }}>{title}</p>
-        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0, lineHeight: 1.55 }}>{desc}</p>
-      </div>
-    </button>
-  );
-}
-
-function pill(color: string): React.CSSProperties {
-  return {
-    fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 99,
-    background: `${color}18`, color, border: `1px solid ${color}35`,
-  };
+function Field({ label, optional = false, children }: { label: string; optional?: boolean; children: React.ReactNode }) {
+  return <label className={styles.field}><span>{label}{optional && <em>Optional</em>}</span>{children}</label>;
 }

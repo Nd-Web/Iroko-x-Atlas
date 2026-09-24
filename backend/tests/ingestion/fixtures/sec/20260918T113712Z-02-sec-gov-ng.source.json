@@ -1,0 +1,16 @@
+{
+  "url": "https://sec.gov.ng/for-investors/keep-track-of-circulars/",
+  "request_started_at": "2026-09-18T11:37:14.928179+00:00",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "final_url": "https://sec.gov.ng/for-investors/keep-track-of-circulars/",
+  "status": 200,
+  "headers": {
+    "content-type": "text/html; charset=utf-8"
+  },
+  "body_complete": true,
+  "size_bytes": 287113,
+  "sha256": "dbe539277953c1cc0aa03e2929f661f148feae7162ae080b36c64ce49ff1cc2c",
+  "response_path": "backend\\tests\\ingestion\\fixtures\\sec\\20260918T113712Z-02-sec-gov-ng.response.bin",
+  "fetched_at": "2026-09-18T11:37:17.777349+00:00",
+  "finished_at": "2026-09-18T11:37:17.777583+00:00"
+}

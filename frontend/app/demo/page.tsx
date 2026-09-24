@@ -670,7 +670,7 @@ function Slide10() {
           padding: "13px 28px", borderRadius: 10, background: C.brand,
           display: "inline-block", flexShrink: 0,
         }}>
-          Book a call →
+          Request free 30-day pilot →
         </Link>
       </div>
 

@@ -1,0 +1,12 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/documents/BODcirculars.html",
+  "final_url": "https://www.cbn.gov.ng/documents/BODcirculars.html",
+  "status": 200,
+  "content_type": "text/html",
+  "fetched_at": "2026-09-18T11:49:58.005322+00:00",
+  "size_bytes": 7302,
+  "sha256": "a7c7fbf949811238e8c067671ea5bdedeca84ea336e1efe66f4d7e0f5ec8ac59",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-06-bod-payments-system.html"
+}

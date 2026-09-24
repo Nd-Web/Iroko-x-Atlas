@@ -1,0 +1,153 @@
+Phase 0 validation baseline
+Date: 2026-09-17 (Africa/Lagos)
+Scope: reconnaissance only; no production-code changes or dependency installs.
+
+Conventions inspected
+---------------------
+backend/AGENTS.md and frontend/AGENTS.md both direct agents to the installed
+Next.js documentation before writing Next.js code. No application code was
+written during these checks.
+
+Backend requirements.txt uses pip-style requirements. There is no declared
+pytest, pytest-asyncio, Python linter or Python type-checker dependency there.
+No pyproject.toml, pytest.ini, conftest.py, tox.ini, setup.cfg, Ruff or Mypy
+configuration was found outside installed dependencies and generated caches.
+backend/tests/test_ai_capabilities.py documents a pytest invocation; the other
+two files under backend/tests contain only comments. Deployment workflows in
+backend/.github and frontend/.github build/deploy containers and do not define
+test/lint/type-check steps.
+
+Frontend package.json scripts: dev, build, start, lint (eslint).
+No frontend test or explicit typecheck script was found. eslint.config.mjs uses
+Next.js core-web-vitals and TypeScript presets. tsconfig.json enables strict
+checking and noEmit; the installed TypeScript executable was used directly.
+
+Installed tools and packages
+----------------------------
+OS: Windows. Python 3.13.7. Node v22.19.0. npm 10.9.3.
+The backend .venv exists and contains the application dependencies, including:
+  FastAPI 0.115.0; SQLAlchemy 2.0.35; pydantic-settings 2.5.2;
+  python-dotenv 1.0.1; httpx 0.27.0; semantic-kernel 1.20.0;
+  openai 1.109.1; psycopg2-binary 2.9.12; asyncpg 0.31.0;
+  APScheduler 3.11.3; tenacity 9.1.4; Playwright 1.61.0;
+  azure-ai-documentintelligence 1.0.0; azure-storage-blob 12.23.0;
+  azure-identity 1.25.3; Pillow 12.3.0.
+Not installed in backend .venv:
+  pytest, pytest-asyncio, Ruff, Mypy, Alembic, pgvector (Python package),
+  Redis (Python package), ARQ, Celery, selectolax, feedparser, pypdfium2,
+  pdfplumber, tiktoken, respx.
+System Python has pytest 9.0.3 and pytest-asyncio 1.3.0, plus the inspected
+application package versions above (SQLAlchemy, Semantic Kernel, settings,
+httpx). Global Ruff 0.16.2 and Mypy 2.3.0 exist, but the repo does not configure
+or document either as a required check. No dependency was installed.
+
+Test side-effect review and exclusions
+-------------------------------------
+Unrestricted pytest discovery at backend/ was deliberately not run:
+  - backend/test_azure.py issues a live Azure OpenAI POST at import time.
+  - backend/scripts/test_search.py searches Azure AI Search at import time.
+  - backend/test_strategist.py loads Azure Key Vault secrets at import time
+    and prints partial credentials; its harness calls the LLM.
+  - backend/test_pdf.py imports main and uses application auth/database flows.
+  - backend/test_fetch.py exercises paid Bright Data fetch/search services.
+Within tests/test_ai_capabilities.py, conversation, retrieval, Watchdog,
+Scribe, streaming and some edge-case tests invoke service-backed methods
+without HTTP mocks. The repository has no live/integration markers or
+documented isolation fixture to prevent cloud calls and application DB use.
+Only inspected pure classes were executed. No production DB, cloud service,
+paid API, Docker container or application server was started by this check.
+
+Executed commands and results
+-----------------------------
+1. From the repository root:
+   .\backend\.venv\Scripts\python.exe -m pytest tests --collect-only -q
+   Exit 1: No module named pytest. No tests were collected or executed.
+
+2. From backend/, using the existing system Python:
+   python -m pytest tests --collect-only -q -p no:cacheprovider
+   Exit 0: 111 tests collected in 0.49s.
+   Collection was restricted to tests/ to avoid live scripts elsewhere.
+
+3. From backend/, using the existing system Python:
+   python -m pytest tests/test_ai_capabilities.py -q --tb=short -p no:cacheprovider -k 'TestIntentClassification or TestEntityExtraction or TestPidginDetection or TestCannedScenarios or TestDocumentProcessing or TestCitationDedup or TestKernelConfig'
+   Exit 1: 6 failed, 64 passed, 41 deselected in 15.33s.
+   Existing failures:
+   - TestIntentClassification::test_network_ops_intents[CAR ratio status-network_operations]
+     Actual intent document_query; expected network_operations (line 101).
+   - TestIntentClassification::test_network_ops_intents[CBN alert this week-network_operations]
+     Actual intent document_query; expected network_operations (line 101).
+   - TestCannedScenarios::test_carbon_mfb_car_breach_match (line 239)
+   - TestCannedScenarios::test_sla_exposure_match (line 246)
+   - TestCannedScenarios::test_compliance_match (line 252)
+     All three expected a match but _match_canned returned None.
+   - TestCannedScenarios::test_canned_citations_have_required_fields (line 260)
+     TypeError: 'NoneType' object is not subscriptable.
+   Existing environment warning during pytest startup:
+     requests reports urllib3 2.5.0 or chardet 7.4.3 / charset_normalizer 3.4.2
+     outside its supported version combination.
+
+4. From frontend/:
+   .\node_modules\.bin\tsc.cmd --noEmit --incremental false
+   Exit 0, no diagnostics. Incremental output was disabled to avoid changing
+   the repository's tsconfig.tsbuildinfo baseline.
+
+5. From frontend/:
+   npm.cmd run lint -- --format json
+   Exit 1. The first JSON report exceeded the terminal-output budget because
+   ESLint includes source text in its JSON reports. The identical check was
+   repeated with a stdout summarizer, without changing source or config:
+
+   npm.cmd run lint -- --format json | python -c "import sys,json,collections; lines=sys.stdin.read().splitlines(); data=json.loads(next(line for line in lines if line.startswith('['))); totals={'files':len(data),'errors':sum(f['errorCount'] for f in data),'warnings':sum(f['warningCount'] for f in data)}; print(json.dumps(totals)); rules=collections.Counter(m['ruleId'] for f in data for m in f['messages']); print(json.dumps(rules)); examples=[{'file':f['filePath'],'line':m.get('line'),'rule':m['ruleId'],'message':m['message'].splitlines()[0]} for f in data for m in f['messages'] if m['severity']==2]; print(json.dumps(examples[:8],indent=2)); sys.exit(1 if totals['errors'] else 0)"
+
+   Exit 1: 195 files checked, 48 errors and 22 warnings.
+   Diagnostics by rule (errors and warnings combined):
+     react-hooks/set-state-in-effect: 23
+     react/no-unescaped-entities: 18
+     @typescript-eslint/no-unused-vars: 18
+     react-hooks/refs: 5
+     react-hooks/exhaustive-deps: 4
+     react-hooks/immutability: 1
+     @typescript-eslint/no-empty-object-type: 1
+   Example existing errors (paths relative to frontend/):
+     app/(auth)/forgot-password/page.tsx:103 - unescaped apostrophe
+     app/(auth)/invite/[token]/page.tsx:68 - synchronous setState in effect
+     app/(auth)/reset-password/page.tsx:50 - synchronous setState in effect
+     app/chat/page.tsx:161 - synchronous setState in effect
+     app/connectors/callback/page.tsx:22 - synchronous setState in effect
+     app/dashboard/page.tsx:23 - synchronous setState in effect
+
+Remaining validation gaps
+-------------------------
+The complete backend test suite has not been executed because it lacks
+offline isolation and includes external-service and DB side effects. Future
+phases need an agreed isolated test environment plus declared test tooling.
+No repo-defined Python lint/type-check command exists to run. No frontend
+test suite exists. Existing failures were documented without changing agents
+or other application code.
+
+Phase 0 snapshot helper checks
+------------------------------
+From the repository root, using already-installed system tools:
+  python docs/ingestion/recon.py --help
+  Exit 0; does not import the application or require secrets.
+
+  python -m ruff check docs/ingestion/recon.py
+  Exit 0: All checks passed.
+
+  python -m mypy docs/ingestion/recon.py --follow-imports skip --no-incremental
+  Exit 0: Success, no issues found in 1 source file.
+
+An inline Python smoke check loaded the helper with runpy and replaced its HTTP
+client with httpx.MockTransport (no network or fixture writes). Eight checks passed:
+  - exact identity-encoded snapshot bytes preserved;
+  - robots disallow prevents any publication request;
+  - cross-regulator redirect rejected before contacting the target;
+  - redirect to an unlisted domain rejected before contacting the target;
+  - mislabelled robots HTML challenge stops fetching;
+  - robots HTTP 503 prevents any publication request;
+  - unexpected compression rejected instead of silently changing captured bytes;
+  - robots HTTP 404 permits the publication request.
+
+  git diff --check
+  Exit 0. Only the new Phase 0 plan, helper, validation record and fixture-source
+  ledger are present as untracked changes; no tracked production files changed.

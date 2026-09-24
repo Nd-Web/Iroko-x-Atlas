@@ -1,0 +1,13 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/documents/",
+  "final_url": "https://www.cbn.gov.ng/documents/",
+  "status": 200,
+  "content_type": "text/html",
+  "content_encoding": "identity",
+  "fetched_at": "2026-09-18T11:35:20.845114+00:00",
+  "size_bytes": 15299,
+  "sha256": "2edd050bf1f1be1f2737bb066237c6bded0e5d94e983cb44d6e1d5eea1cedd07",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-02-documents-index.html"
+}

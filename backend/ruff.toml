@@ -1,0 +1,16 @@
+# Scoped to the ingestion subsystem. The rest of the backend has ~48 pre-existing
+# lint findings; linting it wholesale would bury new issues in old noise.
+# Widening `src`/include is a separate cleanup task.
+include = ["ingestion/**/*.py", "tests/ingestion/**/*.py"]
+line-length = 100
+target-version = "py313"
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = [
+    "E501",  # line length is enforced by the formatter, not the linter
+    "B008",  # FastAPI's Depends() in defaults is the framework's own idiom
+]
+
+[lint.isort]
+known-first-party = ["ingestion", "services", "models", "core", "agents", "routes"]

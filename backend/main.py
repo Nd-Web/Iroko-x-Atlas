@@ -71,6 +71,7 @@ from routes.workflows import router as workflows_router
 from routes.graph import router as graph_router
 from routes.meeting import router as meeting_router
 from routes.voice import router as voice_router
+from routes.pilot import router as pilot_router
 
 # Database
 from models.database import init_db
@@ -224,6 +225,7 @@ app.include_router(workflows_router)
 app.include_router(graph_router)
 app.include_router(meeting_router)
 app.include_router(voice_router)
+app.include_router(pilot_router)
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 

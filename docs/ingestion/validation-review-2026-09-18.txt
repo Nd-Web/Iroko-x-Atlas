@@ -1,0 +1,116 @@
+Documentation-review validation
+Date: 2026-09-18 (Africa/Lagos)
+Scope: documentation and .env.example review before Phase 1.
+
+This record preserves the results from the existing, inspected safe checks.
+docs/ingestion/validation-phase-0.txt remains the 2026-09-17 baseline and was
+not changed by this validation task. No production code, agents, dependencies,
+application database, cloud resources or model tests were changed.
+
+Environment and check selection
+-------------------------------
+Windows; existing Python 3.13.7, Node v22.19.0 and npm 10.9.3.
+Existing frontend/node_modules provided ESLint and TypeScript. The existing
+system Python provided pytest; no install or update command was run.
+
+Re-read backend/AGENTS.md and frontend/AGENTS.md. No Next.js code was written.
+The inspected backend test module and frontend package/config files had no
+tracked changes when this run began. The prior safe backend selection was
+used unchanged; backend-root test discovery and service-backed tests were
+not invoked. See validation-phase-0.txt for the prior side-effect inspection.
+
+1. Backend safe subset
+----------------------
+Working directory: backend/
+Command:
+  python -m pytest tests/test_ai_capabilities.py -q --tb=short -p no:cacheprovider -k 'TestIntentClassification or TestEntityExtraction or TestPidginDetection or TestCannedScenarios or TestDocumentProcessing or TestCitationDedup or TestKernelConfig'
+
+Exit 1: 6 failed, 64 passed, 41 deselected in 12.95s.
+The same six failures were present in the 2026-09-17 baseline:
+
+  TestIntentClassification::test_network_ops_intents[CAR ratio status-network_operations]
+  TestIntentClassification::test_network_ops_intents[CBN alert this week-network_operations]
+    tests/test_ai_capabilities.py:101
+    Actual document_query; expected network_operations.
+
+  TestCannedScenarios::test_carbon_mfb_car_breach_match
+    tests/test_ai_capabilities.py:239
+  TestCannedScenarios::test_sla_exposure_match
+    tests/test_ai_capabilities.py:246
+  TestCannedScenarios::test_compliance_match
+    tests/test_ai_capabilities.py:252
+    All three expected a match but _match_canned returned None.
+
+  TestCannedScenarios::test_canned_citations_have_required_fields
+    tests/test_ai_capabilities.py:260
+    TypeError: 'NoneType' object is not subscriptable.
+
+The existing RequestsDependencyWarning also remained: urllib3 2.5.0 or
+chardet 7.4.3 / charset_normalizer 3.4.2 does not match a supported version
+combination for the installed requests package.
+
+2. Frontend lint
+----------------
+Working directory: frontend/
+Command (stdout is summarized to avoid large ESLint source excerpts):
+  npm.cmd run lint -- --format json | python -c "import sys,json,collections; lines=sys.stdin.read().splitlines(); data=json.loads(next(line for line in lines if line.startswith('['))); totals={'files':len(data),'errors':sum(f['errorCount'] for f in data),'warnings':sum(f['warningCount'] for f in data)}; print(json.dumps(totals)); rules=collections.Counter(m['ruleId'] for f in data for m in f['messages']); print(json.dumps(rules)); examples=[{'file':f['filePath'],'line':m.get('line'),'rule':m['ruleId'],'message':m['message'].splitlines()[0]} for f in data for m in f['messages'] if m['severity']==2]; print(json.dumps(examples[:8],indent=2)); sys.exit(1 if totals['errors'] else 0)"
+
+Exit 1: 195 files checked, 48 errors and 22 warnings.
+Counts match the 2026-09-17 baseline.
+
+Diagnostics by rule (errors and warnings combined):
+  react-hooks/set-state-in-effect: 23
+  react/no-unescaped-entities: 18
+  @typescript-eslint/no-unused-vars: 18
+  react-hooks/refs: 5
+  react-hooks/exhaustive-deps: 4
+  react-hooks/immutability: 1
+  @typescript-eslint/no-empty-object-type: 1
+
+Examples (paths relative to frontend/):
+  app/(auth)/forgot-password/page.tsx:103 - unescaped apostrophe
+  app/(auth)/invite/[token]/page.tsx:68 - synchronous setState in effect
+  app/(auth)/reset-password/page.tsx:50 - synchronous setState in effect
+  app/chat/page.tsx:161 - synchronous setState in effect
+  app/connectors/callback/page.tsx:22 - synchronous setState in effect
+  app/dashboard/page.tsx:23 - synchronous setState in effect
+
+npm emitted an available-update notice; no npm update was performed.
+
+3. Frontend type checking
+-------------------------
+Working directory: frontend/
+Command:
+  .\node_modules\.bin\tsc.cmd --noEmit --incremental false
+
+Exit 0, no diagnostics. This matches the 2026-09-17 baseline.
+Incremental output was disabled to avoid modifying tsconfig.tsbuildinfo.
+
+Continuing limitations and Phase 1 boundary
+-------------------------------------------
+This is a safe subset result, not a passing full backend suite. Existing
+backend-root scripts perform live Azure/Key Vault requests during import;
+other service-backed tests lack mocks and can use application database or
+paid-service connections. The repo has no established offline fixture or
+live/integration exclusion configuration covering those paths. They remain
+excluded until isolation is agreed and implemented.
+
+No repo-defined Python linter/type-checker command or frontend test suite
+was introduced. Existing baseline failures were left unchanged.
+
+Documentation/template checks
+-----------------------------
+Validated .env.example, ingestion BRIEF/PLAN/README/database investigation,
+and the fixture SOURCES ledger for trailing whitespace, final newlines, balanced
+Markdown fences and existing relative document links. Parsed the template with
+python-dotenv and asserted the exact approved contact/User-Agent, blank optional
+database/deployment overrides and proposed dimension value 1536. All passed.
+The original attachment's SHA-256 remains:
+  52e3af7cccf32cfbba9fd337a628b8d436169267dfd089b1e732671373517a6f
+The Phase 1 backend/ingestion package does not exist; no models, migrations or
+schema-assertion test implementation were added during this documentation review.
+
+No ingestion models exist yet. The user's ingestion schema assertion belongs
+in the Phase 1 implementation and test requirements; no placeholder model or
+schema test was added during this documentation-only revision. Phase 1 has
+not started as part of these checks.

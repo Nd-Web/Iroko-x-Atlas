@@ -1,0 +1,12 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/documents/FPRCircularsNotices.html",
+  "final_url": "https://www.cbn.gov.ng/documents/FPRCircularsNotices.html",
+  "status": 200,
+  "content_type": "text/html",
+  "fetched_at": "2026-09-18T11:50:02.229981+00:00",
+  "size_bytes": 7472,
+  "sha256": "5a2007e737f839fd86cfdfac0366c3a574d06897b82c3269c1c6f33cdfff086d",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-07-fpr-financial-policy-and-regulation.html"
+}

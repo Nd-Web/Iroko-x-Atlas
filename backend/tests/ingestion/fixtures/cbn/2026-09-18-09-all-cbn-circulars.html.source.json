@@ -1,0 +1,12 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/documents/circulars.html",
+  "final_url": "https://www.cbn.gov.ng/documents/circulars.html",
+  "status": 200,
+  "content_type": "text/html",
+  "fetched_at": "2026-09-18T11:50:04.496423+00:00",
+  "size_bytes": 7348,
+  "sha256": "981a10c2d38e7c0f119164d8b163994a2e4bf4fb4a90fd7c5002494e9ae6b074",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-09-all-cbn-circulars.html"
+}

@@ -1,0 +1,13 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/robots.txt",
+  "final_url": "https://www.cbn.gov.ng/robots.txt",
+  "status": 200,
+  "content_type": "text/plain",
+  "content_encoding": "identity",
+  "fetched_at": "2026-09-18T11:35:19.653580+00:00",
+  "size_bytes": 194,
+  "sha256": "a28e1810a23c0cb48b57f050d394687b0337efaca2e43c24a499773c775e0ff6",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-01-robots.txt"
+}

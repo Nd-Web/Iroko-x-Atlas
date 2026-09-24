@@ -1,0 +1,12 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/documents/BSDCircularsNEW.html",
+  "final_url": "https://www.cbn.gov.ng/documents/BSDCircularsNEW.html",
+  "status": 200,
+  "content_type": "text/html",
+  "fetched_at": "2026-09-18T11:49:53.852489+00:00",
+  "size_bytes": 7354,
+  "sha256": "50a263d07cf1f67b3542b0325cffe0827fcc6febdae3f2145fd6cfba4e228276",
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-04-bsd-banking-supervision-new.html"
+}

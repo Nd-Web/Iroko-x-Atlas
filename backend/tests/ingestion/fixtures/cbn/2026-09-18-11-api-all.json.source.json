@@ -1,0 +1,13 @@
+{
+  "requested_url": "https://www.cbn.gov.ng/api/GetAllCirculars",
+  "final_url": "https://www.cbn.gov.ng/api/GetAllCirculars",
+  "status": 200,
+  "content_type": "application/json; charset=utf-8",
+  "fetched_at": "2026-09-18T11:53:01.877839+00:00",
+  "size_bytes": 1177729,
+  "sha256": "0fac90541443f27b5e996ff2bb106e9b5e4ef0781b9e9d5e9bfde04b83613147",
+  "record_count": 2629,
+  "user_agent": "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)",
+  "tls_verification": true,
+  "path": "backend/tests/ingestion/fixtures/cbn/2026-09-18-11-api-all.json"
+}
