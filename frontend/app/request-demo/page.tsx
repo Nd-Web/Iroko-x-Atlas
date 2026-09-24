@@ -46,11 +46,13 @@ export default function RequestPilotPage() {
   const [selectedSlot, setSelectedSlot] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [slotsError, setSlotsError] = useState("");
   const [booking, setBooking] = useState<Booking | null>(null);
   const [phoneCode, setPhoneCode] = useState("+234");
 
   const loadAvailability = useCallback(async () => {
     setLoadingSlots(true);
+    setSlotsError("");
     try {
       const response = await fetch("/api/pilot/availability", { cache: "no-store" });
       if (!response.ok) throw new Error("Could not load available times.");
@@ -59,7 +61,7 @@ export default function RequestPilotPage() {
       const firstDay = data.slots[0] ? dayKey(data.slots[0]) : "";
       setSelectedDay((current) => current && data.slots.some((slot) => dayKey(slot) === current) ? current : firstDay);
     } catch {
-      setError("We couldn't load the booking calendar. Please refresh and try again.");
+      setSlotsError("We couldn't reach the booking calendar. The service may be waking up.");
     } finally {
       setLoadingSlots(false);
     }
@@ -196,8 +198,10 @@ export default function RequestPilotPage() {
 
           <Section number="03" title="Book your onboarding call" last>
             <div className={styles.calendarMeta}><span>30 minutes</span><span>Mon–Fri</span><span>{availability?.business_hours ?? "09:00–17:00"} WAT</span></div>
-            {loadingSlots ? <div className={styles.calendarState}>Loading available times…</div> : days.length === 0 ? (
-              <div className={styles.calendarState}>No times are currently available. Please check again shortly.</div>
+            {loadingSlots ? <div className={styles.calendarState}>Loading available times…</div> : slotsError ? (
+              <div className={styles.calendarState}><span>{slotsError}</span><button type="button" onClick={() => void loadAvailability()}>Try again</button></div>
+            ) : days.length === 0 ? (
+              <div className={styles.calendarState}><span>No times are currently available. Please check again shortly.</span><button type="button" onClick={() => void loadAvailability()}>Refresh times</button></div>
             ) : (
               <>
                 <div className={styles.dayList} aria-label="Available dates">
@@ -235,7 +239,21 @@ export default function RequestPilotPage() {
 }
 
 function Header() {
-  return <header className={styles.header}><div className={styles.headerInner}><Link href="/" className={styles.brand}><span className={styles.mark}>I</span><span>Iroko AI<small>Document Intelligence</small></span></Link><Link href="/login" className={styles.signIn}>Sign in</Link></div></header>;
+  return (
+    <header className={styles.header}>
+      <div className={styles.headerInner}>
+        <Link href="/" className={styles.brand} aria-label="Iroko AI home">
+          <svg viewBox="0 0 42 42" aria-hidden="true">
+            <rect width="42" height="42" rx="13" fill="#176b49" />
+            <path d="M13 29V13h8.2c5.3 0 8.8 2.8 8.8 7.3 0 4.6-3.5 7.5-8.8 7.5H17.8" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="14.5" cy="29" r="2" fill="white" />
+          </svg>
+          <span>iroko<span className={styles.brandAi}>ai</span><small>Document Intelligence</small></span>
+        </Link>
+        <Link href="/login" className={styles.signIn}>Sign in</Link>
+      </div>
+    </header>
+  );
 }
 
 function Section({ number, title, children, last = false }: { number: string; title: string; children: React.ReactNode; last?: boolean }) {
