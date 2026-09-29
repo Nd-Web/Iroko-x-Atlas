@@ -5,10 +5,12 @@ from __future__ import annotations
 import logging
 import os
 import smtplib
+import time
 from email.message import EmailMessage
 from html import escape
 
 from models.pilot_request import PilotRequest
+from services.brevo import send_message as send_brevo_message
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +39,32 @@ def _smtp_send(message: EmailMessage) -> None:
 
 
 def _safe_smtp_send(message: EmailMessage) -> None:
-    try:
-        _smtp_send(message)
-    except Exception:
-        logger.exception('Failed to send pilot email to %s', message.get('To'))
+    sender = message.get('From') or os.getenv('PILOT_FROM_EMAIL') or os.getenv('ZOHO_SMTP_USERNAME', '')
+    if not sender:
+        raise RuntimeError('PILOT_FROM_EMAIL or ZOHO_SMTP_USERNAME must be set')
+    use_brevo = bool(os.getenv('BREVO_API_KEY', '').strip())
+    last_error = None
+    for attempt in range(3):
+        try:
+            if use_brevo:
+                plain = message.get_body('plain')
+                html = message.get_body('html')
+                send_brevo_message(
+                    sender=sender,
+                    recipient=message.get('To', ''),
+                    subject=message.get('Subject', ''),
+                    text=plain.get_content() if plain else '',
+                    html=html.get_content() if html else '',
+                )
+            else:
+                _smtp_send(message)
+            logger.info('Pilot email accepted by %s for %s', 'Brevo' if use_brevo else 'Zoho SMTP', message.get('To'))
+            return
+        except Exception as exc:
+            last_error = exc
+            if attempt < 2:
+                time.sleep(2 ** attempt)
+    logger.error('Pilot email delivery failed after 3 attempts to %s: %s', message.get('To'), last_error)
 
 
 def _message(to_email: str, subject: str, text: str, html: str) -> EmailMessage:
