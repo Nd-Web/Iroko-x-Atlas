@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from models.database import Base
 from models.pilot_request import PilotRequest
-from routes.pilot import available_slot_starts
+from routes.pilot import _exclude_busy_periods, available_slot_starts
 
 
 @pytest.fixture()
@@ -69,3 +69,17 @@ def test_database_rejects_double_booking(db):
 
     with pytest.raises(IntegrityError):
         db.commit()
+
+
+def test_google_busy_period_excludes_every_overlapping_slot(db):
+    now = datetime(2026, 9, 21, 7, 0, tzinfo=UTC)
+    slots = available_slot_starts(db, now=now)
+    busy_start = datetime(2026, 9, 22, 8, 15, tzinfo=UTC)
+    busy_end = datetime(2026, 9, 22, 9, 15, tzinfo=UTC)
+
+    filtered = _exclude_busy_periods(slots, [(busy_start, busy_end)])
+
+    assert datetime(2026, 9, 22, 8, 0, tzinfo=UTC) not in filtered
+    assert datetime(2026, 9, 22, 8, 30, tzinfo=UTC) not in filtered
+    assert datetime(2026, 9, 22, 9, 0, tzinfo=UTC) not in filtered
+    assert datetime(2026, 9, 22, 9, 30, tzinfo=UTC) in filtered

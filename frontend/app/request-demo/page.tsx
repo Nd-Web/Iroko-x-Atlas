@@ -9,6 +9,7 @@ type Availability = {
   slot_minutes: number;
   business_hours: string;
   slots: string[];
+  provider?: "google" | "database";
 };
 
 type Booking = {
@@ -54,14 +55,36 @@ export default function RequestPilotPage() {
     setLoadingSlots(true);
     setSlotsError("");
     try {
-      const response = await fetch("/api/pilot/availability", { cache: "no-store" });
-      if (!response.ok) throw new Error("Could not load available times.");
-      const data: Availability = await response.json();
-      setAvailability(data);
-      const firstDay = data.slots[0] ? dayKey(data.slots[0]) : "";
-      setSelectedDay((current) => current && data.slots.some((slot) => dayKey(slot) === current) ? current : firstDay);
-    } catch {
-      setSlotsError("We couldn't reach the booking calendar. The service may be waking up.");
+      let lastError: unknown;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 20000);
+        try {
+          const response = await fetch("/api/pilot/availability", {
+            cache: "no-store",
+            signal: controller.signal,
+          });
+          const body = await response.json().catch(() => null);
+          if (!response.ok) {
+            throw new Error(body?.detail?.message ?? "Could not load available times.");
+          }
+          const data = body as Availability;
+          setAvailability(data);
+          const firstDay = data.slots[0] ? dayKey(data.slots[0]) : "";
+          setSelectedDay((current) => current && data.slots.some((slot) => dayKey(slot) === current) ? current : firstDay);
+          return;
+        } catch (caught) {
+          lastError = caught;
+          if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 1500 * (attempt + 1)));
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      }
+      throw lastError;
+    } catch (caught) {
+      setSlotsError(caught instanceof Error && caught.name !== "AbortError"
+        ? caught.message
+        : "We couldn't reach the booking calendar. Please try again.");
     } finally {
       setLoadingSlots(false);
     }

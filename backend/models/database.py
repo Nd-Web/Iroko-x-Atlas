@@ -325,5 +325,7 @@ def init_db():
         _add_column_if_missing(conn, "documents", "source_connector_id", "VARCHAR REFERENCES connectors(id)")
         _add_column_if_missing(conn, "documents", "source_item_id", "VARCHAR")
         _add_column_if_missing(conn, "connectors", "last_sync_at", "TIMESTAMP")
+        _add_column_if_missing(conn, "pilot_requests", "calendar_event_id", "VARCHAR(255)")
+        _add_column_if_missing(conn, "pilot_requests", "calendar_event_link", "TEXT")
 
     print("Atlas DB initialised — all tables created.")

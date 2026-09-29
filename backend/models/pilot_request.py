@@ -24,4 +24,6 @@ class PilotRequest(Base):
     consent_to_contact = Column(Boolean, nullable=False)
     slot_start = Column(DateTime(timezone=True), nullable=False, index=True)
     slot_end = Column(DateTime(timezone=True), nullable=False)
+    calendar_event_id = Column(String(255), nullable=True, unique=True)
+    calendar_event_link = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

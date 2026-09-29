@@ -13,6 +13,14 @@ from sqlalchemy.orm import Session
 
 from models.database import get_db
 from models.pilot_request import PilotRequest
+from services.google_calendar import (
+    GoogleCalendarError,
+    busy_periods,
+    create_booking_event,
+    is_configured as google_calendar_is_configured,
+    is_required as google_calendar_is_required,
+    slot_is_free as google_slot_is_free,
+)
 from services.pilot_email import send_pilot_booking_emails
 
 router = APIRouter(prefix="/api/pilot", tags=["Pilot requests"])
@@ -65,6 +73,36 @@ def available_slot_starts(db: Session, now: datetime | None = None) -> list[date
     return slots
 
 
+def _exclude_busy_periods(
+    slots: list[datetime], busy: list[tuple[datetime, datetime]]
+) -> list[datetime]:
+    duration = timedelta(minutes=SLOT_MINUTES)
+    return [
+        slot
+        for slot in slots
+        if not any(
+            slot < busy_end and slot + duration > busy_start
+            for busy_start, busy_end in busy
+        )
+    ]
+
+
+async def available_slots(db: Session, now: datetime | None = None) -> list[datetime]:
+    """Combine business rules and DB reservations with Google free/busy."""
+    candidates = available_slot_starts(db, now=now)
+    if not candidates or not google_calendar_is_configured():
+        if google_calendar_is_required() and not google_calendar_is_configured():
+            raise GoogleCalendarError("Google Calendar is not configured")
+        return candidates
+
+    window_start = candidates[0]
+    window_end = candidates[-1] + timedelta(minutes=SLOT_MINUTES)
+    return _exclude_busy_periods(
+        candidates,
+        await busy_periods(window_start, window_end),
+    )
+
+
 class PilotRequestCreate(BaseModel):
     full_name: str = Field(min_length=2, max_length=160)
     work_email: EmailStr
@@ -96,6 +134,7 @@ class AvailabilityResponse(BaseModel):
     slot_minutes: int
     business_hours: str
     slots: list[datetime]
+    provider: str
 
 
 class PilotRequestResponse(BaseModel):
@@ -106,25 +145,39 @@ class PilotRequestResponse(BaseModel):
 
 
 @router.get("/availability", response_model=AvailabilityResponse)
-def get_availability(db: Session = Depends(get_db)) -> AvailabilityResponse:
+async def get_availability(db: Session = Depends(get_db)) -> AvailabilityResponse:
     start_hour = _business_hour("PILOT_BUSINESS_START_HOUR_WAT", 9)
     end_hour = _business_hour("PILOT_BUSINESS_END_HOUR_WAT", 17)
+    try:
+        slots = await available_slots(db)
+    except GoogleCalendarError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "calendar_unavailable", "message": str(exc)},
+        ) from exc
     return AvailabilityResponse(
         timezone="Africa/Lagos (WAT, UTC+1)",
         slot_minutes=SLOT_MINUTES,
         business_hours=f"{start_hour:02d}:00-{end_hour:02d}:00",
-        slots=available_slot_starts(db),
+        slots=slots,
+        provider="google" if google_calendar_is_configured() else "database",
     )
 
 
 @router.post("/requests", response_model=PilotRequestResponse, status_code=status.HTTP_201_CREATED)
-def create_pilot_request(
+async def create_pilot_request(
     payload: PilotRequestCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ) -> PilotRequestResponse:
     requested_slot = _normalise_utc(payload.slot_start).replace(second=0, microsecond=0)
-    currently_available = set(available_slot_starts(db))
+    try:
+        currently_available = set(await available_slots(db))
+    except GoogleCalendarError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "calendar_unavailable", "message": str(exc)},
+        ) from exc
     if requested_slot not in currently_available:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -161,6 +214,37 @@ def create_pilot_request(
             },
         ) from exc
 
+    if google_calendar_is_configured():
+        try:
+            # Postgres has reserved the slot before this final Google check,
+            # preventing another Iroko request from winning the same race.
+            if not await google_slot_is_free(booking.slot_start, booking.slot_end):
+                raise GoogleCalendarError("That time was just booked in Google Calendar")
+            calendar_event = await create_booking_event(
+                booking_id=booking.id,
+                slot_start=_normalise_utc(booking.slot_start),
+                slot_end=_normalise_utc(booking.slot_end),
+                full_name=booking.full_name,
+                work_email=booking.work_email,
+                phone=booking.phone,
+                company_name=booking.company_name,
+                job_title=booking.job_title,
+                company_type=booking.company_type,
+                country=booking.country,
+                pilot_goal=booking.pilot_goal,
+            )
+            booking.calendar_event_id = calendar_event.event_id
+            booking.calendar_event_link = calendar_event.html_link
+            db.commit()
+        except GoogleCalendarError as exc:
+            # Never show success for a booking that did not reach the calendar.
+            db.delete(booking)
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={"code": "calendar_unavailable", "message": str(exc)},
+            ) from exc
+
     # Copy scalar values before the request-scoped DB session closes.
     email_booking = PilotRequest(
         id=booking.id,
@@ -175,6 +259,8 @@ def create_pilot_request(
         consent_to_contact=booking.consent_to_contact,
         slot_start=_normalise_utc(booking.slot_start).astimezone(WAT),
         slot_end=_normalise_utc(booking.slot_end).astimezone(WAT),
+        calendar_event_id=booking.calendar_event_id,
+        calendar_event_link=booking.calendar_event_link,
     )
     background_tasks.add_task(send_pilot_booking_emails, email_booking)
     return PilotRequestResponse(
