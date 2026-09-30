@@ -11,6 +11,8 @@ import { useUploadDocument } from "@/app/documents/_hooks/useUploadDocument";
 import { cn, formatBytes, formatRelativeTime } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import DocumentEvidence from "@/components/documents/DocumentEvidence";
+import RegulatorySources from "@/components/documents/RegulatorySources";
 
 interface Doc {
   id: string;
@@ -18,7 +20,8 @@ interface Doc {
   title?: string;
   size: number;
   type: string;
-  status: "indexed" | "indexing" | "error";
+  status: "indexed" | "indexing" | "error" | "review required" | "rejected" | "archived" | "superseded";
+  pipeline?: boolean;
   connector: string;
   tags?: string[];
   chunks?: number;
@@ -29,6 +32,8 @@ interface Doc {
 // department/source values) — see below.
 
 function normaliseStatus(status: string): Doc["status"] {
+  if (status === "review_required") return "review required";
+  if (status === "rejected" || status === "archived" || status === "superseded") return status;
   if (status === "indexed" || status === "completed") return "indexed";
   if (status === "error" || status === "failed") return "error";
   return "indexing";
@@ -53,7 +58,7 @@ export default function DocumentsContent({
   const router = useRouter();
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [selected, setSelected] = useState<Doc | null>(null);
+  const [selectedSnapshot, setSelected] = useState<Doc | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isPending, isError, error, refetch } = useDocuments({ page_size: 100 });
@@ -64,6 +69,7 @@ export default function DocumentsContent({
     if (!data?.documents) return [];
     return data.documents.map((doc) => ({
       id: doc.id,
+      pipeline: !!doc.extra_metadata?.pipeline,
       name: doc.filename ?? doc.title ?? "Untitled document",
       title: doc.title ?? undefined,
       size: doc.file_size ?? 0,
@@ -76,6 +82,9 @@ export default function DocumentsContent({
       updated_at: doc.updated_at ?? doc.created_at ?? new Date().toISOString(),
     }));
   }, [data]);
+  const selected = selectedSnapshot
+    ? docs.find(doc => doc.id === selectedSnapshot.id) ?? selectedSnapshot
+    : null;
 
   // Report the count upward — only ever with real data from the API.
   useEffect(() => {
@@ -99,8 +108,8 @@ export default function DocumentsContent({
       const formData = new FormData();
       formData.append("file", file);
       // onSuccess invalidates the ["documents"] query — the list refreshes itself.
-      await uploadMutation.mutateAsync(formData);
-      toast.success(`${file.name} uploaded — indexing started`, { id: toastId });
+      const saved = await uploadMutation.mutateAsync(formData);
+      toast.success(`${file.name} saved · ${normaliseStatus(saved.status)}`, { id: toastId });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed. Please try again.", { id: toastId });
     }
@@ -111,6 +120,7 @@ export default function DocumentsContent({
 
   return (
     <div className="space-y-6">
+      <RegulatorySources />
       {/* Header / Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2 flex-wrap">
@@ -214,7 +224,7 @@ export default function DocumentsContent({
                   <FileGlyph name={doc.name} size={20} />
                 </div>
                 <div className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full",
-                  doc.status === "indexed" ? "bg-success-50 text-success-500" : "bg-info-50 text-info-500 animate-pulse")}>
+                  doc.status === "indexed" ? "bg-success-50 text-success-500" : doc.status === "indexing" ? "bg-info-50 text-info-500 animate-pulse" : "bg-amber-50 text-amber-700")}>
                   {doc.status.toUpperCase()}
                 </div>
               </div>
@@ -322,9 +332,9 @@ export default function DocumentsContent({
               )}
 
               <p className="text-[12px] text-gray-400 leading-relaxed m-0">
-                This document is chunked, embedded and indexed — every answer citing it links back
-                to the exact passage.
+                {selected.status === "indexed" ? "This document is available for answers. Open its evidence to inspect the extracted source." : "This document is not currently available for answers. Its processing or review status is shown above."}
               </p>
+              {selected.pipeline && <DocumentEvidence id={selected.id} />}
             </div>
 
             <div className="flex justify-end gap-2 px-5 py-4 border-t border-border-default">
@@ -333,6 +343,7 @@ export default function DocumentsContent({
                 Close
               </button>
               <button
+                disabled={selected.status !== "indexed"}
                 onClick={() => router.push(`/chat?q=${encodeURIComponent(`Summarise the key points of the document "${selected.title ?? selected.name}" and what actions it implies`)}`)}
                 className="px-3.5 py-2 rounded-xl text-[12.5px] font-bold text-[#0A0A0B] bg-brand-500 hover:bg-brand-400 transition-all">
                 Ask Iroko about this document →

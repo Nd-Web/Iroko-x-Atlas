@@ -128,6 +128,7 @@ class DocumentResponse(BaseModel):
     chunk_count: int
     error_message: Optional[str] = None
     source_connector_id: Optional[str] = None
+    extra_metadata: Dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
 
     class Config:
@@ -146,6 +147,10 @@ class DocumentStatusBreakdown(BaseModel):
     processing: int
     failed: int
     pending: int
+    review_required: int = 0
+    rejected: int = 0
+    superseded: int = 0
+    archived: int = 0
 
 
 class DocumentAnalyticsResponse(BaseModel):
@@ -190,6 +195,7 @@ class DocumentSearchHit(BaseModel):
     search_score: Optional[float] = None
     rerank_score: Optional[float] = None
     created_at: Optional[str] = None
+    provenance: Optional[Dict[str, Any]] = None
 
 
 class DocumentSearchResponse(BaseModel):
@@ -216,6 +222,8 @@ class Citation(BaseModel):
     document_title: str
     excerpt: str
     relevance_score: float = 1.0
+    chunk_id: Optional[str] = None
+    provenance: Optional[Dict[str, Any]] = None
 
 
 # ─── Ask / Chat ───────────────────────────────────────────────────────────────

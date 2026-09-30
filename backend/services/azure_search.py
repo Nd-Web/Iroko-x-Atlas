@@ -10,6 +10,7 @@ Fields indexed:
   chunk_index, parent_id, created_at
 """
 import os
+import asyncio
 import logging
 from typing import Optional, List, Dict, Any
 
@@ -86,6 +87,10 @@ async def index_document_chunks(
     """
     client = get_search_client()
 
+    if client is None or not chunks:
+        logger.error("Cannot index without Azure Search and nonempty chunks")
+        return False
+
     # Generate embeddings for all chunks in one batched call
     contents = []
     for chunk in chunks:
@@ -93,6 +98,9 @@ async def index_document_chunks(
 
     from services.embeddings import get_embeddings_batch
     embeddings = await get_embeddings_batch(contents)
+    if len(embeddings) != len(contents) or any(e is None or len(e) != 3072 for e in embeddings):
+        logger.error("Embedding batch incomplete or wrong dimensions; indexing deferred")
+        return False
 
     documents = []
     for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
@@ -121,17 +129,14 @@ async def index_document_chunks(
 
         if embedding is not None:
             doc["content_vector"] = embedding
-        # If embedding unavailable (OpenAI not reachable) we still index the
-        # text fields so BM25 search continues to work.
+        # Ingestion requires complete vectors; query-time keyword fallback remains available.
 
         documents.append(doc)
 
-    if client is None:
-        logger.info(f"Mock index: {len(documents)} chunks for '{title}'")
-        return True
-
     try:
-        result = client.upload_documents(documents=documents)
+        result = []
+        for start in range(0, len(documents), 100):
+            result.extend(await asyncio.to_thread(client.upload_documents, documents=documents[start:start + 100]))
         succeeded = sum(1 for r in result if r.succeeded)
         failed_results = [r for r in result if not r.succeeded]
         if failed_results:
@@ -170,7 +175,7 @@ async def hybrid_search(
 
     search_kwargs: Dict[str, Any] = {
         "search_text":                  query,
-        "top":                          top,
+        "top":                          min(max(top * 3, 50), 200),
         "filter":                       filter_str,
         "query_type":                   "semantic",
         "semantic_configuration_name":  SEMANTIC_CONFIG,
@@ -192,7 +197,8 @@ async def hybrid_search(
         ]
 
     try:
-        return list(client.search(**search_kwargs))
+        results = await asyncio.to_thread(lambda: list(client.search(**search_kwargs)))
+        return (await asyncio.to_thread(eligible_results, results))[:top]
     except Exception as e:
         logger.warning(f"Azure Search semantic query failed, falling back to simple: {e}")
         try:
@@ -203,7 +209,8 @@ async def hybrid_search(
                 "filter":      search_kwargs.get("filter"),
                 "select":      search_kwargs.get("select"),
             }
-            return list(client.search(**simple_kwargs))
+            results = await asyncio.to_thread(lambda: list(client.search(**simple_kwargs)))
+            return (await asyncio.to_thread(eligible_results, results))[:top]
         except Exception as e2:
             logger.error(f"Azure Search fallback query also failed: {e2}")
             return []
@@ -285,6 +292,7 @@ async def search_documents(
             "search_score":  round(float(r["@search.score"]), 4) if "@search.score" in r else None,
             "rerank_score":  round(float(r["rerank_score"]), 4) if "rerank_score" in r else None,
             "created_at":    r.get("created_at"),
+            "provenance":    r.get("provenance"),
         }
         hits.append(hit)
 
@@ -395,3 +403,38 @@ def check_retrieval_quality(
         "confidence":    confidence,
         "knowledge_gap": confidence < 0.01,  # Coarse first-pass only; Watchdog handles fine-grained gating at 0.7/0.85
     }
+
+
+def eligible_results(results):
+    """Keep only published pipeline revisions and attach canonical provenance.
+
+    Azure Search may contain partially uploaded or older chunks. Postgres is
+    authoritative, so such chunks cannot enter model context through hybrid_search.
+    Existing, unmanaged index records retain their legacy behaviour.
+    """
+    from ingestion.queue import enabled
+    if not enabled() or not results:
+        return results
+    from ingestion.db import Session
+    from ingestion.models import Chunk, Revision
+    from models.database import Document
+    with Session() as db:
+        ids = {r.get("doc_id", r.get("parent_id")) for r in results}
+        revisions = {r.id: r for r in db.query(Revision).filter(Revision.id.in_(ids))}
+        docs = {d.id: d for d in db.query(Document).filter(Document.id.in_(ids))}
+        chunks = {c.id: c for c in db.query(Chunk).filter(Chunk.id.in_([r.get("id") for r in results]))}
+        accepted = []
+        for row in results:
+            result = dict(row)
+            doc_id = result.get("doc_id", result.get("parent_id"))
+            revision = revisions.get(doc_id)
+            if revision:
+                doc, chunk = docs.get(doc_id), chunks.get(result.get("id"))
+                if not doc or doc.status != "indexed" or not revision.is_current or not chunk:
+                    continue
+                if result.get("content") != chunk.content:
+                    continue
+                result["provenance"] = {**revision.provenance, **chunk.provenance,
+                                        "sha256": revision.sha256, "previous_id": revision.previous_id}
+            accepted.append(result)
+        return accepted

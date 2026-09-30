@@ -419,13 +419,27 @@ async def import_files(
                 failed += 1; continue
 
             existing = db.query(Document).filter(Document.source_connector_id == connector_id, Document.source_item_id == item_id).first()
-            if existing:
+            from ingestion.queue import enabled as pipeline_enabled
+            if existing and not pipeline_enabled():
                 results.append(ImportFileResult(item_id=item_id, filename=filename, document_id=existing.id, success=True, error="Already imported"))
                 imported += 1; continue
 
             doc_id = generate_id()
             dest = os.path.join(UPLOAD_DIR, f"{doc_id}.{ext}")
             await graph.download_drive_item(token, connector.drive_id, item_id, dest)
+
+            if pipeline_enabled():
+                from ingestion.pipeline import accept
+                try:
+                    document = await accept(db, dest, filename, filename.rsplit(".", 1)[0], current_user.id,
+                                            {"department": body.department, "tags": body.tags, "doc_type": ext},
+                                            f"connector:{connector_id}:{item_id}", connector_id, item_id)
+                    results.append(ImportFileResult(item_id=item_id, filename=filename, document_id=document.id, success=True))
+                    imported += 1
+                finally:
+                    if os.path.exists(dest):
+                        os.remove(dest)
+                continue
 
             ct_map = {"pdf": "application/pdf", "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "txt": "text/plain", "csv": "text/csv", "md": "text/markdown"}
             document = Document(id=doc_id, title=filename.rsplit(".", 1)[0], filename=filename, file_type=ext, file_size=os.path.getsize(dest), department=body.department, tags=body.tags, status="processing", uploaded_by_id=current_user.id, source_connector_id=connector_id, source_item_id=item_id)
@@ -452,6 +466,7 @@ async def import_files(
             imported += 1
         except Exception as e:
             logger.error(f"Import failed for {item_id}: {e}")
+            db.rollback()
             results.append(ImportFileResult(item_id=item_id, filename="unknown", success=False, error=str(e)))
             failed += 1
 

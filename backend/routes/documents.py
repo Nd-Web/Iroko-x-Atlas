@@ -87,7 +87,7 @@ async def upload_document(
         )
 
     # Read file
-    content = await file.read()
+    content = await file.read(MAX_FILE_SIZE_MB * 1024 * 1024 + 1)
     size_mb = len(content) / (1024 * 1024)
     if size_mb > MAX_FILE_SIZE_MB:
         raise HTTPException(
@@ -102,6 +102,26 @@ async def upload_document(
 
     async with aiofiles.open(file_path, "wb") as f:
         await f.write(content)
+
+    from ingestion.queue import enabled
+    if enabled():
+        from ingestion.pipeline import accept
+        try:
+            parsed_tags = json.loads(tags or "[]")
+            if not isinstance(parsed_tags, list) or not all(isinstance(t, str) for t in parsed_tags):
+                raise ValueError("Tags must be a list of strings")
+            return await accept(db, file_path, filename, title, current_user.id,
+                                {"department": department, "doc_type": doc_type or ext,
+                                 "tags": parsed_tags, "classification": "internal"})
+        except ValueError as exc:
+            db.rollback()
+            raise HTTPException(422, str(exc)) from exc
+        except Exception as exc:
+            db.rollback()
+            logger.exception("Could not durably accept document")
+            raise HTTPException(503, "Document could not be saved. Please retry; processing has not been accepted.") from exc
+        finally:
+            os.remove(file_path)
 
     # Create document record
     document = Document(
@@ -411,6 +431,10 @@ async def get_document_analytics(
             processing=status_counts.get("processing", 0),
             failed=status_counts.get("failed", 0),
             pending=status_counts.get("pending", 0),
+            review_required=status_counts.get("review_required", 0),
+            rejected=status_counts.get("rejected", 0),
+            superseded=status_counts.get("superseded", 0),
+            archived=status_counts.get("archived", 0),
         ),
         by_file_type=by_file_type,
         by_department=by_department,
@@ -456,6 +480,16 @@ async def reindex_document(
         raise HTTPException(status_code=404, detail="Document not found")
     if not doc.blob_url:
         raise HTTPException(status_code=422, detail="Document has no blob — cannot reindex")
+
+    from ingestion.queue import enabled
+    if enabled() and (doc.extra_metadata or {}).get("pipeline"):
+        from ingestion.pipeline import reprocess
+        try:
+            reprocess(db, document_id)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        db.refresh(doc)
+        return doc
 
     from services.blob_storage import download_document as download_blob
     import tempfile
@@ -521,6 +555,22 @@ async def delete_document(
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+    from ingestion.queue import enabled
+    if enabled() and (doc.extra_metadata or {}).get("pipeline"):
+        from ingestion.db import prepare_session
+        from ingestion.models import Job, Revision
+        prepare_session(db)
+        job = db.query(Job).filter_by(id=f"document:{document_id}").with_for_update().first()
+        if job and job.state == "running":
+            raise HTTPException(409, "Document is processing; wait until it finishes before archiving")
+        if job:
+            job.state = "cancelled"
+        revision = db.get(Revision, document_id)
+        if revision:
+            revision.is_current = False
+        doc.status = "archived"
+        db.commit()
+        return {"message": "Document archived; original and audit history retained", "document_id": document_id}
     db.delete(doc)
     db.commit()
     return {"message": "Document deleted", "document_id": document_id}

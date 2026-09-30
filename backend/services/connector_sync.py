@@ -135,6 +135,17 @@ async def _ingest_file(
     department: str = "",
 ):
     """Shared: create Document, upload to blob, process, index."""
+    from ingestion.queue import enabled
+    if enabled():
+        from ingestion.pipeline import accept
+        try:
+            return await accept(db, dest_path, filename, filename.rsplit(".", 1)[0], connector.user_id,
+                                {"department": department, "doc_type": ext, "classification": "internal"},
+                                source_key=f"connector:{connector.id}:{source_item_id}",
+                                connector_id=connector.id, source_item_id=source_item_id)
+        finally:
+            if os.path.exists(dest_path):
+                os.remove(dest_path)
     from services.document_processor import process_document
     from services.blob_storage import upload_document as upload_to_blob
     from services.cosmos_graph import upsert_document_node
@@ -247,6 +258,11 @@ async def _ingest_text_content(
 
 
 def _already_imported(connector_id: str, source_item_id: str, db) -> bool:
+    from ingestion.queue import enabled
+    if enabled():
+        # The durable pipeline hashes content and detects changed versions.
+        # A previously seen item ID is not proof that its bytes are unchanged.
+        return False
     from models.database import Document
     return db.query(Document).filter(
         Document.source_connector_id == connector_id,
@@ -280,14 +296,13 @@ async def _sync_microsoft_drive(connector, db):
         return
 
     # Delta query
-    cursors = _sync_cursors.get(connector.id, {})
+    cursors = (connector.extra_config or {}).get("sync_cursor") or _sync_cursors.get(connector.id, {})
     delta_link = cursors.get("delta_link")
     changed_items, next_delta = await graph.get_drive_delta(
         access_token=access_token, drive_id=drive_id, delta_link=delta_link,
     )
-    _sync_cursors[connector.id] = {"delta_link": next_delta}
-
     imported = 0
+    import_failed = False
     for item in changed_items:
         if item["item_type"] != "file" or item.get("deleted"):
             continue
@@ -307,8 +322,13 @@ async def _sync_microsoft_drive(connector, db):
             await _ingest_file(dest_path, name, ext, connector, db, item_id)
             imported += 1
         except Exception as e:
+            import_failed = True
+            db.rollback()
             logger.error(f"Drive sync download failed for '{name}': {e}")
 
+    if not import_failed:
+        _sync_cursors[connector.id] = {"delta_link": next_delta}
+        connector.extra_config = {**(connector.extra_config or {}), "sync_cursor": {"delta_link": next_delta}}
     connector.last_synced_at = datetime.utcnow()
     db.commit()
     logger.info(f"Drive sync complete for '{connector.display_name}': {imported} imported")

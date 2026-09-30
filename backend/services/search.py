@@ -72,6 +72,7 @@ def _normalise_hit(raw: dict) -> dict:
         "source": source,
         "score": round(score, 4),
         "document_id": document_id,
+        "provenance": raw.get("provenance"),
     }
 
 
@@ -231,6 +232,8 @@ async def get_context_for_query(
         source = r.get("source", "Unknown")
         content = r.get("content", "").strip()
         if content:
-            blocks.append(f"[Source: {source}]\n{content}")
+            import json
+            provenance = json.dumps(r.get("provenance") or {}, ensure_ascii=False)
+            blocks.append(f"[Source: {source}]\n[Provenance: {provenance}]\n{content}")
 
     return "\n\n".join(blocks)

@@ -5,6 +5,8 @@ Includes Cohere reranking and corrective-RAG knowledge-gap detection.
 Capability-scoped via CapabilityGuard (Integration 12).
 """
 import json
+import os
+import asyncio
 import logging
 from typing import Optional, Annotated
 from agents._compat import kernel_function, Kernel
@@ -71,9 +73,9 @@ you retrieve evidence."""
 
             filters = []
             if department:
-                filters.append(f"department eq '{department}'")
+                filters.append("department eq '" + department.replace("'", "''") + "'")
             if doc_type:
-                filters.append(f"doc_type eq '{doc_type}'")
+                filters.append("doc_type eq '" + doc_type.replace("'", "''") + "'")
             filter_str = " and ".join(filters) if filters else None
 
             # ── Inject Regulatory Memory Context ──────────────────────────
@@ -131,12 +133,13 @@ you retrieve evidence."""
                     "title":        r.get("title", "Untitled"),
                     "department":   r.get("department", "Unknown"),
                     "doc_type":     r.get("doc_type", "document"),
-                    "excerpt":      r.get("content", "")[:600],
+                    "excerpt":      r.get("content", ""),
                     "source":       r.get("source", ""),
                     "language":     r.get("language", "en"),
                     "classification": r.get("classification", "internal"),
                     "region":       r.get("region", ""),
                     "chunk_index":  r.get("chunk_index", 0),
+                    "provenance":   r.get("provenance"),
                     "created_at":   str(r.get("created_at", "")),
                     "relevance_score": round(
                         r.get("rerank_score", r.get("@search.score", 0)), 3
@@ -166,11 +169,34 @@ you retrieve evidence."""
         document_id: Annotated[str, "The document ID to retrieve"],
     ) -> str:
         try:
+            from ingestion.queue import enabled
+            if enabled():
+                from ingestion.db import Session
+                from ingestion.models import Page, Revision
+                from models.database import Document
+                with Session() as db:
+                    revision = db.get(Revision, document_id)
+                    if revision:
+                        document = db.get(Document, document_id)
+                        if not document or document.status != "indexed" or not revision.is_current:
+                            return json.dumps({"error": "Document is not an approved current source"})
+                        pages = db.query(Page).filter_by(document_id=document_id).order_by(Page.position).all()
+                        return json.dumps({"id": document_id, "title": document.title,
+                                           "content": "\n\n".join(p.text for p in pages),
+                                           "provenance": revision.provenance})
             client = get_search_client()
             if client is None:
                 return json.dumps({"error": "Search client not configured"})
 
-            doc = client.get_document(key=document_id)
+            safe = document_id.replace("'", "''")
+            chunks = await asyncio.to_thread(lambda: list(client.search(
+                search_text="*", filter=f"doc_id eq '{safe}'",
+            )))
+            if not chunks:
+                return json.dumps({"error": "Document not found"})
+            chunks.sort(key=lambda c: c.get("chunk_index", 0))
+            doc = dict(chunks[0])
+            doc["content"] = "\n\n".join(c.get("content", "") for c in chunks)
             return json.dumps({
                 "id":             doc.get("id"),
                 "doc_id":         doc.get("doc_id", doc.get("id")),
@@ -205,16 +231,19 @@ you retrieve evidence."""
 
             filters = []
             if department:
-                filters.append(f"department eq '{department}'")
+                filters.append("department eq '" + department.replace("'", "''") + "'")
             if doc_type:
-                filters.append(f"doc_type eq '{doc_type}'")
+                filters.append("doc_type eq '" + doc_type.replace("'", "''") + "'")
 
             results = client.search(
                 search_text="*",
                 top=limit,
                 filter=" and ".join(filters) if filters else None,
-                select=["id", "title", "department", "doc_type", "created_at"],
+                select=["id", "doc_id", "content", "title", "department", "doc_type", "created_at"],
             )
+
+            from services.azure_search import eligible_results
+            results = eligible_results(list(results))
 
             docs = [
                 {
@@ -265,6 +294,9 @@ you retrieve evidence."""
     # ── Mock data ─────────────────────────────────────────────────────────────
 
     def _mock_search(self, query: str) -> str:
+        if os.getenv("ALLOW_DEMO_SEARCH", "false").lower() != "true":
+            return json.dumps({"results": [], "knowledge_gap": True, "confidence": 0,
+                               "message": _KNOWLEDGE_GAP_MESSAGE})
         mock_results = [
             {
                 "document_id": "doc_001",
@@ -408,6 +440,8 @@ you retrieve evidence."""
         })
 
     def _mock_document_list(self) -> str:
+        if os.getenv("ALLOW_DEMO_SEARCH", "false").lower() != "true":
+            return json.dumps({"documents": [], "total": 0})
         docs = [
             {"id": "doc_001", "title": "Ikeja Cluster RCA Power Outage Q1 2026", "department": "Network Operations", "type": "report"},
             {"id": "doc_002", "title": "TowerCo IHS Nigeria Tower Lease Agreement", "department": "Procurement", "type": "contract"},

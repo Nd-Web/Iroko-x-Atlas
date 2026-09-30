@@ -496,9 +496,8 @@ async def extract_text(file_path: str, file_type: str) -> Optional[str]:
     if text:
         return text
 
-    # Last resort: dev mock so the pipeline doesn't stall entirely
-    logger.warning(f"All extractors failed for '{file_type}' — using mock text")
-    return _mock_document_text(file_type)
+    logger.error(f"All extractors failed for '{file_type}'; no content will be indexed")
+    return None
 
 
 def _mock_document_text(file_type: str) -> str:

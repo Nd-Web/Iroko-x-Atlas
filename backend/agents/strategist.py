@@ -302,6 +302,9 @@ class StrategistAgent:
         try:
             result = json.loads(clean)
             result.setdefault("citations", context.get("citations", []))
+            # Keep citation coordinates from retrieval, never generated page numbers.
+            requested_ids = {c.get("document_id") for c in result.get("citations", []) if isinstance(c, dict)}
+            result["citations"] = [c for c in context.get("citations", []) if not requested_ids or c.get("document_id") in requested_ids]
             return result
         except json.JSONDecodeError:
             # GPT-5.x usually returns well-formatted prose (bold headings, cited
@@ -342,11 +345,16 @@ class StrategistAgent:
                 confidence = "low"
             else:
                 for r in search_result.get("results", []):
-                    chunks.append(r.get("excerpt", ""))
+                    source_header = json.dumps({"document_id": r.get("document_id"),
+                                                "chunk_id": r.get("chunk_id"),
+                                                "provenance": r.get("provenance")}, ensure_ascii=False)
+                    chunks.append(f"[Source evidence: {source_header}]\n{r.get('excerpt', '')}")
                     citations.append({
                         "document_id":    r.get("document_id", ""),
                         "document_title": r.get("title", ""),
                         "excerpt":        r.get("excerpt", "")[:200],
+                        "chunk_id":       r.get("chunk_id"),
+                        "provenance":     r.get("provenance"),
                     })
                 raw_conf = search_result.get("retrieval_confidence", 0.5)
 
@@ -838,7 +846,7 @@ Pidgin: {is_pidgin}"""
         for c in citations:
             if not isinstance(c, dict):
                 continue
-            d = c.get("document_id")
+            d = c.get("chunk_id") or c.get("document_id")
             if d and d not in seen:
                 seen.add(d)
                 out.append(c)

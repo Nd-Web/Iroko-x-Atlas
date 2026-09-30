@@ -10,12 +10,13 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from services.auth_utils import get_current_user
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/search", tags=["search"])
+router = APIRouter(prefix="/api/search", tags=["search"], dependencies=[Depends(get_current_user)])
 
 
 # ── Request / Response schemas ────────────────────────────────────────────────
@@ -35,6 +36,7 @@ class SearchResult(BaseModel):
     source: str
     score: float
     document_id: str
+    provenance: Optional[dict] = None
 
 
 class SearchResponse(BaseModel):
@@ -97,6 +99,7 @@ async def search(body: SearchRequest):
             source=r.get("source", "Unknown"),
             score=float(r.get("score", 0.0)),
             document_id=str(r.get("document_id", "")),
+            provenance=r.get("provenance"),
         )
         for r in raw
     ]

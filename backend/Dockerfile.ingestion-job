@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TIKTOKEN_CACHE_DIR=/opt/iroko-tiktoken
+
+WORKDIR /app
+
+COPY requirements-ingestion-job.txt ./
+RUN pip install --no-cache-dir -r requirements-ingestion-job.txt \
+    && useradd --uid 10001 --create-home --shell /usr/sbin/nologin iroko
+RUN mkdir -p /opt/iroko-tiktoken \
+    && python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')" \
+    && chmod -R a+rX /opt/iroko-tiktoken
+
+COPY --chown=iroko:iroko . .
+USER iroko
+
+# The portal's manual trigger starts one finite execution. It does not create
+# a scheduler or keep a process running between pulls.
+CMD ["python", "-m", "ingestion", "drain", "--max-seconds", "5400"]

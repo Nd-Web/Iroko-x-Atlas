@@ -1,5 +1,10 @@
 # Regulatory ingestion: database and configuration review
 
+> September 30 implementation: see [OPERATIONS.md](OPERATIONS.md) for the new
+> working pipeline and deployment steps, and [IMPLEMENTATION-2026-09-30.md](IMPLEMENTATION-2026-09-30.md)
+> for its scope. The rest of this file records the earlier September 18 review;
+> it is not the current runtime configuration guide.
+
 Updated 2026-09-18. **Phase 1 has not started.** This is the reviewed design and
 operating contract, not a claim that the subsystem or migration files exist.
 See [BRIEF.md](BRIEF.md), [PLAN.md](PLAN.md), and the

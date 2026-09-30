@@ -72,6 +72,7 @@ from routes.graph import router as graph_router
 from routes.meeting import router as meeting_router
 from routes.voice import router as voice_router
 from routes.pilot import router as pilot_router
+from ingestion.api import router as ingestion_router
 
 # Database
 from models.database import init_db
@@ -226,6 +227,7 @@ app.include_router(graph_router)
 app.include_router(meeting_router)
 app.include_router(voice_router)
 app.include_router(pilot_router)
+app.include_router(ingestion_router)
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 

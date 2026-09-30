@@ -16,6 +16,7 @@ from azure.search.documents.indexes.models import (
     SemanticSearch
 )
 from azure.core.credentials import AzureKeyCredential
+from azure.core.exceptions import ResourceNotFoundError
 
 load_dotenv()
 
@@ -67,10 +68,28 @@ fields = [
 ]
 
 try:
-    client.delete_index(index_name)
-    print(f"Old index '{index_name}' deleted")
-except Exception as e:
-    print(f"No existing index to delete or error: {e}")
+    existing = client.get_index(index_name)
+except ResourceNotFoundError:
+    existing = None
+
+if existing is not None:
+    existing_fields = {field.name: field for field in existing.fields}
+    required_names = {field.name for field in fields}
+    missing = required_names - existing_fields.keys()
+    existing_vector = existing_fields.get("content_vector")
+    existing_configs = {
+        config.name for config in (existing.semantic_search.configurations if existing.semantic_search else [])
+    }
+    if missing or not existing_vector or existing_vector.vector_search_dimensions != 3072 or "iroko-semantic" not in existing_configs:
+        raise RuntimeError(
+            f"Index '{index_name}' already exists but is incompatible: "
+            f"missing fields={sorted(missing)}, vector dimensions="
+            f"{existing_vector.vector_search_dimensions if existing_vector else 'missing'}, "
+            f"semantic configuration present={'iroko-semantic' in existing_configs}. "
+            "Review the schema before making any changes."
+        )
+    print(f"Index '{index_name}' already exists with the required fields and vector configuration.")
+    raise SystemExit(0)
 
 index = SearchIndex(
     name=index_name,
@@ -79,5 +98,5 @@ index = SearchIndex(
     semantic_search=SemanticSearch(configurations=[semantic_config])
 )
 
-client.create_or_update_index(index)
+client.create_index(index)
 print(f"Index '{index_name}' created successfully with all required fields (including content_vector and semantic configuration).")
