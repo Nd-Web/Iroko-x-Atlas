@@ -1,8 +1,23 @@
 """Legacy sample identities are quarantined without hiding real source records."""
 
+from types import SimpleNamespace
+from unittest.mock import Mock
+
+import pytest
+
 from ingestion.access import allowed_document_ids
 from ingestion.models import Revision
 from models.database import Document, User
+
+
+@pytest.mark.parametrize("dialect,enabled,expected", [("postgresql", False, True), ("sqlite", True, True), ("sqlite", False, False)])
+def test_auth_schema_preflight_is_not_skipped_when_processing_is_disabled(monkeypatch, dialect, enabled, expected):
+    from ingestion import readiness
+    check = Mock()
+    monkeypatch.setattr(readiness, "check_schema", check)
+    session = SimpleNamespace(get_bind=lambda: SimpleNamespace(dialect=SimpleNamespace(name=dialect)))
+    readiness.check_api_schema(session, enabled)
+    assert check.called is expected
 
 
 def test_only_unproven_legacy_samples_are_hidden(db):

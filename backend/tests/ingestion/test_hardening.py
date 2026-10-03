@@ -73,6 +73,29 @@ def headers(user):
     return {"Authorization": "Bearer " + create_access_token(user.id, user.role)}
 
 
+def test_login_audit_works_with_migrated_workspace_schema(api, db):
+    from ingestion.models import RecordAccess
+    from models.database import AuditLog
+    from routes.auth import router as auth_router
+    from services.auth_utils import hash_password
+
+    api.app.include_router(auth_router)
+    owner = db.get(User, "owner")
+    owner.email = "owner@example.com"
+    owner.full_name = "Test Owner"
+    owner.hashed_password = hash_password("regression-only-password")
+    db.commit()
+    response = api.post("/api/auth/login", json={"email": owner.email, "password": "regression-only-password"})
+    assert response.status_code == 200, response.text
+    assert response.json()["access_token"]
+    assert response.json()["user"]["id"] == owner.id
+    audit = db.query(AuditLog).filter_by(action="user_login", user_id=owner.id).one()
+    assert db.get(RecordAccess, ("audit", audit.id)).workspace_id == "user:owner"
+    denied = api.post("/api/auth/login", json={"email": owner.email, "password": "wrong-password"})
+    assert denied.status_code == 401
+    assert db.query(AuditLog).filter_by(action="user_login", user_id=owner.id).count() == 1
+
+
 @pytest.fixture
 def retrieval_db(db, monkeypatch):
     @contextmanager

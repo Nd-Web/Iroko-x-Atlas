@@ -15,8 +15,10 @@
  */
 
 import { cookies } from "next/headers";
-import { API_BASE, COOKIE_NAME, COOKIE_MAX_AGE } from "@/lib/config";
-import type { AuthTokenResponse } from "@/lib/types";
+import { COOKIE_NAME, COOKIE_MAX_AGE } from "@/lib/config";
+import { loginToBackend } from "@/lib/auth-login-proxy";
+
+export const maxDuration = 30;
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -31,42 +33,13 @@ export async function POST(request: Request) {
     );
   }
 
-  // Forward to AtlasCore
-  let backendRes: Response;
-  try {
-    backendRes = await fetch(`${API_BASE}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      cache: "no-store",
-      signal: AbortSignal.timeout(8000),
-    });
-  } catch {
-    return Response.json(
-      { error: "Network error. Could not reach the authentication server." },
-      { status: 503 }
-    );
+  const result = await loginToBackend(body);
+  if (!result.ok) {
+    return Response.json({ error: result.error }, { status: result.status,
+      headers: { "Cache-Control": "private, no-store", ...(result.status >= 500 ? { "Retry-After": "5" } : {}) } });
   }
 
-  const contentType = backendRes.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
-    return Response.json(
-      { error: "Backend unavailable. Please try again." },
-      { status: 503 }
-    );
-  }
-  const data = await backendRes.json();
-
-  if (!backendRes.ok) {
-    // Surface a human-readable error message from FastAPI
-    let errorMsg = "Login failed. Please check your credentials.";
-    if (data?.detail) {
-      errorMsg = typeof data.detail === "string" ? data.detail : errorMsg;
-    }
-    return Response.json({ error: errorMsg }, { status: backendRes.status });
-  }
-
-  const { access_token, user } = data as AuthTokenResponse;
+  const { access_token, user } = result.data;
 
   // Set the JWT as an httpOnly cookie so it is never accessible from JS
   const cookieStore = await cookies();
@@ -79,5 +52,5 @@ export async function POST(request: Request) {
   });
 
   // Only return safe user data to the client — never the raw token
-  return Response.json({ user }, { status: 200 });
+  return Response.json({ user }, { status: 200, headers: { "Cache-Control": "private, no-store" } });
 }

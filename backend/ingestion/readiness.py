@@ -5,6 +5,13 @@ from sqlalchemy import select, text
 from ingestion.models import PipelineBase
 
 
+def check_api_schema(db, pipeline_enabled):
+    # Audit/workspace hooks are installed by imported API routes even when
+    # document processing is disabled. Postgres auth therefore needs this schema.
+    if pipeline_enabled or db.get_bind().dialect.name == "postgresql":
+        check_schema(db)
+
+
 def check_schema(db):
     try:
         for table in PipelineBase.metadata.sorted_tables:

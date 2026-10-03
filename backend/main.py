@@ -97,11 +97,10 @@ async def lifespan(app: FastAPI):
     # Initialise database
     init_db()
     from ingestion.queue import enabled as pipeline_enabled
-    if pipeline_enabled():
-        from ingestion.db import Session as PipelineSession
-        from ingestion.readiness import check_schema
-        with PipelineSession() as pipeline_db:
-            check_schema(pipeline_db)
+    from ingestion.db import Session as PipelineSession
+    from ingestion.readiness import check_api_schema
+    with PipelineSession() as pipeline_db:
+        check_api_schema(pipeline_db, pipeline_enabled())
     logger.info("Database initialised.")
 
     # Create default admin if no users exist
