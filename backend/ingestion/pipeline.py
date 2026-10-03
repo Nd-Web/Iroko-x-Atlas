@@ -13,12 +13,14 @@ from sqlalchemy.exc import IntegrityError
 from ingestion import extraction
 from ingestion.chunking import chunk_pages
 from ingestion.db import prepare_session, source_lock
-from ingestion.models import Chunk, Job, OcrBudget, Page, Revision
+from ingestion.models import Chunk, DocumentAccess, Job, OcrBudget, Page, Revision
 from ingestion.queue import enqueue, finish, owned
+from ingestion.record_access import install_access_handlers
 from ingestion.storage import preserve
 from models.database import Alert, AuditLog, Document, generate_id
 
 logger = logging.getLogger(__name__)
+install_access_handlers()
 
 
 async def accept(
@@ -33,11 +35,36 @@ async def accept(
     source_item_id=None,
 ):
     """Commit Document, immutable revision and job together after preserving bytes."""
+    # Blocking transaction locks run on a dedicated thread while the caller awaits.
+    # This session is used sequentially, never concurrently across threads.
+    return await asyncio.to_thread(
+        _accept_sync,
+        db,
+        path,
+        filename,
+        title,
+        user_id,
+        metadata,
+        source_key,
+        connector_id,
+        source_item_id,
+    )
+
+
+def _accept_sync(
+    db, path, filename, title, user_id, metadata, source_key, connector_id, source_item_id
+):
     prepare_session(db)
+    from ingestion.access import ensure_workspace
+    from ingestion.limits import reserve_upload
+    from ingestion.validation import validate_file
+
     metadata = dict(metadata or {})
     filename = Path(filename.replace("\\", "/")).name
     if not filename or len(filename) > 255:
         raise ValueError("Invalid filename")
+    size = validate_file(path, filename)
+    workspace = ensure_workspace(db, user_id)
     with Path(path).open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     source_key = source_key or f"upload:{user_id}:{filename}"
@@ -48,6 +75,7 @@ async def accept(
         if document is None:
             raise ValueError("Archived document; contact an administrator before restoring it")
         return document
+    reserve_upload(db, workspace, size)
     previous = (
         db.query(Revision)
         .filter_by(source_key=source_key)
@@ -55,7 +83,7 @@ async def accept(
         .first()
     )
     document_id = generate_id()
-    blob_url = await preserve(path, document_id, filename)
+    blob_url = asyncio.run(preserve(path, document_id, filename))
     metadata.update(
         {
             "source": metadata.get("source_url") or filename,
@@ -79,6 +107,7 @@ async def accept(
         extra_metadata={"pipeline": "v1", "sha256": digest},
     )
     db.add(doc)
+    db.add(DocumentAccess(document_id=document_id, workspace_id=workspace, shared_regulatory=False))
     db.add(
         Revision(
             id=document_id,
@@ -111,7 +140,7 @@ async def accept(
     return doc
 
 
-def reserve_ocr(db, count):
+def reserve_ocr(db, count, workspace=None):
     day = datetime.utcnow().date().isoformat()
     source_lock(db, f"ocr:{day}")
     budget = db.get(OcrBudget, day)
@@ -123,6 +152,10 @@ def reserve_ocr(db, count):
         max(0, int(os.getenv("DOCINTEL_DAILY_PAGE_BUDGET", "500")) - budget.pages),
         int(os.getenv("DOCINTEL_MAX_PAGES_PER_DOCUMENT", "50")),
     )
+    if workspace is not None:
+        from ingestion.limits import reserve_workspace_ocr
+
+        allowed = reserve_workspace_ocr(db, workspace, allowed)
     budget.pages += allowed
     db.commit()  # Reserve before paid work, including failed calls.
     return allowed
@@ -155,13 +188,15 @@ async def process(db, key, token):
             with open(path, "rb") as stream:
                 if hashlib.file_digest(stream, "sha256").hexdigest() != revision.sha256:
                     raise ValueError("Original file checksum does not match its accepted revision")
-            pages = await asyncio.to_thread(extraction.native_pages, path, file_type)
+            pages = await asyncio.to_thread(extraction.bounded_native_pages, path, file_type)
             flagged = [p for p in pages if file_type == "pdf" and extraction.needs_ocr(p)]
             if flagged:
                 configured = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT") and os.getenv(
                     "AZURE_DOCUMENT_INTELLIGENCE_KEY"
                 )
-                permitted = reserve_ocr(db, len(flagged)) if configured else 0
+                access = db.get(DocumentAccess, document_id)
+                workspace = access.workspace_id if access else f"user:{doc.uploaded_by_id}"
+                permitted = reserve_ocr(db, len(flagged), workspace) if configured else 0
                 numbers = [p["page_number"] for p in flagged[:permitted]]
                 replacements = {}
                 if numbers:

@@ -1,5 +1,9 @@
 # Azure on-demand worker for the first manual pull
 
+This describes the original manual-batch deployment. For the workspace-hardening
+release, follow [PRODUCTION-HARDENING.md](PRODUCTION-HARDENING.md) first: it requires
+the newer `20261001_workspaces` migration and a rebuilt worker image.
+
 Use an Azure Container Apps **manual Job**, not an always-on Container App, for
 the initial 20-document regulator batch. The API's **Collect now** action queues
 a source job in the shared Render Postgres database. A manually started Azure

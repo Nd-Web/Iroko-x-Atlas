@@ -23,6 +23,8 @@ from models.schemas import (
     DocumentSearchHit,
 )
 from services.auth_utils import get_current_user, require_role
+from ingestion.access import document_predicate, require_document
+from ingestion.validation import UploadLimitError
 from services.document_processor import process_document
 from services.blob_storage import upload_document as upload_to_blob
 from services.cosmos_graph import upsert_document_node
@@ -48,7 +50,9 @@ async def list_documents(
     db: Session = Depends(get_db),
 ):
     """List all uploaded documents with optional filters."""
-    query = db.query(Document)
+    if page < 1 or not 1 <= page_size <= 100:
+        raise HTTPException(422, "Invalid pagination")
+    query = db.query(Document).filter(document_predicate(db, current_user))
 
     if department:
         query = query.filter(Document.department == department)
@@ -77,6 +81,11 @@ async def upload_document(
     Upload a document for indexing.
     Supports PDF, DOCX, XLSX, TXT, CSV.
     """
+    from ingestion.queue import enabled
+    if current_user.role not in {"superadmin", "admin", "analyst"}:
+        raise HTTPException(403, "Document upload is not permitted for this role")
+    if not enabled():
+        raise HTTPException(503, "Document ingestion is unavailable; please try again later")
     # Validate file type
     filename = file.filename or "unknown"
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
@@ -113,6 +122,9 @@ async def upload_document(
             return await accept(db, file_path, filename, title, current_user.id,
                                 {"department": department, "doc_type": doc_type or ext,
                                  "tags": parsed_tags, "classification": "internal"})
+        except UploadLimitError as exc:
+            db.rollback()
+            raise HTTPException(429, str(exc), headers={"Retry-After": "3600"}) from exc
         except ValueError as exc:
             db.rollback()
             raise HTTPException(422, str(exc)) from exc
@@ -258,11 +270,11 @@ def _enrich_hits_with_blob_url(hits: list, db: Session) -> list:
     doc_ids = list({h["doc_id"] for h in hits if h.get("doc_id")})
     if not doc_ids:
         return hits
-    docs = db.query(Document.id, Document.blob_url).filter(Document.id.in_(doc_ids)).all()
+    docs = db.query(Document.id, Document.blob_url).filter(Document.id.in_(doc_ids), document_predicate(db)).all()
     blob_map = {d.id: d.blob_url for d in docs}
     for h in hits:
         h["blob_url"] = blob_map.get(h.get("doc_id"))
-    return hits
+    return [h for h in hits if h.get("doc_id") in blob_map]
 
 
 @router.get("/search", response_model=DocumentSearchResponse)
@@ -370,11 +382,11 @@ async def get_document_analytics(
         func.count(Document.id),
         func.coalesce(func.sum(Document.chunk_count), 0),
         func.coalesce(func.sum(Document.file_size), 0),
-    ).one()
+    ).filter(document_predicate(db, current_user)).one()
     total_documents, total_chunks, total_size_bytes = int(totals[0]), int(totals[1]), int(totals[2])
 
     # Status breakdown
-    status_rows = db.query(Document.status, func.count(Document.id)).group_by(Document.status).all()
+    status_rows = db.query(Document.status, func.count(Document.id)).filter(document_predicate(db, current_user)).group_by(Document.status).all()
     status_counts = {status: cnt for status, cnt in status_rows}
 
     indexed_rate = round(status_counts.get("indexed", 0) / total_documents * 100, 1) if total_documents else 0.0
@@ -383,6 +395,7 @@ async def get_document_analytics(
     by_file_type = [
         {"file_type": ft or "unknown", "count": cnt}
         for ft, cnt in db.query(Document.file_type, func.count(Document.id))
+        .filter(document_predicate(db, current_user))
         .group_by(Document.file_type)
         .order_by(func.count(Document.id).desc())
         .all()
@@ -392,6 +405,7 @@ async def get_document_analytics(
     by_department = [
         {"department": dept or "Unassigned", "count": cnt}
         for dept, cnt in db.query(Document.department, func.count(Document.id))
+        .filter(document_predicate(db, current_user))
         .group_by(Document.department)
         .order_by(func.count(Document.id).desc())
         .all()
@@ -399,7 +413,7 @@ async def get_document_analytics(
 
     # Upload trend — single query, grouped in Python
     trend_start = (now - timedelta(days=days - 1)).replace(hour=0, minute=0, second=0, microsecond=0)
-    uploads_in_range = db.query(Document.created_at).filter(Document.created_at >= trend_start).all()
+    uploads_in_range = db.query(Document.created_at).filter(Document.created_at >= trend_start, document_predicate(db, current_user)).all()
     daily_counts: dict = defaultdict(int)
     for (ts,) in uploads_in_range:
         daily_counts[ts.strftime("%Y-%m-%d")] += 1
@@ -415,7 +429,7 @@ async def get_document_analytics(
     # Failed documents (up to 10 most recent)
     failed_docs = (
         db.query(Document)
-        .filter(Document.status == "failed")
+        .filter(Document.status == "failed", document_predicate(db, current_user))
         .order_by(Document.created_at.desc())
         .limit(10)
         .all()
@@ -458,10 +472,7 @@ async def get_document(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    doc = db.query(Document).filter(Document.id == document_id).first()
-    if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
-    return doc
+    return require_document(db, document_id, current_user)
 
 
 @router.post("/{document_id}/reindex", response_model=DocumentResponse)
@@ -475,9 +486,7 @@ async def reindex_document(
     for a document already stored in blob storage. Useful for fixing documents
     stuck in 'processing' or 'failed' state.
     """
-    doc = db.query(Document).filter(Document.id == document_id).first()
-    if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+    doc = require_document(db, document_id, current_user, write=True)
     if not doc.blob_url:
         raise HTTPException(status_code=422, detail="Document has no blob — cannot reindex")
 
@@ -552,9 +561,7 @@ async def delete_document(
     current_user: User = Depends(require_role("superadmin", "admin", "analyst")),
     db: Session = Depends(get_db),
 ):
-    doc = db.query(Document).filter(Document.id == document_id).first()
-    if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+    doc = require_document(db, document_id, current_user, write=True)
     from ingestion.queue import enabled
     if enabled() and (doc.extra_metadata or {}).get("pipeline"):
         from ingestion.db import prepare_session

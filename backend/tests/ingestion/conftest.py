@@ -11,6 +11,19 @@ from models.database import Base, User
 
 
 @pytest.fixture
+def pdf_bytes():
+    from io import BytesIO
+
+    from reportlab.pdfgen.canvas import Canvas
+
+    stream = BytesIO()
+    canvas = Canvas(stream)
+    canvas.showPage()
+    canvas.save()
+    return stream.getvalue()
+
+
+@pytest.fixture
 def db():
     engine = create_engine(
         "sqlite://",

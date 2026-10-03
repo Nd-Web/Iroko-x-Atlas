@@ -46,11 +46,14 @@ class AnalystAgent(BaseAgent):
             data_points = json.dumps([
                 {
                     "date": e.get("document_id", str(i)),
-                    "value": e.get("relevance_score", round(0.5 + i * 0.05, 2)),
+                    "value": e["value"],
                     "label": e.get("title", e.get("document_title", "")),
                 }
                 for i, e in enumerate(evidence)
+                if isinstance(e.get("value"), (int, float)) and not isinstance(e.get("value"), bool)
             ])
+            if data_points == "[]":
+                return {"error": "No source-backed numeric observations provided", "knowledge_gap": True}
 
             raw = await self._with_retry(
                 self._analyst.compute_statistics,

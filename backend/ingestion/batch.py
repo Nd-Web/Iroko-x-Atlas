@@ -44,7 +44,7 @@ def _status(started_at, previously_failed):
     return pending, new_failures, source_results
 
 
-async def drain(max_seconds=5400, poll_seconds=5):
+async def drain(max_seconds=5400, poll_seconds=5, *, allow_idle=False):
     """Run queued jobs to quiescence, waiting for bounded retries.
 
     Does not schedule recurring sources. A failed source crawl, partial source
@@ -61,6 +61,17 @@ async def drain(max_seconds=5400, poll_seconds=5):
     while True:
         if time.monotonic() >= deadline:
             pending, failures, results = _status(started_at, previously_failed)
+            if (
+                allow_idle
+                and not failures
+                and all(r["status"] == "succeeded" and not r["errors"] for r in results)
+            ):
+                logger.info("Scheduled drain yielded; processed=%s pending=%s", processed, pending)
+                return {
+                    "processed_jobs": processed,
+                    "pending_jobs": pending,
+                    "source_results": results,
+                }
             raise BatchIncomplete(
                 f"Batch timed out with {pending} unfinished jobs, "
                 f"{len(failures)} new failed jobs and {len(results)} source runs"
@@ -71,26 +82,29 @@ async def drain(max_seconds=5400, poll_seconds=5):
             continue
 
         pending, failures, results = _status(started_at, previously_failed)
-        if pending == 0:
+        if pending == 0 or allow_idle:
             for result in results:
                 logger.info(
                     "Source %s: %s; found=%s accepted=%s errors=%s",
-                    result["source_id"], result["status"], result["found"],
-                    result["accepted"], len(result["errors"]),
+                    result["source_id"],
+                    result["status"],
+                    result["found"],
+                    result["accepted"],
+                    len(result["errors"]),
                 )
             bad_sources = [
                 result["source_id"]
                 for result in results
                 if result["status"] != "succeeded" or result["errors"]
             ]
-            if not processed:
+            if not processed and not allow_idle:
                 raise BatchIncomplete("No queued work; click Collect now before starting the job")
             if failures or bad_sources:
                 raise BatchIncomplete(
                     f"Batch incomplete: {len(failures)} failed jobs, "
                     f"{len(bad_sources)} sources with errors; inspect ingestion runs"
                 )
-            logger.info("Manual ingestion batch complete: %s jobs; no unfinished work", processed)
-            return {"processed_jobs": processed, "source_results": results}
+            logger.info("Ingestion drain complete: processed=%s pending=%s", processed, pending)
+            return {"processed_jobs": processed, "pending_jobs": pending, "source_results": results}
 
         await asyncio.sleep(min(poll_seconds, max(0, deadline - time.monotonic())))

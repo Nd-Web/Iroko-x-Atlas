@@ -21,7 +21,8 @@ export default function DocumentEvidence({ id }: { id: string }) {
   const [error, setError] = useState("");
   const cache = useQueryClient();
   const query = useQuery<Evidence>({
-    queryKey: ["document-evidence", id],
+    queryKey: ["document-evidence", id, user?.id],
+    enabled: Boolean(user),
     queryFn: async () => {
       const response = await fetch(`/api/ingestion/documents/${id}`);
       if (!response.ok) throw new Error("Could not load source evidence. Please retry.");

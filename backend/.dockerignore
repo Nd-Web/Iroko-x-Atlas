@@ -2,6 +2,12 @@
 .git
 .github
 venv
+.venv
+.pytest_cache
+.ruff_cache
+.dist
+*.db*
+*.sqlite*
 node_modules
 .next
 __pycache__

@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from agents.watchdog import WatchdogAgent
 from models.database import get_db, User
-from services.auth_utils import get_current_user, get_user_from_api_key
+from services.auth_utils import authenticate_user, get_user_from_api_key
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 _bearer = HTTPBearer(auto_error=False)
@@ -34,7 +34,7 @@ async def _optional_jwt_user(
     if not credentials:
         return None
     try:
-        return get_current_user(credentials=credentials, db=db)
+        return authenticate_user(credentials=credentials, db=db)
     except HTTPException:
         return None
 
@@ -136,7 +136,9 @@ async def compliance_check(
             sector = "financial"
         default_org = "MTN Nigeria" if sector == "network" else "African Fintech Platform"
         org = body.context or default_org
-        raw = await _watchdog.find_policy_conflicts(organisation=org, topic=body.text, sector=sector)
+        from ingestion.access import as_user
+        with as_user(user):
+            raw = await _watchdog.find_policy_conflicts(organisation=org, topic=body.text, sector=sector)
         result = json.loads(raw)
         alerts = result.get("alerts", [])
     except HTTPException:
@@ -177,17 +179,18 @@ async def compliance_check(
     # ── Workflow hook: NO-GO / MONITOR verdicts become actionable tasks ──────
     try:
         from services.workflow_service import create_task_from_verdict
-        task = create_task_from_verdict(
-            db,
-            verdict=verdict,
-            subject_text=body.text,
-            reasoning=reasoning,
-            regulation=regulation,
-            organisation=getattr(user, "organisation", None) or org,
-        )
-        if task:
-            db.commit()
-            logger.info("Compliance verdict %s → workflow task '%s'", verdict, task.title)
+        with as_user(user):
+            task = create_task_from_verdict(
+                db,
+                verdict=verdict,
+                subject_text=body.text,
+                reasoning=reasoning,
+                regulation=regulation,
+                organisation=getattr(user, "organisation", None) or org,
+            )
+            if task:
+                db.commit()
+                logger.info("Compliance verdict %s → workflow task '%s'", verdict, task.title)
     except Exception:
         logger.exception("Failed to create workflow task from compliance verdict")
         db.rollback()

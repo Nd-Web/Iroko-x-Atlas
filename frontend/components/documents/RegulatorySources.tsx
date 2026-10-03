@@ -8,7 +8,7 @@ type Source = { id: string; regulator: string; url: string; parser: string; enab
 
 export default function RegulatorySources() {
   const { user } = useAuth();
-  const admin = user?.role === "admin" || user?.role === "superadmin";
+  const admin = user?.role === "superadmin";
   const [open, setOpen] = useState(false);
   const [regulator, setRegulator] = useState("CBN");
   const [url, setUrl] = useState("");
@@ -16,7 +16,7 @@ export default function RegulatorySources() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const sources = useQuery<Source[]>({
-    queryKey: ["regulatory-sources"], enabled: admin && open,
+    queryKey: ["regulatory-sources", user?.id], enabled: admin && open,
     queryFn: async () => {
       const res = await fetch("/api/ingestion/sources");
       if (!res.ok) throw new Error("Source collection is unavailable. Check that the document pipeline is configured.");

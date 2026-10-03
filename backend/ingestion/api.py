@@ -9,6 +9,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
 
+from ingestion.access import document_predicate, require_document
 from ingestion.db import prepare_session
 from ingestion.models import Chunk, CrawlRun, Job, Page, Revision, Source
 from ingestion.pipeline import reindex, reprocess, review
@@ -19,6 +20,7 @@ from services.auth_utils import get_current_user, require_role
 
 router = APIRouter(prefix="/api/ingestion", tags=["Document ingestion"])
 admin = require_role("admin", "superadmin")
+platform_admin = require_role("superadmin")
 
 
 def session(db=Depends(get_db)):
@@ -35,6 +37,54 @@ def session(db=Depends(get_db)):
 class ReviewRequest(BaseModel):
     decision: str = Field(pattern="^(approve|reject)$")
     note: str = Field(min_length=5, max_length=2000)
+
+
+class WorkspaceRequest(BaseModel):
+    name: str = Field(min_length=2, max_length=120)
+
+
+class MemberRequest(BaseModel):
+    user_id: str = Field(min_length=1, max_length=100)
+
+
+class SharingRequest(BaseModel):
+    shared_regulatory: bool
+    note: str = Field(min_length=10, max_length=2000)
+
+
+@router.post("/workspaces")
+def create_workspace(body: WorkspaceRequest, user=Depends(platform_admin), db=Depends(session)):
+    from ingestion.models import Workspace
+    from models.database import AuditLog
+
+    workspace = Workspace(name=body.name)
+    db.add(workspace)
+    db.flush()
+    db.add(
+        AuditLog(user_id=user.id, action="workspace_created", resource=f"workspaces/{workspace.id}")
+    )
+    db.commit()
+    return {"id": workspace.id, "name": workspace.name}
+
+
+@router.post("/workspaces/{workspace_id}/members")
+def add_member(
+    workspace_id: str, body: MemberRequest, user=Depends(platform_admin), db=Depends(session)
+):
+    from ingestion.workspaces import assign_member
+
+    assign_member(db, user, body.user_id, workspace_id)
+    return {"status": "assigned"}
+
+
+@router.put("/documents/{document_id}/sharing")
+def share_document(
+    document_id: str, body: SharingRequest, user=Depends(platform_admin), db=Depends(session)
+):
+    from ingestion.workspaces import set_shared
+
+    set_shared(db, user, document_id, body.shared_regulatory, body.note)
+    return {"shared_regulatory": body.shared_regulatory}
 
 
 class SourceRequest(BaseModel):
@@ -55,9 +105,17 @@ class SourceRequest(BaseModel):
 
 @router.get("/stats")
 def stats(user=Depends(admin), db=Depends(session)):
+    ids = db.query(Document.id).filter(document_predicate(db, user, write=True))
     return {
-        "jobs": dict(db.query(Job.state, func.count()).group_by(Job.state).all()),
-        "awaiting_review": db.query(Revision).filter_by(review_status="required").count(),
+        "jobs": dict(
+            db.query(Job.state, func.count())
+            .filter(Job.kind == "document", Job.target_id.in_(ids))
+            .group_by(Job.state)
+            .all()
+        ),
+        "awaiting_review": db.query(Revision)
+        .filter(Revision.id.in_(ids), Revision.review_status == "required")
+        .count(),
     }
 
 
@@ -65,12 +123,17 @@ def stats(user=Depends(admin), db=Depends(session)):
 def reviews(user=Depends(admin), db=Depends(session)):
     return [
         {"id": r.id, "issues": r.issues, "provenance": r.provenance}
-        for r in db.query(Revision).filter_by(review_status="required").limit(100)
+        for r in db.query(Revision)
+        .filter(
+            Revision.review_status == "required",
+            Revision.id.in_(db.query(Document.id).filter(document_predicate(db, user, write=True))),
+        )
+        .limit(100)
     ]
 
 
 @router.get("/runs")
-def runs(user=Depends(admin), db=Depends(session)):
+def runs(user=Depends(platform_admin), db=Depends(session)):
     return [
         {
             "id": r.id,
@@ -85,6 +148,7 @@ def runs(user=Depends(admin), db=Depends(session)):
 
 @router.get("/documents/{document_id}")
 def detail(document_id: str, user=Depends(get_current_user), db=Depends(session)):
+    require_document(db, document_id, user)
     revision = db.get(Revision, document_id)
     if not revision or not db.get(Document, document_id):
         raise HTTPException(404, "Document pipeline record not found")
@@ -122,9 +186,7 @@ def detail(document_id: str, user=Depends(get_current_user), db=Depends(session)
 async def original(document_id: str, user=Depends(get_current_user), db=Depends(session)):
     from services.blob_storage import download_document
 
-    doc = db.get(Document, document_id)
-    if not doc:
-        raise HTTPException(404, "Document not found")
+    doc = require_document(db, document_id, user)
     with tempfile.TemporaryDirectory(prefix="iroko-original-") as directory:
         path = str(Path(directory) / "original")
         ok = await asyncio.to_thread(
@@ -149,6 +211,7 @@ async def original(document_id: str, user=Depends(get_current_user), db=Depends(
 def review_document(
     document_id: str, body: ReviewRequest, user=Depends(admin), db=Depends(session)
 ):
+    require_document(db, document_id, user, write=True)
     try:
         review(db, document_id, user.id, body.decision, body.note)
     except ValueError as exc:
@@ -158,6 +221,7 @@ def review_document(
 
 @router.post("/documents/{document_id}/reprocess")
 def reprocess_document(document_id: str, user=Depends(admin), db=Depends(session)):
+    require_document(db, document_id, user, write=True)
     try:
         reprocess(db, document_id)
     except ValueError as exc:
@@ -167,6 +231,7 @@ def reprocess_document(document_id: str, user=Depends(admin), db=Depends(session
 
 @router.post("/documents/{document_id}/reindex")
 def reindex_document(document_id: str, user=Depends(admin), db=Depends(session)):
+    require_document(db, document_id, user, write=True)
     try:
         reindex(db, document_id)
     except ValueError as exc:
@@ -175,7 +240,7 @@ def reindex_document(document_id: str, user=Depends(admin), db=Depends(session))
 
 
 @router.get("/sources")
-def sources(user=Depends(admin), db=Depends(session)):
+def sources(user=Depends(platform_admin), db=Depends(session)):
     return [
         {
             "id": s.id,
@@ -193,7 +258,7 @@ def sources(user=Depends(admin), db=Depends(session)):
 
 
 @router.post("/sources")
-def create_source(body: SourceRequest, user=Depends(admin), db=Depends(session)):
+def create_source(body: SourceRequest, user=Depends(platform_admin), db=Depends(session)):
     if body.regulator not in DOMAINS or (body.parser == "cbn_json" and body.regulator != "CBN"):
         raise HTTPException(422, "Unsupported regulator/parser combination")
     try:
@@ -209,7 +274,7 @@ def create_source(body: SourceRequest, user=Depends(admin), db=Depends(session))
 
 
 @router.post("/sources/{source_id}/run")
-def run_source(source_id: str, user=Depends(admin), db=Depends(session)):
+def run_source(source_id: str, user=Depends(platform_admin), db=Depends(session)):
     source = db.get(Source, source_id)
     if not source or not source.enabled:
         raise HTTPException(409, "Enable the source before running it")
@@ -219,7 +284,9 @@ def run_source(source_id: str, user=Depends(admin), db=Depends(session)):
 
 
 @router.patch("/sources/{source_id}")
-def update_source(source_id: str, body: SourceRequest, user=Depends(admin), db=Depends(session)):
+def update_source(
+    source_id: str, body: SourceRequest, user=Depends(platform_admin), db=Depends(session)
+):
     source = db.get(Source, source_id)
     if not source:
         raise HTTPException(404, "Source not found")

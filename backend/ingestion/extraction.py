@@ -1,7 +1,11 @@
 """Evidence-preserving extraction. No generated text or guessed PDF page numbers."""
 
+import json
 import os
 import re
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 
@@ -42,6 +46,8 @@ def native_pages(path, file_type):
 
         result = []
         with pdfplumber.open(path) as pdf:
+            if len(pdf.pages) > int(os.getenv("DOCUMENT_MAX_PAGES", "250")):
+                raise ValueError("PDF exceeds the configured page limit")
             for i, item in enumerate(pdf.pages):
                 raw = item.extract_text(layout=False) or ""
                 tables = bool(item.find_tables())
@@ -67,7 +73,13 @@ def native_pages(path, file_type):
         import openpyxl
 
         book = openpyxl.load_workbook(path, read_only=True, data_only=True)
+        if len(book.sheetnames) > 100:
+            book.close()
+            raise ValueError("Workbook exceeds sheet limit")
         try:
+            for sheet in book.worksheets:
+                if (sheet.max_row or 0) * (sheet.max_column or 0) > 250000:
+                    raise ValueError("Workbook exceeds cell limit")
             return [
                 page(
                     "\n".join(
@@ -83,6 +95,41 @@ def native_pages(path, file_type):
     if file_type in {"txt", "md", "csv"}:
         return [page(Path(path).read_text(encoding="utf-8-sig", errors="replace"), locator="Text")]
     raise ValueError(f"Unsupported document format: {file_type}")
+
+
+def bounded_native_pages(path, file_type):
+    """Timeout and memory boundary around parsers; stdout is bounded on disk."""
+    with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
+        result = subprocess.run(
+            [sys.executable, "-m", "ingestion.extract_task", str(Path(path).resolve()), file_type],
+            cwd=Path(__file__).resolve().parents[1],
+            stdout=output,
+            stderr=errors,
+            timeout=int(os.getenv("EXTRACTION_TIMEOUT_SECONDS", "150")),
+            check=False,
+            env={
+                k: v
+                for k, v in os.environ.items()
+                if not any(
+                    secret in k.upper()
+                    for secret in (
+                        "KEY",
+                        "SECRET",
+                        "TOKEN",
+                        "PASSWORD",
+                        "CONNECTION",
+                        "DATABASE_URL",
+                    )
+                )
+            },
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        if result.returncode:
+            raise ValueError("Document parser rejected the file or exceeded its resource limit")
+        if output.tell() > 32 * 1024 * 1024:
+            raise ValueError("Extracted content exceeds the configured output limit")
+        output.seek(0)
+        return json.load(output)
 
 
 def ocr_pages(path, numbers):

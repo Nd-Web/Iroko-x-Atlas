@@ -64,7 +64,7 @@ def generate_api_key() -> str:
     return f"sk-atlas-{uuid.uuid4().hex}"
 
 
-def get_current_user(
+def authenticate_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ) -> User:
@@ -90,6 +90,16 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+async def get_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+):
+    from ingestion.access import as_user
+    user = authenticate_user(credentials, db)
+    with as_user(user):
+        yield user
 
 
 def require_role(*roles: str):

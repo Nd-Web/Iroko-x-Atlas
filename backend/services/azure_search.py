@@ -165,6 +165,11 @@ async def hybrid_search(
     Hybrid search: BM25 lexical + HNSW vector retrieval, re-ranked by semantic scorer.
     Falls back to BM25-only if embeddings are unavailable.
     """
+    from ingestion.access import search_filter
+    acl = await asyncio.to_thread(search_filter)
+    if not acl:
+        return []
+    filter_str = f"({acl}) and ({filter_str})" if filter_str else acl
     client = get_search_client()
     if client is None:
         return []
@@ -410,16 +415,17 @@ def eligible_results(results):
 
     Azure Search may contain partially uploaded or older chunks. Postgres is
     authoritative, so such chunks cannot enter model context through hybrid_search.
-    Existing, unmanaged index records retain their legacy behaviour.
+    Unknown, inaccessible and stale records fail closed, including legacy records.
     """
-    from ingestion.queue import enabled
-    if not enabled() or not results:
-        return results
+    from ingestion.access import allowed_document_ids
+    if not results:
+        return []
     from ingestion.db import Session
     from ingestion.models import Chunk, Revision
     from models.database import Document
     with Session() as db:
         ids = {r.get("doc_id", r.get("parent_id")) for r in results}
+        allowed = allowed_document_ids(db, ids)
         revisions = {r.id: r for r in db.query(Revision).filter(Revision.id.in_(ids))}
         docs = {d.id: d for d in db.query(Document).filter(Document.id.in_(ids))}
         chunks = {c.id: c for c in db.query(Chunk).filter(Chunk.id.in_([r.get("id") for r in results]))}
@@ -427,10 +433,14 @@ def eligible_results(results):
         for row in results:
             result = dict(row)
             doc_id = result.get("doc_id", result.get("parent_id"))
+            if doc_id not in allowed or not docs.get(doc_id) or docs[doc_id].status != "indexed":
+                continue
             revision = revisions.get(doc_id)
+            if not revision:
+                continue  # Seed/legacy records are never source evidence.
             if revision:
                 doc, chunk = docs.get(doc_id), chunks.get(result.get("id"))
-                if not doc or doc.status != "indexed" or not revision.is_current or not chunk:
+                if not doc or doc.status != "indexed" or not revision.is_current or not chunk or chunk.document_id != doc_id:
                     continue
                 if result.get("content") != chunk.content:
                     continue

@@ -1,7 +1,6 @@
 import { apiRequest } from "@/lib/api-client";
-import { cookies } from "next/headers";
-import { API_BASE, COOKIE_NAME } from "@/lib/config";
-import type { DocumentListResponse, DocumentResponse } from "@/lib/types";
+import type { DocumentListResponse } from "@/lib/types";
+export { proxyDocumentUpload as POST } from "@/lib/document-upload-proxy";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -25,28 +24,4 @@ export async function GET(request: Request) {
 
   if (error) return Response.json({ error }, { status: httpStatus || 500 });
   return Response.json(data);
-}
-
-export async function POST(request: Request) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-
-  const contentType = request.headers.get("content-type") ?? "";
-
-  // Stream body directly to FastAPI — avoids buffering the full file into memory
-  // and bypasses Next.js's 10 MB formData parsing limit.
-  const fetchOpts = {
-    method: "POST",
-    headers: {
-      "content-type": contentType,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: request.body,
-    duplex: "half", // required by Node.js when body is a ReadableStream
-    cache: "no-store",
-  } as RequestInit;
-  const res = await fetch(`${API_BASE}/api/documents`, fetchOpts);
-
-  const json = await res.json();
-  return Response.json(json, { status: res.status });
 }

@@ -96,6 +96,12 @@ async def lifespan(app: FastAPI):
 
     # Initialise database
     init_db()
+    from ingestion.queue import enabled as pipeline_enabled
+    if pipeline_enabled():
+        from ingestion.db import Session as PipelineSession
+        from ingestion.readiness import check_schema
+        with PipelineSession() as pipeline_db:
+            check_schema(pipeline_db)
     logger.info("Database initialised.")
 
     # Create default admin if no users exist
@@ -123,17 +129,7 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
-    # ── Demo data (self-healing) ──────────────────────────────────────────────
-    # The demo runs on a seeded MTN dataset and the DB is ephemeral, so re-seed
-    # on boot when enabled — keeps graph/analytics/productivity/workflows lit
-    # after every restart. Set SEED_DEMO_DATA=false once real data is ingested.
-    if os.getenv("SEED_DEMO_DATA", "true").lower() in ("1", "true", "yes"):
-        try:
-            from services.demo_seed import seed_demo_data
-            res = seed_demo_data()
-            logger.info(f"Demo data: {res}")
-        except Exception as exc:
-            logger.warning(f"Demo seeding skipped (non-fatal): {exc}")
+    # Automatic demo seeding is removed; only ingest real source documents.
 
     # Start connector auto-sync scheduler
     from services.connector_sync import start_sync_scheduler
@@ -191,6 +187,9 @@ _allowed_origins = [
     for o in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
     if o.strip()
 ]
+
+from ingestion.http_limits import DocumentBodyLimit
+app.add_middleware(DocumentBodyLimit)
 
 app.add_middleware(
     CORSMiddleware,

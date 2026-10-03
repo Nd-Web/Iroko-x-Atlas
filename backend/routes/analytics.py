@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from models.database import get_db, User, Document, Alert, AgentRun, Message, KnowledgeGap, AuditLog
 from models.schemas import DashboardStats, HealthReport, ActivityFeedResponse, ActivityItem
 from services.auth_utils import get_current_user
+from ingestion.access import document_predicate
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
@@ -78,8 +79,8 @@ async def get_stats(
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = now - timedelta(days=7)
 
-    total_docs = db.query(Document).count()
-    indexed_docs = db.query(Document).filter(Document.status == "indexed").count()
+    total_docs = db.query(Document).filter(document_predicate(db, current_user)).count()
+    indexed_docs = db.query(Document).filter(document_predicate(db, current_user)).filter(Document.status == "indexed").count()
     queries_today = db.query(AgentRun).filter(AgentRun.created_at >= today_start).count()
     queries_week = db.query(AgentRun).filter(AgentRun.created_at >= week_start).count()
     active_alerts = db.query(Alert).filter(Alert.status.in_(["new", "acknowledged"])).count()
@@ -102,7 +103,7 @@ async def get_stats(
     top_departments = [
         {"department": dept or "Unknown", "document_count": count}
         for dept, count in (
-            db.query(Document.department, func.count(Document.id))
+            db.query(Document.department, func.count(Document.id)).filter(document_predicate(db, current_user))
             .filter(Document.department.isnot(None))
             .group_by(Document.department)
             .order_by(func.count(Document.id).desc())
@@ -178,7 +179,7 @@ async def get_health(
     overall = "healthy"
 
     # Check 1: Document indexing health
-    failed_docs = db.query(Document).filter(Document.status == "failed").count()
+    failed_docs = db.query(Document).filter(document_predicate(db, current_user)).filter(Document.status == "failed").count()
     if failed_docs > 0:
         checks.append({
             "name": "document_indexing",
@@ -247,7 +248,7 @@ async def get_health(
             })
 
     # Check 4: Total documents indexed
-    total_docs = db.query(Document).filter(Document.status == "indexed").count()
+    total_docs = db.query(Document).filter(document_predicate(db, current_user)).filter(Document.status == "indexed").count()
     checks.append({
         "name": "knowledge_base",
         "status": "ok" if total_docs > 0 else "warning",
@@ -274,8 +275,8 @@ async def get_overview(
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = now - timedelta(days=7)
 
-    total_docs = db.query(Document).count()
-    indexed_docs = db.query(Document).filter(Document.status == "indexed").count()
+    total_docs = db.query(Document).filter(document_predicate(db, current_user)).count()
+    indexed_docs = db.query(Document).filter(document_predicate(db, current_user)).filter(Document.status == "indexed").count()
     queries_today = db.query(AgentRun).filter(AgentRun.created_at >= today_start).count()
     queries_week = db.query(AgentRun).filter(AgentRun.created_at >= week_start).count()
     active_alerts = db.query(Alert).filter(Alert.status.in_(["new", "acknowledged"])).count()
@@ -318,7 +319,7 @@ async def get_overview(
     doc_type_distribution = [
         {"doc_type": ftype or "unknown", "count": count}
         for ftype, count in (
-            db.query(Document.file_type, func.count(Document.id))
+            db.query(Document.file_type, func.count(Document.id)).filter(document_predicate(db, current_user))
             .group_by(Document.file_type)
             .order_by(func.count(Document.id).desc())
             .all()
@@ -361,7 +362,7 @@ async def get_trends(
             AgentRun.created_at >= day_start,
             AgentRun.created_at < day_end,
         ).count()
-        d_count = db.query(Document).filter(
+        d_count = db.query(Document).filter(document_predicate(db, current_user)).filter(
             Document.created_at >= day_start,
             Document.created_at < day_end,
         ).count()
@@ -458,15 +459,15 @@ async def get_productivity(
         time_saved_hours_30d = 0.0
 
     # ── Documents made searchable ─────────────────────────────────────────
-    docs_indexed = db.query(Document).filter(Document.status == "indexed").count()
+    docs_indexed = db.query(Document).filter(document_predicate(db, current_user)).filter(Document.status == "indexed").count()
     chunks_indexed = (
-        db.query(func.coalesce(func.sum(Document.chunk_count), 0))
+        db.query(func.coalesce(func.sum(Document.chunk_count), 0)).filter(document_predicate(db, current_user))
         .filter(Document.status == "indexed")
         .scalar()
         or 0
     )
     docs_this_week = (
-        db.query(Document)
+        db.query(Document).filter(document_predicate(db, current_user))
         .filter(Document.status == "indexed", Document.created_at >= week_start)
         .count()
     )

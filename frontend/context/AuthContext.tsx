@@ -25,6 +25,7 @@ import {
   type ReactNode,
 } from "react";
 import type { User } from "@/lib/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 // How often to silently re-validate the session (milliseconds)
 const SESSION_POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -63,6 +64,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
+  const activeUserId = useRef<string | null>(null);
   const [user, setUser]               = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -73,15 +76,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Show the session-expired toast and clear local user state */
   const triggerSessionExpiry = useCallback(() => {
+    queryClient.clear();
+    activeUserId.current = null;
     setUser(null);
     setSessionExpired(true);
-  }, []);
+  }, [queryClient]);
 
   /**
    * Fetch the authenticated user from our proxy API.
    * Silently sets sessionExpired if the token has expired mid-session.
    */
-  const refreshUser = useCallback(async () => {
+  const refreshUser = useCallback(() => {
     // Never redirect away from public pages — just resolve silently
     const p = typeof window !== "undefined" ? window.location.pathname : "";
     const isPublicPage =
@@ -92,14 +97,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       p.startsWith("/reset-password") ||
       p.startsWith("/invite");
 
-    try {
-      const res = await fetch("/api/auth/me", { cache: "no-store" });
-      if (!res.ok && isPublicPage) { setUserLoading(false); return; }
+    return fetch("/api/auth/me", { cache: "no-store" }).then(async (res) => {
+      if (!res.ok && isPublicPage && res.status !== 401 && res.status !== 403) return;
       if (res.ok) {
         const data: User = await res.json();
+        if (activeUserId.current !== data.id) queryClient.clear();
+        activeUserId.current = data.id;
+        setSessionExpired(false);
         setUser(data);
         wasAuthenticated.current = true;
       } else if (res.status === 401 || res.status === 403) {
+        queryClient.clear();
+        activeUserId.current = null;
         setUser(null);
         wasAuthenticated.current = false;
 
@@ -117,14 +126,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           window.location.href = "/login";
         }
       }
-    } catch {
+    }).catch(() => {
+      queryClient.clear();
+      activeUserId.current = null;
       setUser(null);
-    }
-  }, []);
+    }).finally(() => setUserLoading(false));
+  }, [queryClient]);
 
   /** Initial hydration on mount */
   useEffect(() => {
-    refreshUser().finally(() => setUserLoading(false));
+    void refreshUser();
   }, [refreshUser]);
 
   /**
@@ -144,6 +155,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Delete the server-side cookie then redirect to login */
   const logout = useCallback(async () => {
+    queryClient.clear();
+    activeUserId.current = null;
     // Immediately clear UI state before the network request returns
     setUser(null);
     wasAuthenticated.current = false;
@@ -153,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Navigate away even if the request fails
     }
     window.location.href = "/login";
-  }, []);
+  }, [queryClient]);
 
   return (
     <AuthContext.Provider

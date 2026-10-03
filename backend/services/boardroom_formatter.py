@@ -20,6 +20,8 @@ class BoardroomFormatter:
     language suitable for C-suite and boardroom presentations.
     """
     async def format_executive_summary(self, raw_result: Dict[str, Any], is_pidgin: bool = False) -> Dict[str, Any]:
+        if raw_result.get("_grounded"):
+            return raw_result  # A stylistic rewrite must never alter validated source claims.
         if not LLM_AVAILABLE:
             return raw_result
             

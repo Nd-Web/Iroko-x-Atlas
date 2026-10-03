@@ -1,6 +1,7 @@
 # Minimal runtime for the on-demand ingestion job. Keep versions aligned with
 # requirements.txt; no web server, browser download, or demo seeding is needed.
 sqlalchemy==2.0.35
+alembic>=1.13,<2
 psycopg2-binary>=2.9.9,<3
 python-dotenv==1.0.1
 httpx==0.27.0

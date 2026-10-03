@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from models.database import get_db, User, Document, Alert
 from models.workflow import WorkflowTask, TaskStatus
 from services.auth_utils import get_current_user
+from ingestion.access import document_predicate
 from services.entity_extraction import extract_entities, entity_id
 
 router = APIRouter(prefix="/api/graph", tags=["Knowledge Graph"])
@@ -50,7 +51,7 @@ async def get_knowledge_graph(
             edges.append({"from": src, "to": dst, "label": label})
 
     # ── 1. Documents + entities ───────────────────────────────────────────
-    q = db.query(Document).filter(Document.status == "indexed")
+    q = db.query(Document).filter(Document.status == "indexed", document_predicate(db, current_user))
     if department:
         q = q.filter(Document.department == department)
     documents = q.order_by(Document.created_at.desc()).limit(_MAX_DOCS).all()
@@ -79,7 +80,8 @@ async def get_knowledge_graph(
     # ── 2. Vendor contracts (real network-ops data when present) ─────────
     try:
         from models.network_models import VendorContract
-        contracts = db.query(VendorContract).limit(40).all()
+        from ingestion.queue import enabled
+        contracts = [] if enabled() else db.query(VendorContract).limit(40).all()
         for c in contracts:
             cid = f"contract_{c.id}"
             label = getattr(c, "contract_name", None) or f"{getattr(c, 'vendor_name', 'Vendor')} contract"

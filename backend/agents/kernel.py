@@ -163,6 +163,7 @@ async def llm_complete(
     temperature: float = 0.3,
     service_id: str = "gpt4o",
     system_prompt: str = "",
+    json_schema: Optional[dict] = None,
 ) -> str:
     """
     Call the main LLM with exponential-backoff retry.
@@ -207,18 +208,26 @@ async def llm_complete(
             # output-only. Without it, reasoning tokens silently consume the
             # budget and the visible answer comes back empty.
             if use_responses:
+                output_options = {}
+                if json_schema is not None:
+                    output_options["text"] = {"format": {"type": "json_schema", "name": "grounded_output", "schema": json_schema, "strict": True}}
                 response = await client.responses.create(
                     model=deployment,
                     input=messages,
                     max_output_tokens=max_tokens,
                     reasoning={"effort": "none"},
+                    **output_options,
                 )
                 return response.output_text or ""
+            output_options = {}
+            if json_schema is not None:
+                output_options["response_format"] = {"type": "json_schema", "json_schema": {"name": "grounded_output", "schema": json_schema, "strict": True}}
             response = await client.chat.completions.create(
                 model=deployment,
                 messages=messages,
                 max_completion_tokens=max_tokens,
                 extra_body={"reasoning_effort": "none"},
+                **output_options,
             )
             return response.choices[0].message.content or ""
         except (RateLimitError, APITimeoutError, APIConnectionError) as e:

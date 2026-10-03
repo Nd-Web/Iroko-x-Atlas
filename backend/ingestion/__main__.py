@@ -9,7 +9,10 @@ from dotenv import load_dotenv
 def main():
     load_dotenv()
     parser = argparse.ArgumentParser(description="Iroko document pipeline")
-    parser.add_argument("command", choices=["worker", "once", "drain", "stats", "init-local"])
+    parser.add_argument(
+        "command",
+        choices=["worker", "once", "drain", "scheduled-drain", "stats", "check", "init-local"],
+    )
     parser.add_argument(
         "--max-seconds", type=int, default=int(os.getenv("INGESTION_BATCH_MAX_SECONDS", "5400"))
     )
@@ -23,6 +26,12 @@ def main():
         if engine.dialect.name != "sqlite":
             parser.error("init-local is SQLite-only; use ingestion/alembic.ini for Postgres")
         PipelineBase.metadata.create_all(pipeline_bind(engine))
+    elif args.command == "check":
+        from ingestion.readiness import check_schema
+
+        with Session() as db:
+            check_schema(db)
+        print("Document schema ready")
     elif args.command == "stats":
         from sqlalchemy import func
 
@@ -34,11 +43,19 @@ def main():
 
         if not enabled():
             parser.error("Set DOCUMENT_PIPELINE_ENABLED=true after the ingestion migration")
-        if args.command == "drain":
+        from ingestion.readiness import check_schema
+
+        with Session() as db:
+            check_schema(db)
+        if args.command in {"drain", "scheduled-drain"}:
             from ingestion.batch import BatchIncomplete, drain
 
             try:
-                asyncio.run(drain(max_seconds=args.max_seconds))
+                asyncio.run(
+                    drain(
+                        max_seconds=args.max_seconds, allow_idle=args.command == "scheduled-drain"
+                    )
+                )
             except BatchIncomplete as exc:
                 logging.error("Manual ingestion batch failed: %s", exc)
                 raise SystemExit(1) from exc

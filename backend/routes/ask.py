@@ -75,35 +75,13 @@ _starter_keys = {_normalize_q(q) for q in STARTER_QUERIES}
 
 
 def _get_cached_starter(query: str) -> Optional[str]:
-    """Return cached result_str ONLY if query matches a starter suggestion."""
-    key = _normalize_q(query)
-    if key not in _starter_keys:
-        return None                 # not a starter → full pipeline
-    entry = _starter_cache.get(key)
-    if not entry:
-        return None                 # not yet computed
-    age = (datetime.utcnow() - entry["cached_at"]).total_seconds()
-    if age > _CACHE_TTL_SECONDS:
-        _starter_cache.pop(key, None)
-        return None
-    logger.info(f"Starter cache HIT: '{query[:60]}' (age {age:.0f}s)")
-    return entry["result_str"]
+    """Answers depend on permissions; the old global cache is intentionally disabled."""
+    return None
 
 
 async def warm_starter_cache():
-    """Pre-compute answers for all starter suggestion-box queries.
-    Called once at startup and can be re-called to refresh."""
-    logger.info("Warming starter cache for %d suggestion-box queries...", len(STARTER_QUERIES))
-    for q in STARTER_QUERIES:
-        key = _normalize_q(q)
-        try:
-            strategist = StrategistAgent()
-            result_str = await strategist.investigate(question=q)
-            _starter_cache[key] = {"result_str": result_str, "cached_at": datetime.utcnow()}
-            logger.info(f"Starter cached: '{q[:50]}'")
-        except Exception as e:
-            logger.warning(f"Starter cache failed for '{q[:50]}': {e}")
-    logger.info("Starter cache warm-up complete (%d/%d cached)", len(_starter_cache), len(STARTER_QUERIES))
+    """Never run customer questions without an authenticated principal."""
+    _starter_cache.clear()
 
 
 # ── Feedback schema ───────────────────────────────────────────────────────────
@@ -206,6 +184,14 @@ async def ask(request: AskRequest, current_user: User = Depends(get_current_user
     )
 
 
+async def _scoped_stream(stream, user):
+    # FastAPI may finish yield-dependency cleanup before consuming a streaming body.
+    from ingestion.access import as_user
+    with as_user(user):
+        async for item in stream:
+            yield item
+
+
 @router.post("/ask/stream-http")
 async def ask_stream_http(request: AskRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if not _check_rate_limit(current_user.id):
@@ -277,7 +263,7 @@ async def ask_stream_http(request: AskRequest, current_user: User = Depends(get_
             yield "data: [DONE]\n\n"
 
         return StreamingResponse(
-            cached_event_stream(),
+            _scoped_stream(cached_event_stream(), current_user),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
         )
@@ -334,7 +320,7 @@ async def ask_stream_http(request: AskRequest, current_user: User = Depends(get_
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(
-        event_stream(),
+        _scoped_stream(event_stream(), current_user),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
     )
@@ -372,8 +358,10 @@ async def ask_stream(websocket: WebSocket, token: str):
                 continue
 
             strategist = StrategistAgent()
-            async for event in strategist.investigate_stream(question=query):
-                await websocket.send_json(event)
+            from ingestion.access import as_user
+            with as_user(user):
+                async for event in strategist.investigate_stream(question=query):
+                    await websocket.send_json(event)
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")

@@ -371,21 +371,9 @@ class BrightDataClient:
             On non-retryable API errors or if API key is absent.
         """
         if self.mock_mode:
-            logger.warning("[BrightData] SERP API unavailable in mock mode. Returning mock data.")
-            return [
-                {
-                    "title": f"Mock SERP Result: {query}",
-                    "url": f"https://mock-news.ng/article/{query.replace(' ', '-')}",
-                    "snippet": f"This is a simulated Bright Data SERP result for '{query}'. Used for local testing.",
-                    "position": 1
-                },
-                {
-                    "title": f"Mock Regulatory Update: {query}",
-                    "url": f"https://mock-regulator.gov.ng/{query.replace(' ', '-')}",
-                    "snippet": f"Simulated regulatory warning or competitor announcement regarding '{query}'.",
-                    "position": 2
-                }
-            ]
+            logger.warning("[BrightData] SERP is not configured; no source results available.")
+            return []
+
 
         endpoint = "https://api.brightdata.com/request"
         api_key = self.config.BRIGHTDATA_API_KEY
@@ -539,17 +527,8 @@ class BrightDataClient:
             On non-retryable Datasets API failures (after fallback also fails).
         """
         if self.mock_mode:
-            logger.warning(
-                "[BrightData] Scraper API unavailable in mock mode. Returning mock structured data."
-            )
-            result = {
-                "_meta": {"url": url, "scraped_at": self._now_iso(), "source": "mock_scrape"},
-                "raw_html": "<html><body><h1>Mock Extracted Data</h1></body></html>",
-            }
-            # Fill schema keys with dummy data
-            for key in schema.keys():
-                result[key] = f"Mock extracted {key}"
-            return result
+            raise BrightDataError("Structured scraping is not configured; no extracted evidence available.")
+
 
         datasets_endpoint = "https://api.brightdata.com/datasets/v3/trigger"
         api_key = self.config.BRIGHTDATA_API_KEY

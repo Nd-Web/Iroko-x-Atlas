@@ -232,35 +232,16 @@ class TestPidginDetection:
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestCannedScenarios:
-    """Verify demo canned scenarios match and return complete data."""
+    """Retired canned answers must never return fabricated business evidence."""
 
-    def test_carbon_mfb_car_breach_match(self, strategist):
-        result = strategist._match_canned_scenario("What happened with Carbon MFB CAR breach?")
-        assert result is not None
-        assert "Carbon" in result["answer"] or "CAR" in result["answer"]
-        assert len(result["citations"]) >= 2
-        assert result["confidence"] == "high"
-
-    def test_sla_exposure_match(self, strategist):
-        result = strategist._match_canned_scenario("What is our SLA credit exposure?")
-        assert result is not None
-        assert "NGN" in result["answer"] or "₦" in result["answer"]
-        assert "citations" in result
-
-    def test_compliance_match(self, strategist):
-        result = strategist._match_canned_scenario("What is our CBN compliance status?")
-        assert result is not None
-        assert "CBN" in result["answer"] or "NDPA" in result["answer"]
-
-    def test_no_match_returns_none(self, strategist):
-        assert strategist._match_canned_scenario("random unrelated query") is None
-
-    def test_canned_citations_have_required_fields(self, strategist):
-        result = strategist._match_canned_scenario("Carbon MFB capital adequacy breach")
-        for c in result["citations"]:
-            assert "document_id" in c
-            assert "document_title" in c
-            assert "excerpt" in c
+    @pytest.mark.parametrize("query", [
+        "What happened with Carbon MFB CAR breach?",
+        "What is our SLA credit exposure?",
+        "What is our CBN compliance status?",
+        "random unrelated query",
+    ])
+    def test_canned_answers_are_retired(self, strategist, query):
+        assert strategist._match_canned_scenario(query) is None
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -338,38 +319,15 @@ class TestConversationHandling:
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestDocumentRetrieval:
-    """Researcher agent mock search returns well-formed results."""
+    """Compatibility fallback paths must report an empty corpus, not samples."""
 
-    @pytest.mark.asyncio
-    async def test_mock_search_returns_results(self, researcher):
-        raw = await researcher.search_documents(query="CRC Credit Bureau data agreement")
-        result = json.loads(raw)
-        assert result.get("source") == "mock"
-        assert len(result["results"]) >= 5
+    def test_retired_search_is_empty(self, researcher):
+        result = json.loads(researcher._mock_search("contract terms"))
+        assert result["results"] == []
+        assert result["knowledge_gap"] is True
 
-    @pytest.mark.asyncio
-    async def test_mock_results_have_metadata(self, researcher):
-        raw = await researcher.search_documents(query="tower lease", top_k=3)
-        result = json.loads(raw)
-        for r in result["results"]:
-            assert "document_id" in r
-            assert "title" in r
-            assert "excerpt" in r
-            assert "relevance_score" in r
-
-    @pytest.mark.asyncio
-    async def test_mock_document_list(self, researcher):
-        raw = await researcher.list_documents()
-        result = json.loads(raw)
-        assert "documents" in result
-        assert len(result["documents"]) >= 5
-
-    @pytest.mark.asyncio
-    async def test_retrieval_confidence_present(self, researcher):
-        raw = await researcher.search_documents(query="contract terms")
-        result = json.loads(raw)
-        assert "retrieval_confidence" in result
-        assert 0 <= result["retrieval_confidence"] <= 1
+    def test_retired_document_list_is_empty(self, researcher):
+        assert json.loads(researcher._mock_document_list())["documents"] == []
 
 
 # ═════════════════════════════════════════════════════════════════════════════

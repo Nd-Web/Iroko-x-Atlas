@@ -13,3 +13,14 @@ backend/tests/ingestion/fixtures/**/*.response.bin
 # Python generated files
 __pycache__/
 *.py[cod]
+
+# Generated local document-Q&A evaluation evidence and disposable databases.
+/.dist/rag-evaluation/
+
+# Downloaded source PDFs, generated artifacts, and private local configuration.
+/CBN PDF/
+/.dist/
+.env
+.env.*
+!.env.example
+!.env.*.example

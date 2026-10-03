@@ -1,0 +1,189 @@
+{
+  "date": "2026-09-30",
+  "scope": "Recovery of the 18 failed attachments from the initial 20-document CBN OFIS batch",
+  "summary": {
+    "previously_indexed": 2,
+    "recovered_mirror_candidates": 1,
+    "unrecovered": 17,
+    "newly_indexed": 0
+  },
+  "notes": [
+    "All 18 original attachment requests returned HTTP 403 in the production pull; sampled responses included Cf-Mitigated: challenge.",
+    "Catalogue metadata is preserved as published, not treated as verified document metadata.",
+    "No summaries or unrelated documents substituted. No source-access controls bypassed.",
+    "The recovered file is a third-party mirror candidate, not verified byte-identical to the CBN original. No database document, chunks, or search records created for it."
+  ],
+  "documents": [
+    {
+      "catalogue_id": 7117,
+      "title": "Revocation of Operating Licenses",
+      "catalogue_reference": "OFI/DOA/CON/OFI/005/114",
+      "catalogue_date": "23/05/2023",
+      "catalogue_file_size": "399862",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2023/CCD/Revocation%20of%20Operating%20Lice%20ONE.pdf",
+      "status": "recovered_mirror_pending_review",
+      "retrieved_from": "https://sabilaw.org/wp-content/uploads/2023/06/Revocation-of-Operating-Licence-original-1.pdf",
+      "sha256": "b2e8f7d5c4969cd9a2b20e1e3a409888f9f85c8e2eab2c609e697e8b2a983e7e",
+      "file_size": 469098,
+      "page_count": 10,
+      "observed_identity": "Federal Republic of Nigeria Official Gazette No. 94, Vol. 110, 23 May 2023, Government Notice No. 57, S.I. No. 23; printed pages B459-B468.",
+      "review_note": "File size differs from CBN catalogue (399862 bytes); the original was inaccessible, so full equivalence and authenticity remain unverified. Historical instrument: not proof of present-day licence status.",
+      "storage_account": "irokoai",
+      "container": "iroko-documents",
+      "blob_name": "recovery/2026-09-30/cbn-7117/b2e8f7d5c4969cd9a2b20e1e3a409888f9f85c8e2eab2c609e697e8b2a983e7e/revocation-gazette-94.pdf"
+    },
+    {
+      "catalogue_id": 7116,
+      "title": "Revocation of Operating Licenses",
+      "catalogue_reference": "OFI/DOA/CON/OFI/005/114",
+      "catalogue_date": "23/05/2023",
+      "catalogue_file_size": "387809",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2023/CCD/Revoked%20License%20of%2047%20Microfinance.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 7052,
+      "title": "Letter to all OFIs : Prohibition of Placement/Investment in Funds Managed by Uninsured Entities",
+      "catalogue_reference": "OFI/DOA/CON/OFI/001/304",
+      "catalogue_date": "09/01/2023",
+      "catalogue_file_size": "36006",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2023/OFISD/Prohibition%20of%20Placements%20in%20Funds%20Managed%20by%20Uninsured%20Entities.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 6900,
+      "title": "Letter to all OFIs: Issuance of Risk-Based Cybersecurity Framework and Guidelines for Other Financial Institutions (OFIs)",
+      "catalogue_reference": "OFI/DOA/CON/ACT/004/155",
+      "catalogue_date": "29/06/2022",
+      "catalogue_file_size": "1015337",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2022/OFISD/Letter%20to%20all%20OFIs%20Issuance%20of%20Risk-Based%20Cybersecurity%20Framework%20and%20Guidelines%20for%20Other%20Financial%20Institutions.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 6707,
+      "title": "Adoption of International Financial Reporting Standards by Other Financial Institutions (OFIs)",
+      "catalogue_reference": "OFI/DOA/LTT/CON/002/138",
+      "catalogue_date": "08/10/2021",
+      "catalogue_file_size": "40621",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2021/OFISD/Adoption%20of%20IFRS%20BY%20ALL%20OFIs.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 6034,
+      "title": "Extension of the Timeframe for the Submission of 2019 Audited Financial Statements",
+      "catalogue_reference": "OFI/DIR/LTT/GEN/022/153",
+      "catalogue_date": "29/05/2020",
+      "catalogue_file_size": "307190",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2020/CCD/extension%20of%202019%20AFS.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5798,
+      "title": "Letter to all Other Financial Institutiions (OFIs) on Rendition of Returns on Anti-Money Laundering and Combattting the Financing of Terrorism (AML/CFT)",
+      "catalogue_reference": "OFI/DIR/DOC/GEN/020/365",
+      "catalogue_date": "10/09/2019",
+      "catalogue_file_size": "84314",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2019/OFISD/AML%20CIRCULAR.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5770,
+      "title": "Guide To Charges By Banks And Other Financial Institutions In Nigeria (May 2017 - Removal of Interest Rate and Cap In Respect Of Part 2 Section 2.1.3)",
+      "catalogue_reference": "OFI/DIR/GEN/CIR/07/033",
+      "catalogue_date": "05/09/2019",
+      "catalogue_file_size": "266414",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2019/FPRD/REMOVAL%20OF%20INTEREST%20RATE%20AND%20CAP.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5767,
+      "title": "Letter to all DFIs: Establishment and Operation of Subsidiaries and Special Purpose Vehicles",
+      "catalogue_reference": "OFI/DIR/DOC/GEN/20349",
+      "catalogue_date": "03/09/2019",
+      "catalogue_file_size": "83088",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2019/OFISD/ESTABLISHMENT%20AND%20OPERATIONS%20OF%20SUBSIDIARIES%20AND%20SPECIAL%20PURPOSE%20VEHICLES.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5701,
+      "title": "Letter to all Microfinance Banks (MFBs) on the Revised National Finacial Inclusion Targets",
+      "catalogue_reference": "OFI/DIR/DOC/GEN/020/252",
+      "catalogue_date": "01/07/2019",
+      "catalogue_file_size": "46509",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2019/OFISD/Letter%20to%20all%20MFBs%20on%20the%20Revised%20National%20Financial%20Inclusion%20Targets.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5649,
+      "title": "Letter to All Other Financial Institutions (OFIs) on the Creation of Corporate E-Mails",
+      "catalogue_reference": "OFI/DIR/DOC/GEN/019/156",
+      "catalogue_date": "09/04/2019",
+      "catalogue_file_size": "200773",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2019/OFISD/Creation%20of%20Corporate%20E-Mails.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5609,
+      "title": "Guidance Notes to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria",
+      "catalogue_reference": "OFISD/DIR/GEN/IFR/020/101",
+      "catalogue_date": "05/03/2019",
+      "catalogue_file_size": "771664",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2019/OFISD/IFRS%20GUIDANCE%20NOTE%20FOR%20OFIS%20NEW%20(2).pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5502,
+      "title": "Letter to All Bureaux De Change (BDCs) on Submission of Audited Financial Statements",
+      "catalogue_reference": "OFI/DIR/CIR/GEN/19/241",
+      "catalogue_date": "20/12/2018",
+      "catalogue_file_size": "94531",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2018/OFISD/Circular%20to%20BDCs%20on%20Audited%20Accounts%20submission%2020122018.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5203,
+      "title": "Bank Verification Number (BVN) Enrollment for OFIs Customers",
+      "catalogue_reference": "OFISD/DIR/CIR/GEN/018/217",
+      "catalogue_date": "02/01/2018",
+      "catalogue_file_size": "35551",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2018/OFISD/BANK%20VERIFICATION%20NUMBER%20(BVN)%20ENROLLMENT%20FOR%20OFIs%20CUSTOMERS.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5101,
+      "title": "Bank Verification Number (BVN) Enrollment for OFIs Customers - Extension of Timeline to December 31, 2017.",
+      "catalogue_reference": "OFI/DIR/CIR/GEN/18/011",
+      "catalogue_date": "01/08/2017",
+      "catalogue_file_size": "730204",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2017/OFISD/THE%20BVN%20ENROLLMENT%20FOR%20OFI%20CUSTOMERS0001.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5067,
+      "title": "Letter to All OFIs on Specially Designated Global Terrorist (SDGT)",
+      "catalogue_reference": "OFI/DIR/CIR/GEN/17/204",
+      "catalogue_date": "14/06/2017",
+      "catalogue_file_size": "150066",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2017/OFISD/LETTER%20TO%20ALL%20OFIs%20ON%20GLOBAL%20DESIGNATED%20TERRORIST.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5056,
+      "title": "RE: Data Exchange Agreements with at least Two Licenced Credit Bureaux in Nigeria for OFIs",
+      "catalogue_reference": "OFI/DIR/CIR/GEN/17/151",
+      "catalogue_date": "10/05/2017",
+      "catalogue_file_size": "238168",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2017/OFISD/Circular%20on%20Data%20Exchange%20PDF%20file_1_20170510133700516.pdf",
+      "status": "unrecovered"
+    },
+    {
+      "catalogue_id": 5017,
+      "title": "Bank Verification Number (BVN) Enrollment for OFIs Customers",
+      "catalogue_reference": "OFI/DIR/CIR/GEN/17/139",
+      "catalogue_date": "24/04/2017",
+      "catalogue_file_size": "710722",
+      "canonical_url": "https://www.cbn.gov.ng/Out/2017/OFISD/CIRCULAR%20ON%20BVN%20OF%20OFIs0001%20(3).pdf",
+      "status": "unrecovered"
+    }
+  ]
+}

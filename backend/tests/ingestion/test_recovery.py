@@ -10,7 +10,7 @@ from models.database import Document
 
 
 async def test_source_run_persists_results_and_queues_downloaded_original(
-    db, adapters, monkeypatch
+    db, adapters, monkeypatch, pdf_bytes
 ):
     import json
 
@@ -33,7 +33,7 @@ async def test_source_run_persists_results_and_queues_downloaded_original(
             pass
 
         async def fetch(self, url):
-            return 200, {}, catalog if "/api/" in url else b"%PDF- synthetic preserved file"
+            return 200, {}, catalog if "/api/" in url else pdf_bytes
 
         async def close(self):
             pass

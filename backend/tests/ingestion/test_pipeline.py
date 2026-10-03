@@ -91,10 +91,10 @@ async def test_index_failure_retains_extraction_checkpoint(db, content, adapters
 
 
 async def test_scanned_page_with_missing_ocr_is_held_and_cannot_be_approved(
-    db, content, adapters, monkeypatch
+    db, content, adapters, monkeypatch, pdf_bytes
 ):
+    content.write_bytes(pdf_bytes)
     doc = await accept(db, content, "scan.pdf", "Scan", "owner")
-    monkeypatch.setattr("ingestion.extraction.native_pages", lambda *_: [page("", 1)])
     monkeypatch.delenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", raising=False)
     monkeypatch.delenv("AZURE_DOCUMENT_INTELLIGENCE_KEY", raising=False)
     await process(db, *claim(db))
@@ -219,7 +219,10 @@ async def test_retrieval_excludes_unapproved_old_and_partial_chunks(
     await process(db, *claim(db))
     chunk = db.query(Chunk).filter_by(document_id=doc.id).first()
     hit = {"id": chunk.id, "doc_id": doc.id, "content": chunk.content}
-    assert eligible_results([hit])[0]["provenance"]["sha256"]
+    from ingestion.access import Principal, as_user
+
+    with as_user(Principal("owner", "admin")):
+        assert eligible_results([hit])[0]["provenance"]["sha256"]
     assert not eligible_results([{**hit, "content": "stale partial index text"}])
     db.get(Revision, doc.id).is_current = False
     db.commit()
@@ -234,6 +237,6 @@ async def test_missing_search_client_never_reports_success(monkeypatch):
 
 
 def test_pipeline_metadata_is_isolated():
-    assert len(PipelineBase.metadata.tables) == 7
+    assert len(PipelineBase.metadata.tables) == 12
     assert PipelineBase.metadata is not Base.metadata
     assert all(t.schema == "ingestion" for t in PipelineBase.metadata.tables.values())

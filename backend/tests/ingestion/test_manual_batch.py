@@ -20,8 +20,13 @@ async def test_manual_batch_drains_source_and_documents_without_scheduling(db, m
     _sessions(db, monkeypatch)
     db.add(
         Source(
-            id="cbn", regulator="CBN", url="https://www.cbn.gov.ng/test",
-            parser="cbn_json", enabled=True, interval_hours=6, owner_id="owner",
+            id="cbn",
+            regulator="CBN",
+            url="https://www.cbn.gov.ng/test",
+            parser="cbn_json",
+            enabled=True,
+            interval_hours=6,
+            owner_id="owner",
         )
     )
     enqueue(db, "source", "cbn")
@@ -64,7 +69,9 @@ async def test_manual_batch_reports_partial_source_failure(db, monkeypatch):
             CrawlRun(
                 source_id=source_id,
                 result={
-                    "status": "succeeded", "found": 1, "accepted": 0,
+                    "status": "succeeded",
+                    "found": 1,
+                    "accepted": 0,
                     "errors": [{"url": "https://www.cbn.gov.ng/bad.pdf", "error": "HTTPError"}],
                 },
             )
@@ -81,8 +88,12 @@ async def test_manual_batch_reports_exhausted_document_job(db, monkeypatch):
     _sessions(db, monkeypatch)
     db.add(
         Job(
-            id="document:bad", kind="document", target_id="bad", state="queued",
-            attempts=4, available_at=datetime.utcnow(),
+            id="document:bad",
+            kind="document",
+            target_id="bad",
+            state="queued",
+            attempts=4,
+            available_at=datetime.utcnow(),
         )
     )
     db.commit()
@@ -101,8 +112,12 @@ async def test_manual_batch_waits_for_retry_then_times_out(db, monkeypatch):
     _sessions(db, monkeypatch)
     db.add(
         Job(
-            id="document:later", kind="document", target_id="later", state="retry",
-            attempts=1, available_at=datetime.utcnow() + timedelta(hours=1),
+            id="document:later",
+            kind="document",
+            target_id="later",
+            state="retry",
+            attempts=1,
+            available_at=datetime.utcnow() + timedelta(hours=1),
         )
     )
     db.commit()

@@ -71,7 +71,8 @@ class StrategistAgent:
             if intent == "greeting":
                 result = await self._llm_greeting(question, is_pidgin)
             elif intent == "follow_up":
-                result = await self._llm_followup(question, is_pidgin)
+                previous = self.conversation_history[-1]["question"] if self.conversation_history else ""
+                result = await self._orchestrate_agents(f"{previous}\nFollow-up: {question}", is_pidgin, depth)
             elif intent == "out_of_domain":
                 result = await self._llm_decline(question, is_pidgin, topic)
             elif intent == "network_operations":
@@ -83,12 +84,7 @@ class StrategistAgent:
             elif intent == "regulatory_compliance":
                 result = await self._orchestrate_regulatory(question, is_pidgin)
             else:
-                canned = self._match_canned_scenario(question)
-                if canned:
-                    self._log_trace("Strategist", "canned", "Matched demo scenario")
-                    result = canned
-                else:
-                    result = await self._orchestrate_agents(question, is_pidgin, depth)
+                result = await self._orchestrate_agents(question, is_pidgin, depth)
 
             duration_ms = int((time.time() - start) * 1000)
             if "citations" in result:
@@ -107,7 +103,7 @@ class StrategistAgent:
                     compliance_result=comp_res,
                     signal_strength=max(1, len(result.get("citations", [])))
                 )
-                result["verdict"] = verdict
+                result["verdict"] = "MONITOR" if result.get("_grounded") else verdict
                 self._log_trace("Strategist", "verdict", f"Official verdict stamped: {verdict}")
             except Exception as e:
                 logger.warning(f"Verdict engine failed in strategist: {e}")
@@ -115,7 +111,7 @@ class StrategistAgent:
             # ── Wire Boardroom Formatter (business intents only) ──────────────────
             _BOARDROOM_INTENTS = {"network_operations", "regulatory_compliance",
                                   "fraud_intelligence", "customer_complaint", "document_query"}
-            if intent in _BOARDROOM_INTENTS:
+            if intent in _BOARDROOM_INTENTS and not result.get("_grounded"):
                 try:
                     from services.boardroom_formatter import boardroom_formatter
                     result = await boardroom_formatter.format_executive_summary(result, is_pidgin)
@@ -126,7 +122,7 @@ class StrategistAgent:
             self.conversation_history.append({"question": question, "intent": intent, "topic": topic, "answer_summary": result.get("answer", "")[:300], "timestamp": datetime.utcnow().isoformat()})
             self.conversation_history = self.conversation_history[-5:]
 
-            return json.dumps({"question": question, "answer": result["answer"], "confidence": result.get("confidence", "high"), "verdict": result.get("verdict", "MONITOR"), "is_pidgin": is_pidgin, "agent_trace": self.trace, "citations": result.get("citations", []), "suggested_actions": result.get("suggested_actions", []), "suggested_followups": result.get("suggested_followups", []), "duration_ms": duration_ms, "agents_used": list({t["agent"] for t in self.trace}), "intent": intent, "topic": topic})
+            return json.dumps({"question": question, "answer": result["answer"], "knowledge_gap": bool(result.get("knowledge_gap", False)), "confidence": result.get("confidence", "high"), "verdict": result.get("verdict", "MONITOR"), "is_pidgin": is_pidgin, "agent_trace": self.trace, "citations": result.get("citations", []), "suggested_actions": result.get("suggested_actions", []), "suggested_followups": result.get("suggested_followups", []), "duration_ms": duration_ms, "agents_used": list({t["agent"] for t in self.trace}), "intent": intent, "topic": topic})
 
         except Exception as e:
             logger.error(f"Strategist failed: {e}", exc_info=True)
@@ -135,365 +131,30 @@ class StrategistAgent:
     # -- Streaming entry point ---------------------------------------------
 
     async def investigate_stream(self, question: str, depth: str = "standard") -> AsyncGenerator[dict, None]:
-        start = time.time()
-        self.trace = []
-        is_pidgin = self._detect_pidgin(question)
-
-        yield {"type": "start", "message": "Iroko AI is thinking...", "timestamp": datetime.utcnow().isoformat()}
-
-        try:
-            classification = await self._llm_classify(question, is_pidgin)
-            intent = classification.get("intent", "document_query")
-            topic = classification.get("topic", "")
-            yield {"type": "agent_action", "agent": "Strategist", "tool": "classify", "description": f"Intent: {intent} | Topic: {topic}", "timestamp": datetime.utcnow().isoformat()}
-
-            tokens_streamed = False
-            if intent == "greeting":
-                result = await self._llm_greeting(question, is_pidgin)
-            elif intent == "follow_up":
-                result = await self._llm_followup(question, is_pidgin)
-            elif intent == "out_of_domain":
-                result = await self._llm_decline(question, is_pidgin, topic)
-            elif intent == "document_query":
-                result = None
-                tokens_streamed = False
-                context = await self._retrieve_context(question, depth)
-                for t in self.trace:
-                    yield {"type": "agent_action", **t}
-
-                prompt = self._build_stream_prompt(question, context, is_pidgin)
-                answer_chunks = []
-                async for chunk in llm_complete_stream(prompt, max_tokens=2000, temperature=0.3, system_prompt=self._STREAM_SYSTEM_PROMPT):
-                    answer_chunks.append(chunk)
-                    yield {"type": "token", "content": chunk}
-                tokens_streamed = True
-
-                full_answer = "".join(answer_chunks)
-                result = {
-                    "answer": full_answer,
-                    "citations": context.get("citations", []),
-                    "suggested_followups": context.get("suggested_followups", []),
-                    "confidence": context.get("confidence", "medium"),
-                }
-            elif intent == "network_operations":
-                result = await self._orchestrate_network_ops(question, is_pidgin, depth)
-                tokens_streamed = False
-            elif intent == "customer_complaint":
-                result = await self._orchestrate_cx(question, is_pidgin)
-                tokens_streamed = False
-            elif intent == "fraud_intelligence":
-                result = await self._orchestrate_fraud(question, is_pidgin)
-                tokens_streamed = False
-            elif intent == "regulatory_compliance":
-                result = await self._orchestrate_regulatory(question, is_pidgin)
-                tokens_streamed = False
-            else:
-                result = await self._orchestrate_agents(question, is_pidgin, depth)
-                tokens_streamed = False
-
-            _BOARDROOM_INTENTS = {"network_operations", "regulatory_compliance",
-                                  "fraud_intelligence", "customer_complaint", "document_query"}
-            if result and not tokens_streamed:
-                if intent in _BOARDROOM_INTENTS:
-                    try:
-                        from services.boardroom_formatter import boardroom_formatter
-                        result = await boardroom_formatter.format_executive_summary(result, is_pidgin)
-                        self._log_trace("Strategist", "formatter", "Applied executive language transformation")
-                    except Exception as e:
-                        logger.warning(f"Boardroom formatter failed in stream: {e}")
-
-                if intent != "document_query":
-                    for t in self.trace:
-                        yield {"type": "agent_action", **t}
-
-                answer = result.get("answer", "")
-                words = answer.split(" ")
-                for i in range(0, len(words), 4):
-                    chunk = " ".join(words[i:i + 4])
-                    if i + 4 < len(words):
-                        chunk += " "
-                    yield {"type": "token", "content": chunk}
-
-            duration_ms = int((time.time() - start) * 1000)
-
-            # Update conversation history for multi-turn streaming memory
-            if result:
-                self.conversation_history.append({
-                    "question": question,
-                    "intent": intent,
-                    "topic": topic,
-                    "answer_summary": result.get("answer", "")[:300],
-                    "timestamp": datetime.utcnow().isoformat(),
-                })
-                self.conversation_history = self.conversation_history[-5:]
-
-            # Attach live heatmap data for network operations queries so the
-            # frontend can render the Nigeria map without a separate API call.
-            map_data = []
-            if intent == "network_operations":
-                try:
-                    from models.database import SessionLocal
-                    from services import network_ops as _net_ops
-                    _db = SessionLocal()
-                    try:
-                        map_data = _net_ops.get_heatmap_data(_db)
-                    finally:
-                        _db.close()
-                except Exception as _map_err:
-                    logger.warning(f"Heatmap fetch failed: {_map_err}")
-
-            # Attach fraud intelligence summary for fraud queries so the
-            # frontend can render the FraudRiskCard and the export includes it.
-            fraud_data = None
-            if intent == "fraud_intelligence":
-                try:
-                    from services.fraud_service import get_fraud_summary
-                    fraud_data = get_fraud_summary()
-                except Exception as _fraud_err:
-                    logger.warning(f"Fraud summary fetch failed: {_fraud_err}")
-
-            verdict_str = "MONITOR"
-            if result:
-                try:
-                    from services.verdict_engine import verdict_engine
-                    conf_val = 0.85 if result.get("confidence") == "high" else (0.6 if result.get("confidence") == "medium" else 0.4)
-                    comp_res = {"verdict": "MONITOR", "compliant": True}
-                    if intent == "regulatory_compliance" or "compliance" in topic.lower():
-                        if "NO-GO" in result.get("answer", "") or "violation" in result.get("answer", "").lower():
-                            comp_res = {"verdict": "NO-GO", "compliant": False}
-                    verdict_str = verdict_engine.compute_verdict(
-                        confidence=conf_val,
-                        compliance_result=comp_res,
-                        signal_strength=max(1, len(result.get("citations", [])))
-                    )
-                    self._log_trace("Strategist", "verdict", f"Official verdict stamped: {verdict_str}")
-                except Exception as e:
-                    logger.warning(f"Verdict engine failed in stream: {e}")
-
-            yield {"type": "complete", "answer": result.get("answer", "") if result else "", "citations": result.get("citations", []) if result else [], "suggested_followups": result.get("suggested_followups", []) if result else [], "agent_trace": self.trace, "duration_ms": duration_ms, "map_data": map_data, "fraud_data": fraud_data, "verdict": verdict_str}
-
-        except Exception as e:
-            logger.error(f"Stream failed: {e}", exc_info=True)
-            yield {"type": "error", "message": str(e)}
+        """Progress starts immediately; only validated final answers become tokens."""
+        yield {"type": "start", "message": "Iroko AI is checking the extracted evidence...", "timestamp": datetime.utcnow().isoformat()}
+        result = json.loads(await self.investigate(question, depth))
+        for trace in self.trace:
+            yield {"type": "agent_action", **trace}
+        answer = result.get("answer", "")
+        for offset in range(0, len(answer), 100):
+            yield {"type": "token", "content": answer[offset:offset + 100]}
+        yield {"type": "complete", **result, "map_data": [], "fraud_data": None}
 
     # -- Real agent orchestration ------------------------------------------
 
     async def _orchestrate_agents(self, question: str, is_pidgin: bool, depth: str) -> dict:
+        from services.grounded_answers import answer
         context = await self._retrieve_context(question, depth)
-
-        if context.get("knowledge_gap"):
-            return {"answer": f"I searched the document corpus but couldn't find strong coverage for '{question}'. My corpus covers: incident RCAs, vendor contracts and SLAs, CBN/SEC regulatory returns, NDPA processing records, customer complaint data, and enterprise SLA registers. Could you refine your question?", "citations": [], "suggested_followups": ["What is our AML/CFT filing status?", "Which filings are due this quarter?", "Which vendor contracts expire soon?"], "confidence": "low"}
-
-        prompt = self._build_answer_prompt(question, context, is_pidgin)
-        self._log_trace("Strategist", "reason", "GPT reasoning over retrieved evidence")
-        try:
-            response = await llm_complete(prompt, max_tokens=2000, temperature=0.3, system_prompt=self._ANSWER_SYSTEM_PROMPT)
-        except RuntimeError as e:
-            logger.error(f"LLM reasoning failed after retries: {e}")
-            return {
-                "answer": "The AI reasoning engine is temporarily unavailable. Please try again in a moment.",
-                "citations": context.get("citations", []),
-                "suggested_followups": ["Try again", "Ask a different question"],
-                "confidence": "low",
-            }
-        self._log_trace("Scribe", "format", "Formatting answer with citations")
-
-        clean = response.strip().replace("```json", "").replace("```", "").strip()
-        try:
-            result = json.loads(clean)
-            result.setdefault("citations", context.get("citations", []))
-            # Keep citation coordinates from retrieval, never generated page numbers.
-            requested_ids = {c.get("document_id") for c in result.get("citations", []) if isinstance(c, dict)}
-            result["citations"] = [c for c in context.get("citations", []) if not requested_ids or c.get("document_id") in requested_ids]
-            return result
-        except json.JSONDecodeError:
-            # GPT-5.x usually returns well-formatted prose (bold headings, cited
-            # sections) rather than strict JSON when it fails to comply. Use that
-            # text directly instead of leaking raw JSON syntax to the user.
-            return {
-                "answer": clean or response,
-                "citations": context.get("citations", []),
-                "suggested_followups": ["Tell me more", "What's the financial impact?"],
-                "confidence": "medium",
-            }
+        self._log_trace("Watchdog", "claim_validation", "Checking exact quotes, citation coordinates and claim support before display")
+        result = await answer(question, context, llm_complete, is_pidgin)
+        self._log_trace("Scribe", "format", "Rendered verified claims without executive rewriting")
+        return result
 
     async def _retrieve_context(self, question: str, depth: str) -> dict:
-        citations: List[dict] = []
-        chunks: List[str] = []
-        related_docs: List[dict] = []
-        confidence = "medium"
-        knowledge_gap = False
-
-        # ── Researcher: Azure AI Search (always runs) ─────────────────────
-        self._log_trace("Researcher", "search", f"Hybrid search for: '{question[:60]}'")
-        search_result: dict = {}
-        try:
-            if self.kernel is not None:
-                from agents.kernel import sk_invoke
-                raw = await sk_invoke(
-                    self.kernel, "Researcher", "search_documents",
-                    query=question, top_k=5
-                )
-            else:
-                from agents.researcher import ResearcherAgent
-                researcher = ResearcherAgent()
-                raw = await researcher.search_documents(query=question, top_k=5)
-            search_result = json.loads(raw)
-
-            if search_result.get("knowledge_gap"):
-                knowledge_gap = True
-                confidence = "low"
-            else:
-                for r in search_result.get("results", []):
-                    source_header = json.dumps({"document_id": r.get("document_id"),
-                                                "chunk_id": r.get("chunk_id"),
-                                                "provenance": r.get("provenance")}, ensure_ascii=False)
-                    chunks.append(f"[Source evidence: {source_header}]\n{r.get('excerpt', '')}")
-                    citations.append({
-                        "document_id":    r.get("document_id", ""),
-                        "document_title": r.get("title", ""),
-                        "excerpt":        r.get("excerpt", "")[:200],
-                        "chunk_id":       r.get("chunk_id"),
-                        "provenance":     r.get("provenance"),
-                    })
-                raw_conf = search_result.get("retrieval_confidence", 0.5)
-
-                # ── Bug #2 fix: Watchdog confidence gate in critical path ──
-                from agents.watchdog import WatchdogAgent as _WD
-                _wd_gate = _WD()
-                _is_compliance = any(
-                    k in question.lower()
-                    for k in ["compliance", "ncc", "ndpa", "cbn", "nitda", "regulation", "policy"]
-                )
-                conf_check = _wd_gate.check_confidence(raw_conf, is_compliance=_is_compliance)
-                if conf_check["knowledge_gap"]:
-                    self._log_trace(
-                        "Watchdog", "confidence_gate",
-                        f"Coverage {raw_conf:.2f} below threshold — knowledge gap flagged"
-                    )
-                    knowledge_gap = True
-                    confidence = "low"
-                else:
-                    confidence = "high" if raw_conf > 0.8 else "medium" if raw_conf > 0.5 else "low"
-                    self._log_trace(
-                        "Watchdog", "confidence_gate",
-                        f"Coverage {raw_conf:.2f} cleared ({'compliance' if _is_compliance else 'general'} threshold)"
-                    )
-        except Exception as e:
-            logger.warning(f"Researcher failed: {e}")
-
-        # ── Structured DB enrichment (runs for ALL intents) ────────────────
-        # Even document_query needs access to live operational data.
-        try:
-            entities = self._extract_entities(question)
-            db_chunks = await self._query_structured_data(question, entities)
-            if db_chunks:
-                chunks = db_chunks + chunks  # DB data first, then doc search
-                self._log_trace("Researcher", "db_enrichment", f"Injected {len(db_chunks)} live data sections")
-                # If doc search had a knowledge gap but we found DB data, downgrade the gap
-                if knowledge_gap and len(db_chunks) >= 1:
-                    knowledge_gap = False
-                    confidence = "medium"
-                    self._log_trace("Watchdog", "gap_override", "Knowledge gap cleared — structured data found in DB")
-        except Exception as e:
-            logger.warning(f"Structured DB enrichment failed: {e}")
-
-        # ── Parallel sub-agent calls (standard + thorough depth) ───────────
-        # GraphRAG, Watchdog policy check, Analyst stats, and OrgMemory all
-        # run concurrently via asyncio.gather() instead of sequentially.
-
-        async def _run_graphrag() -> List[dict]:
-            if depth not in ("standard", "thorough") or not citations:
-                return []
-            self._log_trace("Researcher", "graph_rag", "Finding related documents via knowledge graph")
-            try:
-                from services.cosmos_graph import query_related_documents
-                first_doc = citations[0].get("document_id", "")
-                return query_related_documents(first_doc, max_depth=2) if first_doc else []
-            except Exception as e:
-                logger.warning(f"GraphRAG failed: {e}")
-                return []
-
-        async def _run_watchdog_policy() -> List[str]:
-            """Returns extra compliance context chunks."""
-            if depth not in ("standard", "thorough"):
-                return []
-            self._log_trace("Watchdog", "compliance_check", "Validating coverage and policy alignment")
-            try:
-                from agents.watchdog import WatchdogAgent
-                wd = WatchdogAgent()
-                wd_raw = await wd.find_policy_conflicts(topic=question)
-                wd_result = json.loads(wd_raw)
-                if wd_result.get("conflicts"):
-                    return ["COMPLIANCE NOTE: " + json.dumps(wd_result["conflicts"][:2])]
-            except Exception as e:
-                logger.warning(f"Watchdog policy check failed: {e}")
-            return []
-
-        async def _run_analyst() -> List[str]:
-            """Returns extra statistics context chunks."""
-            if depth not in ("standard", "thorough"):
-                return []
-            self._log_trace("Analyst", "compute", "Computing relevant statistics")
-            try:
-                from agents.analyst import AnalystAgent
-                analyst = AnalystAgent()
-                # ── Bug #1 fix: pass structured data + metric_name ────────
-                # Build a simple time-series from citation relevance scores
-                # so compute_statistics receives the correct argument types.
-                data_points = json.dumps([
-                    {"date": c.get("document_id", str(i)), "value": round(0.5 + i * 0.05, 2), "label": c.get("document_title", "")}
-                    for i, c in enumerate(citations[:5])
-                ])
-                an_raw = await analyst.compute_statistics(
-                    data=data_points,
-                    metric_name="document relevance",
-                )
-                an_result = json.loads(an_raw)
-                Asummary = an_result.get("summary")
-                if Asummary:
-                    return ["DOCUMENT RELEVANCE STATISTICS: " + json.dumps(Asummary)]
-            except Exception as e:
-                logger.warning(f"Analyst compute_statistics failed: {e}")
-            return []
-
-        async def _run_org_memory() -> str:
-            if depth not in ("standard", "thorough") or knowledge_gap:
-                return ""
-            return await self._load_org_memory("MTN Nigeria")
-
-        # ── Bug #3 (parallel) fix: run all four concurrently ───────────────
-        gathered = await asyncio.gather(
-            _run_graphrag(),
-            _run_watchdog_policy(),
-            _run_analyst(),
-            _run_org_memory(),
-            return_exceptions=True,   # one agent failing must not kill the others
-        )
-
-        for result in gathered:
-            if isinstance(result, Exception):
-                logger.warning(f"Sub-agent gather error (ignored): {result}")
-
-        related_docs   = gathered[0] if not isinstance(gathered[0], Exception) else []
-        wd_chunks      = gathered[1] if not isinstance(gathered[1], Exception) else []
-        analyst_chunks = gathered[2] if not isinstance(gathered[2], Exception) else []
-        org_facts      = gathered[3] if not isinstance(gathered[3], Exception) else ""
-
-        chunks.extend(wd_chunks)
-        chunks.extend(analyst_chunks)
-        if org_facts:
-            chunks.insert(0, "ORGANISATION MEMORY:\n" + org_facts)
-
-        suggested = ["Tell me more about this topic", "What's the financial impact?", "Who needs to take action?"]
-        return {
-            "chunks":             chunks,
-            "citations":          citations,
-            "related_docs":       related_docs,
-            "confidence":         confidence,
-            "knowledge_gap":      knowledge_gap,
-            "suggested_followups": suggested,
-        }
+        from services.grounded_answers import retrieve
+        self._log_trace("Researcher", "search", "Retrieving accessible extracted source passages")
+        return await retrieve(question)
 
     _ANSWER_SYSTEM_PROMPT = (
         "You are Iroko AI, a compliance and document-intelligence assistant for a CBN/SEC-regulated microfinance bank or fintech — write like a sharp senior analyst. "
@@ -626,6 +287,8 @@ JSON only: {{"intent": "...", "topic": "...", "confidence": 0.0-1.0}}"""
         # If the question names a .pdf or uses clear document-retrieval language,
         # route to document_query regardless of other matching keywords (e.g. "agent_wallet").
         _doc_phrases = [
+            "circular", "letter", "gazette", "guidance", "framework", "template", "worksheet",
+            "document", "extracted", "section", "s.i.",
             "in the pdf", "from the pdf", "the pdf",
             "in the document", "from the document", "the document",
             "in the report", "from the report", "the report",
@@ -853,61 +516,8 @@ Pidgin: {is_pidgin}"""
         return out
 
     def _match_canned_scenario(self, question: str) -> Optional[dict]:
-        # Pre-computed answers are an explicit opt-in demo mode (fast, stable
-        # stage answers over the seeded corpus). In normal operation every
-        # question runs the full live retrieval + synthesis pipeline.
-        import os as _os
-        if _os.getenv("DEMO_CANNED_SCENARIOS", "false").lower() not in ("1", "true", "yes"):
-            return None
-        q = question.lower()
-        if any(k in q for k in ["ikeja outage", "ikeja cluster outage", "ikeja power outage", "feeder failure"]):
-            return self._canned_noc()
-        if any(k in q for k in ["sla credit exposure", "sla exposure", "credit exposure", "vendor sla", "ihs sla"]):
-            return self._canned_sla()
-        if any(k in q for k in ["ncc compliance", "qos return", "compliance status", "compliance gap"]):
-            return self._canned_compliance()
+        """Compatibility only: canned demo answers have been removed."""
         return None
-
-    def _canned_noc(self) -> dict:
-        self._log_trace("Researcher", "search", "Searching Ikeja RCA report + vendor SLAs")
-        self._log_trace("Watchdog", "confidence", "Coverage 0.87 -- high")
-        self._log_trace("Analyst", "compute", "Calculating SLA and regulatory exposure")
-        self._log_trace("Scribe", "synthesise", "Building incident report")
-        return {
-            "answer": "**Incident Report — Ikeja Cluster Power Outage (Q1 2026)**\n\n**Executive Summary**\nOn 14 February 2026 the AES industrial feeder serving the Ikeja cluster failed; IHS diesel backup did not engage within the contracted window, taking cluster availability to **82.7%** against the NCC minimum of 95%. Vendor SLA was breached; combined exposure currently stands at **₦2,660,000** plus regulatory risk on the Q1 QoS return.\n\n**Incident Details**\n- Ref: INC-2026-IKJ-0147 | Detected: 2026-02-14 | Severity: P1 (resolved)\n- Cluster: Ikeja, Lagos | 6 macro sites affected | Drop-call rate peaked at 12.4%\n- Root cause: AES feeder failure + IHS diesel backup SLA miss\n\n**Financial & Regulatory Impact**\n- **IHS SLA penalty**: ₦2.66M (2% fee reduction per 0.1% below SLA)\n- **NCC QoS Return Q1 2026**: Ikeja availability below 95% must be disclosed — submission due 2026-04-14; late filing attracts ₦5M/day\n- **Customer impact**: 312 complaints on incident day; CSAT dipped to 41.2\n\n**Actions**\n1. Recover SLA credits from IHS — Procurement | 14 days\n2. Include RCA disclosure in NCC QoS return — Legal/Regulatory | before 2026-04-14\n3. Commission backup-power audit for all Ikeja macro sites — NOC | 30 days",
-            "citations": [
-                {"document_id": "doc_001", "document_title": "Ikeja Cluster RCA Power Outage Q1 2026", "excerpt": "AES feeder failure; diesel backup SLA miss; availability 82.7%"},
-                {"document_id": "doc_002", "document_title": "TowerCo IHS Nigeria Tower Lease Agreement", "excerpt": "Diesel backup SLA; 2% fee reduction per 0.1% below SLA"},
-                {"document_id": "doc_004", "document_title": "NCC QoS Quarterly Return Q4 2025", "excerpt": "QoS availability reporting obligations"},
-            ],
-            "suggested_followups": ["What penalties apply if IHS misses the SLA again?", "Draft the NCC QoS return disclosure", "How did complaints trend during the outage?"],
-            "confidence": "high",
-        }
-
-    def _canned_sla(self) -> dict:
-        self._log_trace("Analyst", "compute", "Calculating cross-contract SLA exposure")
-        return {
-            "answer": "**Vendor SLA Exposure — Current Quarter**\n\n| Vendor | Contract | Issue | Exposure |\n|---|---|---|---|\n| IHS Nigeria | Ikeja tower lease | Diesel backup SLA breach (Feb outage) | ₦2,660,000 |\n| ATC | ATC/MTN/LAG/2023-007 | Expires in 28 days — 12 sites | ₦19.5M/month at risk |\n| Julius Berger | Kano-Kaduna fibre Phase 1 | Km 142 cut — milestone at risk | Under review |\n\n1. Recover IHS SLA credits — Procurement | 14 days\n2. Open ATC renewal negotiation before expiry — Procurement | this week\n3. Confirm reinstatement schedule for Km 142 — NOC | 72h",
-            "citations": [
-                {"document_id": "doc_002", "document_title": "TowerCo IHS Nigeria Tower Lease Agreement", "excerpt": "Penalty formula: 2% fee reduction per 0.1% below SLA"},
-                {"document_id": "doc_001", "document_title": "Ikeja Cluster RCA Power Outage Q1 2026", "excerpt": "Vendor SLA breached during Feb 14 outage"},
-                {"document_id": "doc_007", "document_title": "Kano Kaduna Fibre Route BoQ", "excerpt": "Phase 1 milestones and reinstatement obligations"},
-            ],
-            "suggested_followups": ["Draft the IHS SLA credit claim", "Which contracts expire in the next 90 days?"],
-            "confidence": "high",
-        }
-
-    def _canned_compliance(self) -> dict:
-        self._log_trace("Watchdog", "check", "Checking NCC + NDPA deadlines")
-        return {
-            "answer": "**Regulatory Compliance Status**\n\n**NCC — QoS Quarterly Return Q1 2026 due 2026-04-14 (12 days)**\n- Ikeja cluster availability 82.7% vs 95% minimum — must be disclosed with RCA\n- Late submission attracts ₦5M/day\n\n**NDPA — Article 24 Processing Record**\n- Annual review overdue; DPO sign-off outstanding\n- MoMo analytics pipeline requires a DPIA before launch\n\n**Actions:**\n1. Assign QoS return owner — 48h\n2. DPO to complete Article 24 review — 7 days\n3. Initiate DPIA for the MoMo analytics pipeline — before launch",
-            "citations": [
-                {"document_id": "doc_004", "document_title": "NCC QoS Quarterly Return Q4 2025", "excerpt": "Quarterly submission requirement and QoS thresholds"},
-                {"document_id": "doc_005", "document_title": "NDPA Article 24 Processing Record", "excerpt": "Annual review and processing-record obligations"},
-            ],
-            "suggested_followups": ["Draft the NCC QoS return", "NDPA penalties for non-compliance?"],
-            "confidence": "high",
-        }
 
 
     # -- OrgMemory helpers -------------------------------------------------
@@ -952,6 +562,9 @@ Pidgin: {is_pidgin}"""
         questions to real database tables (network_sites, vendor_contracts,
         complaint_tickets, network_kpis, network_incidents).
         """
+        from ingestion.queue import enabled
+        if enabled():
+            return []  # Legacy operational tables require their own tenant migration.
         q_lower = question.lower()
         result_chunks: List[str] = []
 
@@ -1247,97 +860,8 @@ Respond with valid JSON:
             }
 
     async def _orchestrate_regulatory(self, question: str, is_pidgin: bool) -> dict:
-        """
-        Handle regulatory compliance queries by injecting real regulation text,
-        section numbers, penalties, and enforcement precedents (NCC, NDPA/NDPC)
-        into the LLM context before synthesis.
-        """
-        self._log_trace("Researcher", "regulatory_lookup", "Loading regulatory corpus (CBN, SEC, NDPA)")
-        from services.regulatory_service import get_regulatory_summary_text, get_regulatory_context
-
-        reg_text = get_regulatory_summary_text(question, sector="financial")
-        ctx = get_regulatory_context(question, sector="financial")
-
-        self._log_trace("Analyst", "compliance_analysis",
-                        f"Matched {ctx['total_matched']} regulations; building compliance briefing")
-
-        doc_context = await self._retrieve_context(question, "standard")
-        pidgin_note = "Respond in Nigerian Pidgin English." if is_pidgin else ""
-
-        prompt = f"""Question: "{question}"
-
-{reg_text}
-
-Document Evidence from the organisation's regulatory corpus:
-{chr(10).join(doc_context.get('chunks', [])[:3])}
-
-{pidgin_note}
-
-Respond with valid JSON:
-{{
-  "answer": "...",
-  "citations": [],
-  "suggested_followups": ["..."],
-  "confidence": "high|medium|low"
-}}"""
-
-        try:
-            response = await llm_complete(
-                prompt, max_tokens=2500, temperature=0.15,
-                system_prompt=(
-                    "You are Iroko AI, a regulatory intelligence assistant for a CBN/SEC-regulated microfinance "
-                    "bank or fintech. Write a precise, well-cited regulatory compliance briefing. "
-                    "Always cite: exact regulation name, section number, penalty figure in NGN, and enforcement precedent. "
-                    "Structure your answer: (1) which regulations apply, (2) what the organisation's specific obligations are, "
-                    "(3) penalty exposure with actual figures, (4) enforcement precedents to illustrate seriousness, "
-                    "(5) recommended immediate actions. "
-                    "Use bold headings (** **). Be comprehensive but concise. Never omit penalty figures."
-                ),
-            )
-            clean = response.strip().replace("```json", "").replace("```", "").strip()
-            try:
-                result = json.loads(clean)
-                result.setdefault("citations", doc_context.get("citations", []))
-                return result
-            except json.JSONDecodeError:
-                # GPT-5.x usually returns a well-formatted prose briefing (bold
-                # headings, cited sections) rather than strict JSON. Use that text
-                # directly instead of discarding a good answer for the generic
-                # checklist fallback below.
-                if clean:
-                    return {
-                        "answer": clean,
-                        "citations": doc_context.get("citations", []),
-                        "suggested_followups": [
-                            "What are the NDPA 2023 data breach notification requirements?",
-                            "What are the CBN capital adequacy requirements for our licence tier?",
-                            "What AML/CFT obligations apply under CBN-AML-001?",
-                        ],
-                        "confidence": "high",
-                    }
-                raise
-        except Exception as e:
-            logger.warning(f"Regulatory LLM synthesis failed, using fallback: {e}")
-            checklist = ctx.get("compliance_checklist", [])
-            lines = ["**Regulatory Compliance Briefing (CBN, SEC & NDPA)**\n"]
-            for item in checklist:
-                lines.append(
-                    f"\n**[{item['risk']}] {item['area']}** — {item['regulator']} | {item['regulation']}\n"
-                    f"{item['obligation']}\n"
-                    f"_Penalty: {item['penalty_if_breached']}_"
-                )
-            return {
-                "answer": "\n".join(lines),
-                "citations": [],
-                "suggested_followups": [
-                    "What are the NDPA 2023 data breach notification requirements?",
-                    "What is our penalty exposure if the CBN prudential return is late?",
-                    "Do we need a DPIA before launching a new lending analytics pipeline?",
-                    "What AML/CFT obligations apply under CBN-AML-001?",
-                    "What capital adequacy ratio does the CBN require for our licence tier?",
-                ],
-                "confidence": "high",
-            }
+        """Use the same verified source policy as document Q&A."""
+        return await self._orchestrate_agents(question, is_pidgin, "standard")
 
     async def _orchestrate_cx(self, question: str, is_pidgin: bool) -> dict:
         """Handle customer experience queries using live complaint data."""
@@ -1424,6 +948,7 @@ Respond with valid JSON:
         urgent = []
         deadlines = []
         key_metrics = []
+        unavailable = False
 
         try:
             from models.database import SessionLocal
@@ -1463,16 +988,15 @@ Respond with valid JSON:
 
         except Exception as e:
             logger.warning(f"Live briefing data failed: {e}")
-            urgent = ["CRC Credit Bureau data agreement expires June 30 2026", "Kuda loan deduction complaint spike: +187% in 24h"]
-            deadlines = ["CBN AML/CFT return due May 15", "NDPA Article 24 gap — DPO review required"]
-            key_metrics = ["CAR compliance: 9.1% (below 10% CBN minimum — flag)", "CSAT: 71/100 (down 4pts)"]
+            unavailable = True
 
         return json.dumps({
             "generated_at": datetime.utcnow().isoformat(),
             "department": user_department,
+            "knowledge_gap": unavailable,
             "sections": [
-                {"title": "Urgent Attention Required", "items": urgent or ["No critical issues — all systems nominal"]},
-                {"title": "Deadlines & Renewals", "items": deadlines or ["No contracts expiring in the next 30 days"]},
+                {"title": "Urgent Attention Required", "items": urgent or ["No verified issues available" if unavailable else "No critical issues found in available operational records"]},
+                {"title": "Deadlines & Renewals", "items": deadlines or ["Deadline data unavailable" if unavailable else "No expiring contracts found in available records"]},
                 {"title": "Key Metrics", "items": key_metrics},
             ],
             "agent_trace": self.trace,

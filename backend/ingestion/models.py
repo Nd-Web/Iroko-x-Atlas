@@ -25,6 +25,42 @@ class PipelineBase(DeclarativeBase):
     metadata = MetaData(schema="ingestion")
 
 
+class Workspace(PipelineBase):
+    __tablename__ = "workspaces"
+    id = Column(String, primary_key=True, default=uid)
+    name = Column(String, nullable=False)
+
+
+class Membership(PipelineBase):
+    __tablename__ = "workspace_memberships"
+    user_id = Column(String, primary_key=True)
+    workspace_id = Column(String, nullable=False, index=True)
+
+
+class DocumentAccess(PipelineBase):
+    __tablename__ = "document_access"
+    document_id = Column(String, primary_key=True)
+    workspace_id = Column(String, nullable=False, index=True)
+    shared_regulatory = Column(Boolean, nullable=False, default=False)
+
+
+class WorkspaceUsage(PipelineBase):
+    __tablename__ = "workspace_usage"
+    key = Column(String, primary_key=True)
+    uploads = Column(Integer, nullable=False, default=0)
+    bytes = Column(Integer, nullable=False, default=0)
+    ocr_pages = Column(Integer, nullable=False, default=0)
+
+
+class RecordAccess(PipelineBase):
+    """Ownership of private document-derived alerts, traces, audits and tasks."""
+
+    __tablename__ = "record_access"
+    kind = Column(String, primary_key=True)
+    record_id = Column(String, primary_key=True)
+    workspace_id = Column(String, nullable=False, index=True)
+
+
 class Revision(PipelineBase):
     __tablename__ = "regulatory_documents"
     __table_args__ = (UniqueConstraint("source_key", "sha256"),)
