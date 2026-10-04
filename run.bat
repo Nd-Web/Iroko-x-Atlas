@@ -7,7 +7,12 @@ echo.
 cd /d "%~dp0"
 
 :: ── Backend ──────────────────────────────────────────────────────────────────
-start "Iroko Backend" cmd /k "cd /d "%~dp0backend" && venv\Scripts\activate.bat && uvicorn main:app --reload --port 8000"
+start "Iroko Backend" cmd /k "cd /d "%~dp0backend" && .venv\Scripts\activate.bat && uvicorn main:app --reload --port 8000"
+
+:: ── Document worker ──────────────────────────────────────────────────────────
+:: Processes uploads and regulator collection. Needs DOCUMENT_PIPELINE_ENABLED=true
+:: in backend\.env; it exits with a message if the pipeline is not enabled.
+start "Iroko Document Worker" cmd /k "cd /d "%~dp0backend" && .venv\Scripts\python.exe -m ingestion worker"
 
 :: Give the backend a moment to bind before the frontend starts
 timeout /t 3 /nobreak >nul
@@ -16,10 +21,10 @@ timeout /t 3 /nobreak >nul
 start "Iroko Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
 
 echo.
-echo Both servers are starting in separate windows.
+echo Backend, document worker and frontend are starting in separate windows.
 echo   Backend:  http://localhost:8000
 echo   API docs: http://localhost:8000/docs
 echo   Frontend: http://localhost:3000
 echo.
-echo Close those two windows to stop the servers.
+echo Close those windows to stop the servers.
 pause

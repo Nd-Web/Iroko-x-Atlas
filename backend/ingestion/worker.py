@@ -57,17 +57,27 @@ async def run_once(*, include_scheduled=True):
         except Exception as exc:
             db.rollback()
             logger.exception("Ingestion job %s failed", key)
+            # Validation, checksum and parser errors are deterministic and raised
+            # with user-facing messages; outages and lost leases are retried.
+            permanent = isinstance(exc, ValueError)
             try:
-                finish(db, key, token, error=f"{type(exc).__name__}: {str(exc)[:300]}")
+                finish(
+                    db,
+                    key,
+                    token,
+                    error=f"{type(exc).__name__}: {str(exc)[:300]}",
+                    permanent=permanent,
+                )
                 job = db.get(Job, key)
                 if job.kind == "document":
                     doc = db.get(Document, job.target_id)
                     if doc:
                         doc.status = "failed" if job.state == "failed" else "pending"
+                        reason = f" {str(exc)[:200].rstrip('.')}." if permanent else ""
                         doc.error_message = (
                             "Processing failed; retry scheduled."
                             if job.state == "retry"
-                            else "Processing failed. An administrator can reprocess this document."
+                            else f"Processing failed.{reason} An administrator can reprocess this document."
                         )
                         db.commit()
             except RuntimeError:

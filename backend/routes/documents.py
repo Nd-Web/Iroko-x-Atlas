@@ -60,6 +60,10 @@ async def list_documents(
         query = query.filter(Document.file_type == doc_type)
     if status:
         query = query.filter(Document.status == status)
+    else:
+        # Archived and superseded revisions are retained for audit but are not
+        # part of the live library unless explicitly requested.
+        query = query.filter(Document.status.notin_(["archived", "superseded"]))
 
     total = query.count()
     docs = query.order_by(Document.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
@@ -563,7 +567,11 @@ async def delete_document(
 ):
     doc = require_document(db, document_id, current_user, write=True)
     from ingestion.queue import enabled
-    if enabled() and (doc.extra_metadata or {}).get("pipeline"):
+    is_pipeline = bool((doc.extra_metadata or {}).get("pipeline"))
+    if is_pipeline and not enabled():
+        # Hard-deleting here would orphan the revision, pages and audit trail.
+        raise HTTPException(503, "Document pipeline is not enabled; pipeline documents can only be archived once it is")
+    if is_pipeline:
         from ingestion.db import prepare_session
         from ingestion.models import Job, Revision
         prepare_session(db)

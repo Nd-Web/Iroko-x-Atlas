@@ -23,4 +23,4 @@ async function handler(request: Request, context: { params: Promise<{ path?: str
   }
 }
 
-export { handler as GET, handler as POST, handler as PATCH };
+export { handler as GET, handler as POST, handler as PATCH, handler as PUT };

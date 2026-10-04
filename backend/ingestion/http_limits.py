@@ -1,7 +1,11 @@
 """Cap document request bodies before FastAPI buffers multipart uploads."""
 
+import re
+
 from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse
+
+UPLOAD_PATHS = re.compile(r"/api/documents(?:/upload)?|/api/ingestion/sources/[^/]+/import")
 
 
 class DocumentBodyLimit:
@@ -12,7 +16,7 @@ class DocumentBodyLimit:
         if (
             scope["type"] != "http"
             or scope.get("method") != "POST"
-            or scope.get("path", "").rstrip("/") not in {"/api/documents", "/api/documents/upload"}
+            or not UPLOAD_PATHS.fullmatch(scope.get("path", "").rstrip("/"))
         ):
             return await self.app(scope, receive, send)
         headers = dict(scope.get("headers", []))

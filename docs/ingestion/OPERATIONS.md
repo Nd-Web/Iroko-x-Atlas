@@ -3,6 +3,59 @@
 This is the September 30 implementation. The earlier BRIEF/PLAN files contain
 historical source reconnaissance, not the deployment instructions for this code.
 
+## Running it (updated 4 October 2026)
+
+The pipeline needs **two processes** against the same database, both with
+`DOCUMENT_PIPELINE_ENABLED=true`: the API (accepts uploads, serves evidence and
+the source controls) and a **worker** (extracts, OCRs, chunks, embeds, indexes and
+collects from regulator sources). Without a worker, uploads stay queued and the
+Regulatory sources panel warns after 10 minutes.
+
+- Local: `run.bat` starts the backend, the worker (`python -m ingestion worker`)
+  and the frontend. The local `backend/.env` points at the production Render
+  Postgres, Blob container and Search index, so local uploads and collections are
+  production writes, private to the uploader's workspace.
+- Production: the Render API needs `DOCUMENT_PIPELINE_ENABLED=true`, and a worker
+  must run: the scheduled Azure job in `backend/deploy/ingestion-worker.bicep`
+  (every 5 minutes, `scheduled-drain`) built from the same commit as the API.
+
+Behaviour added on 4 October:
+
+- **Recurring collection works.** A scheduled drain queues enabled sources whose
+  schedule (6 hours to weekly, set in the panel) is due. Manual sources
+  (interval 0) are still only collected by **Collect now**. Download problems are
+  shown on the source; only newly exhausted jobs fail a scheduled execution.
+- **Access challenges.** If a site answers with a bot challenge
+  (`cf-mitigated: challenge`, as cbn.gov.ng does for every PDF), the run stops
+  after that file with status **blocked**. Iroko does not retry around or bypass it.
+- **Not yet collected list.** Each run keeps the newest 50 listed items that are
+  not in Iroko. For a blocked site, an administrator opens the official link,
+  downloads the file in a browser and uses **Import file**. The import is accepted
+  only for an item in the latest listing, under the crawler's source key and
+  catalogue metadata; when the catalogue states a size (CBN), the bytes must match.
+- **Budget goes to new documents.** Never-collected items are tried before 30-day
+  re-verification; files imported without a crawl count as verified when they
+  were accepted. Broken links back off for 1, 2, 4 … 30 days instead of using
+  the batch every run.
+- **Titles** from generic listing pages drop "Download the full … here · 415 KB"
+  boilerplate and fall back to a tidied file name.
+- **Review.** Generic pages carry no publication date, so their documents enter
+  review with `publication_date_missing`. The reviewer can enter the date printed
+  on the document when approving; it is stored as `date_basis: reviewer_confirmed`
+  and indexed. Short text, Word and sheet records are no longer sent to review as
+  "little or no text" (that check applies to PDF pages only).
+- **Failures.** Validation, checksum and parser errors fail at once with the reason
+  shown on the document; outages are still retried with backoff.
+- **Sharing.** Platform administrators can share an indexed official regulator
+  document with every workspace from its evidence panel (an audit note is required).
+
+Official listing pages verified on 4 October with the collector's identified
+client: SEC rules and regulations, SEC guidelines, FCCPC regulations and
+guidelines, NDIC publications and the NDPC homepage (attachments downloaded);
+CBN `GetAllCirculars` (2,629 items, newest August 2026) and `GetOFISCirculars`
+(78 items, newest May 2023) list circulars but challenge every file download.
+nfiu.gov.ng timed out.
+
 ## Azure Search connection checked September 30
 
 The locally configured endpoint is now `https://irokoai.search.windows.net`.

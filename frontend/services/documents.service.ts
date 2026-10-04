@@ -7,13 +7,19 @@ import type {
   DocumentSearchResponse,
 } from "@/lib/types";
 
-const api = axios.create({ headers: { "Content-Type": "application/json" } });
+// No default Content-Type: axios sets JSON for plain objects and multipart
+// (with its boundary) for FormData. A forced JSON header would serialise
+// uploads as JSON.
+const api = axios.create();
 
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    const message =
-      err.response?.data?.error ?? "Something went wrong. Please try again.";
+    // Next.js route handlers return { error }, the upload and ingestion
+    // proxies forward FastAPI's { detail }.
+    const data = err.response?.data;
+    const detail = typeof data?.detail === "string" ? data.detail : undefined;
+    const message = data?.error ?? detail ?? "Something went wrong. Please try again.";
     return Promise.reject(new Error(message));
   }
 );
@@ -43,7 +49,7 @@ export const documentsService = {
     api.get<DocumentResponse>(`/api/documents/${documentId}`).then((r) => r.data),
 
   uploadDocument: (formData: FormData): Promise<DocumentResponse> =>
-    axios
+    api
       .post<DocumentResponse>("/api/documents", formData)
       .then((r) => r.data),
 

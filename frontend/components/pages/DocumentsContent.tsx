@@ -1,14 +1,16 @@
 "use client";
 /**
  * components/pages/DocumentsContent.tsx — Enterprise document library.
- * File grid/list, upload zone, status tracking, and connector filtering.
+ * File grid/list, upload, status tracking, search and status filtering.
  */
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 import { useDocuments } from "@/app/(app)/documents/_hooks/useDocuments";
 import { useUploadDocument } from "@/app/(app)/documents/_hooks/useUploadDocument";
-import { cn, formatBytes, formatRelativeTime } from "@/lib/utils";
+import { useDeleteDocument } from "@/app/(app)/documents/_hooks/useDeleteDocument";
+import { cn, formatBytes, formatRelativeTime, utcTimestamp } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import DocumentEvidence from "@/components/documents/DocumentEvidence";
@@ -22,14 +24,17 @@ interface Doc {
   type: string;
   status: "indexed" | "indexing" | "error" | "review required" | "rejected" | "archived" | "superseded";
   pipeline?: boolean;
-  connector: string;
+  department?: string;
   tags?: string[];
   chunks?: number;
+  error?: string;
   updated_at: string;
 }
 
-// Filter chips are derived from the loaded documents (docs carry
-// department/source values) — see below.
+// Mirrors the backend upload allow-list and role check in routes/documents.py.
+const UPLOAD_ACCEPT = ".pdf,.docx,.xlsx,.txt,.md,.csv";
+const WRITE_ROLES = new Set(["superadmin", "admin", "analyst"]);
+const PAGE_SIZE = 100;
 
 function normaliseStatus(status: string): Doc["status"] {
   if (status === "review_required") return "review required";
@@ -37,6 +42,17 @@ function normaliseStatus(status: string): Doc["status"] {
   if (status === "indexed" || status === "completed") return "indexed";
   if (status === "error" || status === "failed") return "error";
   return "indexing";
+}
+
+function statusClass(status: Doc["status"]) {
+  switch (status) {
+    case "indexed": return "bg-success-50 text-success-500";
+    case "indexing": return "bg-info-50 text-info-500 animate-pulse";
+    case "review required": return "bg-amber-50 text-amber-700";
+    case "error":
+    case "rejected": return "bg-[rgba(239,68,68,0.12)] text-[#F87171]";
+    default: return "bg-gray-100 text-gray-500";
+  }
 }
 
 /** File-type glyph — colour-coded document icon (replaces emoji). */
@@ -56,13 +72,18 @@ export default function DocumentsContent({
   onCountChange?: (count: number, live: boolean) => void;
 }) {
   const router = useRouter();
+  const { user } = useAuth();
+  const canWrite = WRITE_ROLES.has(user?.role ?? "");
   const [filter, setFilter] = useState("All");
+  const [query, setQuery] = useState("");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [selectedSnapshot, setSelected] = useState<Doc | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, isPending, isError, error, refetch } = useDocuments({ page_size: 100 });
+  const { data, isPending, isError, error, refetch } = useDocuments({ page_size: PAGE_SIZE });
   const uploadMutation = useUploadDocument();
+  const deleteMutation = useDeleteDocument();
   const uploading = uploadMutation.isPending;
 
   const docs: Doc[] = useMemo(() => {
@@ -75,16 +96,19 @@ export default function DocumentsContent({
       size: doc.file_size ?? 0,
       type: doc.file_type ?? "",
       status: normaliseStatus(doc.status ?? "indexing"),
-      connector: doc.source ?? doc.department ?? "Local",
+      department: doc.department ?? undefined,
       tags: doc.tags ?? undefined,
       chunks: doc.chunk_count ?? undefined,
+      error: doc.error_message ?? undefined,
       // The backend list response has created_at only — updated_at may be absent.
-      updated_at: doc.updated_at ?? doc.created_at ?? new Date().toISOString(),
+      updated_at: utcTimestamp(doc.updated_at ?? doc.created_at ?? new Date().toISOString()),
     }));
   }, [data]);
   const selected = selectedSnapshot
     ? docs.find(doc => doc.id === selectedSnapshot.id) ?? selectedSnapshot
     : null;
+
+  const openDoc = (doc: Doc) => { setConfirmRemove(false); setSelected(doc); };
 
   // Report the count upward — only ever with real data from the API.
   useEffect(() => {
@@ -115,8 +139,27 @@ export default function DocumentsContent({
     }
   };
 
-  const filtered = docs.filter(d => filter === "All" || d.connector === filter);
-  const connectorChips = ["All", ...Array.from(new Set(docs.map(d => d.connector)))];
+  const handleRemove = async (doc: Doc) => {
+    const verb = doc.pipeline ? "archived" : "deleted";
+    try {
+      await deleteMutation.mutateAsync(doc.id);
+      toast.success(`${doc.title ?? doc.name} ${verb}`);
+      setSelected(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : `Document could not be ${verb}.`);
+    } finally {
+      setConfirmRemove(false);
+    }
+  };
+
+  const statusChips = ["All", ...Array.from(new Set(docs.map(d => d.status)))];
+  const activeFilter = statusChips.includes(filter) ? filter : "All";
+  const needle = query.trim().toLowerCase();
+  const filtered = docs.filter(d =>
+    (activeFilter === "All" || d.status === activeFilter) &&
+    (!needle || [d.name, d.title, d.department, ...(d.tags ?? [])].some(v => v?.toLowerCase().includes(needle)))
+  );
+  const total = data?.total ?? docs.length;
 
   return (
     <div className="space-y-6">
@@ -124,11 +167,19 @@ export default function DocumentsContent({
       {/* Header / Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2 flex-wrap">
-          {connectorChips.map(c => (
+          <input
+            type="search"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Filter by name, department or tag"
+            aria-label="Filter documents"
+            className="w-full sm:w-64 px-3 py-1.5 rounded-lg text-[12.5px] bg-transparent border border-border-default text-gray-700 placeholder:text-gray-400 focus:outline-none focus:border-border-strong"
+          />
+          {statusChips.length > 2 && statusChips.map(c => (
             <button key={c} onClick={() => setFilter(c)}
-              aria-pressed={filter === c}
-              className={cn("px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all border",
-                filter === c ? "bg-brand-500 text-[#0A0A0B] border-brand-500" : "text-gray-500 border-border-default hover:border-border-strong")}>
+              aria-pressed={activeFilter === c}
+              className={cn("px-3 py-1.5 rounded-full text-[12px] font-semibold capitalize transition-all border",
+                activeFilter === c ? "bg-brand-500 text-[#0A0A0B] border-brand-500" : "text-gray-500 border-border-default hover:border-border-strong")}>
               {c}
             </button>
           ))}
@@ -142,19 +193,27 @@ export default function DocumentsContent({
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
             </button>
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.docx,.xlsx,.txt,.csv"
-            className="hidden"
-            onChange={handleFileSelected}
-          />
-          <Button variant="primary" className="gap-2" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
-            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
-            {uploading ? "Uploading…" : "Upload"}
-          </Button>
+          {canWrite && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={UPLOAD_ACCEPT}
+                className="hidden"
+                onChange={handleFileSelected}
+              />
+              <Button variant="primary" className="gap-2" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
+                {uploading ? "Uploading…" : "Upload"}
+              </Button>
+            </>
+          )}
         </div>
       </div>
+
+      {!isPending && !isError && total > docs.length && (
+        <p className="text-[12px] text-gray-400 m-0">Showing the {docs.length} most recent of {total} documents.</p>
+      )}
 
       {/* Loading state — skeleton cards */}
       {isPending && (
@@ -202,74 +261,99 @@ export default function DocumentsContent({
           <div className="w-12 h-14 rounded-lg bg-gray-50 border border-border-default flex items-center justify-center mb-1"><FileGlyph name="" size={22} /></div>
           <div className="text-[14px] font-semibold text-gray-800">No documents yet</div>
           <p className="text-[12px] text-gray-400 m-0 max-w-[360px]">
-            Upload a PDF, DOCX, XLSX, TXT or CSV file to start building your knowledge base.
+            {canWrite
+              ? "Upload a PDF, DOCX, XLSX, TXT, MD or CSV file to start building your knowledge base."
+              : "Documents shared with your workspace will appear here."}
           </p>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="mt-2 px-3.5 py-2 rounded-xl text-[12.5px] font-semibold text-gray-500 border border-border-default hover:text-gray-900 hover:border-border-strong transition-all"
-          >
-            {uploading ? "Uploading…" : "Upload a document"}
+          {canWrite && (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="mt-2 px-3.5 py-2 rounded-xl text-[12.5px] font-semibold text-gray-500 border border-border-default hover:text-gray-900 hover:border-border-strong transition-all"
+            >
+              {uploading ? "Uploading…" : "Upload a document"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* No matches for the current search/filter */}
+      {!isPending && !isError && docs.length > 0 && filtered.length === 0 && (
+        <div className="rounded-2xl border border-border-default bg-surface-card p-8 text-center">
+          <p className="text-[13px] text-gray-500 m-0">No documents match the current filter.</p>
+          <button onClick={() => { setQuery(""); setFilter("All"); }} className="mt-2 text-[12px] font-semibold text-info-500 hover:underline">
+            Clear filters
           </button>
         </div>
       )}
 
       {/* Grid View */}
-      {!isPending && !isError && docs.length > 0 && view === "grid" && (
+      {!isPending && !isError && filtered.length > 0 && view === "grid" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map(doc => (
-            <Card key={doc.id} className="p-4 group hover:border-border-strong transition-colors">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-12 rounded-lg bg-gray-50 border border-border-default flex items-center justify-center">
-                  <FileGlyph name={doc.name} size={20} />
+            <Card key={doc.id} noPad className="hover:border-border-strong transition-colors">
+              <button
+                onClick={() => openDoc(doc)}
+                aria-label={`View ${doc.title ?? doc.name}`}
+                className="w-full p-4 text-left rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-10 h-12 rounded-lg bg-gray-50 border border-border-default flex items-center justify-center">
+                    <FileGlyph name={doc.name} size={20} />
+                  </div>
+                  <div className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase", statusClass(doc.status))}>
+                    {doc.status}
+                  </div>
                 </div>
-                <div className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full",
-                  doc.status === "indexed" ? "bg-success-50 text-success-500" : doc.status === "indexing" ? "bg-info-50 text-info-500 animate-pulse" : "bg-amber-50 text-amber-700")}>
-                  {doc.status.toUpperCase()}
+                <h4 className="text-[13px] font-semibold text-gray-800 truncate mb-0.5" title={doc.title ?? doc.name}>{doc.title ?? doc.name}</h4>
+                {doc.title && <p className="text-[11px] text-gray-400 font-mono truncate m-0 mb-1" title={doc.name}>{doc.name}</p>}
+                <div className="text-[11px] text-gray-400 flex justify-between gap-2">
+                  <span>{doc.size ? formatBytes(doc.size) : "—"}</span>
+                  <span className="truncate">{doc.department ?? doc.type.toUpperCase()}</span>
                 </div>
-              </div>
-              <h4 className="text-[13px] font-semibold text-gray-800 truncate mb-1" title={doc.name}>{doc.name}</h4>
-              <div className="text-[11px] text-gray-400 flex justify-between">
-                <span>{doc.size ? formatBytes(doc.size) : "—"}</span>
-                <span>{doc.connector}</span>
-              </div>
-              <div className="mt-4 pt-3 border-t border-border-default flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[10px] text-gray-400">{formatRelativeTime(doc.updated_at)}</span>
-                <button onClick={() => setSelected(doc)} className="text-[11px] font-bold text-info-500 hover:underline">View</button>
-              </div>
+                <div className="mt-4 pt-3 border-t border-border-default flex items-center justify-between">
+                  <span className="text-[10px] text-gray-400">{formatRelativeTime(doc.updated_at)}</span>
+                  <span className="text-[11px] font-bold text-info-500">View</span>
+                </div>
+              </button>
             </Card>
           ))}
         </div>
       )}
 
       {/* List View */}
-      {!isPending && !isError && docs.length > 0 && view === "list" && (
+      {!isPending && !isError && filtered.length > 0 && view === "list" && (
         <div className="rounded-2xl border border-border-default overflow-hidden bg-surface-card">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-border-default">
                 <th className="px-5 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
                 <th className="px-5 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-5 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Source</th>
+                <th className="px-5 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Updated</th>
                 <th className="px-5 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-right">Size</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-default">
               {filtered.map(doc => (
-                <tr key={doc.id} onClick={() => setSelected(doc)} className="hover:bg-gray-50 transition-colors group cursor-pointer">
+                <tr key={doc.id} onClick={() => openDoc(doc)} className="hover:bg-gray-50 transition-colors group cursor-pointer">
                   <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <FileGlyph name={doc.name} size={16} />
-                      <span className="text-[13px] text-gray-700 font-medium">{doc.name}</span>
+                      <button
+                        onClick={e => { e.stopPropagation(); openDoc(doc); }}
+                        className="text-[13px] text-gray-700 font-medium text-left truncate hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
+                        title={doc.name}
+                      >
+                        {doc.title ?? doc.name}
+                      </button>
                     </div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full",
-                      doc.status === "indexed" ? "bg-success-50 text-success-500" : "bg-info-50 text-info-500")}>
+                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap", statusClass(doc.status))}>
                       {doc.status}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-[12px] text-gray-400">{doc.connector}</td>
+                  <td className="px-5 py-3.5 text-[12px] text-gray-400 whitespace-nowrap">{formatRelativeTime(doc.updated_at)}</td>
                   <td className="px-5 py-3.5 text-[12px] text-gray-400 text-right font-mono">{doc.size ? formatBytes(doc.size) : "—"}</td>
                 </tr>
               ))}
@@ -307,7 +391,7 @@ export default function DocumentsContent({
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 {[
                   { label: "Status", value: selected.status },
-                  { label: "Source", value: selected.connector },
+                  { label: "Department", value: selected.department ?? "—" },
                   { label: "Size", value: selected.size ? formatBytes(selected.size) : "—" },
                   { label: "Indexed chunks", value: selected.chunks != null ? String(selected.chunks) : "—" },
                   { label: "Type", value: selected.type || "—" },
@@ -334,10 +418,33 @@ export default function DocumentsContent({
               <p className="text-[12px] text-gray-400 leading-relaxed m-0">
                 {selected.status === "indexed" ? "This document is available for answers. Open its evidence to inspect the extracted source." : "This document is not currently available for answers. Its processing or review status is shown above."}
               </p>
+              {selected.error && (selected.status === "error" || selected.status === "rejected") && (
+                <p role="alert" className="text-[12px] text-[#F87171] leading-relaxed m-0 break-words">{selected.error}</p>
+              )}
               {selected.pipeline && <DocumentEvidence id={selected.id} />}
             </div>
 
-            <div className="flex justify-end gap-2 px-5 py-4 border-t border-border-default">
+            <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-4 border-t border-border-default">
+              {canWrite && (
+                confirmRemove ? (
+                  <div className="mr-auto flex items-center gap-2">
+                    <button
+                      disabled={deleteMutation.isPending}
+                      onClick={() => handleRemove(selected)}
+                      className="px-3 py-2 rounded-xl text-[12.5px] font-bold text-[#F87171] border border-[rgba(239,68,68,0.35)] hover:bg-[rgba(239,68,68,0.08)] disabled:opacity-50 transition-all">
+                      {deleteMutation.isPending ? "Working…" : selected.pipeline ? "Confirm archive" : "Confirm delete"}
+                    </button>
+                    <button onClick={() => setConfirmRemove(false)} className="text-[12px] text-gray-400 hover:text-gray-700">Cancel</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmRemove(true)}
+                    title={selected.pipeline ? "Removes it from the library; the original and audit history are kept" : "Permanently deletes this document"}
+                    className="mr-auto px-3 py-2 rounded-xl text-[12.5px] font-semibold text-gray-400 hover:text-[#F87171] transition-all">
+                    {selected.pipeline ? "Archive" : "Delete"}
+                  </button>
+                )
+              )}
               <button onClick={() => setSelected(null)}
                 className="px-3.5 py-2 rounded-xl text-[12.5px] font-semibold text-gray-500 border border-border-default hover:text-gray-900 hover:border-border-strong transition-all">
                 Close
@@ -345,7 +452,7 @@ export default function DocumentsContent({
               <button
                 disabled={selected.status !== "indexed"}
                 onClick={() => router.push(`/chat?q=${encodeURIComponent(`Summarise the key points of the document "${selected.title ?? selected.name}" and what actions it implies`)}`)}
-                className="px-3.5 py-2 rounded-xl text-[12.5px] font-bold text-[#0A0A0B] bg-brand-500 hover:bg-brand-400 transition-all">
+                className="px-3.5 py-2 rounded-xl text-[12.5px] font-bold text-[#0A0A0B] bg-brand-500 hover:bg-brand-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-500 transition-all">
                 Ask Iroko about this document →
               </button>
             </div>

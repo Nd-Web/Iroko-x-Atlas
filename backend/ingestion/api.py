@@ -1,23 +1,27 @@
 """Authenticated operation and evidence review using existing Iroko roles."""
 
 import asyncio
+import logging
 import tempfile
+from datetime import date
 from pathlib import Path
+from urllib.parse import urlsplit
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
 
 from ingestion.access import document_predicate, require_document
 from ingestion.db import prepare_session
-from ingestion.models import Chunk, CrawlRun, Job, Page, Revision, Source
+from ingestion.models import Chunk, CrawlRun, DocumentAccess, Job, Page, Revision, Source
 from ingestion.pipeline import reindex, reprocess, review
 from ingestion.queue import enqueue
 from ingestion.sources import DOMAINS, official_url
 from models.database import Document, get_db
 from services.auth_utils import get_current_user, require_role
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ingestion", tags=["Document ingestion"])
 admin = require_role("admin", "superadmin")
 platform_admin = require_role("superadmin")
@@ -37,6 +41,8 @@ def session(db=Depends(get_db)):
 class ReviewRequest(BaseModel):
     decision: str = Field(pattern="^(approve|reject)$")
     note: str = Field(min_length=5, max_length=2000)
+    # The reviewer can record a publication date read from the document itself.
+    published_date: date | None = None
 
 
 class WorkspaceRequest(BaseModel):
@@ -150,15 +156,27 @@ def runs(user=Depends(platform_admin), db=Depends(session)):
 def detail(document_id: str, user=Depends(get_current_user), db=Depends(session)):
     require_document(db, document_id, user)
     revision = db.get(Revision, document_id)
-    if not revision or not db.get(Document, document_id):
+    doc = db.get(Document, document_id)
+    if not revision or not doc:
         raise HTTPException(404, "Document pipeline record not found")
     pages = db.query(Page).filter_by(document_id=document_id).order_by(Page.position).all()
     job = db.get(Job, f"document:{document_id}")
+    access = db.get(DocumentAccess, document_id)
+    try:
+        official_url(
+            revision.provenance.get("source_url", ""), revision.provenance.get("regulator", "")
+        )
+        official = True
+    except ValueError:
+        official = False
     return {
         "id": revision.id,
         "sha256": revision.sha256,
         "previous_id": revision.previous_id,
         "is_current": revision.is_current,
+        "shared_regulatory": bool(access and access.shared_regulatory),
+        # Mirrors workspaces.set_shared: only current, indexed official evidence.
+        "shareable": official and revision.is_current and doc.status == "indexed",
         "provenance": revision.provenance,
         "extraction": revision.extraction,
         "issues": revision.issues,
@@ -183,9 +201,11 @@ def detail(document_id: str, user=Depends(get_current_user), db=Depends(session)
 
 
 @router.get("/documents/{document_id}/original")
-async def original(document_id: str, user=Depends(get_current_user), db=Depends(session)):
+async def original(document_id: str, user=Depends(get_current_user), db=Depends(get_db)):
+    # Originals live in Blob Storage, so downloading does not require the worker.
     from services.blob_storage import download_document
 
+    prepare_session(db)
     doc = require_document(db, document_id, user)
     with tempfile.TemporaryDirectory(prefix="iroko-original-") as directory:
         path = str(Path(directory) / "original")
@@ -213,7 +233,7 @@ def review_document(
 ):
     require_document(db, document_id, user, write=True)
     try:
-        review(db, document_id, user.id, body.decision, body.note)
+        review(db, document_id, user.id, body.decision, body.note, body.published_date)
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
     return {"status": "accepted"}
@@ -241,6 +261,19 @@ def reindex_document(document_id: str, user=Depends(admin), db=Depends(session))
 
 @router.get("/sources")
 def sources(user=Depends(platform_admin), db=Depends(session)):
+    jobs = {j.target_id: j for j in db.query(Job).filter(Job.kind == "source")}
+
+    def job_state(source_id):
+        job = jobs.get(source_id)
+        if job is None:
+            return None
+        return {
+            "state": job.state,
+            "attempts": job.attempts,
+            "error": job.error,
+            "available_at": job.available_at,
+        }
+
     return [
         {
             "id": s.id,
@@ -251,9 +284,14 @@ def sources(user=Depends(platform_admin), db=Depends(session)):
             "interval_hours": s.interval_hours,
             "max_documents": s.max_documents,
             "last_run": s.last_run,
-            "result": s.result,
+            "job": job_state(s.id),
+            # Per-link backoff records are internal; expose only their count.
+            "result": {
+                **{k: v for k, v in (s.result or {}).items() if k != "failures"},
+                "failing_links": len((s.result or {}).get("failures") or {}),
+            },
         }
-        for s in db.query(Source).all()
+        for s in db.query(Source).order_by(Source.regulator, Source.url).all()
     ]
 
 
@@ -271,6 +309,97 @@ def create_source(body: SourceRequest, user=Depends(platform_admin), db=Depends(
     db.add(source)
     db.commit()
     return {"id": source.id}
+
+
+@router.post("/sources/{source_id}/import")
+async def import_listed_document(
+    source_id: str,
+    source_url: str = Form(..., max_length=2048),
+    file: UploadFile = File(...),
+    user=Depends(platform_admin),
+    db=Depends(session),
+):
+    """Accept a file an administrator downloaded from the regulator's official link.
+
+    Only items from the source's latest listing are accepted, so provenance comes
+    from the regulator's own catalogue. Where the catalogue states a file size,
+    the upload must match it byte for byte.
+    """
+    import os
+
+    from ingestion.sources import ATTACHMENT_TYPES, accept_listed, check_attachment
+    from ingestion.validation import UploadLimitError
+    from models.database import AuditLog
+
+    source = db.get(Source, source_id)
+    if source is None:
+        raise HTTPException(404, "Source not found")
+    listed = (source.result or {}).get("missing") or []
+    item = next((i for i in listed if i.get("source_url") == source_url), None)
+    if item is None:
+        raise HTTPException(
+            409, "That link is not in this source's latest list of missing documents. "
+            "Run Collect now, then import it from the list.",
+        )
+    ext = Path(urlsplit(source_url).path).suffix.lower()
+    if ext not in ATTACHMENT_TYPES:
+        raise HTTPException(422, "Only PDF, DOCX and XLSX regulator files can be imported")
+    limit = int(os.getenv("DOCUMENT_MAX_BYTES", str(50 * 1024 * 1024)))
+    data = await file.read(limit + 1)
+    if len(data) > limit:
+        raise HTTPException(413, "File exceeds the document size limit")
+    expected = item.get("catalogue_size")
+    if expected and len(data) != expected:
+        raise HTTPException(
+            422,
+            f"This file is {len(data):,} bytes but the regulator's catalogue lists "
+            f"{expected:,} bytes. Download the original from the official link and try again.",
+        )
+    try:
+        check_attachment(data, source_url)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    with tempfile.TemporaryDirectory(prefix="iroko-import-") as directory:
+        path = Path(directory) / ("download" + ext)
+        path.write_bytes(data)
+        try:
+            doc = await accept_listed(
+                db,
+                path,
+                {k: v for k, v in item.items() if k != "importable"},
+                source.owner_id,
+                source.regulator,
+                {"acquisition": "browser_download_import", "imported_by": user.id},
+            )
+        except UploadLimitError as exc:
+            db.rollback()
+            raise HTTPException(429, str(exc), headers={"Retry-After": "3600"}) from exc
+        except ValueError as exc:
+            db.rollback()
+            raise HTTPException(422, str(exc)) from exc
+        except Exception as exc:
+            db.rollback()
+            logger.exception("Could not accept imported regulator file")
+            raise HTTPException(
+                503, "The file could not be saved. Please retry; it has not been accepted."
+            ) from exc
+    db.add(
+        AuditLog(
+            user_id=user.id,
+            action="regulatory_document_imported",
+            resource=f"documents/{doc.id}",
+            details={"source_id": source.id, "source_url": source_url, "bytes": len(data)},
+        )
+    )
+    source = db.get(Source, source_id)
+    remaining = [i for i in (source.result or {}).get("missing") or [] if i["source_url"] != source_url]
+    source.result = {
+        **(source.result or {}),
+        "missing": remaining,
+        "missing_total": max(0, int((source.result or {}).get("missing_total", 0)) - 1),
+    }
+    db.commit()
+    return {"document_id": doc.id, "status": doc.status}
 
 
 @router.post("/sources/{source_id}/run")

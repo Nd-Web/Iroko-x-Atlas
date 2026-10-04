@@ -33,6 +33,14 @@ export function formatDate(date: string | Date): string {
  * Return a human-readable relative time string such as "2 hours ago",
  * "just now", or "3 days ago".
  */
+/**
+ * The backend serialises UTC timestamps without an offset ("2026-10-04T15:20:00").
+ * Mark them as UTC so the browser does not read them as local time.
+ */
+export function utcTimestamp(value: string): string {
+  return /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(value) ? value : `${value}Z`;
+}
+
 export function formatRelativeTime(date: string | Date | null | undefined): string {
   if (!date) return "unknown";
   const d = typeof date === "string" ? new Date(date) : date;

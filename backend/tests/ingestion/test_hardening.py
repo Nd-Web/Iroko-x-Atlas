@@ -418,14 +418,18 @@ def test_parser_subprocess_timeout_is_bounded(tmp_path, monkeypatch):
         bounded_native_pages(tmp_path / "file.pdf", "pdf")
 
 
-async def test_scheduled_drain_idle_success_does_not_collect_sources(monkeypatch):
+async def test_scheduled_drain_schedules_once_and_idles_successfully(monkeypatch):
     from ingestion.batch import drain
 
     worker = AsyncMock(return_value=False)
+    scheduled = []
     monkeypatch.setattr("ingestion.batch.run_once", worker)
+    monkeypatch.setattr("ingestion.batch._schedule_due_sources", lambda: scheduled.append(1))
     monkeypatch.setattr("ingestion.batch._snapshot", lambda: {})
     monkeypatch.setattr("ingestion.batch._status", lambda *_: (0, [], []))
     assert (await drain(allow_idle=True))["processed_jobs"] == 0
+    # Due recurring sources are queued once per execution, not on every claim.
+    assert scheduled == [1]
     worker.assert_awaited_once_with(include_scheduled=False)
 
 
@@ -433,9 +437,26 @@ async def test_scheduled_drain_yields_delayed_retries_instead_of_waiting(monkeyp
     from ingestion.batch import drain
 
     monkeypatch.setattr("ingestion.batch.run_once", AsyncMock(return_value=False))
+    monkeypatch.setattr("ingestion.batch._schedule_due_sources", lambda: None)
     monkeypatch.setattr("ingestion.batch._snapshot", lambda: {})
     monkeypatch.setattr("ingestion.batch._status", lambda *_: (3, [], []))
     assert (await drain(allow_idle=True))["pending_jobs"] == 3
+
+
+async def test_scheduled_drain_reports_blocked_source_without_failing(monkeypatch):
+    from ingestion.batch import BatchIncomplete, drain
+
+    blocked = [{"source_id": "cbn", "status": "blocked", "found": 9, "accepted": 0,
+                "errors": [{"error": "AccessChallenge"}]}]
+    monkeypatch.setattr("ingestion.batch.run_once", AsyncMock(return_value=False))
+    monkeypatch.setattr("ingestion.batch._schedule_due_sources", lambda: None)
+    monkeypatch.setattr("ingestion.batch._snapshot", lambda: {})
+    monkeypatch.setattr("ingestion.batch._status", lambda *_: (0, [], blocked))
+    assert (await drain(allow_idle=True))["source_results"] == blocked
+    # A newly exhausted job still fails a scheduled execution visibly.
+    monkeypatch.setattr("ingestion.batch._status", lambda *_: (0, ["document:x"], blocked))
+    with pytest.raises(BatchIncomplete, match="1 failed jobs"):
+        await drain(allow_idle=True)
 
 
 def test_upload_body_limit_covers_missing_content_length():
@@ -466,3 +487,30 @@ def test_upload_body_limit_covers_missing_content_length():
             ).status_code
             == 413
         )
+
+
+async def test_archive_hides_document_and_disabled_pipeline_refuses_hard_delete(
+    api, db, users, content, adapters, monkeypatch
+):
+    owner, _, _ = users
+    response = api.post(
+        "/api/documents",
+        headers=headers(owner),
+        files={"file": ("policy.txt", content.read_bytes(), "text/plain")},
+    )
+    doc_id = response.json()["id"]
+    await process(db, *claim(db))
+
+    monkeypatch.setenv("DOCUMENT_PIPELINE_ENABLED", "false")
+    refused = api.delete(f"/api/documents/{doc_id}", headers=headers(owner))
+    assert refused.status_code == 503
+    assert db.get(Document, doc_id).status == "indexed"
+    original = api.get(f"/api/ingestion/documents/{doc_id}/original", headers=headers(owner))
+    assert original.content == content.read_bytes()
+
+    monkeypatch.setenv("DOCUMENT_PIPELINE_ENABLED", "true")
+    assert api.delete(f"/api/documents/{doc_id}", headers=headers(owner)).status_code == 200
+    assert db.get(Document, doc_id).status == "archived"
+    assert api.get("/api/documents", headers=headers(owner)).json()["total"] == 0
+    archived = api.get("/api/documents?status=archived", headers=headers(owner)).json()
+    assert [d["id"] for d in archived["documents"]] == [doc_id]
