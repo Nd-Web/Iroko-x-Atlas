@@ -4,7 +4,12 @@ import { API_BASE, COOKIE_NAME } from "@/lib/config";
 // Includes a small allowance for multipart field/header overhead.
 const MAX_REQUEST_BYTES = 51 * 1024 * 1024;
 
-export async function proxyDocumentUpload(request: Request) {
+export function proxyDocumentUpload(request: Request) {
+  return proxyMultipartUpload(request, "/api/documents");
+}
+
+/** Stream an authenticated multipart body to a backend upload endpoint. */
+export async function proxyMultipartUpload(request: Request, backendPath: string) {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   const responseHeaders = { "Cache-Control": "private, no-store" };
   const error = (detail: string, status: number) =>
@@ -37,7 +42,7 @@ export async function proxyDocumentUpload(request: Request) {
     signal: AbortSignal.any([request.signal, AbortSignal.timeout(120_000)]),
   };
   try {
-    const upstream = await fetch(`${API_BASE}/api/documents`, options);
+    const upstream = await fetch(`${API_BASE}${backendPath}`, options);
     if (!upstream.headers.get("content-type")?.includes("application/json")) {
       return error("Upload service is temporarily unavailable. Check your document list before retrying.", 502);
     }

@@ -171,7 +171,11 @@ def extraction_issues(pages):
     for item in pages:
         q = item["quality"]
         reasons = []
-        if q["characters"] < int(os.getenv("QUALITY_MIN_CHARS_PER_PAGE", "80")):
+        # Sparse text signals a scan only on a physical PDF page. Word, sheet and
+        # text records are exact; a short note or small sheet is not a failure.
+        if item["page_number"] is not None and q["characters"] < int(
+            os.getenv("QUALITY_MIN_CHARS_PER_PAGE", "80")
+        ):
             reasons.append("little_or_no_text")
         if q["bad_character_ratio"] > float(os.getenv("QUALITY_MAX_BAD_CHAR_RATIO", "0.05")):
             reasons.append("damaged_text")

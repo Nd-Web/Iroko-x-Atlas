@@ -114,11 +114,15 @@ def owned(db, key, token):
     return job
 
 
-def finish(db, key, token, error=None, state="done"):
+def finish(db, key, token, error=None, state="done", permanent=False):
+    """Release the lease. A permanent error fails at once: retrying cannot change it."""
     job = owned(db, key, token)
     job.lease_token, job.lease_until = None, None
     job.error = error
-    job.state = ("failed" if job.attempts >= MAX_ATTEMPTS else "retry") if error else state
+    if error:
+        job.state = "failed" if permanent or job.attempts >= MAX_ATTEMPTS else "retry"
+    else:
+        job.state = state
     if error:
         job.available_at = datetime.utcnow() + timedelta(seconds=min(3600, 30 * 2**job.attempts))
     db.commit()

@@ -216,7 +216,7 @@ async def process(db, key, token):
             issues.append({"reasons": ["new_version_requires_review"]})
         if revision.provenance.get("regulator") and not revision.provenance.get("published_date"):
             issues.append({"reasons": ["publication_date_missing"]})
-        if not pages:
+        if not any(p["text"].strip() for p in pages):
             issues.append({"reasons": ["empty_document"]})
         for position, item in enumerate(pages):
             db.add(Page(document_id=document_id, position=position, **item))
@@ -320,7 +320,7 @@ def reindex(db, document_id):
     db.commit()
 
 
-def review(db, document_id, user_id, decision, note):
+def review(db, document_id, user_id, decision, note, published_date=None):
     prepare_session(db)
     revision = db.query(Revision).filter_by(id=document_id).with_for_update().first()
     doc = db.get(Document, document_id)
@@ -333,6 +333,13 @@ def review(db, document_id, user_id, decision, note):
             raise ValueError("Incomplete OCR must be reprocessed before approval")
         if not db.query(Chunk).filter_by(document_id=document_id).count():
             raise ValueError("No text to approve; reprocess a readable original")
+        if published_date:
+            # Indexed metadata is built from provenance, so the date reaches search too.
+            iso = published_date.isoformat()
+            revision.provenance = {
+                **revision.provenance, "published_date": iso, "date_basis": "reviewer_confirmed"
+            }
+            revision.extraction = {**revision.extraction, "published_date": iso}
         revision.review_status = "approved"
         doc.status = "pending"
         enqueue(db, "document", document_id)
@@ -350,7 +357,10 @@ def review(db, document_id, user_id, decision, note):
             user_id=user_id,
             action=f"document_{decision}",
             resource=f"documents/{document_id}",
-            details={"note": note},
+            details={
+                "note": note,
+                **({"published_date": published_date.isoformat()} if published_date else {}),
+            },
         )
     )
     db.commit()
