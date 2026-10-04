@@ -82,10 +82,11 @@ def robots_allowed(text, url):
 
 
 class OfficialClient:
-    def __init__(self, regulator):
+    def __init__(self, regulator, *, timeout=60, attempts=4, max_bytes=MAX_BYTES):
         self.regulator, self.robots, self.last_request = regulator, {}, 0.0
+        self.attempts, self.max_bytes = attempts, max_bytes
         self.client = httpx.AsyncClient(
-            timeout=httpx.Timeout(60, connect=10),
+            timeout=httpx.Timeout(timeout, connect=min(10, timeout)),
             follow_redirects=False,
             headers={"User-Agent": USER_AGENT},
             trust_env=False,
@@ -100,13 +101,13 @@ class OfficialClient:
         addresses = await asyncio.to_thread(socket.getaddrinfo, host, 443, type=socket.SOCK_STREAM)
         if not addresses or any(not ipaddress.ip_address(a[4][0]).is_global for a in addresses):
             raise ValueError("Regulator host resolved to a non-public address")
-        for attempt in range(4):
+        for attempt in range(self.attempts):
             await asyncio.sleep(max(0, 2 - (time.monotonic() - self.last_request)))
             self.last_request = time.monotonic()
             try:
                 async with self.client.stream("GET", url) as response:
                     if response.status_code == 429 or response.status_code >= 500:
-                        if attempt == 3:
+                        if attempt == self.attempts - 1:
                             response.raise_for_status()
                         retry = response.headers.get("Retry-After", "")
                         await asyncio.sleep(min(60, int(retry)) if retry.isdigit() else 2**attempt)
@@ -122,7 +123,7 @@ class OfficialClient:
                             raise ValueError("Source response exceeds download limit")
                     return response.status_code, response.headers, bytes(body)
             except (httpx.TimeoutException, httpx.NetworkError):
-                if attempt == 3:
+                if attempt == self.attempts - 1:
                     raise
                 await asyncio.sleep(2**attempt)
         raise RuntimeError("Source request exhausted retries")
@@ -139,7 +140,7 @@ class OfficialClient:
                     )
                 if not robots_allowed(self.robots[origin], url):
                     raise ValueError("Source path disallowed by robots.txt")
-            code, headers, body = await self._request(url, 512_000 if robots else MAX_BYTES)
+            code, headers, body = await self._request(url, 512_000 if robots else self.max_bytes)
             if 300 <= code < 400:
                 url = official_url(headers["location"], self.regulator, url)
                 continue

@@ -18,6 +18,8 @@ interface TopbarProps {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  /** Receives the actions container so pages can portal their own actions in. */
+  actionsSlotRef?: (el: HTMLDivElement | null) => void;
   onMenuClick?: () => void;
 }
 
@@ -27,6 +29,7 @@ export default function Topbar({
   title,
   subtitle,
   actions,
+  actionsSlotRef,
   onMenuClick,
 }: TopbarProps) {
   const { user, logout } = useAuth();
@@ -93,7 +96,7 @@ export default function Topbar({
 
       {/* Right side */}
       <div className="flex items-center gap-1.5 md:gap-2.5 shrink-0">
-        <div className="flex items-center gap-2">{actions}</div>
+        <div ref={actionsSlotRef} className="flex items-center gap-2">{actions}</div>
 
         {/* User chip */}
         <div ref={userRef} className="relative">

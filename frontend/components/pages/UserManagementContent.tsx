@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
-import { useUsers } from "@/app/user-management/_hooks/useUsers";
-import { useDeactivateUser } from "@/app/user-management/_hooks/useDeactivateUser";
-import { useInvitations } from "@/app/user-management/_hooks/useInvitations";
+import { useUsers } from "@/app/(app)/user-management/_hooks/useUsers";
+import { useDeactivateUser } from "@/app/(app)/user-management/_hooks/useDeactivateUser";
+import { useInvitations } from "@/app/(app)/user-management/_hooks/useInvitations";
 import type { User } from "@/lib/types";
 
 const ROLE_COLORS: Record<string, { bg: string; color: string }> = {

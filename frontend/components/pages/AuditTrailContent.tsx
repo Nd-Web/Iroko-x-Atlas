@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 const ENTRIES = [
   { id: "AUD-29041", user: "Chukwuemeka Obi",   query: "What caused the Ikeja cluster power outage and what did it cost us?", agent: "Strategist", chunks: 5, latency: "1.84s", time: "09:41:22" },
@@ -42,40 +43,36 @@ type Entry = typeof ENTRIES[0];
 export default function AuditTrailContent() {
   const [selected, setSelected] = useState<Entry | null>(null);
   const [exported, setExported] = useState(false);
-  const [entries, setEntries] = useState<Entry[]>(ENTRIES);
-  const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState("");
-  const fetchedRef = useRef(false);
 
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-    // Same-origin Next.js proxy — forwards the httpOnly cookie as a Bearer token.
-    fetch(`/api/v1/intel/audit-trail`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then((data: unknown) => {
-        const rows: Entry[] = (Array.isArray(data) ? data : (data as { entries?: unknown[] })?.entries ?? [])
-          .filter(Boolean)
-          .map((item: unknown) => {
-            const r = item as Record<string, unknown>;
-            return {
-              id:      String(r.id ?? r.entry_id ?? ""),
-              user:    String(r.user ?? r.user_name ?? r.agent_name ?? "System"),
-              query:   String(r.query ?? r.action_type ?? r.decision_summary ?? ""),
-              agent:   String(r.agent ?? r.agent_name ?? "Analyst"),
-              chunks:  Number(r.chunks ?? r.sources ?? 0),
-              latency: String(r.latency ?? "—"),
-              time:    String(r.time ?? r.created_at ?? ""),
-            };
-          })
-          .filter(e => e.id && e.query);
-        if (rows.length > 0) {
-          setEntries(rows);
-          setIsLive(true);
-        }
-      })
-      .catch(() => { /* silently fall back to hardcoded entries */ });
-  }, []);
+  // Same-origin Next.js proxy — forwards the httpOnly cookie as a Bearer token.
+  // Cached across navigation; falls back to hardcoded entries on error/empty.
+  const liveEntries = useQuery({
+    queryKey: ["audit-trail", "entries"],
+    queryFn: async (): Promise<Entry[]> => {
+      const r = await fetch(`/api/v1/intel/audit-trail`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data: unknown = await r.json();
+      return (Array.isArray(data) ? data : (data as { entries?: unknown[] })?.entries ?? [])
+        .filter(Boolean)
+        .map((item: unknown) => {
+          const r = item as Record<string, unknown>;
+          return {
+            id:      String(r.id ?? r.entry_id ?? ""),
+            user:    String(r.user ?? r.user_name ?? r.agent_name ?? "System"),
+            query:   String(r.query ?? r.action_type ?? r.decision_summary ?? ""),
+            agent:   String(r.agent ?? r.agent_name ?? "Analyst"),
+            chunks:  Number(r.chunks ?? r.sources ?? 0),
+            latency: String(r.latency ?? "—"),
+            time:    String(r.time ?? r.created_at ?? ""),
+          };
+        })
+        .filter(e => e.id && e.query);
+    },
+    retry: false,
+  });
+  const isLive = (liveEntries.data?.length ?? 0) > 0;
+  const entries: Entry[] = isLive ? liveEntries.data! : ENTRIES;
 
   useEffect(() => {
     if (!selected) return;

@@ -17,7 +17,7 @@ interface Props {
   agentPrompts?: Record<string, string>;
 }
 
-const MAX_CHARS = 4000;
+const MAX_CHARS = 2000;
 const CHAR_WARN_THRESHOLD = 500;
 
 export default function InputBar({
@@ -31,7 +31,7 @@ export default function InputBar({
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const onSendRef = useRef(onSend);
-  onSendRef.current = onSend;
+  useEffect(() => { onSendRef.current = onSend; }, [onSend]);
 
   // Auto-grow textarea (max 5 lines ≈ 120px)
   useEffect(() => {
@@ -56,6 +56,8 @@ export default function InputBar({
       if (q && autoSendQuery) {
         onSendRef.current(q.trim());
       } else {
+        // Hydrate an external deep-link value after mount (SSR has no location).
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setValue((prev) => prev || (q ?? agentPrompt ?? ""));
       }
     }

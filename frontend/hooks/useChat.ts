@@ -23,12 +23,10 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { readStream } from "@/lib/stream";
+import { streamChat } from "@/lib/chat-stream";
 import type {
   Citation,
   AgentTraceStep,
-  SseEvent,
-  SseCompleteEvent,
 } from "@/lib/types";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -73,6 +71,9 @@ export function useChat(): UseChatReturn {
 
   const conversationIdRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const requestRef = useRef(0);
+
+  useEffect(() => () => { abortRef.current?.abort(); }, []);
 
   // Load from session storage on mount
   useEffect(() => {
@@ -81,6 +82,8 @@ export function useChat(): UseChatReturn {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.messages && Array.isArray(parsed.messages)) {
+          // Hydrate browser storage after mount; it is not available during SSR.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setMessages(parsed.messages);
         }
         if (parsed.conversationId) {
@@ -96,16 +99,21 @@ export function useChat(): UseChatReturn {
   // Save to session storage whenever messages change
   useEffect(() => {
     if (messages.length > 0) {
-      sessionStorage.setItem("iroko_chat_state", JSON.stringify({
-        messages,
-        conversationId: conversationIdRef.current
-      }));
+      try {
+        sessionStorage.setItem("iroko_chat_state", JSON.stringify({
+          messages,
+          conversationId: conversationIdRef.current
+        }));
+      } catch { /* Browser storage limits must not break sending. */ }
     }
   }, [messages]);
 
   const sendMessage = useCallback(async (content: string) => {
     const trimmed = content.trim();
-    if (!trimmed || isLoading) return;
+    if (!trimmed || abortRef.current || isLoading) return;
+    const requestId = ++requestRef.current;
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     setError(null);
 
@@ -129,7 +137,6 @@ export function useChat(): UseChatReturn {
     setMessages((prev) => [...prev, assistantMsg]);
 
     setIsLoading(true);
-    abortRef.current = new AbortController();
 
     try {
       /**
@@ -142,44 +149,12 @@ export function useChat(): UseChatReturn {
        * this, getStoredToken() returns null (httpOnly cookies are invisible
        * to JS), and every request gets a 401.
        */
-      const res = await fetch(`/api/atlas/ask/stream`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // No Authorization header — the Next.js proxy handles auth via cookie
-        },
-        body: JSON.stringify({
+      let accumulated = "";
+      const completionData = await streamChat({
           query: trimmed,
           conversation_id: conversationIdRef.current,
-        }),
-        signal: abortRef.current.signal,
-      });
-
-      if (!res.ok) {
-        // Expired/invalid session → show the global session-expired toast,
-        // which redirects to /login, instead of an inline error.
-        if (res.status === 401) {
-          triggerSessionExpiry();
-        }
-        // The proxy returns { error: "<human-readable message>", ... } —
-        // show the message itself, not the raw JSON blob.
-        const text = await res.text().catch(() => "");
-        let message = `HTTP ${res.status}`;
-        try {
-          message = JSON.parse(text).error ?? message;
-        } catch {
-          if (text) message = text;
-        }
-        throw new Error(message);
-      }
-
-      // 4. Stream tokens into the assistant message
-      let accumulated = "";
-      let completionData: SseCompleteEvent | null = null;
-
-      for await (const event of readStream(res)) {
-        const evt = event as SseEvent;
-
+      }, controller.signal, (evt) => {
+        if (requestRef.current !== requestId) return;
         switch (evt.type) {
           case "token":
             accumulated += evt.content;
@@ -188,10 +163,6 @@ export function useChat(): UseChatReturn {
                 m.id === assistantId ? { ...m, content: accumulated } : m,
               ),
             );
-            break;
-
-          case "complete":
-            completionData = evt as SseCompleteEvent;
             break;
 
           case "agent_action": {
@@ -212,10 +183,14 @@ export function useChat(): UseChatReturn {
           }
 
           case "start":
-            // No-op
+            if (evt.conversation_id) {
+              conversationIdRef.current = evt.conversation_id;
+              setConversationId(evt.conversation_id);
+            }
             break;
         }
-      }
+      });
+      if (requestRef.current !== requestId) return;
 
       // 5. Attach final metadata to the assistant message
       if (completionData) {
@@ -237,16 +212,10 @@ export function useChat(): UseChatReturn {
               : m,
           ),
         );
-      } else if (accumulated) {
-        // Stream closed without a complete event — still show what we got
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantId ? { ...m, content: accumulated } : m,
-          ),
-        );
       }
     } catch (err: unknown) {
-      if ((err as Error)?.name === "AbortError") return;
+      if (controller.signal.aborted || requestRef.current !== requestId) return;
+      if ((err as { status?: number })?.status === 401) triggerSessionExpiry();
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred.";
       setError(message);
@@ -254,13 +223,17 @@ export function useChat(): UseChatReturn {
       // Remove the empty assistant placeholder on error
       setMessages((prev) => prev.filter((m) => m.id !== assistantId));
     } finally {
-      setIsLoading(false);
-      abortRef.current = null;
+      if (requestRef.current === requestId) {
+        setIsLoading(false);
+        abortRef.current = null;
+      }
     }
-  }, [isLoading]);
+  }, [isLoading, triggerSessionExpiry]);
 
   const clearChat = useCallback(() => {
+    ++requestRef.current;
     abortRef.current?.abort();
+    abortRef.current = null;
     setMessages([]);
     setError(null);
     setIsLoading(false);
@@ -274,11 +247,16 @@ export function useChat(): UseChatReturn {
    * (GET /api/atlas/conversations/{id}/messages — cookie auth, same origin).
    */
   const loadConversation = useCallback(async (id: string) => {
+    const requestId = ++requestRef.current;
     abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/atlas/conversations/${id}/messages`);
+      const res = await fetch(`/api/atlas/conversations/${encodeURIComponent(id)}/messages`, {
+        signal: controller.signal, cache: "no-store",
+      });
       if (!res.ok) {
         // Expired/invalid session → show the global session-expired toast,
         // which redirects to /login, instead of an inline error.
@@ -297,6 +275,7 @@ export function useChat(): UseChatReturn {
         throw new Error(message);
       }
       const data = await res.json();
+      if (requestRef.current !== requestId) return;
       const loaded: ChatMessage[] = (data.messages ?? []).map(
         (m: {
           id: string | number;
@@ -318,13 +297,17 @@ export function useChat(): UseChatReturn {
       setConversationId(id);
       setMessages(loaded);
     } catch (err: unknown) {
+      if (controller.signal.aborted || requestRef.current !== requestId) return;
       const message =
         err instanceof Error ? err.message : "Failed to load conversation.";
       setError(message);
     } finally {
-      setIsLoading(false);
+      if (requestRef.current === requestId) {
+        setIsLoading(false);
+        abortRef.current = null;
+      }
     }
-  }, []);
+  }, [triggerSessionExpiry]);
 
   return {
     messages,

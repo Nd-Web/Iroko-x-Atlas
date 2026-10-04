@@ -97,7 +97,7 @@ def native_pages(path, file_type):
     raise ValueError(f"Unsupported document format: {file_type}")
 
 
-def bounded_native_pages(path, file_type):
+def bounded_native_pages(path, file_type, *, timeout_seconds=None, max_pages=None):
     """Timeout and memory boundary around parsers; stdout is bounded on disk."""
     with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
         result = subprocess.run(
@@ -105,9 +105,9 @@ def bounded_native_pages(path, file_type):
             cwd=Path(__file__).resolve().parents[1],
             stdout=output,
             stderr=errors,
-            timeout=int(os.getenv("EXTRACTION_TIMEOUT_SECONDS", "150")),
+            timeout=timeout_seconds or int(os.getenv("EXTRACTION_TIMEOUT_SECONDS", "150")),
             check=False,
-            env={
+            env={**{
                 k: v
                 for k, v in os.environ.items()
                 if not any(
@@ -121,7 +121,7 @@ def bounded_native_pages(path, file_type):
                         "DATABASE_URL",
                     )
                 )
-            },
+            }, **({"DOCUMENT_MAX_PAGES": str(max_pages)} if max_pages else {})},
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
         if result.returncode:

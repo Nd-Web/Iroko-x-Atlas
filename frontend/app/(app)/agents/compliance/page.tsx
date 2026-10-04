@@ -1,0 +1,116 @@
+import AppShell from "@/components/layout/AppShell";
+import Link from "next/link";
+import MeetingJoinPanel from "@/components/compliance/MeetingJoinPanel";
+import UpcomingDeadlines, { DeadlineStats } from "@/components/compliance/UpcomingDeadlines";
+
+const STATS = [
+  { label: "Open DSRs",           value: "3",     sub: "customer data requests",       accent: "#F59E0B", color: "#F59E0B" },
+  { label: "Pending DPIAs",       value: "2",     sub: "awaiting DPO sign-off",        accent: "#38BDF8", color: "#38BDF8" },
+];
+
+export default function ComplianceAgentPage() {
+  return (
+    <AppShell
+      title="Regulatory Compliance Agent"
+      subtitle="CBN · SEC · NDPA · DPO console · DPIA wizard · filing history"
+      actions={
+        <Link href="/chat?agent=Compliance" className="btn-primary py-2 px-[14px] text-[13px] no-underline">
+          Ask Compliance Agent →
+        </Link>
+      }
+    >
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[14px]">
+        {STATS.map((s) => (
+          <div key={s.label} className="card relative overflow-hidden py-[18px] px-5">
+            <div className="absolute top-0 inset-x-0 h-[2px] opacity-70" style={{ background: s.accent }} />
+            <div className="text-[28px] font-bold tracking-[-0.04em] leading-none mb-[5px]" style={{ color: s.color }}>{s.value}</div>
+            <div className="text-[13px] font-medium text-gray-500 mb-[2px]">{s.label}</div>
+            <div className="text-[11.5px] text-gray-400">{s.sub}</div>
+          </div>
+        ))}
+        {/* Live from the regulatory returns calendar */}
+        <DeadlineStats />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-[14px]">
+        {/* Regulatory deadlines */}
+        <UpcomingDeadlines />
+
+        {/* DPIA tracker */}
+        <div className="card overflow-hidden">
+          <div className="flex justify-between items-center px-5 py-4 border-b border-border-default">
+            <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">DPIA tracker</h2>
+            <button className="btn-secondary py-[5px] px-3 text-xs">+ New DPIA</button>
+          </div>
+          <div className="py-2">
+            {[
+              { name: "Loan Analytics Pipeline v3",            lawful: "Legitimate interest", risk: "High",   status: "in-review" },
+              { name: "Customer KYC Biometric Flow",           lawful: "Legal obligation",    risk: "High",   status: "draft"     },
+              { name: "Customer Credit Behaviour Model",       lawful: "Contract",            risk: "Medium", status: "approved"  },
+              { name: "CX Complaints Dashboard v2",            lawful: "Legitimate interest", risk: "Low",    status: "approved"  },
+            ].map((d, i, arr) => {
+              const st = {
+                "in-review": { color: "var(--color-info-700)",    bg: "var(--color-info-50)",    label: "In review" },
+                draft:       { color: "var(--color-warning-700)", bg: "var(--color-warning-50)", label: "Draft"     },
+                approved:    { color: "var(--color-success-700)", bg: "var(--color-success-50)", label: "Approved"  },
+              }[d.status]!;
+              return (
+                <div key={d.name} className={`flex justify-between items-center gap-3 py-[11px] px-5${i < arr.length - 1 ? " border-b border-border-default" : ""}`}>
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-medium text-gray-700 mb-[3px] truncate">{d.name}</div>
+                    <div className="text-[11.5px] text-gray-400 truncate">
+                      {d.lawful} ·{" "}
+                      <span className={`font-semibold ${d.risk === "High" ? "text-danger-700" : d.risk === "Medium" ? "text-info-700" : "text-success-700"}`}>
+                        {d.risk} risk
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-semibold px-2 py-[2px] rounded-full shrink-0" style={{ color: st.color, background: st.bg }}>{st.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* API key */}
+      <MeetingJoinPanel />
+
+      {/* DSR queue */}
+      <div className="card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border-default">
+          <h2 className="text-sm font-semibold text-gray-900 tracking-[-0.01em]">Data subject request queue</h2>
+          <p className="text-xs text-gray-400 mt-[2px]">Must respond within 30 days of receipt</p>
+        </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[800px]">
+            <div className="grid py-[9px] px-5 bg-gray-50 border-b border-border-default gap-3" style={{ gridTemplateColumns: "90px 1fr 120px 100px 90px 90px" }}>
+              {["Ref", "Request", "Subject", "Type", "Received", "SLA"].map((h) => (
+                <span key={h} className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.055em]">{h}</span>
+              ))}
+            </div>
+            {[
+              { ref: "DSR-0041", req: "Right to access — loan & transaction history export",     subject: "Customer",   type: "Access",        received: "Apr 30", sla: "1 day left", urgent: true  },
+              { ref: "DSR-0040", req: "Right to erasure — customer profile and usage data",       subject: "Customer",   type: "Erasure",       received: "Apr 28", sla: "3 days",     urgent: false },
+              { ref: "DSR-0039", req: "Right to rectification — incorrect BVN on KYC record",     subject: "Enterprise", type: "Rectification", received: "Apr 27", sla: "4 days",     urgent: false },
+            ].map((dsr, i, arr) => (
+              <div
+                key={dsr.ref}
+                className={`grid items-center py-3 px-5 gap-3 hover:bg-gray-50 transition-colors${i < arr.length - 1 ? " border-b border-border-default" : ""}`}
+                style={{ gridTemplateColumns: "90px 1fr 120px 100px 90px 90px" }}
+              >
+                <span className="font-mono text-xs text-brand-700 font-semibold">{dsr.ref}</span>
+                <span className="text-[13px] text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">{dsr.req}</span>
+                <span className="text-xs text-gray-500">{dsr.subject}</span>
+                <span className="text-xs text-gray-500">{dsr.type}</span>
+                <span className="text-xs text-gray-400">{dsr.received}</span>
+                <span className={`text-xs font-bold ${dsr.urgent ? "text-danger-700" : "text-success-700"}`}>{dsr.sla}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </AppShell>
+  );
+}

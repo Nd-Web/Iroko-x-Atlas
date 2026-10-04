@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import StatusMessage from "@/components/ui/StatusMessage";
 import Spinner from "@/components/ui/Spinner";
 import type { Invitation } from "@/lib/types";
-import { useInvitations } from "@/app/user-management/_hooks/useInvitations";
-import { useRevokeInvitation } from "@/app/user-management/_hooks/useRevokeInvitation";
-import { useSendInvite } from "@/app/user-management/_hooks/useSendInvite";
+import { useInvitations } from "@/app/(app)/user-management/_hooks/useInvitations";
+import { useRevokeInvitation } from "@/app/(app)/user-management/_hooks/useRevokeInvitation";
+import { useSendInvite } from "@/app/(app)/user-management/_hooks/useSendInvite";
 
 type InviteStatus = "pending" | "accepted" | "expired";
 

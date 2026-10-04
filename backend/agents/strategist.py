@@ -104,7 +104,7 @@ class StrategistAgent:
                     signal_strength=max(1, len(result.get("citations", [])))
                 )
                 result["verdict"] = "MONITOR" if result.get("_grounded") else verdict
-                self._log_trace("Strategist", "verdict", f"Official verdict stamped: {verdict}")
+                self._log_trace("Strategist", "verdict", f"Result verdict: {result['verdict']}")
             except Exception as e:
                 logger.warning(f"Verdict engine failed in strategist: {e}")
 
@@ -122,7 +122,7 @@ class StrategistAgent:
             self.conversation_history.append({"question": question, "intent": intent, "topic": topic, "answer_summary": result.get("answer", "")[:300], "timestamp": datetime.utcnow().isoformat()})
             self.conversation_history = self.conversation_history[-5:]
 
-            return json.dumps({"question": question, "answer": result["answer"], "knowledge_gap": bool(result.get("knowledge_gap", False)), "confidence": result.get("confidence", "high"), "verdict": result.get("verdict", "MONITOR"), "is_pidgin": is_pidgin, "agent_trace": self.trace, "citations": result.get("citations", []), "suggested_actions": result.get("suggested_actions", []), "suggested_followups": result.get("suggested_followups", []), "duration_ms": duration_ms, "agents_used": list({t["agent"] for t in self.trace}), "intent": intent, "topic": topic})
+            return json.dumps({"question": question, "answer": result["answer"], "knowledge_gap": bool(result.get("knowledge_gap", False)), "confidence": result.get("confidence", "high"), "verdict": result.get("verdict", "MONITOR"), "is_pidgin": is_pidgin, "agent_trace": self.trace, "citations": result.get("citations", []), "partial_answer": result.get("partial_answer", False), "missing_information": result.get("missing_information", []), "source_checks": result.get("source_checks", []), "research_checked_at": result.get("research_checked_at"), "suggested_actions": result.get("suggested_actions", []), "suggested_followups": result.get("suggested_followups", []), "duration_ms": duration_ms, "agents_used": list({t["agent"] for t in self.trace}), "intent": intent, "topic": topic})
 
         except Exception as e:
             logger.error(f"Strategist failed: {e}", exc_info=True)
@@ -133,9 +133,26 @@ class StrategistAgent:
     async def investigate_stream(self, question: str, depth: str = "standard") -> AsyncGenerator[dict, None]:
         """Progress starts immediately; only validated final answers become tokens."""
         yield {"type": "start", "message": "Iroko AI is checking the extracted evidence...", "timestamp": datetime.utcnow().isoformat()}
-        result = json.loads(await self.investigate(question, depth))
-        for trace in self.trace:
-            yield {"type": "agent_action", **trace}
+        self.trace = []
+        work = asyncio.create_task(asyncio.wait_for(self.investigate(question, depth), timeout=120))
+        emitted = 0
+        try:
+            while not work.done():
+                await asyncio.wait({work}, timeout=0.25)
+                while emitted < len(self.trace):
+                    yield {"type": "agent_action", **self.trace[emitted]}
+                    emitted += 1
+            result = json.loads(await work)
+        finally:
+            if not work.done():
+                work.cancel()
+            await asyncio.gather(work, return_exceptions=True)
+        while emitted < len(self.trace):
+            yield {"type": "agent_action", **self.trace[emitted]}
+            emitted += 1
+        if result.get("error"):
+            yield {"type": "error", "message": "The AI model could not complete this request. Please try again. If this continues, contact support."}
+            return
         answer = result.get("answer", "")
         for offset in range(0, len(answer), 100):
             yield {"type": "token", "content": answer[offset:offset + 100]}
@@ -145,10 +162,34 @@ class StrategistAgent:
 
     async def _orchestrate_agents(self, question: str, is_pidgin: bool, depth: str) -> dict:
         from services.grounded_answers import answer
-        context = await self._retrieve_context(question, depth)
+        from services.regulatory_research import eligible, finish, freshness_requested, needs_internal_records, research
+        public_research = eligible(question)
+        fresh_public = public_research and freshness_requested(question) and not needs_internal_records(question)
+        report = None
+        if fresh_public:
+            self._log_trace("Researcher", "official_research", "Checking bounded official regulatory sources; customer documents are not sent to external search services")
+            report = await research(question)
+        # Avoid waiting/paying for an embedding/index lookup whose results would
+        # be discarded. Private status/filing queries still retrieve permitted records.
+        context = {"sources": [], "knowledge_gap": True} if report and report["sources"] else await self._retrieve_context(question, depth)
         self._log_trace("Watchdog", "claim_validation", "Checking exact quotes, citation coordinates and claim support before display")
-        result = await answer(question, context, llm_complete, is_pidgin)
-        self._log_trace("Scribe", "format", "Rendered verified claims without executive rewriting")
+        result = None
+        if not (public_research and freshness_requested(question)):
+            result = await answer(question, context, llm_complete, is_pidgin)
+        if public_research and (result is None or result.get("knowledge_gap")):
+            if report is None:
+                self._log_trace("Researcher", "official_research", "Checking bounded official regulatory sources; customer documents are not sent to external search services")
+                report = await research(question)
+            # Freshness requests should not be dominated by the older local corpus.
+            internal = [] if fresh_public and report["sources"] else context.get("sources", [])[:6]
+            combined = [*report["sources"], *internal]
+            self._log_trace("Watchdog", "research_validation", "Separately auditing supported findings and missing facts; never estimating an unsupported penalty")
+            result = await answer(question, {**context, "sources": combined, "knowledge_gap": not combined}, llm_complete, is_pidgin, allow_partial=True)
+            result = finish(result, report, question)
+        message = ("Reported an evidence/validation gap without a compliance conclusion" if result.get("knowledge_gap")
+                   else "Rendered approved partial findings with the remaining gaps" if result.get("partial_answer")
+                   else "Rendered verified claims without executive rewriting")
+        self._log_trace("Scribe", "format", message)
         return result
 
     async def _retrieve_context(self, question: str, depth: str) -> dict:

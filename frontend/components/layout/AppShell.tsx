@@ -1,66 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import Sidebar from "@/components/layout/Sidebar";
-import Topbar from "@/components/layout/Topbar";
+import { useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
+import PersistentShell, { useShell } from "@/components/layout/PersistentShell";
 
 interface AppShellProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  /** Drop the default padding/max-width — for pages that lay out their own content area. */
+  bare?: boolean;
 }
 
-export default function AppShell({ children, title, subtitle, actions }: AppShellProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const pathname = usePathname();
+/**
+ * Per-page frame content. The sidebar/topbar live in PersistentShell
+ * (mounted once by app/(app)/layout.tsx); this sets the topbar's title and
+ * actions for the current page and renders its scrollable <main>.
+ */
+export default function AppShell(props: AppShellProps) {
+  const shell = useShell();
+  const { children, title, subtitle, actions, bare } = props;
+  const setHeader = shell?.setHeader;
 
-  // Close sidebar when route changes on mobile
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
+  useLayoutEffect(() => {
+    setHeader?.({ title, subtitle });
+  }, [setHeader, title, subtitle]);
+
+  // Rendered outside the (app) route group — provide a shell of its own.
+  if (!shell) {
+    return (
+      <PersistentShell>
+        <AppShell {...props} />
+      </PersistentShell>
+    );
+  }
 
   return (
-    /*
-     * h-screen + overflow-hidden on the outer shell locks the entire layout
-     * to the viewport. The content column (right of the fixed sidebar) fills
-     * the remaining space with its own overflow-y-auto so normal pages still
-     * scroll when their content exceeds the visible area. The chat page
-     * controls its own internal scroll and never triggers this outer scroll.
-     */
-    <div className="flex h-screen overflow-hidden bg-surface-page">
-      {/* Keyboard users can jump straight past the sidebar/topbar */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-surface-card focus:text-brand-700 focus:shadow-md focus:text-sm focus:font-semibold"
+    <>
+      {actions && shell.actionsSlot && createPortal(actions, shell.actionsSlot)}
+      {/* overflow-y-auto lets normal pages scroll; chat page fills this exactly via flex-1 min-h-0 */}
+      <main
+        id="main-content"
+        className={
+          bare
+            ? "flex-1 min-h-0 overflow-y-auto"
+            : "flex-1 p-4 md:p-6 lg:p-7 flex flex-col gap-6 max-w-[1600px] mx-auto w-full overflow-y-auto"
+        }
       >
-        Skip to main content
-      </a>
-
-      {/* Mobile Sidebar Overlay */}
-      <div
-        className={`sidebar-overlay lg:hidden ${sidebarOpen ? 'active' : ''}`}
-        onClick={() => setSidebarOpen(false)}
-        aria-hidden="true"
-      />
-
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      {/* Content column — lg:pl-[240px] offsets the fixed sidebar */}
-      <div className="flex flex-col flex-1 min-w-0 lg:pl-[240px] overflow-hidden">
-        <Topbar
-          title={title}
-          subtitle={subtitle}
-          actions={actions}
-          onMenuClick={() => setSidebarOpen(true)}
-        />
-
-        {/* overflow-y-auto lets normal pages scroll; chat page fills this exactly via flex-1 min-h-0 */}
-        <main id="main-content" className="flex-1 p-4 md:p-6 lg:p-7 flex flex-col gap-6 max-w-[1600px] mx-auto w-full overflow-y-auto">
-          {children}
-        </main>
-      </div>
-    </div>
+        {children}
+      </main>
+    </>
   );
 }

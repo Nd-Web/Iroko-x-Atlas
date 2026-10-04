@@ -1,6 +1,6 @@
 "use client";
 
-import { useInvitations } from "@/app/user-management/_hooks/useInvitations";
+import { useInvitations } from "@/app/(app)/user-management/_hooks/useInvitations";
 import type { Invitation } from "@/lib/types";
 
 function isPending(inv: Invitation): boolean {

@@ -10,10 +10,11 @@
  *   3. Audit Trail      — Hash-chained audit log with integrity verification
  *
  * Auth: reads Bearer token from localStorage["iroko_token"].
- * Data: fetches from /api/v1/intel/* on mount + manual refresh.
+ * Data: /api/v1/intel/* via React Query (cached across navigation) + manual refresh.
  */
 
-import React, { useState, useEffect, useCallback, type FC } from "react";
+import React, { useState, useCallback, type FC } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type {
   SignalsResponse,
   AuditTrailResponse,
@@ -39,66 +40,61 @@ export type {
 const WebIntelDashboard: FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>("signals");
 
-  // Signals state
-  const [signals,        setSignals]        = useState<SignalsResponse | null>(null);
-  const [signalsLoading, setSignalsLoading] = useState(true);
-  const [signalsError,   setSignalsError]   = useState<string | null>(null);
-
-  // Audit state
-  const [auditData,    setAuditData]    = useState<AuditTrailResponse | null>(null);
-  const [auditLoading, setAuditLoading] = useState(true);
-  const [auditError,   setAuditError]   = useState<string | null>(null);
+  // Cached via React Query so returning to the dashboard renders instantly
+  // from the last result instead of refetching everything behind spinners.
+  const signalsQuery = useQuery({
+    queryKey: ["webintel", "signals"],
+    queryFn: () => apiFetch<SignalsResponse>("/signals"),
+  });
+  const auditQuery = useQuery({
+    queryKey: ["webintel", "audit-trail"],
+    queryFn: () => apiFetch<AuditTrailResponse>("/audit-trail?limit=200&verify_chain=true"),
+  });
 
   // Operation-level stats — "what does Iroko know about my operation right now"
-  const [opsStats, setOpsStats] = useState<{ alerts: number | null; docs: number | null }>({ alerts: null, docs: null });
+  // (same-origin proxies, cookie auth) — non-critical, failures show "—".
+  const alertsCountQuery = useQuery({
+    queryKey: ["webintel", "ops", "alerts"],
+    queryFn: async () => {
+      const r = await fetch("/api/alerts?status=new&limit=1");
+      if (!r.ok) throw new Error(String(r.status));
+      const d: { total?: number } = await r.json();
+      return d.total ?? null;
+    },
+    retry: false,
+  });
+  const docsCountQuery = useQuery({
+    queryKey: ["webintel", "ops", "docs"],
+    queryFn: async () => {
+      const r = await fetch("/api/documents?page_size=1");
+      if (!r.ok) throw new Error(String(r.status));
+      const d: { total?: number; documents?: unknown[] } = await r.json();
+      return d.total ?? d.documents?.length ?? null;
+    },
+    retry: false,
+  });
 
-  // Fetch signals
+  const signals        = signalsQuery.data ?? null;
+  const [refreshing, setRefreshing] = useState(false);
+  const signalsLoading = signalsQuery.isLoading || refreshing;
+  const signalsError   = signalsQuery.error
+    ? (signalsQuery.error.message || "Failed to load signals.")
+    : null;
   const fetchSignals = useCallback(async () => {
-    setSignalsLoading(true);
-    setSignalsError(null);
-    try {
-      const data = await apiFetch<SignalsResponse>("/signals");
-      setSignals(data);
-    } catch (e) {
-      setSignalsError((e as Error).message ?? "Failed to load signals.");
-    } finally {
-      setSignalsLoading(false);
-    }
-  }, []);
+    setRefreshing(true);
+    try { await signalsQuery.refetch(); } finally { setRefreshing(false); }
+  }, [signalsQuery]);
 
-  // Fetch audit trail
-  const fetchAudit = useCallback(async () => {
-    setAuditLoading(true);
-    setAuditError(null);
-    try {
-      const data = await apiFetch<AuditTrailResponse>(
-        "/audit-trail?limit=200&verify_chain=true"
-      );
-      setAuditData(data);
-    } catch (e) {
-      setAuditError((e as Error).message ?? "Failed to load audit trail.");
-    } finally {
-      setAuditLoading(false);
-    }
-  }, []);
+  const auditData    = auditQuery.data ?? null;
+  const auditLoading = auditQuery.isLoading;
+  const auditError   = auditQuery.error
+    ? (auditQuery.error.message || "Failed to load audit trail.")
+    : null;
 
-  useEffect(() => {
-    fetchSignals();
-    fetchAudit();
-  }, [fetchSignals, fetchAudit]);
-
-  // Fetch live operation counts (same-origin proxies, cookie auth) — non-critical.
-  useEffect(() => {
-    fetch("/api/alerts?status=new&limit=1")
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then((d: { total?: number }) => setOpsStats(s => ({ ...s, alerts: d.total ?? null })))
-      .catch(() => {});
-    fetch("/api/documents?page_size=1")
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then((d: { total?: number; documents?: unknown[] }) =>
-        setOpsStats(s => ({ ...s, docs: d.total ?? d.documents?.length ?? null })))
-      .catch(() => {});
-  }, []);
+  const opsStats = {
+    alerts: alertsCountQuery.data ?? null,
+    docs: docsCountQuery.data ?? null,
+  };
 
   // Derived counts for tab badges
   const totalSignals = signals

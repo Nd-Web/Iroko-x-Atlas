@@ -12,6 +12,7 @@ export interface ChatCitation {
   document_id: string;
   document_title: string;
   excerpt?: string;
+  source_url?: string | null;
 }
 
 export interface ChatMessage {

@@ -236,6 +236,12 @@ body {
 
 /* ─── Reusable Component Classes ────────────────────────────────── */
 @layer components {
+  /* The page <main> is a fixed-height flex column that scrolls. Without this,
+     children with overflow:hidden (most .card panels) shrink to a sliver
+     instead of making the area scroll. Full-height children (chat) use
+     flex-1 + min-h-0 with a zero basis, so they still fill exactly. */
+  #main-content > * { flex-shrink: 0; }
+
 
   /* Card */
   .card {

@@ -1,0 +1,17 @@
+# Keeps the Render backend warm. On Render's free plan a service sleeps after
+# ~15 minutes idle and the next visitor waits 30-60s for it to boot; a ping
+# every 10 minutes prevents that. Harmless (and removable) on a paid plan.
+name: Keep backend warm
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping backend health
+        run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 -o /dev/null -w "health %{http_code} in %{time_total}s\n" https://iroko-x-atlas.onrender.com/health

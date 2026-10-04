@@ -11,6 +11,7 @@ import remarkGfm from "remark-gfm";
 import { cn, formatRelativeTime, getRiskHex, getRiskLabel } from "@/lib/utils";
 import { toast } from "sonner";
 import type { ChatMessage } from "@/types/chat";
+import { citationUrl } from "@/lib/citation-url";
 
 interface Props {
   message: ChatMessage;
@@ -243,17 +244,19 @@ export default function MessageBubble({ message, contextQuery }: Props) {
         {!isUser && message.citations && message.citations.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 mt-1 max-w-full">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-0.5">Sources</span>
-            {message.citations.map((c) => (
+            {message.citations.map((c, index) => (
               <Link
-                key={c.document_id + c.document_title}
-                href="/documents"
+                key={c.document_id + c.document_title + index}
+                href={citationUrl(c.source_url) ?? "/documents"}
+                target={citationUrl(c.source_url) ? "_blank" : undefined}
+                rel={citationUrl(c.source_url) ? "noopener noreferrer" : undefined}
                 title={c.excerpt ?? c.document_title}
                 className="inline-flex items-center gap-1 max-w-[220px] px-2 py-1 rounded-lg text-[10.5px] font-semibold text-info-500 bg-info-50 border border-[#38BDF8]/25 hover:bg-[#38BDF8]/15 transition-colors"
               >
                 <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="shrink-0">
                   <path d="M7.5 1H3A1.5 1.5 0 0 0 1.5 2.5v7A1.5 1.5 0 0 0 3 11h6A1.5 1.5 0 0 0 10.5 9.5V4l-3-3Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
                 </svg>
-                <span className="truncate">{c.document_title}</span>
+                <span className="truncate">[{index + 1}] {c.document_title}</span>
               </Link>
             ))}
           </div>

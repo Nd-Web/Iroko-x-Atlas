@@ -111,12 +111,14 @@ export interface Citation {
   chunk_id?: string;
   document_id?: string;
   relevance_score?: number;
+  source_url?: string | null;
+  provenance?: Record<string, unknown>;
 }
 
 /** Request body for POST /api/atlas/ask and POST /api/atlas/ask/stream */
 export interface AtlasAskRequest {
   query: string;
-  conversation_id?: string;
+  conversation_id?: string | null;
   department_filter?: string;
   stream?: boolean;
 }
@@ -146,6 +148,10 @@ export interface AtlasAskResponse {
   agent_trace: AgentTraceStep[];
   citations: Citation[];
   suggested_followups: string[];
+  partial_answer?: boolean;
+  missing_information?: string[];
+  source_checks?: { regulator: string; url: string; status: string; fetched_at?: string }[];
+  research_checked_at?: string | null;
   duration_ms: number;
   duration_text?: string;
   created_at: string;
@@ -314,6 +320,7 @@ export interface SseStartEvent {
   type: "start";
   message: string;
   timestamp: string;
+  conversation_id?: string;
 }
 
 export interface SseAgentActionEvent {
@@ -334,8 +341,19 @@ export interface SseCompleteEvent extends AtlasAskResponse {
   type: "complete";
 }
 
+export interface SseErrorEvent {
+  type: "error";
+  message: string;
+}
+
+export interface SseHeartbeatEvent {
+  type: "heartbeat";
+}
+
 export type SseEvent =
   | SseStartEvent
   | SseAgentActionEvent
   | SseTokenEvent
-  | SseCompleteEvent;
+  | SseCompleteEvent
+  | SseErrorEvent
+  | SseHeartbeatEvent;

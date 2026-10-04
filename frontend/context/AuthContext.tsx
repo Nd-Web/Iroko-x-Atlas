@@ -101,7 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok && isPublicPage && res.status !== 401 && res.status !== 403) return;
       if (res.ok) {
         const data: User = await res.json();
-        if (activeUserId.current !== data.id) queryClient.clear();
+        // Clear cached data only when a *different* user signs in. Clearing on
+        // first hydration (null -> id) destroyed queries already in flight for
+        // this same user, leaving those pages stuck on their loading state.
+        if (activeUserId.current !== null && activeUserId.current !== data.id) queryClient.clear();
         activeUserId.current = data.id;
         setSessionExpired(false);
         setUser(data);
@@ -127,8 +130,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     }).catch(() => {
-      queryClient.clear();
-      activeUserId.current = null;
+      // A network failure (e.g. a slow backend) says nothing about who is
+      // signed in, so keep the cache and the last known user id — a later
+      // successful check with a different id still clears the cache.
       setUser(null);
     }).finally(() => setUserLoading(false));
   }, [queryClient]);

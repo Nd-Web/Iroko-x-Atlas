@@ -73,6 +73,7 @@ from routes.meeting import router as meeting_router
 from routes.voice import router as voice_router
 from routes.pilot import router as pilot_router
 from ingestion.api import router as ingestion_router
+from routes.regulatory_returns import router as regulatory_returns_router
 
 # Database
 from models.database import init_db
@@ -135,21 +136,22 @@ async def lifespan(app: FastAPI):
     start_sync_scheduler()
     logger.info("Connector auto-sync scheduler started.")
 
-    # Run initial regulatory data sync, then schedule every 60 seconds
-    from services.omcr_sync import run_omcr_sync
-    from services.connector_sync import get_scheduler
-    try:
-        await run_omcr_sync()
-        logger.info("Initial regulatory data sync complete.")
-    except Exception as exc:
-        logger.warning(f"Initial regulatory data sync skipped (service unreachable?): {exc}")
-    get_scheduler().add_job(
-        run_omcr_sync,
-        "interval",
-        seconds=60,
-        id="regulatory_sync",
-        replace_existing=True,
-    )
+    # OMC-R feeds simulated network data, so it is opt-in: never sync it by default.
+    if os.getenv("OMCR_SYNC_ENABLED", "false").lower() == "true":
+        from services.omcr_sync import run_omcr_sync
+        from services.connector_sync import get_scheduler
+        try:
+            await run_omcr_sync()
+            logger.info("Initial OMC-R sync complete.")
+        except Exception as exc:
+            logger.warning(f"Initial OMC-R sync skipped (service unreachable?): {exc}")
+        get_scheduler().add_job(
+            run_omcr_sync,
+            "interval",
+            seconds=60,
+            id="regulatory_sync",
+            replace_existing=True,
+        )
 
     logger.info("Iroko AI ready.")
     logger.info(f"Docs: http://localhost:8000/docs")
@@ -226,6 +228,7 @@ app.include_router(meeting_router)
 app.include_router(voice_router)
 app.include_router(pilot_router)
 app.include_router(ingestion_router)
+app.include_router(regulatory_returns_router)
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 

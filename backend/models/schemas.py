@@ -211,6 +211,7 @@ class DocumentSearchResponse(BaseModel):
 class AgentAction(BaseModel):
     agent: str
     tool: str
+    description: Optional[str] = None
     args: Dict[str, Any] = {}
     result_preview: Optional[str] = None
     duration_ms: Optional[int] = None
@@ -224,6 +225,7 @@ class Citation(BaseModel):
     relevance_score: float = 1.0
     chunk_id: Optional[str] = None
     provenance: Optional[Dict[str, Any]] = None
+    source_url: Optional[str] = None
 
 
 # ─── Ask / Chat ───────────────────────────────────────────────────────────────
@@ -242,6 +244,10 @@ class AskResponse(BaseModel):
     agent_trace: List[AgentAction] = []
     citations: List[Citation] = []
     suggested_followups: List[str] = []
+    partial_answer: bool = False
+    missing_information: List[str] = []
+    source_checks: List[Dict[str, Any]] = []
+    research_checked_at: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 

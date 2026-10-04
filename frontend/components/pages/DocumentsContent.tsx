@@ -6,8 +6,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useDocuments } from "@/app/documents/_hooks/useDocuments";
-import { useUploadDocument } from "@/app/documents/_hooks/useUploadDocument";
+import { useDocuments } from "@/app/(app)/documents/_hooks/useDocuments";
+import { useUploadDocument } from "@/app/(app)/documents/_hooks/useUploadDocument";
 import { cn, formatBytes, formatRelativeTime } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";

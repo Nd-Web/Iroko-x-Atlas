@@ -181,15 +181,50 @@ async def ask(request: AskRequest, current_user: User = Depends(get_current_user
         answer=result.get("answer", ""), agent_trace=result.get("agent_trace", []),
         citations=result.get("citations", []),
         suggested_followups=followups,
+        partial_answer=result.get("partial_answer", False),
+        missing_information=result.get("missing_information", []),
+        source_checks=result.get("source_checks", []),
+        research_checked_at=result.get("research_checked_at"),
     )
 
 
-async def _scoped_stream(stream, user):
-    # FastAPI may finish yield-dependency cleanup before consuming a streaming body.
-    from ingestion.access import as_user
-    with as_user(user):
-        async for item in stream:
+def _scoped_stream(stream, user):
+    # FastAPI may finish yield-dependency cleanup before consuming a streaming body,
+    # so snapshot the principal now — the ORM User is detached by then.
+    from ingestion.access import Principal, as_user
+    snapshot = Principal(user.id, user.role)
+
+    async def scoped():
+        with as_user(snapshot):
+            async for item in stream:
+                yield item
+
+    return scoped()
+
+
+async def _with_heartbeats(stream, interval=10):
+    """Keep intermediaries alive during evidence validation, without exposing drafts."""
+    pending = None
+    try:
+        while True:
+            if pending is None:
+                pending = asyncio.create_task(anext(stream))
+            done, _ = await asyncio.wait({pending}, timeout=interval)
+            if not done:
+                yield ": keep-alive\n\n"
+                continue
+            try:
+                item = pending.result()
+            except StopAsyncIteration:
+                return
+            pending = None
             yield item
+    finally:
+        if pending is not None:
+            if not pending.done():
+                pending.cancel()
+            await asyncio.gather(pending, return_exceptions=True)
+        await stream.aclose()
 
 
 @router.post("/ask/stream-http")
@@ -276,24 +311,35 @@ async def ask_stream_http(request: AskRequest, current_user: User = Depends(get_
         full_result: dict = {}
         try:
             async for event in strategist.investigate_stream(question=request.query):
-                yield f"data: {json.dumps(event)}\n\n"
                 if event.get("type") == "complete":
-                    full_result = event
+                    full_result = {**event, "conversation_id": conversation_id}
+                else:
+                    if event.get("type") == "start":
+                        event = {**event, "conversation_id": conversation_id}
+                    yield f"data: {json.dumps(event)}\n\n"
+                    if event.get("type") == "error":
+                        return
         except Exception as e:
             logger.error(f"SSE stream generator error: {e}")
             yield f"data: {json.dumps({'type': 'error', 'message': 'Stream interrupted. Please retry.'})}\n\n"
+            return
+
+        if not full_result:
+            yield f"data: {json.dumps({'type': 'error', 'message': 'The answer did not complete. Please retry.'})}\n\n"
+            return
 
         # Persist only the assistant response — user message already committed above.
         try:
             from models.database import SessionLocal
             _db = SessionLocal()
             try:
-                _db.add(Message(
+                assistant_message = Message(
                     conversation_id=conversation_id, role="assistant",
                     content=full_result.get("answer", ""),
                     agent_trace=full_result.get("agent_trace", []),
                     citations=full_result.get("citations", []),
-                ))
+                )
+                _db.add(assistant_message)
                 _db.add(AgentRun(
                     conversation_id=conversation_id, agent_type="strategist",
                     input_query=request.query, output=full_result.get("answer", ""),
@@ -310,17 +356,24 @@ async def ask_stream_http(request: AskRequest, current_user: User = Depends(get_
                             input_query=request.query, output=trace_step.get("description", ""),
                             steps=[trace_step], duration_ms=0, success=True,
                         ))
+                saved_conversation = _db.get(Conversation, conversation_id)
+                if saved_conversation:
+                    saved_conversation.updated_at = datetime.utcnow()
+                _db.flush()
+                full_result["message_id"] = assistant_message.id
                 _db.commit()
             finally:
                 _db.close()
         except Exception as e:
             logger.error(f"SSE: DB persist (assistant) failed: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': 'The reply could not be saved. Please retry.'})}\n\n"
+            return
 
-
+        yield f"data: {json.dumps(full_result)}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(
-        _scoped_stream(event_stream(), current_user),
+        _scoped_stream(_with_heartbeats(event_stream()), current_user),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
     )
