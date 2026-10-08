@@ -1,6 +1,6 @@
 from sqlalchemy import (
     create_engine, Column, String, Integer, Float,
-    Boolean, DateTime, Text, JSON, ForeignKey, Enum
+    Boolean, DateTime, Text, JSON, ForeignKey, Enum, UniqueConstraint
 )
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, relationship
 from sqlalchemy.sql import func
@@ -15,6 +15,9 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./atlas.db")
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
+    # Remote Postgres drops idle connections; test before use and recycle early.
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -235,6 +238,25 @@ class KnowledgeGap(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 
+class AnswerFeedback(Base):
+    """One user's verdict on one assistant answer.
+
+    Thumbs-down answers with a reason become reviewed evaluation cases; thumbs-up answers
+    are candidate examples. See scripts/export_answer_feedback.py.
+    """
+    __tablename__ = "answer_feedback"
+    __table_args__ = (UniqueConstraint("message_id", "user_id"),)
+
+    id = Column(String, primary_key=True, default=generate_id)
+    message_id = Column(String, ForeignKey("messages.id"), nullable=False, index=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    helpful = Column(Boolean, nullable=False)
+    reason = Column(String, nullable=True)  # Set only when the answer was not helpful.
+    comment = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class UserInvitation(Base):
     __tablename__ = "user_invitations"
 
@@ -318,6 +340,8 @@ def init_db():
     import models.signal_node  # noqa: F401
     # Import workflow models (document → insight → action tasks)
     import models.workflow  # noqa: F401
+    # Import regulatory filing drafts, shared bank profile and filing memory
+    import models.filing  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
     # ── Column-level migrations (add new columns to existing tables) ─────────

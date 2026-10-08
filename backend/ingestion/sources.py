@@ -12,7 +12,7 @@ import time
 from datetime import datetime, timedelta
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import quote, unquote, urldefrag, urljoin, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, quote, unquote, urldefrag, urljoin, urlsplit, urlunsplit
 
 import httpx
 
@@ -29,6 +29,9 @@ DOMAINS = {
     "NFIU": {"nfiu.gov.ng", "www.nfiu.gov.ng"},
     "NDPC": {"ndpc.gov.ng", "www.ndpc.gov.ng"},
     "FCCPC": {"fccpc.gov.ng", "www.fccpc.gov.ng"},
+    # Government publishers of Acts: the National Assembly and the tax authority.
+    "NASS": {"nass.gov.ng", "www.nass.gov.ng"},
+    "NRS": {"nrs.gov.ng", "www.nrs.gov.ng"},
 }
 USER_AGENT = "IrokoAI-RegulatoryIngest/1.0 (+mailto:ingest@irokoai.site)"
 MAX_BYTES = 50 * 1024 * 1024
@@ -42,19 +45,28 @@ class AccessChallenge(ValueError):
     """The host answered with a bot challenge. Iroko never attempts to bypass one."""
 
 
-def attachment_filename(url):
-    return unquote(Path(urlsplit(url).path).name)
+def attachment_filename(url, ext=None):
+    """The file name a URL serves, or its download handler's fileName, with `ext` if missing."""
+    parts = urlsplit(url)
+    name = unquote(Path(parts.path).name)
+    if Path(name).suffix.lower() not in ATTACHMENT_TYPES:
+        query = dict(parse_qsl(parts.query))
+        name = unquote(query.get("fileName") or query.get("filename") or name or "document")
+        name = re.sub(r'[\\/:*?"<>|]+', " ", name).strip()[:180] or "document"
+        if ext and not name.lower().endswith(ext):
+            name += ext
+    return name
 
 
 def source_key(regulator, url):
     return f"regulator:{regulator}:{url}"
 
 
-def official_url(url, regulator, base=""):
+def official_url(url, regulator, base="", hosts=None):
     p = urlsplit(urldefrag(urljoin(base, url.strip()))[0])
     if (
         p.scheme != "https"
-        or p.hostname not in DOMAINS.get(regulator, set())
+        or p.hostname not in (hosts if hosts is not None else DOMAINS.get(regulator, set()))
         or p.username
         or p.password
         or p.port not in (None, 443)
@@ -101,8 +113,9 @@ def robots_allowed(text, url):
 
 
 class OfficialClient:
-    def __init__(self, regulator, *, timeout=60, attempts=4, max_bytes=MAX_BYTES):
-        self.regulator, self.robots, self.last_request = regulator, {}, 0.0
+    def __init__(self, regulator, *, timeout=60, attempts=4, max_bytes=MAX_BYTES, hosts=None):
+        # `hosts` replaces the regulator allowlist, e.g. for a public legal archive.
+        self.regulator, self.hosts, self.robots, self.last_request = regulator, hosts, {}, 0.0
         self.attempts, self.max_bytes = attempts, max_bytes
         self.client = httpx.AsyncClient(
             timeout=httpx.Timeout(timeout, connect=min(10, timeout)),
@@ -114,7 +127,7 @@ class OfficialClient:
     async def close(self):
         await self.client.aclose()
 
-    async def _request(self, url, cap):
+    async def _request(self, url, cap, *, truncate=False):
         # DNS checks supplement domain allowlisting; private source endpoints are never fetched.
         host = urlsplit(url).hostname
         addresses = await asyncio.to_thread(socket.getaddrinfo, host, 443, type=socket.SOCK_STREAM)
@@ -144,6 +157,10 @@ class OfficialClient:
                     async for part in response.aiter_bytes():
                         body.extend(part)
                         if len(body) > cap:
+                            if truncate:
+                                # RFC 9309: rules past a parser's size limit may be ignored.
+                                del body[cap:]
+                                break
                             raise ValueError("Source response exceeds download limit")
                     return response.status_code, response.headers, bytes(body)
             except (httpx.TimeoutException, httpx.NetworkError):
@@ -154,7 +171,7 @@ class OfficialClient:
 
     async def fetch(self, url, *, robots=False):
         for _ in range(6):
-            url = official_url(url, self.regulator)
+            url = official_url(url, self.regulator, hosts=self.hosts)
             origin = "https://" + urlsplit(url).hostname
             if not robots:
                 if origin not in self.robots:
@@ -164,9 +181,11 @@ class OfficialClient:
                     )
                 if not robots_allowed(self.robots[origin], url):
                     raise ValueError("Source path disallowed by robots.txt")
-            code, headers, body = await self._request(url, 512_000 if robots else self.max_bytes)
+            code, headers, body = await self._request(
+                url, 512_000 if robots else self.max_bytes, truncate=robots
+            )
             if 300 <= code < 400:
-                url = official_url(headers["location"], self.regulator, url)
+                url = official_url(headers["location"], self.regulator, url, hosts=self.hosts)
                 continue
             if code == 404 and not robots:
                 raise ValueError("Source document not found (404)")
@@ -238,12 +257,26 @@ _LINK_TRAILERS = (
 )
 
 
+_GENERIC_LABEL = re.compile(
+    r"^(?:preview|view|open|read|see|get|download)?\s*(?:the\s+)?(?:full\s+)?"
+    r"(?:document|file|attachment|pdf|link|here|more|details)s?$",
+    re.I,
+)
+# Sentences such as "To delve deeper ... we invite you to download the full document".
+_PROSE_LABEL = re.compile(r"\b(?:download|we invite|click|to explore|to delve)\b", re.I)
+
+
 def humanize_filename(url):
     stem = Path(attachment_filename(url)).stem
-    # Drop storage suffixes: "_18521", Django's random "_x9rSXtI", or a trailing UUID.
+    # Drop storage affixes: "_18521", Django's random "_x9rSXtI", a trailing UUID,
+    # or a leading upload timestamp such as "20090408210018".
     stem = re.sub(r"[-_][0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$", "", stem, flags=re.I)
     stem = re.sub(r"_(?:\d+|(?=[A-Za-z0-9]*\d)(?=[A-Za-z0-9]*[A-Z])[A-Za-z0-9]{7})$", "", stem)
-    return " ".join(re.split(r"[-_\s]+", stem)).strip() or attachment_filename(url)
+    stem = re.sub(r"^\d{8,}(?=[A-Za-z])", "", stem)
+    text = " ".join(re.split(r"[-_\s]+", stem)).strip()
+    if text and text == text.lower():
+        text = text[0].upper() + text[1:]
+    return text or attachment_filename(url)
 
 
 def listing_title(label, url):
@@ -254,7 +287,7 @@ def listing_title(label, url):
         previous = text
         for pattern in _LINK_TRAILERS:
             text = pattern.sub("", text).strip(" -–—:·•|")
-    if len(text) < 8:
+    if len(text) < 8 or _GENERIC_LABEL.match(text) or (len(text.split()) > 12 and _PROSE_LABEL.search(text)):
         return humanize_filename(url)
     return text[0].upper() + text[1:]
 
@@ -302,10 +335,29 @@ def _latest_revisions(db, regulator):
     return latest
 
 
+def sniff_type(data):
+    """Attachment type from content, for download handlers whose URLs have no extension."""
+    if data.startswith(b"%PDF-"):
+        return ".pdf"
+    if data.startswith(b"PK"):
+        import io
+        import zipfile
+
+        try:
+            names = set(zipfile.ZipFile(io.BytesIO(data)).namelist())
+        except zipfile.BadZipFile:
+            names = set()
+        if "word/document.xml" in names:
+            return ".docx"
+        if "xl/workbook.xml" in names:
+            return ".xlsx"
+    raise ValueError("Unsupported regulatory attachment; original needs manual import")
+
+
 def check_attachment(data, url):
     ext = Path(urlsplit(url).path).suffix.lower()
     if ext not in ATTACHMENT_TYPES:
-        raise ValueError("Unsupported regulatory attachment; original needs manual import")
+        ext = sniff_type(data)
     if ext == ".pdf" and not data.startswith(b"%PDF-"):
         raise ValueError("Expected PDF bytes; server returned another format")
     if ext in {".xlsx", ".docx"} and not data.startswith(b"PK"):
@@ -313,14 +365,14 @@ def check_attachment(data, url):
     return ext
 
 
-async def accept_listed(db, path, item, owner_id, regulator, extra=None):
+async def accept_listed(db, path, item, owner_id, regulator, extra=None, key=None, filename=None):
     """Accept a regulator file under its official source key and listing metadata."""
     now = datetime.utcnow().isoformat()
-    key = source_key(regulator, item["source_url"])
+    key = key or source_key(regulator, item["source_url"])
     doc = await accept(
         db,
         str(path),
-        attachment_filename(item["source_url"]),
+        filename or attachment_filename(item["source_url"], Path(path).suffix.lower()),
         item["title"],
         owner_id,
         {

@@ -102,6 +102,27 @@
   --topbar-height:  64px;
 }
 
+/* Iroko's green accent is scoped to chat; the existing app theme is unchanged. */
+.iroko-chat {
+  --color-brand-50: rgba(110, 231, 183, 0.06);
+  --color-brand-100: rgba(110, 231, 183, 0.12);
+  --color-brand-200: rgba(110, 231, 183, 0.22);
+  --color-brand-300: rgba(110, 231, 183, 0.4);
+  --color-brand-400: #a7f3d0;
+  --color-brand-500: #6ee7b7;
+  --color-brand-600: #6ee7b7;
+  --color-brand-700: #a7f3d0;
+}
+
+.chat-workspace {
+  background: radial-gradient(ellipse at 50% 25%, rgba(16, 185, 129, 0.045), transparent 65%), var(--color-surface-page);
+}
+
+.iroko-chat textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 /* ─── Base ──────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;

@@ -12,7 +12,7 @@ Fields indexed:
 import os
 import asyncio
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal, TypedDict
 
 logger = logging.getLogger(__name__)
 
@@ -161,22 +161,56 @@ async def hybrid_search(
     top: int = 20,
     filter_str: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
+    """Compatibility wrapper for callers that only need the matching passages."""
+    result = await hybrid_search_detailed(query, top=top, filter_str=filter_str)
+    return result["results"]
+
+
+class RetrievalResult(TypedDict):
+    results: List[Dict[str, Any]]
+    retrieval_status: Literal["ok", "empty", "unavailable", "access_check_failed"]
+
+
+async def hybrid_search_detailed(
+    query: str,
+    top: int = 20,
+    filter_str: Optional[str] = None,
+) -> RetrievalResult:
     """
     Hybrid search: BM25 lexical + HNSW vector retrieval, re-ranked by semantic scorer.
-    Falls back to BM25-only if embeddings are unavailable.
+    Falls back to BM25-only if embeddings or semantic ranking are unavailable.
+
+    Preserve the difference between an empty completed search and unavailable
+    dependencies. No result or diagnostic reveals inaccessible document counts.
+    Both pre-filter and canonical post-filter remain mandatory and fail closed.
     """
-    from ingestion.access import search_filter
-    acl = await asyncio.to_thread(search_filter)
+    from ingestion.access import principal, search_filter
+
+    if principal.get() is None:
+        return {"results": [], "retrieval_status": "access_check_failed"}
+    try:
+        acl = await asyncio.to_thread(search_filter)
+    except Exception as exc:
+        logger.warning("Document search access check failed (%s)", type(exc).__name__)
+        return {"results": [], "retrieval_status": "access_check_failed"}
     if not acl:
-        return []
+        return {"results": [], "retrieval_status": "empty"}
     filter_str = f"({acl}) and ({filter_str})" if filter_str else acl
-    client = get_search_client()
+    try:
+        client = get_search_client()
+    except Exception as exc:
+        logger.warning("Document search client unavailable (%s)", type(exc).__name__)
+        return {"results": [], "retrieval_status": "unavailable"}
     if client is None:
-        return []
+        return {"results": [], "retrieval_status": "unavailable"}
 
     # Generate query embedding for the vector leg of hybrid search
     from services.embeddings import get_embedding
-    query_vector = await get_embedding(query)
+    try:
+        query_vector = await get_embedding(query)
+    except Exception as exc:
+        logger.warning("Query embedding unavailable; using keyword search (%s)", type(exc).__name__)
+        query_vector = None
 
     search_kwargs: Dict[str, Any] = {
         "search_text":                  query,
@@ -192,20 +226,22 @@ async def hybrid_search(
     }
 
     if query_vector is not None:
-        from azure.search.documents.models import VectorizedQuery
-        search_kwargs["vector_queries"] = [
-            VectorizedQuery(
-                vector=query_vector,
-                k_nearest_neighbors=top,
-                fields="content_vector",
-            )
-        ]
+        try:
+            from azure.search.documents.models import VectorizedQuery
+            search_kwargs["vector_queries"] = [
+                VectorizedQuery(
+                    vector=query_vector,
+                    k_nearest_neighbors=top,
+                    fields="content_vector",
+                )
+            ]
+        except Exception as exc:
+            logger.warning("Vector query unavailable; using keyword search (%s)", type(exc).__name__)
 
     try:
         results = await asyncio.to_thread(lambda: list(client.search(**search_kwargs)))
-        return (await asyncio.to_thread(eligible_results, results))[:top]
     except Exception as e:
-        logger.warning(f"Azure Search semantic query failed, falling back to simple: {e}")
+        logger.warning("Azure Search semantic query failed; trying keyword search (%s)", type(e).__name__)
         try:
             # Fallback: simple BM25 search without semantic or vector ranking
             simple_kwargs = {
@@ -215,10 +251,17 @@ async def hybrid_search(
                 "select":      search_kwargs.get("select"),
             }
             results = await asyncio.to_thread(lambda: list(client.search(**simple_kwargs)))
-            return (await asyncio.to_thread(eligible_results, results))[:top]
         except Exception as e2:
-            logger.error(f"Azure Search fallback query also failed: {e2}")
-            return []
+            logger.warning("Azure Search keyword query failed (%s)", type(e2).__name__)
+            return {"results": [], "retrieval_status": "unavailable"}
+
+    try:
+        accepted = (await asyncio.to_thread(eligible_results, results))[:top]
+    except Exception as exc:
+        # Retrying Azure cannot repair a failed canonical/permission check.
+        logger.warning("Document search source verification failed (%s)", type(exc).__name__)
+        return {"results": [], "retrieval_status": "access_check_failed"}
+    return {"results": accepted, "retrieval_status": "ok" if accepted else "empty"}
 
 
 # ── Document Search (endpoint-oriented) ──────────────────────────────────────

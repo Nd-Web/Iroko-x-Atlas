@@ -125,14 +125,22 @@ async def health_full() -> dict:
     except Exception as exc:
         _record("azure_search", False, t, str(exc))
 
-    # ── 3. Azure OpenAI chat (1-token live probe) ───────────────────────────
+    # ── 3. Azure OpenAI chat (tiny live probe of each model) ────────────────
+    # Primary (e.g. gpt-6.1-sol) and fallback (e.g. gpt-5.4-nano) are probed
+    # separately, so a working fallback cannot hide a broken primary.
     t = time.perf_counter()
     try:
-        from agents.kernel import llm_complete
-        r = await asyncio.wait_for(
-            llm_complete("ping", max_tokens=4, service_id="nano"), timeout=20
-        )
-        _record("azure_openai_chat", bool(r is not None), t)
+        from agents.kernel import llm_probe
+        models = await llm_probe()
+        if not models:
+            _record("azure_openai_chat", False, t, "no LLM configured")
+        else:
+            primary_ok = models.get("primary", {}).get("status") == "ok"
+            answering = primary_ok or models.get("fallback", {}).get("status") == "ok"
+            detail = "" if primary_ok else (
+                "primary model failing — answering with the fallback" if answering else "every model failing")
+            _record("azure_openai_chat", answering, t, detail)
+            results["azure_openai_chat"]["models"] = models
     except Exception as exc:
         _record("azure_openai_chat", False, t, str(exc))
 

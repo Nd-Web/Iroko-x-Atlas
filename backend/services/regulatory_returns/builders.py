@@ -161,7 +161,9 @@ def _validate(fields: tuple[Field, ...], raw: dict, where: str, errors: list[str
 # ─── Prepare ──────────────────────────────────────────────────────────────────
 
 
-def prepare(return_id: str, payload: dict, upload: bytes | None = None) -> Prepared:
+def prepare(return_id: str, payload: dict, upload: bytes | None = None, dataset: dict | None = None) -> Prepared:
+    """`dataset` carries data Iroko already imported (see drafts.dataset_payload);
+    otherwise upload-based returns read the Iroko input template from `upload`."""
     spec = RETURNS_BY_ID.get(return_id)
     if spec is None or not spec.generator:
         raise KeyError(return_id)
@@ -183,6 +185,7 @@ def prepare(return_id: str, payload: dict, upload: bytes | None = None) -> Prepa
                  or f"{abbr}/{REF_CODES[spec.id]}/{period.key if period else letter_date.strftime('%Y%m%d')}")
     remediation = {str(k): str(v) for k, v in (payload.get("remediation") or {}).items()}
     p = Prepared(spec, profile, period, letter_date, reference, data, remediation, errors)
+    p.ctx["dataset"] = dataset or {}
     if period and not errors:
         due = due_date(spec, period)
         if period.end >= letter_date:
@@ -300,14 +303,18 @@ def _period_end_text(p: Prepared) -> str:
 
 
 def _compute_prudential(p: Prepared, upload: bytes | None) -> None:
-    if not upload:
+    ds = p.ctx.get("dataset") or {}
+    if ds.get("sfp") is not None:
+        parsed = templates.PrudentialUpload(ds["sfp"], ds["pl"], ds.get("loans", []))
+    elif not upload:
         p.errors.append("Upload the completed prudential input workbook (download the template first).")
         return
-    try:
-        parsed = templates.parse_prudential(upload)
-    except templates.TemplateError as exc:
-        p.errors.extend(exc.problems)
-        return
+    else:
+        try:
+            parsed = templates.parse_prudential(upload)
+        except templates.TemplateError as exc:
+            p.errors.extend(exc.problems)
+            return
     p.errors.extend(parsed.problems)
     if p.errors:
         return
@@ -316,7 +323,12 @@ def _compute_prudential(p: Prepared, upload: bytes | None) -> None:
         rwa_override=p.data.get("risk_weighted_assets_override"),
         qualifying_capital_override=p.data.get("qualifying_capital_override"),
     )
-    p.warnings.extend(res.warnings)
+    for w in res.warnings:
+        if w.startswith("Statement of financial position does not balance"):
+            # Never let an unbalanced balance sheet reach the regulator.
+            p.errors.append(w + " Check the trial balance: an account is probably on the wrong line or marked 'Not reported'.")
+        else:
+            p.warnings.append(w)
     p.breaches = [
         {"code": b.code, "title": b.title, "detail": b.detail, **({"group": "Single-obligor limit breaches"} if b.code == "SOL" else {})}
         for b in res.breaches
@@ -888,18 +900,22 @@ def _render_str(p: Prepared) -> list[tuple[str, bytes, str]]:
 
 
 def _compute_ctr(p: Prepared, upload: bytes | None) -> None:
-    if not upload:
+    ds = p.ctx.get("dataset") or {}
+    if ds.get("txns") is None and not upload:
         p.errors.append("Upload the transactions workbook (download the template first).")
         return
     start, end = p.data["period_from"], p.data["period_to"]
     if start and end and start > end:
         p.errors.append("'Transactions from' must be on or before 'Transactions to'.")
         return
-    try:
-        txns, problems = templates.parse_transactions(upload)
-    except templates.TemplateError as exc:
-        p.errors.extend(exc.problems)
-        return
+    if ds.get("txns") is not None:
+        txns, problems = ds["txns"], []
+    else:
+        try:
+            txns, problems = templates.parse_transactions(upload)
+        except templates.TemplateError as exc:
+            p.errors.extend(exc.problems)
+            return
     p.errors.extend(problems)
     if p.errors:
         return

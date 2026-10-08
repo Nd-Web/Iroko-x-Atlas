@@ -239,9 +239,11 @@ async def run(args):
     from fastapi import FastAPI
 
     corpus = json.loads((ARTIFACTS / "corpus.json").read_text(encoding="utf-8"))
-    cases = json.loads(
-        (BACKEND / "tests" / "evals" / "cbn_document_questions.json").read_text(encoding="utf-8")
-    )
+    cases = json.loads(Path(args.questions).read_text(encoding="utf-8"))
+    for case in cases:
+        # Synthetic question sets (e.g. cbn_retrieval_questions.json) carry no graded expectations.
+        case.setdefault("expected", "")
+        case.setdefault("sources", [{"document_id": case["document_id"], "pages": []}] if case.get("document_id") else [])
     if args.case_id:
         cases = [case for case in cases if case["id"] in args.case_id]
         if len(cases) != len(set(args.case_id)):
@@ -419,6 +421,8 @@ def main():
     parser.add_argument("--concurrency", type=int, choices=[1, 2, 3], default=2)
     parser.add_argument("--modes", default="normal,stream")
     parser.add_argument("--case-id", action="append", default=[], help="Run only selected case IDs")
+    parser.add_argument("--questions", default=str(BACKEND / "tests" / "evals" / "cbn_document_questions.json"),
+                        help="Question set to run; the default is the graded CBN evaluation set")
     args = parser.parse_args()
     if not set(args.modes.split(",")) <= {"normal", "stream", "oracle"}:
         parser.error("Modes must be normal,stream,oracle")

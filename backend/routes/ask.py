@@ -7,14 +7,15 @@ import logging
 import os
 import tempfile
 
-from typing import Optional
+from typing import Literal, Optional
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import datetime, timedelta
 
-from models.database import get_db, User, Conversation, Message, AgentRun, AuditLog, KnowledgeGap
+from models.database import get_db, User, Conversation, Message, AgentRun, AuditLog, KnowledgeGap, AnswerFeedback
 from models.schemas import AskRequest, AskResponse
 from services.auth_utils import get_current_user
 from agents.strategist import StrategistAgent
@@ -92,19 +93,59 @@ class FeedbackRequest(BaseModel):
     query: Optional[str] = Field(None, description="The original query, for gap logging")
 
 
-def _load_history(db: Session, conversation_id: str, limit: int = 10) -> list:
-    """Load recent messages from DB as conversation context."""
+class AnswerFeedbackRequest(BaseModel):
+    """A binary verdict on one answer: easier to give honestly than a 1-5 rating."""
+    helpful: bool
+    reason: Optional[Literal["wrong_fact", "missed_part", "wrong_document", "unclear", "other"]] = None
+    comment: Optional[str] = Field(None, max_length=1000)
+
+
+def _load_history(db: Session, conversation_id: str, limit: int = 24) -> list:
+    """Load bounded context from this already-authorised conversation.
+
+    Prior answers and citation titles resolve references; they are never evidence.
+    Resolved questions are server-authored trace metadata, not a client parameter.
+    """
     msgs = db.query(Message).filter(
         Message.conversation_id == conversation_id
-    ).order_by(Message.created_at.desc()).limit(limit).all()
+    ).order_by(Message.created_at.desc(), Message.id.desc()).limit(min(limit, 48)).all()
     msgs.reverse()
     history = []
     for m in msgs:
         if m.role == "user":
-            history.append({"question": m.content, "intent": "document_query", "topic": "", "answer_summary": "", "timestamp": m.created_at.isoformat()})
+            history.append({"question": m.content, "intent": "document_query", "topic": "", "answer_summary": "", "citations": [], "timestamp": m.created_at.isoformat()})
         elif m.role == "assistant" and history:
-            history[-1]["answer_summary"] = (m.content or "")[:300]
-    return history[-5:]
+            history[-1]["answer_summary"] = (m.content or "")[:1200]
+            history[-1]["citations"] = [
+                {"document_id": str(c.get("document_id", ""))[:200],
+                 "document_title": str(c.get("document_title") or c.get("source") or "")[:240],
+                 "excerpt": str(c.get("excerpt") or "")[:1200],
+                 "chunk_id": c.get("chunk_id")}
+                for c in (m.citations or [])[:6] if isinstance(c, dict)
+            ]
+            for step in m.agent_trace or []:
+                if isinstance(step, dict) and step.get("tool") == "intent" and isinstance(step.get("intent"), str):
+                    history[-1]["intent"] = step["intent"]
+                if isinstance(step, dict) and step.get("tool") == "conversation_context" and isinstance(step.get("resolved_question"), str):
+                    history[-1]["resolved_question"] = step["resolved_question"][:4000]
+                if isinstance(step, dict) and step.get("tool") == "research_activity":
+                    history[-1]["research_activity"] = {
+                        "document_search": step.get("document_search") is True,
+                        "official_research": step.get("official_research") is True,
+                        "source_checks": [{k: c.get(k) for k in ("url", "status")} for c in (step.get("source_checks") or [])[:12] if isinstance(c, dict)],
+                    }
+    history = history[-12:]
+    if history:
+        # Retain the actual opening even once it leaves the recent-turn window.
+        from services.chat_intent import conversational_kind
+        from services.chat_conversation import recall_kind
+        opening = db.query(Message).filter(Message.conversation_id == conversation_id, Message.role == "user").order_by(Message.created_at.asc(), Message.id.asc()).limit(24).all()
+        if opening:
+            history[0]["conversation_start"] = opening[0].content
+            first_question = next((m.content for m in opening if not conversational_kind(m.content) and not recall_kind(m.content)), None)
+            if first_question:
+                history[0]["conversation_first_question"] = first_question
+    return history
 
 
 def _get_or_create_conversation(db: Session, user: User, request: AskRequest) -> Conversation:
@@ -114,6 +155,8 @@ def _get_or_create_conversation(db: Session, user: User, request: AskRequest) ->
             Conversation.id == request.conversation_id,
             Conversation.user_id == user.id,
         ).first()
+        if conversation is None:
+            raise HTTPException(404, "Conversation not found. Open a saved conversation or start a new chat.")
     if not conversation:
         conversation = Conversation(
             user_id=user.id,
@@ -144,9 +187,15 @@ async def ask(request: AskRequest, current_user: User = Depends(get_current_user
     else:
         # Normal full AI pipeline
         strategist = StrategistAgent()
+        strategist.set_viewer(current_user.full_name)
         strategist.set_history(history)
         result_str = await strategist.investigate(question=request.query)
         result = json.loads(result_str)
+
+    if result.get("error"):
+        # Keep the user's message for retry/history, but never persist a failed
+        # generation as a successful assistant answer or expose its exception.
+        raise HTTPException(status_code=503, detail="The chat service could not complete this request. Please try again.")
 
     assistant_message = Message(
         conversation_id=conversation.id, role="assistant",
@@ -172,6 +221,7 @@ async def ask(request: AskRequest, current_user: User = Depends(get_current_user
                 input_query=request.query, output=trace_step.get("description", ""),
                 steps=[trace_step], duration_ms=0, success=True,
             ))
+    conversation.updated_at = datetime.utcnow()
     db.commit()
 
     followups = result.get("suggested_followups", [])
@@ -181,6 +231,9 @@ async def ask(request: AskRequest, current_user: User = Depends(get_current_user
         answer=result.get("answer", ""), agent_trace=result.get("agent_trace", []),
         citations=result.get("citations", []),
         suggested_followups=followups,
+        suggested_actions=result.get("suggested_actions", []),
+        answer_status=result.get("answer_status", "answered"),
+        gap_reason=result.get("gap_reason"),
         partial_answer=result.get("partial_answer", False),
         missing_information=result.get("missing_information", []),
         source_checks=result.get("source_checks", []),
@@ -305,6 +358,7 @@ async def ask_stream_http(request: AskRequest, current_user: User = Depends(get_
 
     # ── Normal full pipeline streaming ──
     strategist = StrategistAgent()
+    strategist.set_viewer(current_user.full_name)
     strategist.set_history(history)
 
     async def event_stream():
@@ -428,10 +482,14 @@ async def ask_stream(websocket: WebSocket, token: str):
 
 @router.get("/conversations")
 async def get_conversations(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    conversations = db.query(Conversation).filter(
+    # Count in SQL: never load all saved message bodies merely to show a list.
+    count = db.query(func.count(Message.id)).filter(
+        Message.conversation_id == Conversation.id
+    ).correlate(Conversation).scalar_subquery()
+    conversations = db.query(Conversation, count.label("message_count")).filter(
         Conversation.user_id == current_user.id
-    ).order_by(Conversation.updated_at.desc()).limit(50).all()
-    return {"conversations": [{"id": c.id, "title": c.title, "created_at": c.created_at, "updated_at": c.updated_at, "message_count": len(c.messages)} for c in conversations]}
+    ).order_by(Conversation.updated_at.desc(), Conversation.id).limit(50).all()
+    return {"conversations": [{"id": c.id, "title": c.title, "created_at": c.created_at, "updated_at": c.updated_at, "message_count": message_count} for c, message_count in conversations]}
 
 
 @router.get("/conversations/{conversation_id}/messages")
@@ -439,7 +497,29 @@ async def get_messages(conversation_id: str, current_user: User = Depends(get_cu
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id, Conversation.user_id == current_user.id).first()
     if not conversation:
         raise HTTPException(404, "Conversation not found")
-    return {"conversation_id": conversation_id, "messages": [{"id": m.id, "role": m.role, "content": m.content, "agent_trace": m.agent_trace, "citations": m.citations, "created_at": m.created_at} for m in conversation.messages]}
+    votes = {f.message_id: {"helpful": f.helpful, "reason": f.reason} for f in db.query(AnswerFeedback).filter(
+        AnswerFeedback.user_id == current_user.id,
+        AnswerFeedback.message_id.in_([m.id for m in conversation.messages if m.role == "assistant"]))}
+    return {"conversation_id": conversation_id, "messages": [{"id": m.id, "role": m.role, "content": m.content, "agent_trace": m.agent_trace, "citations": m.citations, "created_at": m.created_at, "feedback": votes.get(m.id)} for m in conversation.messages]}
+
+
+@router.post("/messages/{message_id}/feedback")
+async def answer_feedback(message_id: str, body: AnswerFeedbackRequest,
+                          current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Record whether one answer was right. Voting again replaces the earlier verdict."""
+    message = (db.query(Message).join(Conversation, Conversation.id == Message.conversation_id)
+               .filter(Message.id == message_id, Message.role == "assistant",
+                       Conversation.user_id == current_user.id).first())
+    if message is None:
+        raise HTTPException(status_code=404, detail="Answer not found")
+    entry = (db.query(AnswerFeedback).filter_by(message_id=message_id, user_id=current_user.id).first()
+             or AnswerFeedback(message_id=message_id, user_id=current_user.id))
+    entry.helpful = body.helpful
+    entry.reason = None if body.helpful else body.reason
+    entry.comment = (body.comment or "").strip() or None
+    db.add(entry)
+    db.commit()
+    return {"status": "ok", "message_id": message_id, "helpful": entry.helpful, "reason": entry.reason}
 
 
 @router.post("/briefing")
@@ -533,6 +613,7 @@ async def voice_ask(
     db.commit()
 
     strategist = StrategistAgent()
+    strategist.set_viewer(current_user.full_name)
     strategist.set_history(history)
     result_str = await strategist.investigate(question=transcript.strip())
     result = json.loads(result_str)

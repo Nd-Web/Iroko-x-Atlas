@@ -1,0 +1,1171 @@
+[
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_0:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_0",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "By when must all OFIs fully comply with the risk-based cybersecurity framework and guidelines—what is the compliance effective date?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_0:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_0",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "What is the effective date for full compliance with the Risk-Based Cybersecurity Framework and Guidelines for Other Financial Institutions (OFIs) issued in this letter, dated June 29, 2022?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_10:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_10",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "By when should an OFI submit its cybersecurity self-assessment report to the CBN, and who must sign it after approval?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_10:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_10",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Submit a cybersecurity self-assessment report to the Director, Other Financial Institutions Supervision Department of the Central Bank of Nigeria no later than 31 March every year; it must be signed by the CISO after Senior Management approval."
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_11:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_11",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How soon must an OFI report a cyber-incident (whether it succeeds or fails) to the regulator, and what condition does the timing relate to?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_11:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_11",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "In the letter dated 2022-06-29 on issuance of a risk-based cybersecurity framework for OFIs, what is the obligation and timing to report cyber-incidents to the Director, Other Financial Institutions Supervision Department using the required process?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_12:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_12",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How soon after detecting any cyber-incident must an OFI submit the incident report to the regulator, and what is the reporting deadline?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_12:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_12",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the “Issuance of Risk-Based Cybersecurity Framework and Guidelines for Other Financial Institutions (OFIs)” dated 2022-06-29, when must an OFI report all cyber-incidents to the Director, Other Financial Institutions Supervision Department of the Central Bank of Nigeria?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_13:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_13",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What categories should we use when maintaining the inventory of authorized devices, including consideration of device mobility?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_13:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_13",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "In the “Letter to all OFIs: Issuance of Risk-Based Cybersecurity Framework and Guidelines for Other Financial Institutions (OFIs)” dated 2022-06-29, what device inventory categories must be used for authorized hardware?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_14:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_14",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What background checks and periodic re-checks are required for staff whose duties involve implementing or protecting policies and procedures for sensitive information?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_14:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_14",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "In the 2022-06-29 letter on the risk-based cybersecurity framework and guidelines for OFIs, what must an OFI do regarding background checks and periodic reassessment for employees who implement or protect controls (including IT system administrators and security guards)?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_15:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_15",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "When using third parties, what restrictions should we apply to their network connections and IP access, and what must we do for logging and monitoring their connections to our network?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_15:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_15",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the 2022-06-29 letter on issuing a risk-based cybersecurity framework and guidelines for OFIs, what requirements apply to restricting and time-limiting third-party network access, and what logging/monitoring must occur for third-party connections?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_16:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_16",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How many times per year must board members and employees complete cybersecurity awareness training, and what proof of compliance must be available to CBN examiners?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_16:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_16",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the letter on issuance of a risk-based cybersecurity framework and guidelines for OFIs (29 June 2022), how often must board members and employees complete cybersecurity awareness training, and what proof is required?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_17:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_17",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What must an OFI include in its data loss/leakage prevention strategy to discover, monitor, and protect sensitive data across endpoints, storage, networks, and other digital stores?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_17:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_17",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the June 29, 2022 risk-based cybersecurity framework for OFIs, what data loss/leakage prevention strategy elements is an OFI required to develop?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_18:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_18",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How often must an OFI conduct vulnerability assessments, and what events require an additional assessment? Also, when should vulnerabilities made known trigger action?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_18:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_18",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "1) In the OFIs cybersecurity framework and guidelines (29 June 2022), what is the required frequency and trigger for vulnerability assessment (e.g., quarterly and after significant changes)?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_19:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_19",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "When updating systems, how quickly must an OFI apply patches for well-known or zero-day vulnerabilities under the risk-based cybersecurity guidance?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_19:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_19",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "In the 2022-06-29 letter on issuing a risk-based cybersecurity framework and guidelines for OFIs, what patch update timelines apply to well-known and zero-day vulnerabilities?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_1:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_1",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What are the stated objectives/purpose of the cybersecurity framework guidelines for other financial institutions in Nigeria?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_1:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_1",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "In the CBN framework and Guidelines for Other Financial Institutions on risk-based cybersecurity (issued 29 June 2022), what is the stated purpose of the Guidelines?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_20:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_20",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What items must a continuous cybersecurity monitoring policy/strategy include (e.g., log retention duration and event triggers for alerts) and who must approve it?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_20:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_20",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the risk-based cybersecurity framework and guidelines for OFIs, what is the Board-approved continuous security monitoring policy required to include, such as alert triggers and log retention duration?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_21:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_21",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What requirements must an incident response policy cover for cyber-incidents, including who approves the cyber-incident response plan and how an acceptable interruption window is set for different incident categories?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_22:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_22",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What assurance programme must an OFI set up for its payment service providers, including key elements like due diligence, written agreements, monitoring PCI DSS status, and checking incident response and cyber-insurance?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_22:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_22",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the “Letter to all OFIs: Issuance of Risk-Based Cybersecurity Framework and Guidelines for Other Financial Institutions (OFIs)” dated 2022-06-29, what must an OFI establish for the Payment Service Provider Security Assurance Programme?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_23:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_23",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "For an OFI, what SOC setup is required—Board-approved strategy and budget, SIEM capability with security logs, and continuous 24x7 staffing with defined responsibilities?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_23:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_23",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "What requirements does the 29 June 2022 risk-based cybersecurity guidance require for an OFI’s Security Operations Center (SOC), including Board approval, SIEM use, and 24x7 staffing?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_24:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_24",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What is the minimum required staffing/composition of a Security Operations Centre (SOC) team?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_24:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_24",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "In the 2022-06-29 letter on issuance of a risk-based cybersecurity framework and guidelines for OFIs, what minimum composition is required for the SOC team?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_26:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_26",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What is the definition of “Acceptable Interruption Window” for mission critical systems—what does it measure and limit?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_26:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_26",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "For the OFIs cybersecurity framework letter dated 2022-06-29, what does the document define as “Acceptable Interruption Window”?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_27:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_27",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What is a firewall, in the cybersecurity framework’s definition?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_27:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_27",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "In the 2022-06-29 “Letter to all OFIs: Issuance of Risk-Based Cybersecurity Framework and Guidelines for Other Financial Institutions (OFIs)”, what does “Firewall” mean?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_28:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_28",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What does the guidelines say a “Nested Payment Service Provider” means in relation to payment service providers?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_28:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_28",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "In the cybersecurity framework and guidelines for OFIs, 29 June 2022, what is defined as a “Nested Payment Service Provider”?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_29:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_29",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How does the guidance define cyber risk, including what it covers beyond technical failure (e.g., financial loss or service disruption)?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_29:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_29",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Cyber Risk in the \"Letter to all OFIs: Issuance of Risk-Based Cybersecurity Framework and Guidelines for Other Financial Institutions (OFIs)\" (2022-06-29)."
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_2:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_2",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "What does the document require the Board of Directors to ensure about cybersecurity programme oversight and integration with the OFI’s business functions?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_2:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_2",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the Guidelines for Other Financial Institutions (OFIs) dated 29 June 2022, what responsibility does the Board of Directors have to ensure cybersecurity oversight and integration with business functions?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_3:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_3",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How frequently should Senior Management submit cybersecurity programme reports to the Board, and what is required for the Board to confirm regarding cyber risk thresholds?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_3:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_3",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the 2022-06-29 OFIs risk-based cybersecurity framework guidelines, how often must the Board receive and review Senior Management cybersecurity programme reports, and what must those reports cover?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_4:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_4",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How frequently should management submit cybersecurity status reports to the board, and what overall cyber-risk elements should those reports cover?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_4:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_4",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the “Letter to all OFIs: Issuance of Risk-Based Cybersecurity Framework and Guidelines for Other Financial Institutions (OFIs)” (29 June 2022), how often must Senior Management provide periodic cybersecurity reports to the Board, and what must they cover?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_5:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_5",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How often must cybersecurity reporting be made to the MD/CEO at minimum?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_5:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_5",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the risk-based cybersecurity framework for OFIs issued on 2022-06-29, what minimum interval is required for reporting cybersecurity matters to the MD/CEO?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_6:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_6",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How long do we have after appointing the CISO to acquire the required information security certifications?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_6:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_6",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "In the cybersecurity framework and guidelines for OFIs (dated 2022-06-29), what is required for the Chief Information Security Officer to obtain relevant information security certifications, and within what time after appointment?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_7:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_7",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "Who must receive quarterly reports on cybersecurity risk from the Risk Management function?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_7:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_7",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the “Issuance of Risk-Based Cybersecurity Framework and Guidelines for Other Financial Institutions (OFIs)” dated 2022-06-29, what quarterly reporting obligation does the Risk Management function have, and to whom?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_8:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_8",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How should an OFI’s Board handle approval of the cybersecurity strategy, and what is the minimum frequency for reviewing and updating the Board-approved cybersecurity policy?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_8:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_8",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Under the 2022-06-29 guidance on risk-based cybersecurity for OFIs, what are the Board’s responsibilities for approving the information security and cybersecurity strategy, and how often must the approved policy be reviewed and updated?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_9:natural",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_9",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "natural",
+  "question": "How should an OFI select risk treatment options after a risk assessment, and to whom must information from risk management activities be reported?"
+ },
+ {
+  "id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_9:specific",
+  "chunk_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172_chunk_9",
+  "document_id": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+  "style": "specific",
+  "question": "Risk treatment and reporting requirements under the OFIs risk-based cybersecurity framework and guidelines (29 June 2022)."
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_0:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_0",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "What monthly figures should a microfinance bank report for account opening and loan disbursement, including how to classify new savings accounts, new loans disbursed, and new customers?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_0:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_0",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "What does the “FINANCIAL INCLUSION TARGET - DATA COLLECTION TEMPLATE FOR MICROFINANCE BANKS” require microfinance banks to report monthly on account opening and loan disbursement?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_10:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_10",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "What qualifies a customer as “new” for BVN registration in your MFB’s customer count, even if they already have an account elsewhere?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_10:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_10",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the Data Collection Template for MFBs – Financial Inclusion Target (2019-07-01), how does it define “NEW CUSTOMERS” and what BVN-registration criterion must be met?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_11:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_11",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "What makes a customer count as “new” for monthly reporting if the person already opened a first savings account elsewhere, and how is BVN registration determined?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_11:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_11",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "Under the Data Collection Template for Microfinance Banks (Financial Inclusion Target), what qualifies a customer as “new,” and what does the bank have to have done for BVN registration?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_12:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_12",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "For monthly MFB reporting, what qualifies a customer as “new,” especially regarding BVN registration being done by our bank?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_12:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_12",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the Data Collection Template for Microfinance Banks (Financial Inclusion Target) dated 2019-07-01, what does “NEW” customer mean, including how BVN registration must relate to the MFB?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_13:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_13",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "What qualifies a customer as “new,” and does the MFB need to be the one that registered the person’s BVN even if the customer has another account elsewhere?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_13:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_13",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the “Data Collection Template for Microfinance Banks” dated 2019-07-01, how does it define “NEW CUSTOMERS” and what BVN-registration condition must be met for an MFB?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_14:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_14",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "When reporting “NEW” BVN registered for the month, what gender breakdown and totals must be provided?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_14:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_14",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "Data Collection Template for MFBs – Financial Inclusion Target (2019-07-01): What fields are required for “NEW” BVN registered in the month, by gender and total?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_15:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_15",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "How should I define “new customers” when reporting monthly account opening and credit disbursement data for my MFB, especially regarding BVN registration and first savings accounts?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_15:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_15",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the “Data Collection Template for Microfinance Banks” within the Financial Inclusion Target material dated 2019-07-01, what does “NEW CUSTOMERS” mean for counting in monthly account-opening and loan-disbursement reporting?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_16:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_16",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "What qualifies as a “new customer” for BVN in an MFB, and does opening a first savings account count if the BVN was registered by the bank?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_16:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_16",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "According to the 2019 data collection template, how is “NEW CUSTOMERS” defined for an MFB (including BVN registration and first savings account)?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_1:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_1",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "In our monthly account opening and loan disbursement reporting, who qualifies as a “new customer,” especially regarding BVN registration responsibility?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_1:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_1",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "Under the Data Collection Template for MFBs - Financial Inclusion Target (published 2019-07-01), what does “NEW CUSTOMERS” mean, and whose BVN registration must be responsible?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_2:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_2",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "In the monthly account opening and loan disbursement report, how does the template define a “new customer,” especially regarding BVN registration by the bank?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_2:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_2",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "For the “Data Collection Template for Microfinance Banks” (monthly data reporting template), what does “NEW” mean for savings accounts and BVN registration?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_3:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_3",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "For the state-by-state branch breakdown table, what values are recorded for ABIA under male, female, and total?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_3:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_3",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the MFBs data collection template on financial inclusion targets (2019-07-01), what male/female/total entries are shown for ABIA for the branch breakdown by state?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_4:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_4",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "When reporting “new customers” in monthly MFB data, does a customer qualify only if the bank registered the person’s BVN, even if they already have an account elsewhere?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_4:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_4",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the “Data Collection Template for MFBs - Financial Inclusion Target” dated 2019-07-01, what does “NEW CUSTOMERS” mean for a microfinance bank’s monthly account opening and loan disbursement report?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_5:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_5",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "What counts as a “new customer” for reporting—does BVN registration by our bank include people opening their first savings account, and what about people bringing their BVN from elsewhere?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_5:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_5",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the “Data Collection Template for Microfinance Banks” (Monthly Data Reporting Template on Account Opening and Loan Disbursement), how is a “NEW” customer defined for BVN registration and first savings account openings?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_6:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_6",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "How does the template define “new customers” for account opening and loan disbursement reporting?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_6:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_6",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the “Data Collection Template for Microfinance Banks” (Financial Inclusion Secretariat), published 2019-07-01, what definition of “NEW CUSTOMERS” is provided for monthly reporting?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_7:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_7",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "In the monthly reporting template on account opening and loan disbursement, what numbers are required (new savings accounts, new credit disbursed, and new BVN registrations), and how should they be split by male, female, and total?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_8:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_8",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "When counting “new customers” for a monthly MFB reporting template, does a customer need their BVN to be registered by the same MFB, or can any BVN count regardless of who registered it?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_8:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_8",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the Data Collection Template for Microfinance Banks dated 2019-07-01, what qualifies a customer as a “NEW” customer, and who must register their BVN?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_9:natural",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_9",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "natural",
+  "question": "What qualifies someone as a “new customer,” and does the BVN have to be registered by the microfinance bank that is reporting?"
+ },
+ {
+  "id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_9:specific",
+  "chunk_id": "17df5c74-d087-4511-be95-7f6eb978f622_chunk_9",
+  "document_id": "17df5c74-d087-4511-be95-7f6eb978f622",
+  "style": "specific",
+  "question": "In the “DATA COLLECTION TEMPLATE FOR MICROFINANCE BANKS” (monthly data reporting template on account opening and loan disbursement), what does “NEW customers” mean and what BVN-registration condition must be met?"
+ },
+ {
+  "id": "21a3358c-c031-4574-9062-f7bac37c1be6_chunk_0:natural",
+  "chunk_id": "21a3358c-c031-4574-9062-f7bac37c1be6_chunk_0",
+  "document_id": "21a3358c-c031-4574-9062-f7bac37c1be6",
+  "style": "natural",
+  "question": "For mortgage finance rates, are they still subject to a maximum of MPR + 5%, and from what date is the amended rule effective?"
+ },
+ {
+  "id": "21a3358c-c031-4574-9062-f7bac37c1be6_chunk_0:specific",
+  "chunk_id": "21a3358c-c031-4574-9062-f7bac37c1be6_chunk_0",
+  "document_id": "21a3358c-c031-4574-9062-f7bac37c1be6",
+  "style": "specific",
+  "question": "What change did the “Guide to Charges by Banks and Other Financial Institutions in Nigeria” (May 2017; Part 2 Section 2.1.3 Mortgage Finance) make on the “maximum cap of MPR + 5%”, and when did it take effect?"
+ },
+ {
+  "id": "22dcdfae-e7a6-47ba-b657-d36ea1811e76_chunk_0:natural",
+  "chunk_id": "22dcdfae-e7a6-47ba-b657-d36ea1811e76_chunk_0",
+  "document_id": "22dcdfae-e7a6-47ba-b657-d36ea1811e76",
+  "style": "natural",
+  "question": "By when must an OFI enroll its customers for BVN enrollment under the CBN directive?"
+ },
+ {
+  "id": "22dcdfae-e7a6-47ba-b657-d36ea1811e76_chunk_0:specific",
+  "chunk_id": "22dcdfae-e7a6-47ba-b657-d36ea1811e76_chunk_0",
+  "document_id": "22dcdfae-e7a6-47ba-b657-d36ea1811e76",
+  "style": "specific",
+  "question": "What does the CBN letter on Bank Verification Number (BVN) Enrollment for OFIs Customers dated April 21, 2017 require OFIs to do by July 31, 2017?"
+ },
+ {
+  "id": "2d2cf161-827c-4585-ba4a-7d8f8729a8d0_chunk_0:natural",
+  "chunk_id": "2d2cf161-827c-4585-ba4a-7d8f8729a8d0_chunk_0",
+  "document_id": "2d2cf161-827c-4585-ba4a-7d8f8729a8d0",
+  "style": "natural",
+  "question": "By what date must Other Financial Institutions submit their 2019 audited financial statements following the extended deadline?"
+ },
+ {
+  "id": "2d2cf161-827c-4585-ba4a-7d8f8729a8d0_chunk_0:specific",
+  "chunk_id": "2d2cf161-827c-4585-ba4a-7d8f8729a8d0_chunk_0",
+  "document_id": "2d2cf161-827c-4585-ba4a-7d8f8729a8d0",
+  "style": "specific",
+  "question": "What submission deadline did the CBN set in its April 30, 2020 letter extending the timeframe for OFIs to file 2019 audited financial statements?"
+ },
+ {
+  "id": "30daeed2-7058-4277-9167-d46bda79d48f_chunk_0:natural",
+  "chunk_id": "30daeed2-7058-4277-9167-d46bda79d48f_chunk_0",
+  "document_id": "30daeed2-7058-4277-9167-d46bda79d48f",
+  "style": "natural",
+  "question": "We have customers without BVN—what account status must we apply immediately, and can we still accept credits like deposits or inward transfers?"
+ },
+ {
+  "id": "30daeed2-7058-4277-9167-d46bda79d48f_chunk_0:specific",
+  "chunk_id": "30daeed2-7058-4277-9167-d46bda79d48f_chunk_0",
+  "document_id": "30daeed2-7058-4277-9167-d46bda79d48f",
+  "style": "specific",
+  "question": "In the Central Bank of Nigeria Other Financial Institutions Supervision Department letter dated January 2, 2018 on BVN enrollment for OFIs customers, what status must be applied to accounts without BVN and what credits are allowed?"
+ },
+ {
+  "id": "455dffc3-d4d3-4481-ab63-8a32000fa470_chunk_0:natural",
+  "chunk_id": "455dffc3-d4d3-4481-ab63-8a32000fa470_chunk_0",
+  "document_id": "455dffc3-d4d3-4481-ab63-8a32000fa470",
+  "style": "natural",
+  "question": "We have existing placements with uninsured entities; by what deadline must an OFI liquidate them under CBN guidance?"
+ },
+ {
+  "id": "455dffc3-d4d3-4481-ab63-8a32000fa470_chunk_0:specific",
+  "chunk_id": "455dffc3-d4d3-4481-ab63-8a32000fa470_chunk_0",
+  "document_id": "455dffc3-d4d3-4481-ab63-8a32000fa470",
+  "style": "specific",
+  "question": "Under the Central Bank of Nigeria letter titled “Prohibition of Placement/Investment in Funds Managed by Uninsured Entities” dated 9 January 2023, what timeline applies to liquidating existing placements with such entities?"
+ },
+ {
+  "id": "46c5a19e-ad17-40f8-94d9-7c5d17ea8d46_chunk_0:natural",
+  "chunk_id": "46c5a19e-ad17-40f8-94d9-7c5d17ea8d46_chunk_0",
+  "document_id": "46c5a19e-ad17-40f8-94d9-7c5d17ea8d46",
+  "style": "natural",
+  "question": "I received a CBN SDGT designation update—what is the stated action requirement for other financial institutions upon receipt?"
+ },
+ {
+  "id": "46c5a19e-ad17-40f8-94d9-7c5d17ea8d46_chunk_0:specific",
+  "chunk_id": "46c5a19e-ad17-40f8-94d9-7c5d17ea8d46_chunk_0",
+  "document_id": "46c5a19e-ad17-40f8-94d9-7c5d17ea8d46",
+  "style": "specific",
+  "question": "In the Central Bank of Nigeria letter dated June 14, 2017 on the designation of Mark John Taylor, El Shafee Elsheik, Anjem Choudary, Sami Bouras and Shane Crawford as SDGT, what instruction is given to other financial institutions?"
+ },
+ {
+  "id": "77cde388-0fe1-465b-ab8f-3dabb333b1e2_chunk_0:natural",
+  "chunk_id": "77cde388-0fe1-465b-ab8f-3dabb333b1e2_chunk_0",
+  "document_id": "77cde388-0fe1-465b-ab8f-3dabb333b1e2",
+  "style": "natural",
+  "question": "What must a DFI submit for all special purpose vehicles, including ownership, governance, financial statements (assets/liabilities and income/expenditure), project status, risk exposure and mitigants, and its own regulatory returns?"
+ },
+ {
+  "id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_0:natural",
+  "chunk_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_0",
+  "document_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e",
+  "style": "natural",
+  "question": "When would a microfinance bank licence be revoked under this Gazette notice, based on the stated grounds?"
+ },
+ {
+  "id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_0:specific",
+  "chunk_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_0",
+  "document_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e",
+  "style": "specific",
+  "question": "Under “REVOCATION OF OPERATING LICENCES” (S.I. No. 23 of 2023) published in the Federal Republic of Nigeria Official Gazette on 23rd May 2023, what grounds are stated for revoking microfinance banks’ licences?"
+ },
+ {
+  "id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_1:natural",
+  "chunk_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_1",
+  "document_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e",
+  "style": "natural",
+  "question": "Which microfinance bank is listed as S/N 1 in the revoked licences schedule?"
+ },
+ {
+  "id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_1:specific",
+  "chunk_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_1",
+  "document_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e",
+  "style": "specific",
+  "question": "Revocation of Operating Licenses (2023-05-23): Schedule I lists the microfinance bank licences revoked—e.g., which bank name appears as item 1."
+ },
+ {
+  "id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_3:natural",
+  "chunk_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_3",
+  "document_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e",
+  "style": "natural",
+  "question": "In this revocation document, what does Schedule II list and what category of institutions’ licences are being revoked?"
+ },
+ {
+  "id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_3:specific",
+  "chunk_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e_chunk_3",
+  "document_id": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e",
+  "style": "specific",
+  "question": "What is the subject of Schedule II in the document “Revocation of Operating Licenses” dated 2023-05-23, and what types of licences does it list as revoked?"
+ },
+ {
+  "id": "abd71c76-817a-4df4-b6ad-978a50df2cb9_chunk_0:natural",
+  "chunk_id": "abd71c76-817a-4df4-b6ad-978a50df2cb9_chunk_0",
+  "document_id": "abd71c76-817a-4df4-b6ad-978a50df2cb9",
+  "style": "natural",
+  "question": "How many microfinance banks have their operating licences revoked under the 22 May 2023 revocation notice?"
+ },
+ {
+  "id": "abd71c76-817a-4df4-b6ad-978a50df2cb9_chunk_0:specific",
+  "chunk_id": "abd71c76-817a-4df4-b6ad-978a50df2cb9_chunk_0",
+  "document_id": "abd71c76-817a-4df4-b6ad-978a50df2cb9",
+  "style": "specific",
+  "question": "In the Gazette Government Notice No. 56 (S.I. No. 22 of 2023) on Revocation of Operating Licences, published 22nd May 2023, how many microfinance banks have their operating licences revoked?"
+ },
+ {
+  "id": "abd71c76-817a-4df4-b6ad-978a50df2cb9_chunk_1:natural",
+  "chunk_id": "abd71c76-817a-4df4-b6ad-978a50df2cb9_chunk_1",
+  "document_id": "abd71c76-817a-4df4-b6ad-978a50df2cb9",
+  "style": "natural",
+  "question": "In that 2023 revocation notice, how many microfinance banks had their operating licences revoked in total?"
+ },
+ {
+  "id": "abd71c76-817a-4df4-b6ad-978a50df2cb9_chunk_1:specific",
+  "chunk_id": "abd71c76-817a-4df4-b6ad-978a50df2cb9_chunk_1",
+  "document_id": "abd71c76-817a-4df4-b6ad-978a50df2cb9",
+  "style": "specific",
+  "question": "Revocation of Operating Licenses (2023-05-22): How many microfinance banks’ licenses were revoked, and what is the total number listed in the schedule?"
+ },
+ {
+  "id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_0:natural",
+  "chunk_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_0",
+  "document_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0",
+  "style": "natural",
+  "question": "How soon must a financial institution submit Suspicious Transaction Reports (STRs) to the NFIU under AML/CFT reporting requirements?"
+ },
+ {
+  "id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_0:specific",
+  "chunk_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_0",
+  "document_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0",
+  "style": "specific",
+  "question": "In the Central Bank of Nigeria letter dated 2 May 2017 on AML/CFT return rendition, what is the required timeframe for submitting Suspicious Transaction Reports (STRs) to NFIU?"
+ },
+ {
+  "id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_1:natural",
+  "chunk_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_1",
+  "document_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0",
+  "style": "natural",
+  "question": "By when should we email our AML/CFT returns electronically after the close of each reporting month, according to the applicable rule?"
+ },
+ {
+  "id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_1:specific",
+  "chunk_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_1",
+  "document_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0",
+  "style": "specific",
+  "question": "In the Rendition of Returns on Anti-Money Laundering and Combatting Financing of Terrorism (AML/CFT) (2017-05-02), what is the submission due date after the end of each reporting month for electronic returns?"
+ },
+ {
+  "id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_2:natural",
+  "chunk_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_2",
+  "document_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0",
+  "style": "natural",
+  "question": "If we have no AML/CFT report to submit for a given reporting period, what should we render— and what consequence applies if we don’t?"
+ },
+ {
+  "id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_2:specific",
+  "chunk_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0_chunk_2",
+  "document_id": "b8dc42df-614b-4c9d-8d10-499aafb9beb0",
+  "style": "specific",
+  "question": "What obligation applies to Bureaux De Change (BDCs) when there is no report to file in a reporting period under the Rendition of Returns on AML/CFT (2017-05-02)?"
+ },
+ {
+  "id": "c6d8a712-a05a-4030-8f4e-0338939db455_chunk_0:natural",
+  "chunk_id": "c6d8a712-a05a-4030-8f4e-0338939db455_chunk_0",
+  "document_id": "c6d8a712-a05a-4030-8f4e-0338939db455",
+  "style": "natural",
+  "question": "Per infraction, what fine applies to a Unit, State, or National licensed microfinance bank for noncompliance on credit bureau data exchange and disclosure requirements?"
+ },
+ {
+  "id": "c6d8a712-a05a-4030-8f4e-0338939db455_chunk_0:specific",
+  "chunk_id": "c6d8a712-a05a-4030-8f4e-0338939db455_chunk_0",
+  "document_id": "c6d8a712-a05a-4030-8f4e-0338939db455",
+  "style": "specific",
+  "question": "RE: DATA EXCHANGE AGREEMENTS WITH AT LEAST TWO LICENCED CREDIT BUREAUX IN NIGERIA (May 10, 2017): What penalties apply per infraction to Unit, State, and National licenced Microfinance Banks?"
+ },
+ {
+  "id": "c6d8a712-a05a-4030-8f4e-0338939db455_chunk_1:natural",
+  "chunk_id": "c6d8a712-a05a-4030-8f4e-0338939db455_chunk_1",
+  "document_id": "c6d8a712-a05a-4030-8f4e-0338939db455",
+  "style": "natural",
+  "question": "If we fail to comply with the data exchange requirements on credit bureaux information sharing, what sanction/consequence will apply?"
+ },
+ {
+  "id": "c6d8a712-a05a-4030-8f4e-0338939db455_chunk_1:specific",
+  "chunk_id": "c6d8a712-a05a-4030-8f4e-0338939db455_chunk_1",
+  "document_id": "c6d8a712-a05a-4030-8f4e-0338939db455",
+  "style": "specific",
+  "question": "Under the 2017-05-10 requirements on data exchange agreements with at least two licensed credit bureaux for OFIs, what consequence applies to entities that default?"
+ },
+ {
+  "id": "d2d9013d-6797-449c-9df8-a514a4fb4f77_chunk_0:natural",
+  "chunk_id": "d2d9013d-6797-449c-9df8-a514a4fb4f77_chunk_0",
+  "document_id": "d2d9013d-6797-449c-9df8-a514a4fb4f77",
+  "style": "natural",
+  "question": "If an OFI currently uses webmail for official communication, how soon must it create corporate e-mails and notify the CBN?"
+ },
+ {
+  "id": "d2d9013d-6797-449c-9df8-a514a4fb4f77_chunk_0:specific",
+  "chunk_id": "d2d9013d-6797-449c-9df8-a514a4fb4f77_chunk_0",
+  "document_id": "d2d9013d-6797-449c-9df8-a514a4fb4f77",
+  "style": "specific",
+  "question": "Letter to All Other Financial Institutions (OFIs) on the Creation of Corporate E-Mails, 9th April, 2019"
+ },
+ {
+  "id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2_chunk_0:natural",
+  "chunk_id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2_chunk_0",
+  "document_id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2",
+  "style": "natural",
+  "question": "When do BDCs have to submit audited financial statements to the CBN for approval, after the end of their accounting year?"
+ },
+ {
+  "id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2_chunk_0:specific",
+  "chunk_id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2_chunk_0",
+  "document_id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2",
+  "style": "specific",
+  "question": "Under the 20th December 2018 Central Bank of Nigeria letter to all Bureaux de Change (BDCs) on submission of audited financial statements, what is the submission deadline to the Director, Other Financial Institutions Supervision Department?"
+ },
+ {
+  "id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2_chunk_1:natural",
+  "chunk_id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2_chunk_1",
+  "document_id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2",
+  "style": "natural",
+  "question": "What specific items must a BDC disclose in the Notes to the Accounts for annual audited submissions, including any analysis of forex purchases and totals for forex sold and commission?"
+ },
+ {
+  "id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2_chunk_1:specific",
+  "chunk_id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2_chunk_1",
+  "document_id": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2",
+  "style": "specific",
+  "question": "Letter to All Bureaux De Change (BDCs) on Submission of Audited Financial Statements (20 December 2018) — what additional information must BDCs include as part of Notes to the Accounts (including the breakdowns and totals)?"
+ },
+ {
+  "id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632_chunk_0:natural",
+  "chunk_id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632_chunk_0",
+  "document_id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632",
+  "style": "natural",
+  "question": "How soon must an Other Financial Institution submit Suspicious Transaction Reports to the NFIU under the AML/CFT returns requirements?"
+ },
+ {
+  "id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632_chunk_0:specific",
+  "chunk_id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632_chunk_0",
+  "document_id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632",
+  "style": "specific",
+  "question": "In the Central Bank of Nigeria letter dated 10th September 2019 to all Other Financial Institutions (OFIs) on rendition of AML/CFT returns, what time limit applies to submitting Suspicious Transaction Reports (STRs) to NFIU?"
+ },
+ {
+  "id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632_chunk_1:natural",
+  "chunk_id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632_chunk_1",
+  "document_id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632",
+  "style": "natural",
+  "question": "How often should I render the Three Tiered KYC AML/CFT returns to both CBN and NFIU?"
+ },
+ {
+  "id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632_chunk_1:specific",
+  "chunk_id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632_chunk_1",
+  "document_id": "e78c79b4-7e9f-4a09-81e2-2443aa68c632",
+  "style": "specific",
+  "question": "In the 2019-09-10 letter on rendition of returns on AML/CFT, how often are OFIs required to submit “Three Tiered KYC” returns to CBN and NFIU?"
+ },
+ {
+  "id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec_chunk_0:natural",
+  "chunk_id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec_chunk_0",
+  "document_id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec",
+  "style": "natural",
+  "question": "What is the required monthly new-customer acquisition target per microfinance bank branch, and what total number of new BVN-linked accounts does it equal per branch per year?"
+ },
+ {
+  "id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec_chunk_0:specific",
+  "chunk_id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec_chunk_0",
+  "document_id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec",
+  "style": "specific",
+  "question": "Under the “Letter to all Microfinance Banks (MFBs) on the Revised National Financial Inclusion Targets” dated 20th June 2019, what monthly target must each MFB branch achieve for new customers and how many new accounts does this yearly translate to?"
+ },
+ {
+  "id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec_chunk_1:natural",
+  "chunk_id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec_chunk_1",
+  "document_id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec",
+  "style": "natural",
+  "question": "Who should receive the monthly report/update on new customers onboarded, and what recipient role is specified for that report?"
+ },
+ {
+  "id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec_chunk_1:specific",
+  "chunk_id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec_chunk_1",
+  "document_id": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec",
+  "style": "specific",
+  "question": "In the 2019-06-20 letter to all Microfinance Banks on the Revised National Financial Inclusion Targets, who must receive the monthly report/update on new customers onboarded?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_0:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_0",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "By when must other financial institutions submit their IFRS 9 implementation project information to CBN, and when should monthly status updates start?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_0:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_0",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "What supervisory expectations and submission requirements does the Central Bank of Nigeria’s “Guidance Note to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria” (March 5, 2019) set for OFIs regarding IFRS 9 implementation projects?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_10:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_10",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "By when should an OFI send its IFRS 9 implementation plan to the Director, Other Financial Institutions Supervision Department, and which email addresses should receive the soft copies?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_11:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_11",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "I adopted IFRS 9 in 2018—what must I submit to the CBN, and for those not yet adopted, when do monthly project status updates start?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_12:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_12",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "For OFIs that have not adopted IFRS 9, by what day of the following month must the monthly implementation status report be submitted to the CBN starting July 2019?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_12:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_12",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "In the “Guidance Notes to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria” dated 2019-03-05, what monthly submission deadline to the CBN applies to OFIs yet to adopt IFRS 9 from July 2019?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_1:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_1",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "When assessing significant increase in credit risk for debt instruments measured at amortised cost or FVOCI, what indicators and presumption rules should be used at each reporting date?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_1:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_1",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "Under the Guidance Notes to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria (2019-03-05), what is the expected approach for assessing significant increase in credit risk for debt instruments at amortised cost and FVOCI?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_2:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_2",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "When assessing significant increase in credit risk under the 30-days/7-days past due presumption, what forward-looking information must be incorporated, and when may the presumption be applied despite missing it?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_2:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_2",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "Guidance Notes to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria (2019-03-05): what forward-looking use is required when using the 30 days past due / 7 days for loans below 180 days criterion?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_3:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_3",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "When moving exposures between 12‑month ECL and Lifetime ECL, what probationary periods (including the 90/30 and 180/60 day requirements) should an OFI observe?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_3:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_3",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "How do Other Financial Institutions apply staging/transfer criteria for significant increase in credit risk under the Guidance Notes on the Implementation of IFRS 9 in Nigeria (2019-03-05)?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_4:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_4",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "How often must an OFI review and update expected credit loss estimates to reflect changes in credit risk since initial recognition?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_4:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_4",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "Guidance Notes to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria (2019-03-05): ECL impairment implementation requirements."
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_5:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_5",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "When using IRB model outputs for IFRS 9 PD, what validation and adjustment steps are required to make PD estimates fit IFRS 9 requirements?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_5:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_5",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "For the “Guidance Notes to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria” (2019-03-05), what requirements apply to validating IRB model PD outputs and making adjustments for IFRS 9 compliance?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_6:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_6",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "When computing IFRS 9 ECL/LGD, what adjustments are required for the discount rate so it reflects time value of money and approximates the EIR?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_6:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_6",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "Guidance Notes to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria (2019-03-05): discount rate adjustments for computing IFRS 9 ECL/LGD"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_7:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_7",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "When must an OFI validate its ECL models, who should do it, and what happens if performance thresholds are breached?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_7:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_7",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "Guidance Notes to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria (2019-03-05)"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_8:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_8",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "When there’s no reasonable expectation of recovery on a non-performing facility, what portion must be written off and how should that write-off be treated?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_8:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_8",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "Guidance Notes to Other Financial Institutions on the Implementation of IFRS 9 (Financial Instruments) in Nigeria (2019-03-05): What’s required for ECL write-off of non-performing facilities?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_9:natural",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_9",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "natural",
+  "question": "When a modified financial asset is distressed, should lifetime expected credit loss be recognized immediately after modification, or can it be treated differently under the ECL staging rules?"
+ },
+ {
+  "id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_9:specific",
+  "chunk_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac_chunk_9",
+  "document_id": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+  "style": "specific",
+  "question": "The guidance notes to other financial institutions on the implementation of IFRS 9 (Financial Instruments) in Nigeria (2019-03-05) say distressed asset modification must be treated as an originated credit-impaired financial asset, with lifetime ECL recognized after modification."
+ },
+ {
+  "id": "f6d58089-9318-490c-81f0-aa676828e941_chunk_0:natural",
+  "chunk_id": "f6d58089-9318-490c-81f0-aa676828e941_chunk_0",
+  "document_id": "f6d58089-9318-490c-81f0-aa676828e941",
+  "style": "natural",
+  "question": "Until when must OFIs complete BVN enrolment, and how often should they submit progress reports on BVN enrolment after the deadline extension?"
+ },
+ {
+  "id": "f6d58089-9318-490c-81f0-aa676828e941_chunk_0:specific",
+  "chunk_id": "f6d58089-9318-490c-81f0-aa676828e941_chunk_0",
+  "document_id": "f6d58089-9318-490c-81f0-aa676828e941",
+  "style": "specific",
+  "question": "What BVN enrollment timeline extension is approved for Other Financial Institutions in the August 1, 2017 BVN enrollment for OFIs customers letter, and what monthly reporting requirement applies?"
+ },
+ {
+  "id": "f6d58089-9318-490c-81f0-aa676828e941_chunk_1:natural",
+  "chunk_id": "f6d58089-9318-490c-81f0-aa676828e941_chunk_1",
+  "document_id": "f6d58089-9318-490c-81f0-aa676828e941",
+  "style": "natural",
+  "question": "From January 1, 2018, what happens to debit operations for customers whose accounts have no BVN linked to them?"
+ },
+ {
+  "id": "f6d58089-9318-490c-81f0-aa676828e941_chunk_1:specific",
+  "chunk_id": "f6d58089-9318-490c-81f0-aa676828e941_chunk_1",
+  "document_id": "f6d58089-9318-490c-81f0-aa676828e941",
+  "style": "specific",
+  "question": "Under the BVN enrolment extension for OFIs to December 31, 2017 (dated 1 August 2017), what operational restriction applies from January 1, 2018 to customers without BVN linked to their accounts?"
+ },
+ {
+  "id": "fb64b718-abc0-4d49-9b3d-3953e797b6cc_chunk_0:natural",
+  "chunk_id": "fb64b718-abc0-4d49-9b3d-3953e797b6cc_chunk_0",
+  "document_id": "fb64b718-abc0-4d49-9b3d-3953e797b6cc",
+  "style": "natural",
+  "question": "From which financial year must OFIs prepare annual financial statements fully compliant with IFRS, and what happens if the submitted statements are not compliant?"
+ },
+ {
+  "id": "fb64b718-abc0-4d49-9b3d-3953e797b6cc_chunk_0:specific",
+  "chunk_id": "fb64b718-abc0-4d49-9b3d-3953e797b6cc_chunk_0",
+  "document_id": "fb64b718-abc0-4d49-9b3d-3953e797b6cc",
+  "style": "specific",
+  "question": "The letter dated October 8, 2021 (CBN) on adoption of IFRS by Other Financial Institutions (OFIs) requires OFIs from the 2021 financial year to prepare annual financial statements fully compliant with IFRS."
+ }
+]

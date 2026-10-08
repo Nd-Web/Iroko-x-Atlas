@@ -28,6 +28,7 @@ import type {
   Citation,
   AgentTraceStep,
 } from "@/lib/types";
+import type { AnswerFeedbackState } from "@/types/chat";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,13 +40,21 @@ export interface ChatMessage {
   citations?: Citation[];
   suggested_followups?: string[];
   trace?: AgentTraceStep[];
+  interrupted?: boolean;
+  answer_status?: string;
+  gap_reason?: string | null;
+  /** Server id of the saved answer, required to record feedback on it. */
+  message_id?: string;
+  feedback?: AnswerFeedbackState | null;
 }
 
 export interface UseChatReturn {
   messages: ChatMessage[];
   isLoading: boolean;
+  isLoadingHistory: boolean;
   error: string | null;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, options?: { retry?: boolean }) => Promise<void>;
+  stopMessage: () => void;
   clearChat: () => void;
   /** Load an existing conversation's history from the backend. */
   loadConversation: (conversationId: string) => Promise<void>;
@@ -66,12 +75,14 @@ export function useChat(): UseChatReturn {
   const { triggerSessionExpiry } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
   const conversationIdRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const requestRef = useRef(0);
+  const activeAssistantRef = useRef<string | null>(null);
 
   useEffect(() => () => { abortRef.current?.abort(); }, []);
 
@@ -108,9 +119,13 @@ export function useChat(): UseChatReturn {
     }
   }, [messages]);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, options?: { retry?: boolean }) => {
     const trimmed = content.trim();
     if (!trimmed || abortRef.current || isLoading) return;
+    if (trimmed.length > 2000) {
+      setError("Please shorten your question to 2,000 characters or fewer.");
+      return;
+    }
     const requestId = ++requestRef.current;
     const controller = new AbortController();
     abortRef.current = controller;
@@ -124,10 +139,15 @@ export function useChat(): UseChatReturn {
       content: trimmed,
       timestamp: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => {
+      const last = prev[prev.length - 1];
+      return options?.retry && last?.role === "user" && last.content === trimmed
+        ? prev : [...prev, userMsg];
+    });
 
     // 2. Prepare an assistant message placeholder
     const assistantId = msgId();
+    activeAssistantRef.current = assistantId;
     const assistantMsg: ChatMessage = {
       id: assistantId,
       role: "assistant",
@@ -208,6 +228,9 @@ export function useChat(): UseChatReturn {
                   suggested_followups:
                     completionData!.suggested_followups ?? [],
                   trace: completionData!.agent_trace ?? [],
+                  answer_status: completionData!.answer_status,
+                  gap_reason: completionData!.gap_reason,
+                  message_id: completionData!.message_id,
                 }
               : m,
           ),
@@ -226,20 +249,38 @@ export function useChat(): UseChatReturn {
       if (requestRef.current === requestId) {
         setIsLoading(false);
         abortRef.current = null;
+        activeAssistantRef.current = null;
       }
     }
   }, [isLoading, triggerSessionExpiry]);
+
+  const stopMessage = useCallback(() => {
+    // Fence late tokens/completions before aborting the network request.
+    ++requestRef.current;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    const assistantId = activeAssistantRef.current;
+    activeAssistantRef.current = null;
+    setMessages(prev => prev.flatMap(message => message.id !== assistantId
+      ? [message]
+      : message.content ? [{ ...message, interrupted: true }] : []));
+    setIsLoading(false);
+    setIsLoadingHistory(false);
+    setError(null);
+  }, []);
 
   const clearChat = useCallback(() => {
     ++requestRef.current;
     abortRef.current?.abort();
     abortRef.current = null;
+    activeAssistantRef.current = null;
     setMessages([]);
     setError(null);
     setIsLoading(false);
+    setIsLoadingHistory(false);
     conversationIdRef.current = null;
     setConversationId(null);
-    sessionStorage.removeItem("iroko_chat_state");
+    try { sessionStorage.removeItem("iroko_chat_state"); } catch { /* Storage may be disabled. */ }
   }, []);
 
   /**
@@ -251,7 +292,9 @@ export function useChat(): UseChatReturn {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    activeAssistantRef.current = null;
     setIsLoading(true);
+    setIsLoadingHistory(true);
     setError(null);
     try {
       const res = await fetch(`/api/atlas/conversations/${encodeURIComponent(id)}/messages`, {
@@ -266,17 +309,16 @@ export function useChat(): UseChatReturn {
         // The proxy returns { error: "<human-readable message>", ... } —
         // show the message itself, not the raw JSON blob.
         const text = await res.text().catch(() => "");
-        let message = `HTTP ${res.status}`;
+        let message = "This conversation could not be loaded. Please try again.";
         try {
           message = JSON.parse(text).error ?? message;
-        } catch {
-          if (text) message = text;
-        }
+        } catch { /* Never render a gateway's HTML error page as chat content. */ }
         throw new Error(message);
       }
       const data = await res.json();
       if (requestRef.current !== requestId) return;
-      const loaded: ChatMessage[] = (data.messages ?? []).map(
+      if (!Array.isArray(data.messages)) throw new Error("The saved conversation response was incomplete. Please try again.");
+      const loaded: ChatMessage[] = data.messages.map(
         (m: {
           id: string | number;
           role: "user" | "assistant";
@@ -284,13 +326,19 @@ export function useChat(): UseChatReturn {
           agent_trace?: AgentTraceStep[];
           citations?: Citation[];
           created_at?: string;
+          feedback?: AnswerFeedbackState | null;
         }) => ({
           id: String(m.id ?? msgId()),
+          message_id: m.role === "assistant" && m.id != null ? String(m.id) : undefined,
+          feedback: m.feedback ?? null,
           role: m.role,
           content: m.content,
           timestamp: m.created_at ?? new Date().toISOString(),
           citations: m.citations ?? undefined,
           trace: m.agent_trace ?? undefined,
+          answer_status: m.agent_trace?.find(step => step.tool === "answer_outcome")?.answer_status,
+          gap_reason: m.agent_trace?.find(step => step.tool === "answer_outcome")?.gap_reason,
+          suggested_followups: m.agent_trace?.find(step => step.tool === "answer_outcome")?.suggested_followups,
         }),
       );
       conversationIdRef.current = id;
@@ -304,6 +352,7 @@ export function useChat(): UseChatReturn {
     } finally {
       if (requestRef.current === requestId) {
         setIsLoading(false);
+        setIsLoadingHistory(false);
         abortRef.current = null;
       }
     }
@@ -312,8 +361,10 @@ export function useChat(): UseChatReturn {
   return {
     messages,
     isLoading,
+    isLoadingHistory,
     error,
     sendMessage,
+    stopMessage,
     clearChat,
     loadConversation,
     conversationId,

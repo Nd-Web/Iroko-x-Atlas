@@ -216,6 +216,11 @@ class AgentAction(BaseModel):
     result_preview: Optional[str] = None
     duration_ms: Optional[int] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+    intent: Optional[str] = None
+    resolved_question: Optional[str] = None
+    answer_status: Optional[str] = None
+    gap_reason: Optional[str] = None
+    suggested_followups: List[str] = Field(default_factory=list)
 
 
 class Citation(BaseModel):
@@ -244,6 +249,9 @@ class AskResponse(BaseModel):
     agent_trace: List[AgentAction] = []
     citations: List[Citation] = []
     suggested_followups: List[str] = []
+    suggested_actions: List[str] = Field(default_factory=list)
+    answer_status: str = "answered"
+    gap_reason: Optional[str] = None
     partial_answer: bool = False
     missing_information: List[str] = []
     source_checks: List[Dict[str, Any]] = []

@@ -314,8 +314,43 @@ async def research(question):
             "checked_at": datetime.now(timezone.utc).isoformat(), "exhaustive": False}
 
 
-def finish(result, report, question):
+def _finish_helpful(result, report, question):
+    """Add research coverage without replacing findings or precise failure causes."""
+    from services.grounded_answers import helpful_result
+
+    missing = list(result.get("missing_information", []))
+    if freshness_requested(question):
+        missing.append("latest_coverage")
+    if result.get("knowledge_gap"):
+        if re.search(r"\b(cost|fine|penalt\w*|sanction\w*)\b", question, re.I) or "cod=st" in question.lower():
+            missing.append("penalty")
+        if report["sources"]:
+            # These links establish discovery, not approval of any proposed claim.
+            citations, seen = [], set()
+            for source in report["sources"]:
+                if source["document_id"] in seen:
+                    continue
+                seen.add(source["document_id"])
+                citations.append({"document_id": source["document_id"], "document_title": source["title"],
+                    "chunk_id": source["chunk_id"], "excerpt": source["content"][:500],
+                    "provenance": source["provenance"], "source_url": source["provenance"]["source_url"]})
+                if len(citations) == 3:
+                    break
+            result["citations"] = citations
+            base = result.get("_finding_answer", result["answer"])
+            result["_finding_answer"] = base + "\n\nOfficial source links are available below for review; they are not approved answer findings."
+    result.update(missing_information=list(dict.fromkeys(missing)), source_checks=report["checks"],
+                  research_checked_at=report["checked_at"], _grounded=True, verdict="MONITOR")
+    result = helpful_result(result, question)
+    if any(check["status"] != "checked" for check in report["checks"]):
+        result["answer"] += "\n\nSome official sources were unavailable during this check, so coverage is incomplete."
+    return result
+
+
+def finish(result, report, question, *, helpful=False):
     """Server-owned limitations, never model-generated claims of legal completeness."""
+    if helpful:
+        return _finish_helpful(result, report, question)
     missing = list(result.get("missing_information", []))
     if freshness_requested(question):
         missing.append("latest_coverage")

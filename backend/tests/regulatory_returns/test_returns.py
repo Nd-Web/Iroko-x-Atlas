@@ -329,3 +329,11 @@ def test_every_generator_is_wired():
     for spec in RETURNS:
         if spec.generator:
             assert spec.id in builders._COMPUTE and spec.id in builders._RENDER and spec.id in builders.REF_CODES
+
+
+def test_unbalanced_balance_sheet_blocks_generation():
+    sfp = dict(SFP, A10=SFP["A10"] + 9_000_000)
+    p = builders.prepare("cbn-monthly-prudential", _payload("2026-09"), dataset={"sfp": sfp, "pl": PL, "loans": []})
+    assert any("does not balance" in e for e in p.errors)
+    with pytest.raises(builders.ReturnInputError):
+        builders.render(p)

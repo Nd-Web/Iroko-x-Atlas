@@ -48,11 +48,11 @@ export default function PersistentShell({ children }: { children: React.ReactNod
   return (
     <ShellContext.Provider value={{ setHeader, actionsSlot }}>
       {/*
-       * h-screen + overflow-hidden on the outer shell locks the entire layout
+       * h-dvh + overflow-hidden follows the mobile viewport and locks the layout
        * to the viewport. Each page's <main> (rendered by AppShell) owns the
        * scroll inside the content column.
        */}
-      <div className="flex h-screen overflow-hidden bg-surface-page">
+      <div className="flex h-dvh overflow-hidden bg-surface-page">
         {/* Keyboard users can jump straight past the sidebar/topbar */}
         <a
           href="#main-content"

@@ -1,335 +1,234 @@
 "use client";
-/**
- * components/chat/MessageBubble.tsx
- * Single message bubble — user right-aligned, assistant left-aligned.
- * Uses react-markdown + remark-gfm for proper rendering.
- */
-import React, { useState } from "react";
+
+import { useState, useRef, useEffect, useId, type ComponentProps } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn, formatRelativeTime, getRiskHex, getRiskLabel } from "@/lib/utils";
 import { toast } from "sonner";
-import type { ChatMessage } from "@/types/chat";
+import type { AnswerFeedbackState, ChatMessage } from "@/types/chat";
 import { citationUrl } from "@/lib/citation-url";
+
+// Reviewed "not right" answers become evaluation cases, so the reason matters more than a score.
+const FEEDBACK_REASONS = [
+  { id: "wrong_fact", label: "Wrong or unsupported fact" },
+  { id: "missed_part", label: "Missed part of my question" },
+  { id: "wrong_document", label: "Used the wrong document" },
+  { id: "unclear", label: "Hard to understand" },
+  { id: "other", label: "Something else" },
+] as const;
+
+function AnswerFeedback({ messageId, initial }: { messageId: string; initial?: AnswerFeedbackState | null }) {
+  const [vote, setVote] = useState<AnswerFeedbackState | null>(initial ?? null);
+  const [choosingReason, setChoosingReason] = useState(false);
+  const [reason, setReason] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const send = async (helpful: boolean) => {
+    if (sending) return;
+    setSending(true);
+    try {
+      const response = await fetch(`/api/atlas/messages/${encodeURIComponent(messageId)}/feedback`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ helpful, reason: helpful ? null : reason, comment: helpful ? null : note.trim() || null }),
+      });
+      if (!response.ok) throw new Error("Feedback failed");
+      setVote({ helpful, reason: helpful ? null : reason });
+      setChoosingReason(false);
+      toast.success(helpful ? "Thanks for confirming this answer." : "Thanks. This answer will be reviewed to improve Iroko.");
+    } catch {
+      toast.error("Couldn’t save your feedback. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (vote && !choosingReason) {
+    const label = FEEDBACK_REASONS.find(item => item.id === vote.reason)?.label;
+    return <span className="flex min-h-9 items-center gap-2">
+      <span>{vote.helpful ? "You marked this answer right" : `You marked this answer not right${label ? `: ${label.toLowerCase()}` : ""}`}</span>
+      <button onClick={() => { setVote(null); setReason(null); setNote(""); }} className="underline-offset-2 hover:text-gray-800 hover:underline">Change</button>
+    </span>;
+  }
+
+  return <div className="flex min-w-0 flex-col gap-2">
+    <div className="flex min-h-9 items-center gap-1" role="group" aria-label="Was this answer right?">
+      <span className="mr-1">Was this answer right?</span>
+      <button onClick={() => void send(true)} disabled={sending} aria-label="Yes, this answer was right"
+        className="rounded-md px-2 py-1 hover:bg-gray-50 hover:text-gray-800 disabled:opacity-50">👍 Yes</button>
+      <button onClick={() => setChoosingReason(true)} disabled={sending} aria-label="No, this answer was not right" aria-expanded={choosingReason}
+        className="rounded-md px-2 py-1 hover:bg-gray-50 hover:text-gray-800 disabled:opacity-50">👎 No</button>
+    </div>
+    {choosingReason && <div className="rounded-xl border border-border-default bg-surface-card p-3 text-xs text-gray-600">
+      <p className="mb-2 font-medium text-gray-700">What was wrong?</p>
+      <div className="mb-2 flex flex-wrap gap-2">
+        {FEEDBACK_REASONS.map(item => <button key={item.id} onClick={() => setReason(item.id)} aria-pressed={reason === item.id}
+          className={cn("rounded-lg border px-2.5 py-1.5", reason === item.id ? "border-brand-300 bg-brand-50 text-brand-600" : "border-border-default hover:border-brand-200")}>{item.label}</button>)}
+      </div>
+      <label className="sr-only" htmlFor={`feedback-note-${messageId}`}>What should the answer have said? (optional)</label>
+      <textarea id={`feedback-note-${messageId}`} value={note} onChange={event => setNote(event.target.value)} maxLength={1000} rows={2}
+        placeholder="What should the answer have said? (optional)"
+        className="w-full resize-none rounded-lg border border-border-default bg-surface-page/40 p-2 text-xs text-gray-700 outline-none focus:border-brand-300" />
+      <div className="mt-2 flex gap-2">
+        <button onClick={() => void send(false)} disabled={sending || !reason}
+          className="rounded-lg bg-brand-500 px-3 py-1.5 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">{sending ? "Sending…" : "Send feedback"}</button>
+        <button onClick={() => setChoosingReason(false)} className="rounded-lg px-3 py-1.5 hover:text-gray-800">Cancel</button>
+      </div>
+    </div>}
+  </div>;
+}
 
 interface Props {
   message: ChatMessage;
-  /** The user question this assistant message answered — included in PDF exports. */
   contextQuery?: string;
+  isStreaming?: boolean;
+  compact?: boolean;
 }
 
-function RiskBadge({ score }: { score: number }) {
-  const hex = getRiskHex(score);
-  const label = getRiskLabel(score);
-  return (
-    <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-      style={{ background: `${hex}20`, color: hex, border: `1px solid ${hex}40` }}
-    >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: hex }} />
-      {label} · {score}/10
-    </span>
-  );
-}
-
-const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
-  // Headings
-  h1: ({ children }) => (
-    <h1 className="text-base font-bold text-gray-900 mt-3 mb-1.5 first:mt-0">{children}</h1>
-  ),
-  h2: ({ children }) => (
-    <h2 className="text-sm font-bold text-gray-900 mt-3 mb-1 first:mt-0">{children}</h2>
-  ),
-  h3: ({ children }) => (
-    <h3 className="text-sm font-semibold text-gray-900 mt-2.5 mb-1 first:mt-0">{children}</h3>
-  ),
-  h4: ({ children }) => (
-    <h4 className="text-xs font-semibold text-gray-900 mt-2 mb-0.5 first:mt-0">{children}</h4>
-  ),
-
-  // Paragraph
-  p: ({ children }) => (
-    <p className="mb-2 last:mb-0 leading-relaxed text-gray-800">{children}</p>
-  ),
-
-  // Strong / bold
-  strong: ({ children }) => (
-    <strong className="font-semibold text-gray-900">{children}</strong>
-  ),
-
-  // Emphasis / italic
-  em: ({ children }) => (
-    <em className="italic text-gray-800">{children}</em>
-  ),
-
-  // Unordered list
-  ul: ({ children }) => (
-    <ul className="mb-2 space-y-1 pl-4">{children}</ul>
-  ),
-
-  // Ordered list
-  ol: ({ children }) => (
-    <ol className="mb-2 space-y-1 pl-5 list-decimal">{children}</ol>
-  ),
-
-  // List item
-  li: ({ children }) => (
-    <li className="text-gray-800 leading-relaxed relative before:content-[''] pl-1">
-      <span className="flex gap-2 items-start">
-        <span className="mt-[6px] w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0" />
-        <span>{children}</span>
-      </span>
-    </li>
-  ),
-
-  // Override li for ordered lists
-  // (react-markdown passes ordered flag via context, handled naturally by ol wrapper)
-
-  // Horizontal rule
-  hr: () => (
-    <hr className="my-3 border-0 border-t border-border-default" />
-  ),
-
-  // Inline code
-  code: ({ children, className }) => {
-    const isBlock = className?.startsWith("language-");
-    if (isBlock) {
-      return (
-        <pre className="my-2 rounded-lg bg-surface-page border border-border-default p-3 overflow-x-auto">
-          <code className="text-xs font-mono text-info-500">{children}</code>
-        </pre>
-      );
-    }
-    return (
-      <code className="px-1 py-0.5 rounded text-[11px] bg-gray-100 text-info-500 font-mono">
-        {children}
-      </code>
-    );
-  },
-
-  // Blockquote
-  blockquote: ({ children }) => (
-    <blockquote className="border-l-2 border-info-500 pl-3 my-2 text-gray-500 italic">
-      {children}
-    </blockquote>
-  ),
-
-  // Table
-  table: ({ children }) => (
-    <div className="my-2 overflow-x-auto rounded-lg border border-border-default">
-      <table className="w-full text-xs">{children}</table>
-    </div>
-  ),
-  thead: ({ children }) => (
-    <thead className="bg-gray-50 font-semibold">{children}</thead>
-  ),
-  tbody: ({ children }) => (
-    <tbody className="divide-y divide-border-default">{children}</tbody>
-  ),
-  tr: ({ children }) => <tr>{children}</tr>,
-  th: ({ children }) => (
-    <th className="px-3 py-2 text-left text-[11px] font-semibold text-gray-600">{children}</th>
-  ),
-  td: ({ children }) => (
-    <td className="px-3 py-2 text-gray-800">{children}</td>
-  ),
-
-  // Links
-  a: ({ href, children }) => (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-info-500 underline hover:text-[#7DD3FC] transition-colors"
-    >
-      {children}
-    </a>
-  ),
+const markdownComponents: ComponentProps<typeof ReactMarkdown>["components"] = {
+  h1: ({ children }) => <h2 className="mb-3 mt-6 text-lg font-semibold leading-snug text-gray-900 first:mt-0">{children}</h2>,
+  h2: ({ children }) => <h2 className="mb-3 mt-6 text-base font-semibold leading-snug text-gray-900 first:mt-0">{children}</h2>,
+  h3: ({ children }) => <h3 className="mb-2 mt-5 text-sm font-semibold text-gray-900 first:mt-0">{children}</h3>,
+  h4: ({ children }) => <h4 className="mb-2 mt-4 font-semibold text-gray-900">{children}</h4>,
+  p: ({ children }) => <p className="mb-3 leading-6 last:mb-0">{children}</p>,
+  strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+  ul: ({ children }) => <ul className="mb-3 list-disc space-y-1 pl-5 marker:text-brand-500">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-3 list-decimal space-y-1 pl-5 marker:text-gray-500">{children}</ol>,
+  li: ({ children }) => <li className="pl-1 leading-6 [&>p]:mb-1">{children}</li>,
+  hr: () => <hr className="my-6 border-border-default" />,
+  pre: ({ children }) => <pre className="my-4 max-w-full overflow-x-auto rounded-xl border border-border-default bg-surface-card p-4 text-xs leading-relaxed">{children}</pre>,
+  code: ({ children, className }) => <code className={cn("break-words font-mono text-info-700", className || "rounded bg-gray-50 px-1 py-0.5 text-[12px]")}>{children}</code>,
+  blockquote: ({ children }) => <blockquote className="my-4 border-l-2 border-brand-300 pl-4 text-gray-500">{children}</blockquote>,
+  table: ({ children }) => <div className="my-4 max-w-full overflow-x-auto rounded-xl border border-border-default"><table className="w-full min-w-[440px] text-xs">{children}</table></div>,
+  thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+  tbody: ({ children }) => <tbody className="divide-y divide-border-default">{children}</tbody>,
+  th: ({ children }) => <th className="px-4 py-3 text-left font-semibold text-gray-800">{children}</th>,
+  td: ({ children }) => <td className="px-4 py-3 align-top leading-relaxed">{children}</td>,
+  a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="break-words text-info-700 underline decoration-info-500/40 underline-offset-4 hover:decoration-info-500">{children}</a>,
 };
 
-export default function MessageBubble({ message, contextQuery }: Props) {
+export default function MessageBubble({ message, contextQuery, isStreaming = false, compact = false }: Props) {
   const isUser = message.role === "user";
-  const [reasoningOpen, setReasoningOpen] = useState(false);
-  const hasSteps = message.reasoning_steps && message.reasoning_steps.length > 0;
-  const contentRef = React.useRef<HTMLDivElement>(null);
-
+  const isConversational = message.answer_status === "conversational";
+  const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const answerRef = useRef<HTMLDivElement>(null);
+  const answerId = useId();
+
+  useEffect(() => {
+    const content = answerRef.current;
+    if (!content || !compact) return;
+    const measure = () => {
+      const previewHeight = Math.min(240, Math.max(120, window.innerHeight * 0.26));
+      setHasOverflow(content.scrollHeight > previewHeight + 4);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(content);
+    window.addEventListener("resize", measure);
+    return () => { observer.disconnect(); window.removeEventListener("resize", measure); };
+  }, [compact, message.content]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopied(true);
+    } catch {
+      toast.error("Couldn’t copy. Select the answer text to copy it.");
+    }
+  };
 
   const handleDownloadPdf = async () => {
-    if (exporting) return;
+    if (exporting || isStreaming) return;
     setExporting(true);
-
-    const toastId = toast.loading("Generating detailed PDF report…");
-
+    const toastId = toast.loading("Generating PDF report…");
     try {
-      // Use the relative Next.js proxy path instead of hardcoded localhost
       const response = await fetch("/api/v1/pdf/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: contextQuery ?? "Context derived from chat",
-          original_response: message.content,
-          trace_id: message.id,
-          citations: message.citations ?? [],
-        })
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: contextQuery ?? "Context derived from chat", original_response: message.content, trace_id: message.id, citations: message.citations ?? [] }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate PDF on backend");
-      }
-
-      // Download the binary blob
+      if (!response.ok) throw new Error("Failed to generate PDF");
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `iroko-ai-detailed-report-${Date.now()}.pdf`;
-      document.body.appendChild(a);
-      a.click();
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "iroko-ai-report-" + Date.now() + ".pdf";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast.success("PDF report downloaded!", { id: toastId });
-    } catch (err) {
-      console.error("PDF export failed:", err);
-      toast.error("Failed to generate PDF. Please try again.", { id: toastId });
+      toast.success("PDF report downloaded", { id: toastId });
+    } catch {
+      toast.error("Couldn’t generate the PDF. Please try again.", { id: toastId });
     } finally {
       setExporting(false);
     }
   };
 
+  if (isUser) return (
+    <article className="flex justify-end" aria-label="Your question">
+      <div className="max-w-[95%] rounded-2xl rounded-tr-md border border-brand-200 bg-brand-50 px-4 py-2.5 text-[13px] leading-6 text-gray-800 sm:max-w-[85%]">
+        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+      </div>
+    </article>
+  );
 
   return (
-    <div className={cn("flex gap-3 max-w-full", isUser ? "flex-row-reverse" : "flex-row")}>
-      {/* Avatar */}
-      {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center shrink-0 mt-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#0A0A0B" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-      )}
-
-      <div className={cn("flex flex-col gap-1 max-w-[78%]", isUser ? "items-end" : "items-start")}>
-        {/* Risk badge for assistant */}
-        {!isUser && message.risk_score !== undefined && message.risk_score !== null && (
-          <RiskBadge score={message.risk_score} />
-        )}
-
-        {/* Bubble */}
-        <div
-          className={cn(
-            "rounded-2xl px-4 py-3 text-sm",
-            isUser
-              ? "bg-brand-500 text-[#0A0A0B] font-medium rounded-tr-sm"
-              : "bg-surface-card text-gray-800 border border-border-default rounded-tl-sm",
-          )}
-        >
-          {isUser ? (
-            <span>{message.content}</span>
-          ) : (
-            <div className="prose-sm max-w-none" ref={contentRef}>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={markdownComponents}
-              >
-                {message.content}
-              </ReactMarkdown>
-            </div>
-          )}
-        </div>
-
-        {/* Cited sources — chips linking into the document library */}
-        {!isUser && message.citations && message.citations.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 mt-1 max-w-full">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-0.5">Sources</span>
-            {message.citations.map((c, index) => (
-              <Link
-                key={c.document_id + c.document_title + index}
-                href={citationUrl(c.source_url) ?? "/documents"}
-                target={citationUrl(c.source_url) ? "_blank" : undefined}
-                rel={citationUrl(c.source_url) ? "noopener noreferrer" : undefined}
-                title={c.excerpt ?? c.document_title}
-                className="inline-flex items-center gap-1 max-w-[220px] px-2 py-1 rounded-lg text-[10.5px] font-semibold text-info-500 bg-info-50 border border-[#38BDF8]/25 hover:bg-[#38BDF8]/15 transition-colors"
-              >
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="shrink-0">
-                  <path d="M7.5 1H3A1.5 1.5 0 0 0 1.5 2.5v7A1.5 1.5 0 0 0 3 11h6A1.5 1.5 0 0 0 10.5 9.5V4l-3-3Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-                </svg>
-                <span className="truncate">[{index + 1}] {c.document_title}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {/* Actions row: Reasoning + PDF Export */}
-        <div className="flex items-center gap-4 mt-1">
-          {hasSteps && (
-            <button
-              onClick={() => setReasoningOpen(!reasoningOpen)}
-              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5"
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={cn("transition-transform", reasoningOpen ? "rotate-180" : "")}>
-                <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              {reasoningOpen ? "Hide" : "View"} reasoning ({message.reasoning_steps!.length} steps)
-            </button>
-          )}
-
-          {!isUser && (
-            <button
-              onClick={handleDownloadPdf}
-              disabled={exporting}
-              className={cn(
-                "text-[11px] flex items-center gap-1.5 transition-all duration-200",
-                exporting
-                  ? "text-brand-500 opacity-70 cursor-wait"
-                  : "text-gray-400 hover:text-brand-500 cursor-pointer"
-              )}
-              title="Download as PDF"
-            >
-              {exporting ? (
-                <>
-                  <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                  </svg>
-                  Generating…
-                </>
-              ) : (
-                <>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  Export PDF
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Reasoning steps inline */}
-        {hasSteps && reasoningOpen && (
-          <div className="w-full space-y-1.5 mt-1">
-            {message.reasoning_steps!.map((step, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-2 px-3 py-2 rounded-lg bg-surface-card border border-border-default text-xs"
-              >
-                <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold bg-info-50 text-info-500">{i + 1}</span>
-                <div>
-                  <span className="font-semibold text-info-500">{step.agent.replace("Agent","")}: </span>
-                  <span className="text-gray-500">{step.message}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Timestamp */}
+    <article aria-label="Iroko answer" className={cn("min-w-0", compact && "rounded-2xl border border-border-default bg-surface-card/70 p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.08)]")}>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 text-brand-500" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </span>
+        <span className="text-xs font-semibold text-gray-700">Iroko</span>
         <span className="text-[10px] text-gray-400">{formatRelativeTime(message.timestamp)}</span>
+        {message.risk_score != null && <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ color: getRiskHex(message.risk_score), background: getRiskHex(message.risk_score) + "20" }}>{getRiskLabel(message.risk_score)} · {message.risk_score}/10</span>}
+        {message.interrupted && <span className="text-[11px] text-warning-700">Stopped · incomplete answer</span>}
+        {compact && hasOverflow && !isStreaming && <button onClick={() => setExpanded(value => !value)} aria-expanded={expanded} aria-controls={answerId} className="ml-auto min-h-8 rounded-lg border border-border-default px-2.5 text-[11px] font-medium text-gray-600 hover:border-brand-200 hover:text-brand-500">{expanded ? "Collapse answer ↑" : "Read full answer ↗"}</button>}
       </div>
-    </div>
+      {compact && hasOverflow && !expanded && <p className="sr-only">Earlier answer collapsed. Select Read full answer to read it.</p>}
+      <div id={answerId} className={cn("relative min-w-0 overflow-hidden", compact && !expanded && "max-h-[clamp(120px,26dvh,240px)]")}
+        inert={compact && hasOverflow && !expanded ? true : undefined}>
+      <div ref={answerRef} className="min-w-0 break-words text-[13px] leading-6 text-gray-700 sm:text-[14px]">
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{message.content}</ReactMarkdown>
+      </div>
+      {compact && hasOverflow && !expanded && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-surface-card to-transparent" />}
+      </div>
+      {compact && hasOverflow && !expanded && <p className="mt-3 flex flex-wrap items-center gap-x-2 rounded-lg border border-border-default bg-surface-page/40 px-3 py-2 text-[11px] leading-relaxed text-gray-500"><span className="font-medium text-brand-500">Preview</span>{isStreaming ? "The answer is still arriving." : "Open the full answer for all details and limitations."}</p>}
+
+      {!!message.citations?.length && !isStreaming && <details className="group mt-3 rounded-xl border border-border-default bg-surface-page/50">
+        <summary className="cursor-pointer px-3 py-2.5 text-[11px] font-medium text-gray-600 marker:text-brand-500">Sources checked <span className="ml-1 text-gray-400">({message.citations.length})</span></summary>
+        <div className="space-y-3 border-t border-border-default p-4">
+          <p className="text-[11px] leading-relaxed text-gray-400">Inspect the source context and applicability before relying on an answer.</p>
+          {message.citations.map((source, index) => {
+            const href = citationUrl(source.source_url);
+            return <div key={source.document_id + index} className="rounded-lg border border-border-default p-3">
+              <Link href={href ?? "/documents"} target={href ? "_blank" : undefined} rel={href ? "noopener noreferrer" : undefined}
+                className="flex items-start gap-2 text-xs font-medium leading-relaxed text-info-700 hover:underline">
+                <span className="shrink-0 text-gray-400">[{index + 1}]</span><span className="min-w-0 break-words">{source.document_title}</span><span aria-hidden="true" className="ml-auto shrink-0">↗</span>
+              </Link>
+              {source.excerpt && <blockquote className="mt-2 whitespace-pre-wrap break-words border-l border-border-strong pl-3 text-xs leading-relaxed text-gray-500">{source.excerpt}</blockquote>}
+              <p className="mt-2 text-[10px] text-gray-400">{href ? new URL(href).hostname : "Open document library"}</p>
+            </div>;
+          })}
+        </div>
+      </details>}
+
+      {!isStreaming && <div className="mt-2 flex flex-wrap items-start gap-x-4 gap-y-1 text-[11px] text-gray-400">
+        <button onClick={handleCopy} title="Copy the complete answer, including content beyond the preview" onBlur={() => setCopied(false)} className="min-h-9 hover:text-gray-800">{copied ? "Copied ✓" : "Copy answer"}</button>
+        {!isConversational && !message.interrupted && <button onClick={handleDownloadPdf} disabled={exporting} className="min-h-9 hover:text-gray-800 disabled:cursor-wait disabled:opacity-50">{exporting ? "Preparing PDF…" : "Export PDF"}</button>}
+        {!isConversational && !message.interrupted && message.message_id && <AnswerFeedback key={message.message_id} messageId={message.message_id} initial={message.feedback} />}
+        {!isConversational && !!message.reasoning_steps?.length && <details className="min-w-0 flex-1">
+          <summary className="min-h-9 cursor-pointer py-2.5 hover:text-gray-800">View activity ({message.reasoning_steps.length})</summary>
+          <div className="mt-2 space-y-3 rounded-xl border border-border-default bg-surface-card p-4">
+            {message.reasoning_steps.map((step, index) => <div key={index} className="flex gap-3 text-xs">
+              <span className="mt-0.5 text-gray-400">{index + 1}</span>
+              <div className="min-w-0"><p className="font-medium text-brand-500">{step.agent.replace("Agent", "")}</p><p className="mt-1 break-words leading-relaxed text-gray-500">{step.message}</p></div>
+            </div>)}
+          </div>
+        </details>}
+      </div>}
+    </article>
   );
 }

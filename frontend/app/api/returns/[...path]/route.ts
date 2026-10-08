@@ -29,7 +29,7 @@ async function forward(request: Request, context: RouteContext): Promise<Respons
   if (contentType) headers["content-type"] = contentType;
 
   let body: ArrayBuffer | undefined;
-  if (request.method === "POST") {
+  if (request.method !== "GET" && request.method !== "HEAD") {
     if (Number(request.headers.get("content-length") ?? 0) > MAX_REQUEST_BYTES) {
       return Response.json({ detail: "The upload exceeds the 10 MB limit." }, { status: 413, headers: noStore });
     }
@@ -62,3 +62,5 @@ async function forward(request: Request, context: RouteContext): Promise<Respons
 
 export const GET = forward;
 export const POST = forward;
+export const PUT = forward;
+export const PATCH = forward;

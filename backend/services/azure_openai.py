@@ -100,6 +100,7 @@ def _get_responses_client():
     return AsyncOpenAI(
         api_key=settings.AZURE_OPENAI_RESPONSES_API_KEY,
         base_url=f"{settings.AZURE_OPENAI_RESPONSES_ENDPOINT.rstrip('/')}/openai/v1/",
+        max_retries=0,  # the tenacity policy on get_chat_completion is the only retry layer
     )
 
 
@@ -126,14 +127,33 @@ async def get_chat_completion(
     full_messages.extend(messages)
 
     if deployment is None and _responses_configured():
-        client = _get_responses_client()
-        response = await client.responses.create(
-            model=settings.AZURE_OPENAI_RESPONSES_DEPLOYMENT,
-            input=full_messages,
-            max_output_tokens=max_tokens,
-            reasoning={"effort": "none"},
+        # Primary model (e.g. gpt-6.1-sol) with its own reasoning settings; the
+        # Chat Completions fallback (e.g. gpt-5.4-nano) answers if it cannot.
+        from openai import BadRequestError
+
+        from services.llm_settings import (
+            fallback_deployment,
+            fallback_enabled,
+            responses_deployment,
+            responses_kwargs,
         )
-        return response.output_text or ""
+        try:
+            response = await _get_responses_client().responses.create(
+                model=responses_deployment(),
+                input=full_messages,
+                **responses_kwargs(max_tokens),
+            )
+            text = response.output_text or ""
+            if text or not fallback_enabled():
+                return text
+            logger.warning(f"LLM fallback: {responses_deployment()} returned no text — answering with {fallback_deployment()}")
+        except BadRequestError:
+            raise  # a malformed request fails the same way on any model
+        except Exception as exc:
+            if not fallback_enabled():
+                raise
+            logger.warning(f"LLM fallback: {responses_deployment()} failed ({exc}) — answering with {fallback_deployment()}")
+        deployment = fallback_deployment()
 
     client = _get_client()
     model = deployment or settings.AZURE_OPENAI_DEPLOYMENT

@@ -10,7 +10,7 @@ import asyncio
 import logging
 from typing import Optional, Annotated
 from agents._compat import kernel_function, Kernel
-from services.azure_search import get_search_client, hybrid_search, rerank_results, check_retrieval_quality
+from services.azure_search import get_search_client, hybrid_search_detailed, rerank_results, check_retrieval_quality
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +22,29 @@ except ImportError:
     logger.warning("[ResearcherAgent] agent_capabilities not available — scoping unenforced")
 
 _KNOWLEDGE_GAP_MESSAGE = (
-    "Iroko does not have sufficient documents to answer this question confidently. "
-    "Consider uploading relevant documents to the knowledge base."
+    "No matching passages were found in the documents available to you. "
+    "Try a document title or a more specific question, or upload the relevant document."
 )
+
+_RETRIEVAL_MESSAGES = {
+    "empty": _KNOWLEDGE_GAP_MESSAGE,
+    "unavailable": "Document search is temporarily unavailable. Please try again shortly.",
+    "access_check_failed": (
+        "I could not verify access to the document evidence. Please try again shortly."
+    ),
+}
+
+
+def _retrieval_gap(status: str) -> str:
+    """Return safe diagnostics without revealing backend errors or foreign records."""
+    if status not in _RETRIEVAL_MESSAGES:
+        status = "unavailable"
+    return json.dumps({
+        "results": [],
+        "knowledge_gap": True,
+        "retrieval_status": status,
+        "message": _RETRIEVAL_MESSAGES[status],
+    })
 
 
 class ResearcherAgent:
@@ -65,12 +85,9 @@ you retrieve evidence."""
             try:
                 capability_guard.require("ResearcherAgent", AgentCapability.FETCH_REGULATORY)
             except PermissionError as e:
-                logger.warning("[ResearcherAgent] Capability check failed: %s", e)
+                logger.warning("[ResearcherAgent] Capability check failed (%s)", type(e).__name__)
+                return _retrieval_gap("access_check_failed")
         try:
-            client = get_search_client()
-            if client is None:
-                return json.dumps({"results": [], "knowledge_gap": True, "message": _KNOWLEDGE_GAP_MESSAGE})
-
             filters = []
             if department:
                 filters.append("department eq '" + department.replace("'", "''") + "'")
@@ -81,15 +98,12 @@ you retrieve evidence."""
             mem_context = None  # Only extracted source text may enter document Q&A.
 
             # Retrieve candidate set via hybrid (BM25 + vector) search
-            raw = await hybrid_search(query=query, top=20, filter_str=filter_str)
+            retrieval = await hybrid_search_detailed(query=query, top=20, filter_str=filter_str)
+            raw = retrieval["results"]
 
             # Empty retrieval is a knowledge gap, never permission to fabricate evidence.
             if not raw:
-                logger.warning(
-                    "[ResearcherAgent] Azure search returned 0 results for '%s' — "
-                    "returning an explicit knowledge gap.", query[:80]
-                )
-                return json.dumps({"results": [], "knowledge_gap": True, "message": _KNOWLEDGE_GAP_MESSAGE})
+                return _retrieval_gap(retrieval["retrieval_status"])
 
             # ── Corrective RAG: check quality BEFORE reranking ────────────
             quality = check_retrieval_quality(query, raw)
@@ -121,18 +135,19 @@ you retrieve evidence."""
                 })
 
             if not formatted:
-                return json.dumps({"results": [], "message": "No documents found matching this query."})
+                return _retrieval_gap("empty")
 
             return json.dumps({
                 "results": formatted,
                 "total_found": len(formatted),
                 "retrieval_confidence": quality["confidence"],
+                "retrieval_status": "ok",
                 "historical_context": mem_context,
             })
 
         except Exception as e:
-            logger.error(f"Researcher search failed: {e}")
-            return json.dumps({"error": str(e), "results": []})
+            logger.warning("Researcher search failed (%s)", type(e).__name__)
+            return _retrieval_gap("unavailable")
 
     @kernel_function(
         description="""Get the complete full text of a specific document by its ID.

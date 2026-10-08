@@ -25,6 +25,11 @@ export default function ComplianceReportsPage() {
 
   return (
     <AppShell title="Compliance reports" subtitle="CBN returns · NDPA audit · SEC filings · DPIA tracker · DSR queue">
+      {/* Regulatory returns first — preparing and filing them is the main job here */}
+      <div className="mb-8">
+        <RegulatoryReturns />
+      </div>
+
       {/* Send Iroko to a live meeting */}
       <div className="mb-8">
         <MeetingJoinPanel />
@@ -40,9 +45,6 @@ export default function ComplianceReportsPage() {
         </div>
         <ComplianceChecker />
       </div>
-
-      {/* Regulatory returns: real deadlines + generators */}
-      <RegulatoryReturns />
 
       {/* DPIA wizard */}
       <div className="card flex flex-col md:flex-row md:items-center justify-between gap-6 px-6 md:px-9 py-6 md:py-8 mt-6">

@@ -15,14 +15,26 @@ export interface ChatCitation {
   source_url?: string | null;
 }
 
+/** The user's verdict on one answer; feeds evaluation and improvement. */
+export interface AnswerFeedbackState {
+  helpful: boolean;
+  reason?: string | null;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  answer_status?: string;
   reasoning_steps?: AgentStep[];
   citations?: ChatCitation[];
   risk_score?: number;
   timestamp: string;
+  interrupted?: boolean;
+  suggested_followups?: string[];
+  /** Server id of a saved answer; feedback can only be given once it exists. */
+  message_id?: string;
+  feedback?: AnswerFeedbackState | null;
 }
 
 export interface ChatConversation {
@@ -90,27 +102,22 @@ export interface SuggestedPrompt {
   icon?: string;
 }
 
-// The four canonical demo questions — each is guaranteed to hit rich seeded
-// data (Ikeja RCA, vendor contracts, MoMo complaints, NCC QoS return).
+// Starting points, not claims about available documents or compliance status.
 export const DEFAULT_SUGGESTED_PROMPTS: SuggestedPrompt[] = [
   {
-    label: "What caused the Ikeja outage?",
-    query: "What caused the Ikeja cluster power outage and what did it cost us?",
-    icon: "⚡",
+    label: "Understand a regulation",
+    query: "Explain the key CBN requirements for a Nigerian microfinance bank, citing the available sources and identifying any gaps.",
   },
   {
-    label: "Contracts expiring soon",
-    query: "Which vendor contracts expire in the next 90 days?",
-    icon: "📄",
+    label: "See your document library",
+    query: "What documents do you have?",
   },
   {
-    label: "MoMo complaints trend",
-    query: "Summarise the MoMo deduction complaints trend in Lagos this quarter",
-    icon: "📈",
+    label: "Check recent regulatory changes",
+    query: "Check official sources for recent Nigerian financial regulatory changes relevant to MFBs and fintechs. State the dates and applicability limits.",
   },
   {
-    label: "NCC QoS return readiness",
-    query: "Are we ready to submit the NCC QoS return for Q1 2026?",
-    icon: "📋",
+    label: "Explore a compliance risk",
+    query: "Help me investigate a compliance risk for my institution. Ask for the licence category and specific breach before estimating any penalty.",
   },
 ];

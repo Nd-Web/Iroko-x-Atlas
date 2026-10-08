@@ -22,6 +22,8 @@ type RequestOptions = Omit<RequestInit, "headers"> & {
   headers?: Record<string, string>;
   /** Pass a raw token string to skip reading from the cookie store */
   bearerToken?: string;
+  /** Longer budget for read-only endpoints affected by backend cold starts. */
+  timeoutMs?: number;
 };
 
 /**
@@ -36,9 +38,10 @@ export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {}
 ): Promise<ApiResult<T>> {
+  const { timeoutMs = 8000, bearerToken, ...fetchOptions } = options;
   // Read the token from the cookie store unless one is passed explicitly
   const cookieStore = await cookies();
-  const token = options.bearerToken ?? cookieStore.get(COOKIE_NAME)?.value;
+  const token = bearerToken ?? cookieStore.get(COOKIE_NAME)?.value;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -51,11 +54,11 @@ export async function apiRequest<T>(
 
   try {
     const res = await fetch(`${API_BASE}${path}`, {
-      ...options,
+      ...fetchOptions,
       headers,
       // Auth responses must never be served from cache
       cache: "no-store",
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
 
     // 204 No Content — treat as success with no body
@@ -81,12 +84,14 @@ export async function apiRequest<T>(
     }
 
     return { data: json as T, error: null, status: res.status };
-  } catch {
+  } catch (error) {
     // Network failure or JSON parse error
     return {
       data: null,
-      error: "Network error. Please check your connection and try again.",
-      status: 0,
+      error: error instanceof Error && error.name === "TimeoutError"
+        ? "The backend is taking too long to respond. Please try again."
+        : "The backend could not be reached. Please try again.",
+      status: error instanceof Error && error.name === "TimeoutError" ? 504 : 502,
     };
   }
 }

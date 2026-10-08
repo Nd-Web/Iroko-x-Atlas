@@ -1,0 +1,424 @@
+[
+ {
+  "id": "natural_str",
+  "category": "natural question",
+  "turns": [
+   {
+    "user": "Who do we send suspicious transaction reports to, and how quickly?",
+    "must_match": [
+     "NFIU",
+     "24\\s*hours?"
+    ],
+    "must_cite": [
+     "Anti-Money Laundering"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "natural_uninsured",
+  "category": "natural question",
+  "turns": [
+   {
+    "user": "How long do we have to pull out existing placements with fund managers that aren't insured?",
+    "must_match": [
+     "90\\s*days"
+    ],
+    "must_cite": [
+     "Uninsured"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "natural_bvn_credits",
+  "category": "natural question",
+  "turns": [
+   {
+    "user": "If a customer has no BVN and their account is on post no debit, can they still receive money?",
+    "must_match": [
+     "credit|deposit|inward"
+    ],
+    "must_cite": [
+     "Bank Verification Number"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "natural_dfi_leverage",
+  "category": "natural question",
+  "turns": [
+   {
+    "user": "What leverage ratio does the CBN expect DFIs with SPVs to maintain?",
+    "must_match": [
+     "10\\s*%",
+     "common equity"
+    ],
+    "must_cite": [
+     "DFIs"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "natural_afs_extension",
+  "category": "natural question",
+  "turns": [
+   {
+    "user": "When was the deadline for 2019 audited financial statements pushed to?",
+    "must_match": [
+     "July\\s*31,?\\s*2020|31(st)?\\s*July,?\\s*2020"
+    ],
+    "must_cite": [
+     "2019 Audited"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "natural_inclusion",
+  "category": "natural question",
+  "turns": [
+   {
+    "user": "How many new customers a month should each MFB branch bring in under the financial inclusion targets?",
+    "must_match": [
+     "\\b64\\b"
+    ],
+    "must_cite": [
+     "Inclusion"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "natural_bdc_deadline",
+  "category": "natural question",
+  "turns": [
+   {
+    "user": "How soon after its year end must a bureau de change submit audited accounts?",
+    "must_match": [
+     "three\\s*(\\(3\\)\\s*)?months|\\b3\\s*months"
+    ],
+    "must_cite": [
+     "Bureaux De Change"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "natural_credit_bureau_penalty",
+  "category": "natural question",
+  "turns": [
+   {
+    "user": "What does a state MFB pay per infraction for not sharing credit data with credit bureaux?",
+    "must_match": [
+     "250,000"
+    ],
+    "must_cite": [
+     "Credit Bureaux"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "vague_str",
+  "category": "short or vague",
+  "turns": [
+   {
+    "user": "STR deadline?",
+    "must_match": [
+     "24\\s*hours?"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "vague_cyber",
+  "category": "short or vague",
+  "turns": [
+   {
+    "user": "cyber incident reporting timeline",
+    "must_match": [
+     "24\\s*hours?"
+    ],
+    "must_cite": [
+     "Cybersecurity"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "followup_aml_chain",
+  "category": "follow-up",
+  "turns": [
+   {
+    "user": "What does the CBN require for suspicious transaction reports?",
+    "must_match": [
+     "NFIU"
+    ]
+   },
+   {
+    "user": "And for currency transaction reports?",
+    "must_match": [
+     "7\\s*days"
+    ],
+    "must_cite": [
+     "Anti-Money Laundering"
+    ]
+   },
+   {
+    "user": "Who receives those?",
+    "must_match": [
+     "NFIU"
+    ],
+    "intent_in": [
+     "follow_up"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "followup_corporate_email",
+  "category": "follow-up",
+  "turns": [
+   {
+    "user": "What did the CBN say about OFIs using Gmail or Yahoo for official mail?",
+    "must_match": [
+     "corporate e-?mails?"
+    ]
+   },
+   {
+    "user": "How long did they have to fix it?",
+    "must_match": [
+     "one\\s*(\\(1\\)\\s*)?month|\\b1\\s*month"
+    ],
+    "intent_in": [
+     "follow_up"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "followup_revocation_law",
+  "category": "follow-up",
+  "turns": [
+   {
+    "user": "How many microfinance bank licences did the CBN revoke in May 2023?",
+    "must_match": [
+     "\\b47\\b|forty-seven"
+    ],
+    "must_cite": [
+     "Revocation"
+    ]
+   },
+   {
+    "user": "Under which law?",
+    "must_match": [
+     "Section\\s*12",
+     "BOFIA|Banks and Other Financial Institutions Act"
+    ],
+    "must_cite": [
+     "Revocation"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "followup_uninsured_fine",
+  "category": "follow-up",
+  "turns": [
+   {
+    "user": "Tell me about the CBN letter on investments with uninsured entities.",
+    "must_cite": [
+     "Uninsured"
+    ]
+   },
+   {
+    "user": "Is there a fine for not complying?",
+    "must_cite": [
+     "Uninsured"
+    ],
+    "must_not_match": [
+     "₦\\s?\\d",
+     "\\bN\\d{2,}"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "topic_switch",
+  "category": "topic switch",
+  "turns": [
+   {
+    "user": "What is the CTR deadline?",
+    "must_match": [
+     "7\\s*days"
+    ]
+   },
+   {
+    "user": "Separately, what leverage ratio must DFIs maintain for their SPVs?",
+    "must_match": [
+     "10\\s*%"
+    ],
+    "must_cite": [
+     "DFIs"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "new_question_after_history",
+  "category": "topic switch",
+  "turns": [
+   {
+    "user": "What is the STR deadline?",
+    "must_match": [
+     "24\\s*hours?"
+    ]
+   },
+   {
+    "user": "When must OFIs fully comply with the cybersecurity framework, and how fast must they report a cyber incident?",
+    "must_match": [
+     "January\\s*1,?\\s*2023|1(st)?\\s*January,?\\s*2023",
+     "24\\s*hours?"
+    ],
+    "must_cite": [
+     "Cybersecurity"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "library_topic",
+  "category": "document library",
+  "turns": [
+   {
+    "user": "What documents do you have about money laundering?",
+    "intent_in": [
+     "catalog"
+    ],
+    "must_match": [
+     "Anti-Money Laundering"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "library_then_item",
+  "category": "document library",
+  "turns": [
+   {
+    "user": "Which circulars mention BVN?",
+    "intent_in": [
+     "catalog"
+    ]
+   },
+   {
+    "user": "What does the January 2018 one require?",
+    "must_match": [
+     "post no debit"
+    ],
+    "must_cite": [
+     "Bank Verification Number"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "absent_capital",
+  "category": "not in the documents",
+  "turns": [
+   {
+    "user": "What is the minimum capital requirement for a national MFB?",
+    "must_not_match": [
+     "₦\\s?\\d[\\d,.]*\\s*(billion|million|bn|m)\\b",
+     "\\bN\\d[\\d,.]*\\s*(billion|million|bn|m)\\b"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "out_of_scope_weather",
+  "category": "out of scope",
+  "turns": [
+   {
+    "user": "What's the weather in Lagos today?",
+    "intent_in": [
+     "out_of_domain"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "greeting_then_library",
+  "category": "conversation",
+  "turns": [
+   {
+    "user": "hi",
+    "intent_in": [
+     "greeting"
+    ]
+   },
+   {
+    "user": "what can you do?",
+    "intent_in": [
+     "greeting"
+    ]
+   },
+   {
+    "user": "ok, what documents do you have?",
+    "intent_in": [
+     "catalog"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "implication_bvn",
+  "category": "implication",
+  "turns": [
+   {
+    "user": "We're an MFB and some customers still have no BVN. What do the circulars require us to do?",
+    "must_match": [
+     "post no debit"
+    ],
+    "must_cite": [
+     "Bank Verification Number"
+    ],
+    "must_not_match": [
+     "₦\\s?\\d"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "comparison_ftr",
+  "category": "comparison",
+  "turns": [
+   {
+    "user": "How did the FTR reporting requirements change between the 2017 and 2019 AML/CFT circulars?",
+    "must_match": [
+     "7\\s*days",
+     "24\\s*hours?"
+    ],
+    "must_cite": [
+     "Anti-Money Laundering"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "pidgin_str",
+  "category": "pidgin",
+  "turns": [
+   {
+    "user": "Abeg, who we go send STR give and how fast e suppose reach?",
+    "must_match": [
+     "NFIU",
+     "24"
+    ]
+   }
+  ]
+ }
+]

@@ -177,12 +177,49 @@ def test_cbn_parser_skips_malformed_rows_and_keeps_catalogue_size():
         ("", "https://fccpc.gov.ng/wp-content/uploads/2022/07/FCCPA-2018.pdf", "FCCPA 2018"),
         ("Guidelines on Data Protection Impact Assessment", "https://ndpc.gov.ng/Files/x.pdf",
          "Guidelines on Data Protection Impact Assessment"),
+        ("Document", "https://sec.gov.ng/documents/8/Rules-on-Issuance-Offering-and-Custody-of-Digital-Assets.pdf",
+         "Rules on Issuance Offering and Custody of Digital Assets"),
+        ("Preview Document",
+         "https://ndic.gov.ng/storage/cms/media/ndic-act-2023-latest-14ab1a0a-82c7-4e05-9419-4b6e0afbfbc8.pdf",
+         "Ndic act 2023 latest"),
+        ("To delve deeper into these guidelines for Shareholders Associations and ensure your full "
+         "compliance, we invite you to download the full document",
+         "https://sec.gov.ng/documents/29/20090408210018Code-of-Conduct-for-Shareholders-Associations-in-Nigeria.pdf",
+         "Code of Conduct for Shareholders Associations in Nigeria"),
     ],
 )
 def test_listing_titles_drop_link_boilerplate(label, url, title):
     from ingestion.sources import listing_title
 
     assert listing_title(label, url) == title
+
+
+async def test_oversized_robots_file_is_read_up_to_its_limit(monkeypatch):
+    """An HTML page served as robots.txt must not stop collection (RFC 9309 size limit)."""
+    import httpx
+
+    from ingestion.sources import OfficialClient
+
+    def handler(request):
+        if request.url.path == "/robots.txt":
+            return httpx.Response(200, content=b"User-agent: *\nDisallow: /private/\n" + b"x" * 700_000)
+        return httpx.Response(200, content=b"<html>listing</html>")
+
+    monkeypatch.setattr(
+        "ingestion.sources.socket.getaddrinfo",
+        lambda *a, **k: [(None, None, None, None, ("41.58.0.10", 443))],
+    )
+    monkeypatch.setattr("ingestion.sources.asyncio.sleep", AsyncMock())
+    client = OfficialClient("NFIU", attempts=1)
+    await client.client.aclose()
+    client.client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    try:
+        code, _, body = await client.fetch("https://nfiu.gov.ng/")
+        assert code == 200 and body == b"<html>listing</html>"
+        with pytest.raises(ValueError, match="robots"):
+            await client.fetch("https://nfiu.gov.ng/private/report.pdf")
+    finally:
+        await client.close()
 
 
 async def test_scheduled_drain_queues_only_due_recurring_sources(db, monkeypatch):

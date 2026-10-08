@@ -1,6 +1,10 @@
 import { apiRequest } from "@/lib/api-client";
 import type { DocumentSearchResponse } from "@/lib/types";
 
+// Hybrid search embeds the query, queries Azure Search, applies the workspace
+// access filter and reranks; that can exceed the default 8 s proxy budget.
+const SEARCH_TIMEOUT_MS = 30_000;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
@@ -24,7 +28,8 @@ export async function GET(request: Request) {
   if (rerank !== null) params.set("rerank", rerank ?? "true");
 
   const { data, error, status } = await apiRequest<DocumentSearchResponse>(
-    `/api/documents/search?${params.toString()}`
+    `/api/documents/search?${params.toString()}`,
+    { timeoutMs: SEARCH_TIMEOUT_MS }
   );
 
   if (error) return Response.json({ error }, { status: status || 500 });
@@ -41,7 +46,7 @@ export async function POST(request: Request) {
 
   const { data, error, status } = await apiRequest<DocumentSearchResponse>(
     `/api/documents/search`,
-    { method: "POST", body: JSON.stringify(body) }
+    { method: "POST", body: JSON.stringify(body), timeoutMs: SEARCH_TIMEOUT_MS }
   );
 
   if (error) return Response.json({ error }, { status: status || 500 });

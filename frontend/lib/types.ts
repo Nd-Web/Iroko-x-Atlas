@@ -101,6 +101,9 @@ export interface AgentTraceStep {
   result_preview?: string | null;
   duration_ms?: number | null;
   timestamp: string;
+  answer_status?: string;
+  gap_reason?: string | null;
+  suggested_followups?: string[];
 }
 
 /** A cited source chunk returned by the AI */
@@ -148,6 +151,9 @@ export interface AtlasAskResponse {
   agent_trace: AgentTraceStep[];
   citations: Citation[];
   suggested_followups: string[];
+  suggested_actions?: string[];
+  answer_status?: string;
+  gap_reason?: string | null;
   partial_answer?: boolean;
   missing_information?: string[];
   source_checks?: { regulator: string; url: string; status: string; fetched_at?: string }[];

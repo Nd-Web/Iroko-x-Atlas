@@ -22,6 +22,9 @@ def chat(db, monkeypatch):
     monkeypatch.setattr("models.database.SessionLocal", factory)
 
     class FakeStrategist:
+        def set_viewer(self, full_name):
+            self.viewer = full_name
+
         def set_history(self, history):
             self.history = history
 

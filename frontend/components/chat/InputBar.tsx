@@ -1,151 +1,118 @@
 "use client";
-/**
- * components/chat/InputBar.tsx
- * Chat input bar with auto-grow textarea, Ctrl+Enter send, character count.
- */
-import React, { useRef, useEffect, useState, useCallback } from "react";
+
+import { useRef, useEffect, useState, useCallback, type KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
-import Spinner from "@/components/ui/Spinner";
+import { CHAT_MAX_CHARS, shouldSubmitChat } from "@/lib/chat-ux";
 
 interface Props {
   onSend: (content: string) => void;
   isStreaming: boolean;
+  onStop?: () => void;
+  disabled?: boolean;
   placeholder?: string;
-  /** When true, a `?q=` query param is sent immediately instead of prefilled. */
   autoSendQuery?: boolean;
-  /** Maps `?agent=<name>` deep links to a canonical starter question (prefilled). */
   agentPrompts?: Record<string, string>;
+  /** A user-selected suggestion, never an automatic model request. */
+  draft?: { text: string; version: number };
 }
 
-const MAX_CHARS = 2000;
-const CHAR_WARN_THRESHOLD = 500;
-
 export default function InputBar({
-  onSend,
-  isStreaming,
-  placeholder = "Ask Iroko a question…",
-  autoSendQuery = false,
-  agentPrompts,
+  onSend, isStreaming, onStop, disabled = false,
+  placeholder = "Ask Iroko about your compliance…",
+  autoSendQuery = false, agentPrompts, draft,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [value, setValue] = useState("");
-  const [focused, setFocused] = useState(false);
   const onSendRef = useRef(onSend);
   useEffect(() => { onSendRef.current = onSend; }, [onSend]);
 
-  // Auto-grow textarea (max 5 lines ≈ 120px)
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px";
   }, [value]);
 
-  // Handle deep-link params: `?q=` (prefill, or auto-send when enabled) and
-  // `?agent=` (prefill that agent's canonical starter question).
+  useEffect(() => {
+    if (!draft) return;
+    // External suggestion selection updates the controlled composer.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setValue(draft.text);
+    if (draft.text) textareaRef.current?.focus();
+  }, [draft]);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const q = params.get("q");
+    const q = params.get("q")?.trim();
     const agent = params.get("agent");
-    const agentPrompt =
-      !q && agent && agentPrompts
-        ? agentPrompts[agent.toLowerCase()] ?? null
-        : null;
-    if (q || agentPrompt) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-      if (q && autoSendQuery) {
-        onSendRef.current(q.trim());
-      } else {
-        // Hydrate an external deep-link value after mount (SSR has no location).
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setValue((prev) => prev || (q ?? agentPrompt ?? ""));
-      }
+    const text = q || (agent ? agentPrompts?.[agent.toLowerCase()] : "");
+    if (!text) return;
+    params.delete("q");
+    params.delete("agent");
+    const remaining = params.toString();
+    window.history.replaceState({}, document.title,
+      `${window.location.pathname}${remaining ? `?${remaining}` : ""}${window.location.hash}`);
+    if (q && autoSendQuery && q.length <= CHAT_MAX_CHARS) {
+      onSendRef.current(q);
+    } else {
+      // Browser deep links are only available after mount.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setValue(prev => prev || text);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
-    if (!trimmed || isStreaming || trimmed.length > MAX_CHARS) return;
+    if (!trimmed || isStreaming || disabled || value.length > CHAT_MAX_CHARS) return;
     onSend(trimmed);
     setValue("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
-  }, [value, isStreaming, onSend]);
+    textareaRef.current?.focus();
+  }, [value, isStreaming, disabled, onSend]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      e.preventDefault();
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (shouldSubmitChat(event)) {
+      event.preventDefault();
       handleSend();
     }
   };
 
-  const canSend = value.trim().length > 0 && !isStreaming && value.length <= MAX_CHARS;
-  const overLimit = value.length > MAX_CHARS;
-  const showCount = value.length >= CHAR_WARN_THRESHOLD;
+  const overLimit = value.length > CHAT_MAX_CHARS;
+  const canSend = !!value.trim() && !isStreaming && !disabled && !overLimit;
 
   return (
-    <div className="px-4 pb-4 pt-2 shrink-0">
-      <div
-        className={cn(
-          "relative flex items-end gap-3 rounded-2xl border bg-surface-card px-4 py-3 transition-all duration-200",
-          focused
-            ? "border-brand-500/60 shadow-[0_0_0_3px_rgba(255,203,5,0.12)]"
-            : "border-border-default",
-          overLimit && "border-red-500/60",
-        )}
-      >
-        {/* Textarea */}
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          placeholder={placeholder}
-          disabled={isStreaming}
-          rows={1}
-          className={cn(
-            "flex-1 resize-none bg-transparent text-sm text-gray-800 placeholder-gray-400",
-            "outline-none leading-relaxed min-h-[24px] max-h-[120px]",
-            "disabled:opacity-60 disabled:cursor-not-allowed",
-          )}
-        />
-
-        {/* Right side: count + send */}
-        <div className="flex items-center gap-2 shrink-0 pb-0.5">
-          {showCount && (
-            <span className={cn("text-[11px] font-medium", overLimit ? "text-red-400" : "text-gray-400")}>
-              {value.length}/{MAX_CHARS}
-            </span>
-          )}
-          <button
-            id="chat-send-btn"
-            onClick={handleSend}
-            disabled={!canSend}
-            className={cn(
-              "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200",
-              canSend
-                ? "bg-brand-500 text-[#0A0A0B] hover:bg-brand-400 hover:scale-105 active:scale-95"
-                : "bg-gray-50 text-gray-300 cursor-not-allowed",
-            )}
-            title="Send (Ctrl+Enter)"
-          >
-            {isStreaming ? (
-              <Spinner size="sm" color="white" />
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M14 8L2 2l2.5 6L2 14l12-6z" fill="currentColor"/>
+    <div className="shrink-0 px-3 pt-2 pb-[max(12px,env(safe-area-inset-bottom))] sm:px-6 sm:pb-4">
+      <div className="mx-auto max-w-[960px]">
+        <form onSubmit={event => { event.preventDefault(); handleSend(); }}
+          className={cn("flex items-end gap-3 rounded-2xl border bg-surface-card p-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.15)] transition-colors focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-50 sm:p-3",
+            overLimit ? "border-danger-500" : "border-border-strong")}>
+          <textarea ref={textareaRef} value={value} onChange={event => setValue(event.target.value)}
+            onKeyDown={handleKeyDown} placeholder={placeholder} rows={1} disabled={disabled}
+            aria-label="Your question" aria-describedby="chat-composer-help" aria-invalid={overLimit}
+            className="min-h-[24px] max-h-[160px] flex-1 min-w-0 resize-none self-center bg-transparent pl-1 text-[16px] leading-6 text-gray-800 placeholder:text-gray-400 outline-none disabled:opacity-50 sm:text-sm" />
+          {isStreaming && onStop ? (
+            <button key="stop" type="button" onClick={event => { event.preventDefault(); onStop(); }} aria-label="Stop response" title="Stop response"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border-strong bg-gray-50 text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-500">
+              <span className="h-3.5 w-3.5 rounded-sm bg-current" />
+            </button>
+          ) : (
+            <button key="send" type="submit" id="chat-send-btn" disabled={!canSend} aria-label="Send question" title="Send question (Enter)"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-[#0A0A0B] transition-colors hover:bg-brand-400 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 19V5m-6 6 6-6 6 6" />
               </svg>
-            )}
-          </button>
+            </button>
+          )}
+        </form>
+        <div id="chat-composer-help" className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-[11px] leading-relaxed text-gray-400">
+          <span>{disabled ? "Loading conversation…" : isStreaming ? "Draft your next question while Iroko responds." : "Verify the sources before acting."}</span>
+          {value.length >= 1500 ? (
+            <span className={cn("shrink-0 tabular-nums", overLimit && "text-danger-400")} role={overLimit ? "alert" : undefined}>
+              {value.length.toLocaleString()}/{CHAT_MAX_CHARS.toLocaleString()}{overLimit ? " — shorten your question" : ""}
+            </span>
+          ) : <span className="hidden shrink-0 sm:inline">Enter to send · Shift + Enter for a new line</span>}
         </div>
       </div>
-
-      {/* Hint */}
-      <p className="text-[10px] text-gray-400 text-center mt-1.5">
-        Press <kbd className="px-1 py-0.5 rounded bg-gray-50 border border-border-default text-[9px]">Ctrl+Enter</kbd> to send
-      </p>
     </div>
   );
 }
