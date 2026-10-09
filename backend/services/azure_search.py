@@ -12,6 +12,7 @@ Fields indexed:
 import os
 import asyncio
 import logging
+import time
 from typing import Optional, List, Dict, Any, Literal, TypedDict
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,10 @@ SEMANTIC_CONFIG = os.getenv("AZURE_SEARCH_SEMANTIC_CONFIG", "iroko-semantic")
 
 _search_client = None
 _cohere_client = None
+# The semantic ranker's plan can run out (the free plan's monthly query quota); after a
+# semantic failure, searches go straight to hybrid for this long.
+SEMANTIC_PAUSE_SECONDS = 900
+_semantic_paused_until = 0.0
 
 
 def _get_cohere_client():
@@ -178,7 +183,8 @@ async def hybrid_search_detailed(
 ) -> RetrievalResult:
     """
     Hybrid search: BM25 lexical + HNSW vector retrieval, re-ranked by semantic scorer.
-    Falls back to BM25-only if embeddings or semantic ranking are unavailable.
+    If semantic ranking is unavailable the same hybrid query runs without it; BM25-only
+    is the last resort (no embeddings, or hybrid also failing).
 
     Preserve the difference between an empty completed search and unavailable
     dependencies. No result or diagnostic reveals inaccessible document counts.
@@ -212,12 +218,10 @@ async def hybrid_search_detailed(
         logger.warning("Query embedding unavailable; using keyword search (%s)", type(exc).__name__)
         query_vector = None
 
-    search_kwargs: Dict[str, Any] = {
-        "search_text":                  query,
-        "top":                          min(max(top * 3, 50), 200),
-        "filter":                       filter_str,
-        "query_type":                   "semantic",
-        "semantic_configuration_name":  SEMANTIC_CONFIG,
+    base_kwargs: Dict[str, Any] = {
+        "search_text":  query,
+        "top":          min(max(top * 3, 50), 200),
+        "filter":       filter_str,
         "select": [
             "id", "title", "department", "doc_type", "doc_id",
             "content", "created_at", "language", "classification",
@@ -228,7 +232,7 @@ async def hybrid_search_detailed(
     if query_vector is not None:
         try:
             from azure.search.documents.models import VectorizedQuery
-            search_kwargs["vector_queries"] = [
+            base_kwargs["vector_queries"] = [
                 VectorizedQuery(
                     vector=query_vector,
                     k_nearest_neighbors=top,
@@ -238,22 +242,35 @@ async def hybrid_search_detailed(
         except Exception as exc:
             logger.warning("Vector query unavailable; using keyword search (%s)", type(exc).__name__)
 
-    try:
-        results = await asyncio.to_thread(lambda: list(client.search(**search_kwargs)))
-    except Exception as e:
-        logger.warning("Azure Search semantic query failed; trying keyword search (%s)", type(e).__name__)
+    # Best first: semantic ranking over keyword + vector results; then the same hybrid query
+    # without the semantic ranker (vector search does not use the ranker's monthly quota);
+    # then keyword-only.
+    global _semantic_paused_until
+    attempts = []
+    if time.monotonic() >= _semantic_paused_until:
+        attempts.append(("semantic", {**base_kwargs, "query_type": "semantic",
+                                      "semantic_configuration_name": SEMANTIC_CONFIG}))
+    if "vector_queries" in base_kwargs:
+        attempts.append(("hybrid", base_kwargs))
+    attempts.append(("keyword", {k: v for k, v in base_kwargs.items() if k != "vector_queries"}))
+    results = None
+    for mode, kwargs in attempts:
         try:
-            # Fallback: simple BM25 search without semantic or vector ranking
-            simple_kwargs = {
-                "search_text": search_kwargs["search_text"],
-                "top":         search_kwargs.get("top", 10),
-                "filter":      search_kwargs.get("filter"),
-                "select":      search_kwargs.get("select"),
-            }
-            results = await asyncio.to_thread(lambda: list(client.search(**simple_kwargs)))
-        except Exception as e2:
-            logger.warning("Azure Search keyword query failed (%s)", type(e2).__name__)
-            return {"results": [], "retrieval_status": "unavailable"}
+            results = await asyncio.to_thread(lambda kw=kwargs: list(client.search(**kw)))
+            break
+        except Exception as exc:
+            detail = " ".join(str(getattr(exc, "message", exc)).split())[:200]
+            if mode == "semantic" and "semantic" in detail.lower():
+                # e.g. "Free Query Semantic Usage exceeded for the month": skip the ranker for a
+                # while instead of paying a failed round trip on every question. Other errors
+                # (a network blip) do not switch it off.
+                _semantic_paused_until = time.monotonic() + SEMANTIC_PAUSE_SECONDS
+                logger.warning("Azure Search semantic ranking unavailable; using hybrid search without it "
+                               "for %d minutes (%s: %s)", SEMANTIC_PAUSE_SECONDS // 60, type(exc).__name__, detail)
+            else:
+                logger.warning("Azure Search %s query failed (%s)", mode, type(exc).__name__)
+    if results is None:
+        return {"results": [], "retrieval_status": "unavailable"}
 
     try:
         accepted = (await asyncio.to_thread(eligible_results, results))[:top]
@@ -430,14 +447,16 @@ def check_retrieval_quality(
 
     scores = []
     for r in results:
-        if "rerank_score" in r:
+        # Keyword results (the fallback when semantic search is unavailable, e.g. its free
+        # monthly quota is spent) carry "@search.reranker_score": None, so test values, not keys.
+        if r.get("rerank_score") is not None:
             scores.append(float(r["rerank_score"]))
-        elif "@search.reranker_score" in r:
+        elif r.get("@search.reranker_score") is not None:
             # Azure semantic reranker: 0-4 scale → normalise to 0-1
             scores.append(min(1.0, float(r["@search.reranker_score"]) / 4.0))
-        elif "@search.score" in r:
+        elif r.get("@search.score") is not None:
             scores.append(min(1.0, float(r["@search.score"])))
-        elif "relevance_score" in r:
+        elif r.get("relevance_score") is not None:
             scores.append(float(r["relevance_score"]))
 
     if not scores:

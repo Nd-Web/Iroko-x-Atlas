@@ -236,6 +236,53 @@ async def test_missing_search_client_never_reports_success(monkeypatch):
     assert not await azure_search.index_document_chunks("id", "Title", ["text"], {})
 
 
+def test_keyword_fallback_hits_without_semantic_scores_are_usable():
+    # With the semantic ranker unavailable (e.g. its free monthly quota spent) keyword hits carry
+    # "@search.reranker_score": None. Scoring them must not turn every question into "search unavailable".
+    from services.azure_search import check_retrieval_quality
+    from services.search import _normalise_hit
+
+    hits = [{"content": "BVN enrolment", "@search.reranker_score": None, "@search.score": 19.6},
+            {"content": "KYC", "@search.reranker_score": None, "@search.score": 0.4}]
+    quality = check_retrieval_quality("BVN", hits)
+    assert quality["knowledge_gap"] is False and quality["confidence"] > 0
+    assert _normalise_hit(hits[1])["score"] == 0.4
+
+
+async def test_semantic_quota_falls_back_to_hybrid_and_pauses_the_ranker(monkeypatch):
+    from ingestion import access
+    from services import azure_search, embeddings
+
+    calls = []
+
+    class Client:
+        def search(self, **kwargs):
+            calls.append(kwargs)
+            if kwargs.get("query_type") == "semantic":
+                raise RuntimeError("Free Query Semantic Usage exceeded for the month.")
+            return [{"id": "c1", "content": "BVN", "@search.score": 0.03, "@search.reranker_score": None}]
+
+    async def embed(_text):
+        return [0.1, 0.2, 0.3]
+
+    monkeypatch.setattr(azure_search, "get_search_client", lambda: Client())
+    monkeypatch.setattr(azure_search, "eligible_results", lambda rows: list(rows))
+    monkeypatch.setattr(azure_search, "_semantic_paused_until", 0.0)
+    monkeypatch.setattr(access, "search_filter", lambda: "doc_id eq 'd1'")
+    monkeypatch.setattr(embeddings, "get_embedding", embed)
+    token = access.principal.set(access.Principal("u1", "admin"))
+    try:
+        first = await azure_search.hybrid_search_detailed("BVN enrolment", top=5)
+        assert first["retrieval_status"] == "ok"
+        assert [c.get("query_type") for c in calls] == ["semantic", None]
+        assert "vector_queries" in calls[1]  # hybrid: keyword + vector, without the ranker
+        calls.clear()
+        await azure_search.hybrid_search_detailed("BVN enrolment", top=5)
+        assert len(calls) == 1 and "query_type" not in calls[0]  # the ranker is skipped while paused
+    finally:
+        access.principal.reset(token)
+
+
 def test_pipeline_metadata_is_isolated():
     assert len(PipelineBase.metadata.tables) == 12
     assert PipelineBase.metadata is not Base.metadata

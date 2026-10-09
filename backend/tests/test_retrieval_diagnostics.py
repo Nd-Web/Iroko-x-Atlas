@@ -24,6 +24,7 @@ def search_setup(monkeypatch):
     monkeypatch.setattr(azure_search, "get_search_client", lambda: client)
     monkeypatch.setattr("services.embeddings.get_embedding", embedding)
     monkeypatch.setattr(azure_search, "eligible_results", post_filter)
+    monkeypatch.setattr(azure_search, "_semantic_paused_until", 0.0)  # each test starts with the ranker on
     yield SimpleNamespace(acl=acl, client=client, embedding=embedding, post_filter=post_filter)
     access.principal.reset(token)
 

@@ -57,11 +57,12 @@ def _normalise_hit(raw: dict) -> dict:
 
     # Score — best available relevance signal
     score: float = 0.0
-    if "rerank_score" in raw:
+    # Keyword results carry "@search.reranker_score": None when semantic ranking is unavailable.
+    if raw.get("rerank_score") is not None:
         score = float(raw["rerank_score"])
-    elif "@search.reranker_score" in raw:
+    elif raw.get("@search.reranker_score") is not None:
         score = min(1.0, float(raw["@search.reranker_score"]) / 4.0)
-    elif "@search.score" in raw:
+    elif raw.get("@search.score") is not None:
         score = float(raw["@search.score"])
 
     # Document ID
