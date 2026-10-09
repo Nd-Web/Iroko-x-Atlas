@@ -113,6 +113,8 @@ def setup_local(corpus, run_dir):
     os.environ["DOCUMENT_PIPELINE_ENABLED"] = "true"
     os.environ["SEED_DEMO_DATA"] = "false"
     import models.workflow  # noqa: F401 -- register derived-record tables
+    import models.compliance_graph  # noqa: F401 -- compliance graph tables (graph evals, chat's graph step)
+    import models.filing  # noqa: F401 -- filing profiles (licence categories)
     from ingestion.db import pipeline_bind
     from ingestion.models import (
         Chunk,

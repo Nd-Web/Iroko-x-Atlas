@@ -15,7 +15,6 @@ azure-keyvault-secrets>=4.8.0
 azure-search-documents==11.6.0
 azure-ai-documentintelligence==1.0.0
 azure-storage-blob==12.23.0
-gremlinpython>=3.7.0
 
 httpx==0.27.0
 aiofiles==24.1.0

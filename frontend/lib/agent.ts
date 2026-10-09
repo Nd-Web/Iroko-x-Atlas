@@ -1,9 +1,9 @@
 /**
- * Iroko AI voice client helpers — backed by Azure OpenAI Realtime.
+ * Iroko AI voice client helpers.
  * TTS/STT go through /api/voice/* (server-side proxy, cookie-authenticated
- * like the rest of the app). The WebRTC call path talks to Azure directly
- * from the browser using a short-lived client_secret minted by the backend
- * (safe to expose, unlike a real API key).
+ * like the rest of the app). The live call uses GPT-Live over WebRTC: the
+ * browser's SDP offer goes through the backend, which holds the Azure key,
+ * and the media then flows directly between the browser and Azure.
  */
 
 const PROXY = "/api/voice";
@@ -118,37 +118,32 @@ export async function speakText(text: string, voice = DEFAULT_VOICE): Promise<vo
   }
 }
 
-// ─── Azure Realtime WebRTC session ──────────────────────────────────────────────
+// ─── GPT-Live WebRTC session ────────────────────────────────────────────────────
 //
-// GA flow: the backend mints a short-lived client_secret (safe to hand to the
-// browser), then the browser does a single SDP offer/answer round trip
-// directly against Azure — no separate ICE-candidate exchange step.
+// One SDP offer/answer round trip through the backend, which creates the
+// session (persona, voice, client delegation) with the Azure key.
 
-export interface RealtimeSession {
-  clientSecret: string;
-  callsUrl:     string;
-  greeting:     string;
+export interface LiveSession {
+  sdp:       string;
+  sessionId: string | null;
+  greeting:  string;
 }
 
-export async function getRealtimeSession(instructions = ""): Promise<RealtimeSession> {
-  const res = await fetch(`${PROXY}/session`, {
+export async function createLiveSession(offerSdp: string): Promise<LiveSession> {
+  const res = await fetch(`${PROXY}/live-session`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ instructions }),
+    body: JSON.stringify({ sdp: offerSdp }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({})) as { error?: string };
-    throw new Error(err.error ?? `Session create failed (${res.status})`);
+    throw new Error(err.error ?? `Voice session failed (${res.status})`);
   }
-  const data = await res.json() as { client_secret: string; calls_url: string; greeting?: string };
-  return {
-    clientSecret: data.client_secret,
-    callsUrl:     data.calls_url,
-    greeting:     data.greeting ?? "",
-  };
+  const data = await res.json() as { sdp: string; session_id?: string | null; greeting?: string };
+  return { sdp: data.sdp, sessionId: data.session_id ?? null, greeting: data.greeting ?? "" };
 }
 
-// ─── Compliance engine (the voice agent's check_compliance tool) ───────────────
+// ─── Compliance engine (answers the voice agent's delegations) ─────────────────
 
 export interface ComplianceVerdict {
   verdict:    string;
@@ -157,6 +152,10 @@ export interface ComplianceVerdict {
   regulation: string;
   confidence: number;
   checked_at: string;
+  /** The deciding rule, verbatim from a document in Iroko's library. */
+  evidence?:  string | null;
+  /** That document's title. */
+  source?:    string | null;
 }
 
 export async function runComplianceCheck(
@@ -173,23 +172,4 @@ export async function runComplianceCheck(
     throw new Error(err.error ?? `Compliance check failed (${res.status})`);
   }
   return res.json() as Promise<ComplianceVerdict>;
-}
-
-export async function negotiateWebRTC(
-  callsUrl: string,
-  clientSecret: string,
-  sdp: string
-): Promise<string> {
-  const res = await fetch(callsUrl, {
-    method: "POST",
-    headers: {
-      Authorization:  `Bearer ${clientSecret}`,
-      "Content-Type": "application/sdp",
-    },
-    body: sdp,
-  });
-  if (!res.ok) {
-    throw new Error(`SDP exchange failed (${res.status})`);
-  }
-  return res.text();
 }

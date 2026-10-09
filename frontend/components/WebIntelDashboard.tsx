@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useCallback, type FC } from "react";
+import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import type {
   SignalsResponse,
@@ -23,8 +24,10 @@ import type {
 import { apiFetch } from "@/components/dashboard/webintel/api";
 import { TabButton, StatPill } from "@/components/dashboard/webintel/primitives";
 import LiveSignalsTab from "@/components/dashboard/webintel/SignalsTab";
-import ComplianceTab from "@/components/dashboard/webintel/ComplianceTab";
-import AuditTrailTab from "@/components/dashboard/webintel/AuditTab";
+
+const tabLoading = () => <div role="status" className="min-h-48 animate-pulse text-sm text-gray-400">Loading workspace…</div>;
+const ComplianceTab = dynamic(() => import("@/components/dashboard/webintel/ComplianceTab"), { loading: tabLoading });
+const AuditTrailTab = dynamic(() => import("@/components/dashboard/webintel/AuditTab"), { loading: tabLoading });
 
 // Re-export shared types so existing imports keep working.
 export type {
@@ -49,6 +52,8 @@ const WebIntelDashboard: FC = () => {
   const auditQuery = useQuery({
     queryKey: ["webintel", "audit-trail"],
     queryFn: () => apiFetch<AuditTrailResponse>("/audit-trail?limit=200&verify_chain=true"),
+    // Hash-chain verification is only needed when the audit tab is opened.
+    enabled: activeTab === "audit",
   });
 
   // Operation-level stats — "what does Iroko know about my operation right now"
@@ -191,7 +196,7 @@ const WebIntelDashboard: FC = () => {
               </svg>
             }
             label="Audit Trail"
-            count={auditLoading ? undefined : auditCount}
+            count={auditLoading || !auditData ? undefined : auditCount}
           />
         </div>
       </div>

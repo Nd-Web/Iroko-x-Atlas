@@ -184,7 +184,7 @@ export interface ConversationsResponse {
 /** A single document record as returned by /api/documents and /api/documents/{id} */
 export interface DocumentResponse {
   id: string;
-  extra_metadata?: { pipeline?: string; sha256?: string };
+  extra_metadata?: { pipeline?: string; sha256?: string; document_role?: string };
   error_message?: string | null;
   title?: string | null;
   filename: string;

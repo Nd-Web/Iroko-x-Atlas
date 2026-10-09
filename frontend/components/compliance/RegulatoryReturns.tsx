@@ -52,9 +52,12 @@ export default function RegulatoryReturns() {
     );
   }
 
-  const deadlines = catalog.calendar.filter((d) => d.status !== "submitted" || d.days_left <= 7).slice(0, 8);
-  const periodic = catalog.returns.filter((r) => r.period_type !== "event");
-  const events = catalog.returns.filter((r) => r.period_type === "event");
+  // Returns not filed under this workspace's declared licence are listed separately, not as due.
+  const applicable = catalog.returns.filter((r) => r.applicable !== false);
+  const notApplicable = catalog.returns.filter((r) => r.applicable === false);
+  const deadlines = catalog.calendar.filter((d) => d.applicable !== false && (d.status !== "submitted" || d.days_left <= 7)).slice(0, 8);
+  const periodic = applicable.filter((r) => r.period_type !== "event");
+  const events = applicable.filter((r) => r.period_type === "event");
 
   return (
     <div className="flex flex-col gap-6">
@@ -128,6 +131,13 @@ export default function RegulatoryReturns() {
           {periodic.map((r) => <ReturnCard key={r.id} spec={r} calendar={catalog.calendar} />)}
         </div>
       </div>
+
+      {notApplicable.length > 0 && (
+        <p className="text-[12.5px] text-gray-400 m-0">
+          {notApplicable.length} return(s) Iroko prepares are filed by microfinance banks and do not apply to your declared licence
+          ({notApplicable.map((r) => r.short_title).join(", ")}). Change your licence in the Knowledge Graph if this is wrong.
+        </p>
+      )}
 
       <Modal open={editProfile} onClose={() => setEditProfile(false)} title="Your bank's details" maxWidth="720px">
         <ProfileEditor fields={catalog.profile_fields} licenceCategories={catalog.licence_categories}

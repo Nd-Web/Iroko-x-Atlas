@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { pilotDayKey as dayKey, groupPilotSlots } from "@/lib/pilot-calendar";
 import styles from "./pilot.module.css";
 
 type Availability = {
@@ -36,9 +37,6 @@ const WAT_LONG = new Intl.DateTimeFormat("en-NG", {
 const WAT_TIME = new Intl.DateTimeFormat("en-NG", {
   timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit", hour12: true,
 });
-const dayKey = (iso: string) => new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Africa/Lagos", year: "numeric", month: "2-digit", day: "2-digit",
-}).format(new Date(iso));
 
 export default function RequestPilotPage() {
   const [availability, setAvailability] = useState<Availability | null>(null);
@@ -95,14 +93,7 @@ export default function RequestPilotPage() {
     return () => window.clearTimeout(timer);
   }, [loadAvailability]);
 
-  const days = useMemo(() => {
-    const grouped = new Map<string, string[]>();
-    for (const slot of availability?.slots ?? []) {
-      const key = dayKey(slot);
-      grouped.set(key, [...(grouped.get(key) ?? []), slot]);
-    }
-    return [...grouped.entries()];
-  }, [availability]);
+  const days = useMemo(() => groupPilotSlots(availability?.slots ?? []), [availability]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -273,7 +264,7 @@ function Header() {
           </svg>
           <span>iroko<span className={styles.brandAi}>ai</span><small>Document Intelligence</small></span>
         </Link>
-        <Link href="/login" className={styles.signIn}>Sign in</Link>
+        <Link href="/login" prefetch={false} className={styles.signIn}>Sign in</Link>
       </div>
     </header>
   );

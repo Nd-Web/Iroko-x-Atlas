@@ -104,7 +104,12 @@ def _accept_sync(
         uploaded_by_id=user_id,
         source_connector_id=connector_id,
         source_item_id=source_item_id,
-        extra_metadata={"pipeline": "v1", "sha256": digest},
+        extra_metadata={
+            "pipeline": "v1",
+            "sha256": digest,
+            # The uploader's answer to "what is this document?" (compliance graph).
+            **({"document_role": metadata["document_role"]} if metadata.get("document_role") else {}),
+        },
     )
     db.add(doc)
     db.add(DocumentAccess(document_id=document_id, workspace_id=workspace, shared_regulatory=False))
@@ -305,6 +310,11 @@ async def process(db, key, token):
                 extra_metadata={"document_id": document_id, **revision.provenance},
             )
         )
+    from services.compliance_graph.common import enabled as graph_enabled
+
+    if graph_enabled():
+        # A row insert in the same transaction; extraction happens in its own job.
+        enqueue(db, "graph", document_id)
     finish(db, key, token)
 
 

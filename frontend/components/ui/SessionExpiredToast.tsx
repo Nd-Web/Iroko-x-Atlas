@@ -7,7 +7,7 @@
  * - Appears as a fixed bottom-right toast (desktop) / bottom-center (mobile).
  * - Displays a 5-second countdown, then hard-navigates to /login.
  * - The user can also click "Sign in now" to redirect immediately.
- * - Rendered in app/layout.tsx so it covers every page.
+ * - Rendered by AppProviders on authenticated and auth-flow pages.
  *
  * Trigger:
  * - Reads `sessionExpired` from AuthContext.

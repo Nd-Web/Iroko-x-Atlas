@@ -26,8 +26,6 @@ from services.auth_utils import get_current_user, require_role
 from ingestion.access import document_predicate, require_document
 from ingestion.validation import UploadLimitError
 from services.document_processor import process_document
-from services.blob_storage import upload_document as upload_to_blob
-from services.cosmos_graph import upsert_document_node
 from services.azure_search import search_documents as azure_search_documents
 
 router = APIRouter(prefix="/api/documents", tags=["Documents"])
@@ -71,6 +69,9 @@ async def list_documents(
     return DocumentListResponse(documents=docs, total=total)
 
 
+DOCUMENT_ROLES = {"regulation", "policy", "procedure", "evidence_record", "other"}
+
+
 @router.post("", response_model=DocumentResponse)
 async def upload_document(
     file: UploadFile = File(...),
@@ -78,18 +79,38 @@ async def upload_document(
     department: Optional[str] = Form(None),
     doc_type: Optional[str] = Form(None),
     tags: Optional[str] = Form("[]"),
+    document_role: Optional[str] = Form(None),
+    replaces_document_id: Optional[str] = Form(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
-    Upload a document for indexing.
-    Supports PDF, DOCX, XLSX, TXT, CSV.
+    Upload a document for indexing through the durable ingestion pipeline.
+    Supports PDF, DOCX, XLSX, TXT, CSV, MD.
+
+    document_role answers "what is this document?" for the compliance graph:
+    regulation | policy | procedure | evidence_record | other.
+    replaces_document_id makes the upload a new version of a document you can
+    edit (for example a renamed policy), so its history and links carry over.
     """
     from ingestion.queue import enabled
     if current_user.role not in {"superadmin", "admin", "analyst"}:
         raise HTTPException(403, "Document upload is not permitted for this role")
     if not enabled():
         raise HTTPException(503, "Document ingestion is unavailable; please try again later")
+    role = (document_role or "").strip().lower() or None
+    if role is not None and role not in DOCUMENT_ROLES:
+        raise HTTPException(422, f"document_role must be one of: {', '.join(sorted(DOCUMENT_ROLES))}")
+    source_key = None
+    if replaces_document_id:
+        from ingestion.db import prepare_session
+        from ingestion.models import Revision
+        replaced = require_document(db, replaces_document_id, current_user, write=True)
+        prepare_session(db)
+        revision = db.get(Revision, replaced.id)
+        if revision is None:
+            raise HTTPException(409, "That document predates the ingestion pipeline and cannot be versioned")
+        source_key = revision.source_key
     # Validate file type
     filename = file.filename or "unknown"
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
@@ -116,133 +137,29 @@ async def upload_document(
     async with aiofiles.open(file_path, "wb") as f:
         await f.write(content)
 
-    from ingestion.queue import enabled
-    if enabled():
-        from ingestion.pipeline import accept
-        try:
-            parsed_tags = json.loads(tags or "[]")
-            if not isinstance(parsed_tags, list) or not all(isinstance(t, str) for t in parsed_tags):
-                raise ValueError("Tags must be a list of strings")
-            return await accept(db, file_path, filename, title, current_user.id,
-                                {"department": department, "doc_type": doc_type or ext,
-                                 "tags": parsed_tags, "classification": "internal"})
-        except UploadLimitError as exc:
-            db.rollback()
-            raise HTTPException(429, str(exc), headers={"Retry-After": "3600"}) from exc
-        except ValueError as exc:
-            db.rollback()
-            raise HTTPException(422, str(exc)) from exc
-        except Exception as exc:
-            db.rollback()
-            logger.exception("Could not durably accept document")
-            raise HTTPException(503, "Document could not be saved. Please retry; processing has not been accepted.") from exc
-        finally:
-            os.remove(file_path)
-
-    # Create document record
-    document = Document(
-        id=doc_id,
-        title=title or filename.rsplit(".", 1)[0],
-        filename=filename,
-        file_type=ext,
-        file_size=len(content),
-        department=department,
-        tags=json.loads(tags) if tags else [],
-        status="processing",
-        uploaded_by_id=current_user.id,
-    )
-    db.add(document)
-    db.commit()
-    db.refresh(document)
-
-    # ── Upload original file to Blob Storage ─────────────────────────────
-    content_type_map = {
-        "pdf": "application/pdf",
-        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "txt": "text/plain",
-        "csv": "text/csv",
-        "md": "text/markdown",
-    }
-    blob_url = await upload_to_blob(
-        file_path=file_path,
-        document_id=doc_id,
-        filename=filename,
-        content_type=content_type_map.get(ext, "application/octet-stream"),
-    )
-    if blob_url:
-        document.blob_url = blob_url
-
-    # ── Process: extract → chunk → embed → index ──────────────────────────
+    from ingestion.pipeline import accept
     try:
-        result = await process_document(
-            file_path=file_path,
-            document_id=doc_id,
-            title=document.title,
-            metadata={
-                "department":     department or "",
-                "doc_type":       doc_type or ext,
-                "file_type":      ext,
-                "source":         filename,
-                "filename":       filename,
-                "blob_url":       blob_url or "",
-                "classification": "internal",
-                "language":       "en",
-                "region":         "",
-            },
-        )
-
-        document.status = "indexed" if result["success"] else "failed"
-        document.chunk_count = result.get("chunk_count", 0)
-        if result.get("entities"):
-            # Persist extracted entities for the live knowledge graph
-            document.extra_metadata = {
-                **(document.extra_metadata or {}),
-                "entities": result["entities"],
-            }
-        if not result["success"]:
-            document.error_message = result.get("error", "Unknown error")
-
-    except Exception as e:
-        document.status = "failed"
-        document.error_message = str(e)
-        logger.error(f"Document processing error: {e}")
-
+        parsed_tags = json.loads(tags or "[]")
+        if not isinstance(parsed_tags, list) or not all(isinstance(t, str) for t in parsed_tags):
+            raise ValueError("Tags must be a list of strings")
+        metadata = {"department": department, "doc_type": doc_type or ext,
+                    "tags": parsed_tags, "classification": "internal"}
+        if role:
+            metadata["document_role"] = role
+        return await accept(db, file_path, filename, title, current_user.id, metadata,
+                            source_key=source_key)
+    except UploadLimitError as exc:
+        db.rollback()
+        raise HTTPException(429, str(exc), headers={"Retry-After": "3600"}) from exc
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(422, str(exc)) from exc
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Could not durably accept document")
+        raise HTTPException(503, "Document could not be saved. Please retry; processing has not been accepted.") from exc
     finally:
-        try:
-            os.remove(file_path)
-        except Exception:
-            pass
-
-    # ── Write document vertex + entity edges to knowledge graph ────────────
-    if document.status == "indexed":
-        upsert_document_node(
-            document_id=doc_id,
-            title=document.title,
-            doc_type=doc_type or ext,
-            department=department or "",
-            blob_url=blob_url or "",
-        )
-        # Best-effort: entity vertices + doc→entity edges (Cosmos Gremlin)
-        try:
-            from services.cosmos_graph import upsert_entity_node, upsert_edge
-            from services.entity_extraction import entity_id
-            for ent in (document.extra_metadata or {}).get("entities", [])[:12]:
-                eid = entity_id(ent["name"])
-                upsert_entity_node(eid, ent["type"], ent["name"], ent["type"])
-                upsert_edge(doc_id, eid, "mentions")
-        except Exception as graph_exc:
-            logger.warning(f"Graph entity write failed (non-fatal): {graph_exc}")
-
-    db.add(AuditLog(
-        user_id=current_user.id,
-        action="document_uploaded",
-        resource=f"documents/{doc_id}",
-        details={"filename": filename, "title": document.title, "department": department or ""},
-    ))
-    db.commit()
-    db.refresh(document)
-    return document
+        os.remove(file_path)
 
 
 @router.post("/upload", response_model=DocumentResponse)
@@ -252,6 +169,8 @@ async def upload_document_alias(
     department: Optional[str] = Form(None),
     doc_type: Optional[str] = Form(None),
     tags: Optional[str] = Form("[]"),
+    document_role: Optional[str] = Form(None),
+    replaces_document_id: Optional[str] = Form(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -262,6 +181,8 @@ async def upload_document_alias(
         department=department,
         doc_type=doc_type,
         tags=tags,
+        document_role=document_role,
+        replaces_document_id=replaces_document_id,
         current_user=current_user,
         db=db,
     )
@@ -545,15 +466,6 @@ async def reindex_document(
         except Exception:
             pass
 
-    if doc.status == "indexed":
-        upsert_document_node(
-            document_id=document_id,
-            title=doc.title,
-            doc_type=doc.file_type,
-            department=doc.department or "",
-            blob_url=doc.blob_url or "",
-        )
-
     db.commit()
     db.refresh(doc)
     return doc
@@ -580,10 +492,17 @@ async def delete_document(
             raise HTTPException(409, "Document is processing; wait until it finishes before archiving")
         if job:
             job.state = "cancelled"
+        graph_job = db.query(Job).filter_by(id=f"graph:{document_id}").with_for_update().first()
+        if graph_job and graph_job.state in {"queued", "retry"}:
+            graph_job.state = "cancelled"
         revision = db.get(Revision, document_id)
         if revision:
             revision.is_current = False
         doc.status = "archived"
+        # Graph rows are read-gated, never deleted; affected workspaces re-sync so
+        # links that relied on this document are flagged "source no longer available".
+        from services.compliance_graph.triggers import after_document_change
+        after_document_change(db, document_id)
         db.commit()
         return {"message": "Document archived; original and audit history retained", "document_id": document_id}
     db.delete(doc)

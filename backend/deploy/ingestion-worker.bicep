@@ -5,7 +5,17 @@ param registryIdentityId string
 param image string
 param embeddingEndpoint string
 param cronExpression string = '*/5 * * * *'
+// Compliance graph extraction (graph:* and graph_ws:* jobs). The worker uses the primary
+// Responses model only: an outage defers jobs instead of downgrading to a test model.
+param responsesEndpoint string
+param responsesDeployment string = 'gpt-6.1-sol-1'
+param complianceGraphEnabled bool = true
+param graphDailyTokenBudget string = '2000000'
+param graphWorkspaceDailyTokenBudget string = '1000000'
+param graphTokensPerMinute string = '30000'
 
+@secure()
+param responsesApiKey string
 @secure()
 param databaseUrl string
 @secure()
@@ -42,6 +52,7 @@ resource worker 'Microsoft.App/jobs@2024-03-01' = {
         { name: 'search-key', value: searchKey }
         { name: 'embedding-key', value: embeddingKey }
         { name: 'docintel-key', value: documentIntelligenceKey }
+        { name: 'responses-key', value: responsesApiKey }
       ]
     }
     template: {
@@ -69,6 +80,15 @@ resource worker 'Microsoft.App/jobs@2024-03-01' = {
           { name: 'DOCINTEL_DAILY_PAGE_BUDGET', value: '500' }
           { name: 'DOCINTEL_MAX_PAGES_PER_DOCUMENT', value: '50' }
           { name: 'WORKSPACE_DAILY_OCR_PAGES', value: '200' }
+          { name: 'AZURE_OPENAI_RESPONSES_ENDPOINT', value: responsesEndpoint }
+          { name: 'AZURE_OPENAI_RESPONSES_DEPLOYMENT', value: responsesDeployment }
+          { name: 'AZURE_OPENAI_RESPONSES_API_KEY', secretRef: 'responses-key' }
+          { name: 'LLM_FALLBACK', value: 'false' }
+          { name: 'COMPLIANCE_GRAPH_ENABLED', value: complianceGraphEnabled ? 'true' : 'false' }
+          { name: 'GRAPH_DAILY_TOKEN_BUDGET', value: graphDailyTokenBudget }
+          { name: 'GRAPH_WORKSPACE_DAILY_TOKEN_BUDGET', value: graphWorkspaceDailyTokenBudget }
+          { name: 'GRAPH_TOKENS_PER_MINUTE', value: graphTokensPerMinute }
+          { name: 'GRAPH_JOB_TIME_BOX_SECONDS', value: '150' }
         ]
       }]
     }

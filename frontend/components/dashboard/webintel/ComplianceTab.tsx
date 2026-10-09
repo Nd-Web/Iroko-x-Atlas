@@ -220,7 +220,7 @@ const ComplianceTab: FC = () => {
     }
   }, [transcript]);
 
-  // ── Azure Realtime live voice agent ─────────────────────────────────────────
+  // ── GPT-Live voice agent ────────────────────────────────────────────────────
   const [agentError, setAgentError] = useState<string | null>(null);
   const { status: agentStatus, startCall, endCall } = useAgent({
     onError:   (msg) => setAgentError(msg),
@@ -426,7 +426,7 @@ const ComplianceTab: FC = () => {
               />
               <AgentCallButton
                 status={agentStatus}
-                onStart={startCall}
+                onStart={() => { setAgentError(null); void startCall(); }}
                 onEnd={endCall}
               />
               {(voiceError ?? agentError) && (

@@ -40,7 +40,8 @@ SCENARIOS = harness.BACKEND / "tests" / "evals" / "conversation_scenarios.json"
 
 def check_turn(spec, result):
     """Failed check descriptions for one turn; an empty list means the turn passed."""
-    answer = result.get("answer", "")
+    # Check text as users see it: literal Markdown escaping is not a missing name.
+    answer = re.sub(r"\\([\\`*_{}\[\]<>#+.!|~-])", r"\1", result.get("answer", ""))
     steps = result.get("agent_trace", [])
     intent = next((s.get("intent") for s in steps if s.get("tool") == "intent"), None)
     titles = [c.get("document_title", "") for c in result.get("citations", [])]
@@ -132,8 +133,18 @@ async def run(args):
                     started = time.monotonic()
                     try:
                         response = await asyncio.wait_for(client.post(
-                            "/api/atlas/ask", json={"query": spec["user"], "conversation_id": conversation_id}), timeout=150)
-                        result = response.json() if response.status_code == 200 else {"error": f"HTTP {response.status_code}"}
+                            "/api/atlas/ask/stream-http" if args.stream else "/api/atlas/ask",
+                            json={"query": spec["user"], "conversation_id": conversation_id}), timeout=150)
+                        if args.stream and response.status_code == 200:
+                            events = [json.loads(line[6:]) for line in response.text.splitlines()
+                                      if line.startswith("data: ") and line[6:] != "[DONE]"]
+                            result = next((event for event in reversed(events) if event.get("type") == "complete"), {"error": "MissingStreamCompletion"})
+                            if any(event.get("type") == "error" for event in events):
+                                result = {"error": "StreamError"}
+                            elif "error" not in result and "".join(e.get("content", "") for e in events if e.get("type") == "token") != result.get("answer"):
+                                result = {"error": "StreamTokenMismatch"}
+                        else:
+                            result = response.json() if response.status_code == 200 else {"error": f"HTTP {response.status_code}"}
                     except Exception as exc:  # Never record exception text: it can include configuration.
                         result = {"error": type(exc).__name__}
                     finally:
@@ -172,6 +183,7 @@ async def run(args):
     report = {
         "captured_at": datetime.now().isoformat(),
         "model_calls": model_calls,
+        "transport": "sse" if args.stream else "json",
         "latency_seconds": {"median": latencies[len(latencies) // 2], "max": max(latencies)},
         "scope": "Real local chat API, isolated SQLite, live configured model/search; not production load certification.",
         "conversations_passed": f"{sum(r['passed'] for r in records)}/{len(records)}",
@@ -194,6 +206,7 @@ def main():
     parser.add_argument("--concurrency", type=int, choices=[1, 2, 3], default=2)
     parser.add_argument("--scenarios", type=Path, default=SCENARIOS)
     parser.add_argument("--configured-model", action="store_true", help="Explicitly test the locally configured model (API usage)")
+    parser.add_argument("--stream", action="store_true", help="Exercise the UI's SSE endpoint and verify token/completion consistency")
     parser.add_argument("--max-turns", type=int, default=100)
     parser.add_argument("--max-model-calls", type=int, default=180)
     args = parser.parse_args()

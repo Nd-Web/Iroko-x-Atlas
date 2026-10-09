@@ -342,6 +342,8 @@ def init_db():
     import models.workflow  # noqa: F401
     # Import regulatory filing drafts, shared bank profile and filing memory
     import models.filing  # noqa: F401
+    # Import the compliance knowledge graph (requirements, controls, links, history)
+    import models.compliance_graph  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
     # ── Column-level migrations (add new columns to existing tables) ─────────

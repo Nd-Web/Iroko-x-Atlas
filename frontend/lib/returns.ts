@@ -53,6 +53,8 @@ export interface ReturnSpec {
   submission_notes: string[];
   verification_notes: string[];
   datasets: DatasetSpec[];
+  /** False when the workspace's declared licence is not among this return's filers. */
+  applicable?: boolean;
 }
 
 export type FilingStatus = "not_started" | "draft" | "generated" | "submitted";
@@ -69,6 +71,7 @@ export interface DeadlineItem {
   status: FilingStatus;
   draft_id: string | null;
   submitted_on?: string | null;
+  applicable?: boolean;
 }
 
 export interface ReturnsCatalog {

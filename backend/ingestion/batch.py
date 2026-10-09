@@ -11,6 +11,10 @@ from ingestion.worker import run_once, schedule
 
 logger = logging.getLogger(__name__)
 PENDING_STATES = ("queued", "retry", "running")
+# A drain is judged on documents and sources only. Compliance-graph jobs are
+# model-bound background work: they never block or fail a document batch and
+# report their own health in the graph overview and `python -m ingestion stats`.
+BATCH_KINDS = ("document", "source")
 
 
 class BatchIncomplete(RuntimeError):
@@ -19,15 +23,22 @@ class BatchIncomplete(RuntimeError):
 
 def _snapshot():
     with Session() as db:
-        return {job.id: job.attempts for job in db.query(Job).filter_by(state="failed")}
+        return {
+            job.id: job.attempts
+            for job in db.query(Job).filter(Job.state == "failed", Job.kind.in_(BATCH_KINDS))
+        }
 
 
 def _status(started_at, previously_failed):
     with Session() as db:
-        pending = db.query(Job).filter(Job.state.in_(PENDING_STATES)).count()
+        pending = (
+            db.query(Job)
+            .filter(Job.state.in_(PENDING_STATES), Job.kind.in_(BATCH_KINDS))
+            .count()
+        )
         new_failures = [
             job.id
-            for job in db.query(Job).filter_by(state="failed")
+            for job in db.query(Job).filter(Job.state == "failed", Job.kind.in_(BATCH_KINDS))
             if job.attempts != previously_failed.get(job.id)
         ]
         runs = db.query(CrawlRun).filter(CrawlRun.started_at >= started_at).all()
@@ -69,7 +80,8 @@ async def drain(max_seconds=5400, poll_seconds=5, *, allow_idle=False):
     while True:
         if time.monotonic() >= deadline:
             pending, failures, results = _status(started_at, previously_failed)
-            if allow_idle and not failures:
+            # Graph jobs may still be running; that never makes a document batch incomplete.
+            if (allow_idle or pending == 0) and not failures:
                 _log_sources(results)
                 logger.info("Scheduled drain yielded; processed=%s pending=%s", processed, pending)
                 return {

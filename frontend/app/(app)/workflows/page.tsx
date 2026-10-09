@@ -7,13 +7,14 @@
  * live board. Data comes exclusively from /api/workflows — no mock data.
  */
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import AppShell from "@/components/layout/AppShell";
 import { apiFetch } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/utils";
 
 interface Task {
   id: string; title: string; description: string | null;
-  source_type: string; alert_type: string | null; verdict: string | null;
+  source_type: string; source_id?: string | null; alert_type: string | null; verdict: string | null;
   department: string | null; priority: string; status: string;
   sla_hours: number | null; due_date: string | null; overdue: boolean;
   assigned_to: { id: string; name: string } | null;
@@ -31,6 +32,11 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 const SOURCE_LABELS: Record<string, string> = {
   alert: "Auto · Watchdog", compliance: "Auto · Compliance", chat: "Chat", manual: "Manual",
+  graph_review: "Knowledge Graph · Review", change_impact: "Knowledge Graph · Change",
+};
+// Where a compliance-graph task is worked on.
+const GRAPH_TASK_LINKS: Record<string, string> = {
+  graph_review: "/knowledge-graph?tab=review", change_impact: "/knowledge-graph?tab=changes",
 };
 
 function StatCard({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
@@ -70,6 +76,11 @@ function TaskCard({ task, onTransition }: { task: Task; onTransition: (id: strin
         <h3 className="text-[13px] font-semibold text-gray-800 leading-snug mb-1.5">{task.title}</h3>
         {task.description && (
           <p className="text-[11.5px] text-gray-400 leading-relaxed line-clamp-2">{task.description}</p>
+        )}
+        {GRAPH_TASK_LINKS[task.source_type] && (
+          <Link href={GRAPH_TASK_LINKS[task.source_type]} className="mt-1.5 inline-block text-[11px] text-info-500 hover:underline">
+            Open in Knowledge Graph →
+          </Link>
         )}
         <div className="flex items-center gap-3 mt-3 text-[10px] text-gray-300 flex-wrap">
           {task.department && <span className="text-gray-500">→ {task.department}</span>}

@@ -50,6 +50,7 @@ _azure_retry = retry(
 
 _client: Optional[AsyncAzureOpenAI] = None
 _embedding_client: Optional[AsyncAzureOpenAI] = None
+_transcription_client: Optional[AsyncAzureOpenAI] = None
 
 
 def _get_client() -> AsyncAzureOpenAI:
@@ -67,6 +68,23 @@ def _get_client() -> AsyncAzureOpenAI:
             api_version=settings.AZURE_OPENAI_API_VERSION,
         )
     return _client
+
+
+def _get_transcription_client() -> AsyncAzureOpenAI:
+    """Return an AsyncAzureOpenAI client for speech-to-text, which may be its own resource."""
+    global _transcription_client
+    if _transcription_client is None:
+        endpoint = settings.AZURE_OPENAI_TRANSCRIBE_ENDPOINT or settings.AZURE_OPENAI_ENDPOINT
+        api_key = settings.AZURE_OPENAI_TRANSCRIBE_API_KEY or settings.AZURE_OPENAI_API_KEY
+        api_version = settings.AZURE_OPENAI_TRANSCRIBE_API_VERSION or settings.AZURE_OPENAI_API_VERSION
+        if not endpoint or not api_key:
+            raise RuntimeError("Azure OpenAI speech-to-text is not configured.")
+        _transcription_client = AsyncAzureOpenAI(
+            azure_endpoint=endpoint,
+            api_key=api_key,
+            api_version=api_version,
+        )
+    return _transcription_client
 
 
 def _get_embedding_client() -> AsyncAzureOpenAI:
@@ -201,10 +219,10 @@ async def transcribe_audio(
     deployment: Optional[str] = None,
 ) -> str:
     """
-    Transcribe audio to text using the Azure OpenAI Whisper deployment.
+    Transcribe audio to text using the speech-to-text deployment.
     Automatically retried up to 3 times with exponential backoff + jitter.
     """
-    client = _get_client()
+    client = _get_transcription_client()
     model = deployment or settings.AZURE_OPENAI_WHISPER_DEPLOYMENT
 
     response = await client.audio.transcriptions.create(

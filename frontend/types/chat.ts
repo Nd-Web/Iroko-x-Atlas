@@ -13,6 +13,9 @@ export interface ChatCitation {
   document_title: string;
   excerpt?: string;
   source_url?: string | null;
+  chunk_id?: string;
+  /** Includes source_kind "iroko_record" + record_url for compliance-graph records. */
+  provenance?: Record<string, unknown>;
 }
 
 /** The user's verdict on one answer; feeds evaluation and improvement. */

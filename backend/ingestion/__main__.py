@@ -13,9 +13,15 @@ def main():
         "command",
         choices=[
             "worker", "once", "drain", "scheduled-drain", "stats", "check", "init-local",
-            "import-manifest", "import-folder",
+            "import-manifest", "import-folder", "graph-backfill",
         ],
     )
+    parser.add_argument("--document", help="graph-backfill: one document id")
+    parser.add_argument("--workspace", help="graph-backfill: only documents owned by this workspace")
+    parser.add_argument("--force", action="store_true",
+                        help="graph-backfill: re-run extraction even for documents already done")
+    parser.add_argument("--production", action="store_true",
+                        help="graph-backfill: required when DATABASE_URL is not SQLite")
     parser.add_argument("--manifest", help="import-*: JSON list of official documents")
     parser.add_argument("--folder", help="import-folder: files saved from a browser")
     parser.add_argument("--owner", help="import-*: email of the platform admin who owns the documents")
@@ -49,8 +55,22 @@ def main():
         from sqlalchemy import func
 
         with Session() as db:
-            for state, count in db.query(Job.state, func.count()).group_by(Job.state):
-                print(f"{state}: {count}")
+            rows = db.query(Job.kind, Job.state, func.count()).group_by(Job.kind, Job.state)
+            for kind, state, count in sorted(rows):
+                print(f"{kind} {state}: {count}")
+    elif args.command == "graph-backfill":
+        if engine.dialect.name != "sqlite" and not args.production:
+            parser.error(
+                "graph-backfill queues work in this database, which is not SQLite. "
+                "Pass --production only when that is intended."
+            )
+        from services.compliance_graph.jobs import backfill
+
+        with Session() as db:
+            queued = backfill(
+                db, document_id=args.document, workspace_id=args.workspace, force=args.force
+            )
+        print(f"Queued compliance-graph extraction for {queued} document(s)")
     else:
         from ingestion.queue import enabled
 

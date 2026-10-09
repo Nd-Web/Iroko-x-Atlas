@@ -50,12 +50,13 @@ def api(db, monkeypatch):
     app.include_router(documents_router)
     from routes.alerts import router as alerts_router
     from routes.analytics import router as analytics_router
-    from routes.graph import router as graph_router
+    from routes.compliance_graph import router as compliance_graph_router
     from routes.workflows import router as workflows_router
 
+    monkeypatch.setenv("COMPLIANCE_GRAPH_ENABLED", "true")
     app.include_router(alerts_router)
     app.include_router(analytics_router)
-    app.include_router(graph_router)
+    app.include_router(compliance_graph_router)
     app.include_router(workflows_router)
 
     def dependency():
@@ -173,8 +174,17 @@ async def test_derived_alerts_graph_audit_and_gaps_do_not_leak(api, db, users, c
         )
         db.add(WorkflowTask(id="private-task", title="PRIVATE FOLLOWUP", created_by_id=owner.id))
         db.commit()
+    from ingestion.access import workspace_id
+    from models.compliance_graph import GraphDocument
+
+    db.add(GraphDocument(document_id=doc.id, title=doc.title, role="regulation", role_basis="stated",
+                         workspace_id=workspace_id(db, owner.id), stage_state={}, facts={},
+                         extraction_status="done"))
+    db.commit()
     for path in [
-        "/api/graph",
+        "/api/compliance-graph/overview",
+        "/api/compliance-graph/requirements",
+        "/api/compliance-graph/search?q=PRIVATE",
         "/api/alerts?status=all",
         "/api/analytics/activity",
         "/api/analytics/knowledge-gaps",
@@ -186,7 +196,8 @@ async def test_derived_alerts_graph_audit_and_gaps_do_not_leak(api, db, users, c
         assert "PRIVATE" not in response.text
         assert doc.id not in response.text
         assert "private-task" not in response.text
-    assert "PRIVATE REGULATORY TITLE" in api.get("/api/graph", headers=headers(owner)).text
+    assert "PRIVATE REGULATORY TITLE" in api.get(
+        "/api/compliance-graph/search?q=PRIVATE", headers=headers(owner)).text
     assert (
         "PRIVATE REGULATORY TITLE" in api.get("/api/alerts?status=all", headers=headers(owner)).text
     )

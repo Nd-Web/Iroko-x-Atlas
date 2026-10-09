@@ -1,0 +1,444 @@
+{
+  "about": "Known facts about the CBN corpus snapshot (.dist/rag-evaluation/corpus.json, captured 2026-10-03), read from each document's own text, plus synthetic letters for cases the snapshot lacks. Every check is a must or must-not assertion. Checks marked \"model\": true depend on the language model and are skipped with --offline. Run: python scripts/evaluate_graph_extraction.py [--offline] [--case ID].",
+  "profiles": {
+    "mfb": ["unit_tier1"],
+    "payments": ["psb", "mmo"],
+    "bdc": ["bdc"],
+    "dfi": ["dfi"]
+  },
+  "fixtures": [
+    {
+      "id": "fixture-cites-shared-reference",
+      "title": "Letter to all MFBs on Financial Inclusion Returns",
+      "reference": "OFI/DIR/DOC/GEN/021/010",
+      "published_date": "2020-01-15",
+      "pages": ["CENTRAL BANK OF NIGERIA\nOther Financial Institutions Supervision Department\n\nRef: OFI/DIR/DOC/GEN/021/010\n\nJanuary 15, 2020\n\n# LETTER TO ALL MICROFINANCE BANKS (MFBs)\n\nFurther to our letter referenced OFI/DIR/DOC/GEN/020/252 on the revised financial inclusion targets,\nall MFBs are required to render the monthly report on new customers not later than the 10th day\nof the following month.\n\nPlease be guided accordingly.\n"]
+    },
+    {
+      "id": "fixture-hereby-amends",
+      "title": "Amendment to the BVN Enrollment Circular",
+      "reference": "OFI/DIR/CIR/GEN/17/150",
+      "published_date": "2017-05-08",
+      "pages": ["CENTRAL BANK OF NIGERIA\n\nRef: OFI/DIR/CIR/GEN/17/150\n\nMay 8, 2017\n\n# LETTER TO ALL OTHER FINANCIAL INSTITUTIONS (OFIs)\n\nThis circular hereby amends circular OFI/DIR/CIR/GEN/17/139 on BVN enrollment to require that the\nschedule of customer accounts with BVN be forwarded on a monthly basis.\n\nPlease be guided accordingly.\n"]
+    },
+    {
+      "id": "fixture-payments-circular",
+      "title": "Circular to PSBs and MMOs on Agent Network Reporting",
+      "reference": "PSM/DIR/PUB/CIR/001/005",
+      "published_date": "2024-02-01",
+      "pages": ["CENTRAL BANK OF NIGERIA\nPayments System Management Department\n\nRef: PSM/DIR/PUB/CIR/001/005\n\nFebruary 1, 2024\n\n# CIRCULAR TO ALL PAYMENT SERVICE BANKS (PSBs) AND MOBILE MONEY OPERATORS (MMOs)\n\nAll PSBs and MMOs shall submit a quarterly report on their agent networks to the Director,\nPayments System Management Department, not later than the 14th day after the end of each quarter.\n"]
+    },
+    {
+      "id": "fixture-typo-addressee",
+      "title": "Letter on Microfinance Bank Returns",
+      "reference": "OFI/DIR/DOC/GEN/022/001",
+      "published_date": "2022-03-01",
+      "pages": ["CENTRAL BANK OF NIGERIA\n\nRef: OFI/DIR/DOC/GEN/022/001\n\nMarch 1, 2022\n\n# LETTER TO ALL MICROFINACE BANKS\n\nAll microfinance banks shall render their monthly returns on the eFASS platform.\n"]
+    }
+  ],
+  "mapping": {
+    "about": "A pilot MFB workspace (unit licence) uploads its own policy, procedure and records (tests/evals/graph_fixtures). Iroko must extract the controls, suggest which library requirements each addresses and which records evidence them, and must not map related-sounding or out-of-library material. Every check depends on the model; run with --mapping (not available with --offline).",
+    "workspace": "pilot-mfb",
+    "categories": ["unit_tier1"],
+    "documents": [
+      {"id": "ws-aml-cft-policy", "file": "graph_fixtures/aml_cft_policy.txt", "role": "policy", "title": "AML/CFT Policy v3.0"},
+      {"id": "ws-kyc-procedure", "file": "graph_fixtures/kyc_procedure.txt", "role": "procedure", "title": "KYC and Account Opening Procedure"},
+      {"id": "ws-data-protection-policy", "file": "graph_fixtures/data_protection_policy.txt", "role": "policy", "title": "Data Protection and Privacy Policy v1.2"},
+      {"id": "ws-training-register", "file": "graph_fixtures/training_register.txt", "role": "evidence_record", "title": "AML/CFT Training Attendance Register Q1 2026"},
+      {"id": "ws-bvn-progress-report", "file": "graph_fixtures/bvn_progress_report.txt", "role": "evidence_record", "title": "BVN Enrolment Progress Report March 2026"}
+    ],
+    "checks": [
+      {"check": "control", "document": "ws-aml-cft-policy", "quote": "no account is activated until the customer's Bank Verification Number"},
+      {"check": "control", "document": "ws-aml-cft-policy", "quote": "place every account without a linked BVN on 'post no debit' status"},
+      {"check": "control", "document": "ws-aml-cft-policy", "quote": "render the monthly AML/CFT returns"},
+      {"check": "control", "document": "ws-aml-cft-policy", "quote": "organise annual AML/CFT training"},
+      {"check": "control", "document": "ws-kyc-procedure", "quote": "display the CBN BVN awareness poster"},
+      {"check": "control", "document": "ws-kyc-procedure", "quote": "submit the monthly BVN enrolment progress report"},
+      {"check": "not_control", "document": "ws-aml-cft-policy", "quote": "This policy sets out how the Bank prevents", "why": "A statement of purpose, not an activity."},
+      {"check": "maps", "control": "no account is activated until", "requirement": {"document": "22dcdfae-e7a6-47ba-b657-d36ea1811e76", "quote": "Ensure that all new customers have BVN"}},
+      {"check": "maps", "control": "on 'post no debit' status", "requirement": {"document": "30daeed2-7058-4277-9167-d46bda79d48f", "quote": "place all accounts without BVN on a 'post no debit' status"}},
+      {"check": "maps", "control": "render the monthly AML/CFT returns", "requirement": {"document": "b8dc42df-614b-4c9d-8d10-499aafb9beb0", "quote": "on or before the 14th day after the end of every reporting month"}},
+      {"check": "maps", "control": "display the CBN BVN awareness poster", "requirement": {"document": "22dcdfae-e7a6-47ba-b657-d36ea1811e76", "quote": "Conspicuously display notices sensitizing customers on BVN"}},
+      {"check": "maps", "control": "submit the monthly BVN enrolment progress report", "requirement": {"document": "f6d58089-9318-490c-81f0-aa676828e941", "quote": "progress reports on BVN enrolment on a monthly basis"}},
+      {"check": "no_map", "control": "BVN-linked mobile application", "why": "Mentions BVN but addresses no requirement."},
+      {"check": "no_map", "control": "respond to every data subject access request", "why": "Nothing in the library governs data subject requests: the gap is the library's, and must not be papered over."},
+      {"check": "no_map", "control": "review this policy every year", "why": "Only mentions CBN regulations in general."},
+      {"check": "evidences", "document": "ws-training-register", "any_of": [{"control": "organise annual AML/CFT training"}]},
+      {"check": "evidences", "document": "ws-bvn-progress-report", "any_of": [
+        {"control": "on 'post no debit' status"},
+        {"control": "submit the monthly BVN enrolment progress report"},
+        {"requirement": {"document": "f6d58089-9318-490c-81f0-aa676828e941", "quote": "progress reports on BVN enrolment on a monthly basis"}},
+        {"requirement": {"document": "30daeed2-7058-4277-9167-d46bda79d48f", "quote": "place all accounts without BVN on a 'post no debit' status"}}
+      ]},
+      {"check": "no_evidences", "document": "ws-training-register", "control": "respond to every data subject access request"}
+    ]
+  },
+  "chat": {
+    "about": "After the mapping run, the pilot admin confirms the suggestions the gold set expects, records an owner, and then a 2026 letter amends the 2017 BVN circular. The real chat agent then answers the pilot's five questions, plus one with the graph unavailable. Checks follow scripts/evaluate_conversations.py check_turn, plus record citations and the graph trace step. Run with --chat (needs --mapping).",
+    "owner": {"documents": ["b8dc42df-614b-4c9d-8d10-499aafb9beb0", "e78c79b4-7e9f-4a09-81e2-2443aa68c632"], "team": "Compliance Unit"},
+    "change": {
+      "id": "fixture-2026-bvn-amendment",
+      "title": "Amendment to the BVN Enrolment Circular (2026)",
+      "reference": "OFI/DIR/CIR/GEN/26/001",
+      "published_date": "2026-09-01",
+      "pages": ["CENTRAL BANK OF NIGERIA\nOther Financial Institutions Supervision Department\n\nRef: OFI/DIR/CIR/GEN/26/001\n\nSeptember 1, 2026\n\n# LETTER TO ALL OTHER FINANCIAL INSTITUTIONS (OFIs)\n\nThis circular hereby amends circular OFI/DIR/CIR/GEN/17/139 on BVN enrollment so that BVN\nawareness notices are displayed in every banking hall and on each institution's website.\n\nPlease be guided accordingly.\n"]
+    },
+    "turns": [
+      {"id": "relate-circular-to-procedure", "question": "How does the CBN BVN enrolment circular relate to our KYC procedure?",
+       "graph_trace": true, "record_citations_min": 1, "must_cite": ["Iroko compliance record"],
+       "must_not_match": ["\\bnon-?compliant\\b", "\\bin breach\\b", "\\bfully compliant\\b"]},
+      {"id": "changed-controls", "question": "The BVN enrolment requirement changed. Which of our controls need reviewing?",
+       "intent_in": ["compliance_records"], "must_match": ["(?i)awareness poster|BVN awareness|amends"],
+       "must_not_match": ["\\bnon-?compliant\\b"]},
+      {"id": "evidence-gaps", "question": "Which requirements don't have supporting evidence in our records?",
+       "intent_in": ["compliance_records"], "must_match": ["Not established in Iroko's records"],
+       "must_not_match": ["\\bnon-?compliant\\b", "\\bin breach\\b"]},
+      {"id": "owner-and-due", "question": "Who owns the AML/CFT returns requirement, and what is due next?",
+       "intent_in": ["compliance_records"], "must_match": ["Compliance Unit"]},
+      {"id": "trace-post-no-debit", "question": "Trace the post no debit requirement: our control, its evidence and the review history.",
+       "intent_in": ["compliance_records"], "must_match": ["Control:"], "must_cite": ["Iroko compliance record"]},
+      {"id": "graph-unavailable", "question": "How does the CBN BVN enrolment circular relate to our KYC procedure?",
+       "graph_outage": true, "record_citations_max": 0,
+       "must_not_match": ["\\bnon-?compliant\\b", "\\bin breach\\b"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "bvn-2017-original",
+      "document": "22dcdfae-e7a6-47ba-b657-d36ea1811e76",
+      "why": "The first BVN enrolment circular: a list of duties under 'all OFIs are required to:' and a withdrawal ban dated for that duty alone.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/CIR/GEN/17/139"},
+        {"check": "letter_date", "equals": "2017-04-21"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "applicability", "profile": "mfb", "in": ["applies"]},
+        {"check": "applicability", "profile": "payments", "in": ["not_addressed"]},
+        {"check": "effective", "none": true, "why": "'Effective August 1, 2017' dates the withdrawal ban, not the circular."},
+        {"check": "requirement", "model": true, "quote": "Enroll their customers on or before July 31, 2017", "deadline": {"kind": "fixed_date", "date": "2017-07-31"}},
+        {"check": "requirement", "model": true, "quote": "Conspicuously display notices sensitizing customers on BVN", "addressee_codes": ["ofi"]},
+        {"check": "requirement", "model": true, "quote": "Ensure that all new customers have BVN"},
+        {"check": "requirement", "model": true, "quote": "schedule of customer accounts with BVN on August 7, 2017"},
+        {"check": "requirement", "model": true, "quote": "shall not be allowed to make withdrawals", "kind": "prohibition"},
+        {"check": "no_requirement", "model": true, "quote": "The BVN is expected to also minimize the incidence of fraud"},
+        {"check": "no_requirement", "model": true, "quote": "it has become necessary to extend the BVN enrollment"},
+        {"check": "no_requirement", "model": true, "quote": "In view of the foregoing, all OFIs are required to:"}
+      ]
+    },
+    {
+      "id": "bvn-2017-extension",
+      "document": "f6d58089-9318-490c-81f0-aa676828e941",
+      "why": "Extends the 2017 deadline. The citation and the extension are in different sentences, so the extension can only be suggested; the earlier letter's duties are restated as history.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/CIR/GEN/18/011"},
+        {"check": "letter_date", "equals": "2017-08-01"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "link", "relation": "references", "to": "doc:22dcdfae-e7a6-47ba-b657-d36ea1811e76", "basis": "stated"},
+        {"check": "link", "model": true, "relation": "extends_deadline_of", "to": "doc:22dcdfae-e7a6-47ba-b657-d36ea1811e76", "basis": "suggested"},
+        {"check": "no_link", "relations": ["amends", "supersedes", "revokes", "extends_deadline_of"], "to": "doc:22dcdfae-e7a6-47ba-b657-d36ea1811e76", "basis": "stated"},
+        {"check": "no_change_event", "why": "Only a stated or confirmed change is a library change event."},
+        {"check": "effective", "none": true, "why": "August 1, 2017 is reported from the earlier letter; January 1st, 2018 dates one requirement."},
+        {"check": "requirement", "model": true, "quote": "Ensure that all customers are enrolled on the BVN platform"},
+        {"check": "requirement", "model": true, "quote": "Continue with the submission of progress reports on BVN enrolment on a monthly basis"},
+        {"check": "no_requirement", "model": true, "quote": "Forward to Director, Other Financial Institutions Supervision Department the schedule", "why": "Restates what the earlier letter required."},
+        {"check": "no_requirement", "model": true, "quote": "a. Enroll their customers on or before July 31, 2017", "why": "Restates an expired deadline from the earlier letter."}
+      ]
+    },
+    {
+      "id": "bvn-2018-post-no-debit",
+      "document": "30daeed2-7058-4277-9167-d46bda79d48f",
+      "why": "Follows the extension without citing it by reference; takes effect immediately; its own reference sits below a department-name heading.",
+      "checks": [
+        {"check": "reference", "equals": "OFISD/DIR/CIR/GEN/018/217"},
+        {"check": "letter_date", "equals": "2018-01-02"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "no_link", "relations": ["references"], "to": "ref:OFISD/DIR/CIR/GEN/018/217", "why": "A letter never cites itself."},
+        {"check": "isolated_from", "document": "f6d58089-9318-490c-81f0-aa676828e941", "why": "No reference number names the extension letter."},
+        {"check": "effective", "date": "2018-01-02", "basis": "suggested", "why": "'this directive takes effect immediately': the date printed on the letter."},
+        {"check": "requirement", "model": true, "quote": "place all accounts without BVN on a 'post no debit' status"}
+      ]
+    },
+    {
+      "id": "aml-returns-2017",
+      "document": "b8dc42df-614b-4c9d-8d10-499aafb9beb0",
+      "why": "AML/CFT returns letter: cites a 2012 circular not in the library and the MLPA '(as amended)'; the date is in an OCR page-header comment.",
+      "checks": [
+        {"check": "reference", "equals": "OFISD/DIR/CIR/GEN/17/128"},
+        {"check": "letter_date", "equals": "2017-05-02"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "link", "relation": "references", "to": "ref:FPR/DIR/CON/BOF/01/036", "basis": "stated"},
+        {"check": "link", "relation": "references", "to": "act:mlpa_2011", "basis": "stated"},
+        {"check": "no_link", "relations": ["amends", "supersedes", "revokes"], "to": "act:*", "why": "'(as amended)' describes the Act; it is not this letter amending it."},
+        {"check": "requirement", "model": true, "quote": "a NIL return shall be rendered"},
+        {"check": "requirement", "model": true, "quote": "on or before the 14th day after the end of every reporting month", "deadline": {"kind": "monthly_day", "day": 14}}
+      ]
+    },
+    {
+      "id": "aml-returns-2019",
+      "document": "e78c79b4-7e9f-4a09-81e2-2443aa68c632",
+      "why": "'Further to our circular ref ...' cites the 2017 letter; it does not amend or replace it.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/DOC/GEN/20/365"},
+        {"check": "letter_date", "equals": "2019-09-10"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "link", "relation": "references", "to": "doc:b8dc42df-614b-4c9d-8d10-499aafb9beb0", "basis": "stated"},
+        {"check": "no_link", "relations": ["amends", "supersedes", "revokes", "extends_deadline_of"], "to": "doc:b8dc42df-614b-4c9d-8d10-499aafb9beb0"},
+        {"check": "link", "relation": "references", "to": "act:mlpa_2011", "basis": "stated"},
+        {"check": "no_link", "relations": ["amends", "supersedes", "revokes"], "to": "act:*"},
+        {"check": "no_change_event"}
+      ]
+    },
+    {
+      "id": "afs-2019-extension",
+      "document": "2d2cf161-827c-4585-ba4a-7d8f8729a8d0",
+      "why": "Extends the BOFIA s.27 deadline for 2019 accounts; unrelated to the BDC accounts letter despite the shared subject.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/LTT/GEN/022/153"},
+        {"check": "letter_date", "equals": "2020-04-30"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "link", "relation": "references", "to": "act:bofia_2020", "basis": "stated"},
+        {"check": "no_link", "relations": ["supersedes", "revokes"], "to": "act:bofia_2020"},
+        {"check": "isolated_from", "document": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2", "why": "A shared subject is not a relationship."},
+        {"check": "effective", "none": true},
+        {"check": "requirement", "model": true, "quote": "submit the 2019 Audited Financial Statements on or before July 31, 2020", "deadline": {"kind": "fixed_date", "date": "2020-07-31"}}
+      ]
+    },
+    {
+      "id": "bdc-audited-accounts",
+      "document": "dacd5d44-3de4-45ae-b407-4cab1b1c8dc2",
+      "why": "Addressed to bureaux de change only; names its source guidelines by title, never by reference.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/DOC/GEN/019/241"},
+        {"check": "letter_date", "equals": "2018-12-20"},
+        {"check": "addressee", "code": "bdc", "basis": "stated"},
+        {"check": "no_addressee", "codes": ["ofi", "mfb"], "basis": "stated"},
+        {"check": "applicability", "profile": "mfb", "in": ["not_addressed"]},
+        {"check": "applicability", "profile": "payments", "in": ["not_addressed"]},
+        {"check": "applicability", "profile": "bdc", "in": ["applies"]},
+        {"check": "no_link", "relations": ["amends", "supersedes", "revokes", "extends_deadline_of", "references"], "to": "doc:*", "basis": "stated"},
+        {"check": "requirement", "model": true, "quote": "every licensed BDC shall submit its audited financial statements", "deadline": {"kind": "fy_offset_months", "months": 3}},
+        {"check": "requirement", "model": true, "quote": "no BDC shall publish its audited accounts", "kind": "prohibition"},
+        {"check": "requirement", "model": true, "quote": "all BDCs are required to submit hard copies"}
+      ]
+    },
+    {
+      "id": "dfi-subsidiaries",
+      "document": "77cde388-0fe1-465b-ab8f-3dabb333b1e2",
+      "why": "DFI-only letter with numbered duties under 'DFIs are required to:' (OCR escapes the numbers as '1\\.').",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/CIR/GEN/20/349"},
+        {"check": "letter_date", "equals": "2019-09-03"},
+        {"check": "addressee", "code": "dfi", "basis": "stated"},
+        {"check": "applicability", "profile": "mfb", "in": ["not_addressed"]},
+        {"check": "applicability", "profile": "payments", "in": ["not_addressed"]},
+        {"check": "applicability", "profile": "dfi", "in": ["applies"]},
+        {"check": "requirement", "model": true, "quote": "provide comprehensive disclosures on all subsidiaries and SPV operations"},
+        {"check": "requirement", "model": true, "quote": "Submit returns on all SPVs", "addressee_codes": ["dfi"]},
+        {"check": "requirement", "model": true, "quote": "Report on the Financial soundness indicators"},
+        {"check": "requirement", "model": true, "quote": "Present for approval, its Audited accounts"},
+        {"check": "requirement", "model": true, "quote": "Meet a consolidated leverage ratio of at least 10%"},
+        {"check": "no_requirement", "model": true, "quote": "A consolidated risk-based examination of all subsidiaries", "why": "What the regulator itself will do."}
+      ]
+    },
+    {
+      "id": "ofi-divest-uninsured-funds",
+      "document": "455dffc3-d4d3-4481-ab63-8a32000fa470",
+      "why": "A deadline counted from the date of the letter, and a title that names a prohibition.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DOA/CON/OFI/001/304"},
+        {"check": "letter_date", "equals": "2023-01-09"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "applicability", "profile": "mfb", "in": ["applies"]},
+        {"check": "applicability", "profile": "payments", "in": ["not_addressed"]},
+        {"check": "requirement", "model": true, "quote": "immediately divest from all managed funds or products of uninsured entities"},
+        {"check": "requirement", "model": true, "quote": "must be liquidated within 90 days of the date of this letter", "deadline": {"kind": "fixed_date", "date": "2023-04-09"}},
+        {"check": "no_requirement", "model": true, "quote": "PROHIBITION OF PLACEMENT/INVESTMENT IN FUNDS MANAGED BY UNINSURED ENTITIES"}
+      ]
+    },
+    {
+      "id": "ofi-corporate-email",
+      "document": "d2d9013d-6797-449c-9df8-a514a4fb4f77",
+      "why": "The header misspells 'INSTITIONS' but carries the exact acronym; the deadline runs from the circular's date.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/DOC/GEN/019/156"},
+        {"check": "letter_date", "equals": "2019-04-09"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "requirement", "model": true, "quote": "create their own corporate e-mails within one (1) month from the date of this circular", "deadline": {"kind": "fixed_date", "date": "2019-05-09"}}
+      ]
+    },
+    {
+      "id": "mfb-inclusion-letter",
+      "document": "f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec",
+      "why": "MFB-only letter that shares its reference number with the data collection template.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/DOC/GEN/020/252"},
+        {"check": "letter_date", "equals": "2019-06-20"},
+        {"check": "addressee", "code": "mfb", "basis": "stated"},
+        {"check": "applicability", "profile": "mfb", "in": ["applies"]},
+        {"check": "applicability", "profile": "payments", "in": ["not_addressed"]},
+        {"check": "applicability", "profile": "bdc", "in": ["not_addressed"]},
+        {"check": "requirement", "model": true, "quote": "implement the above resolution and disseminate same to all their branches"},
+        {"check": "requirement", "model": true, "quote": "A monthly report/update on new customers on-boarded should be submitted"}
+      ]
+    },
+    {
+      "id": "mfb-inclusion-template",
+      "document": "17df5c74-d087-4511-be95-7f6eb978f622",
+      "why": "A spreadsheet template with the same note on every monthly sheet; no addressee header, so only the title suggests MFBs.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/DOC/GEN/020/252"},
+        {"check": "addressee", "code": "mfb", "basis": "suggested"},
+        {"check": "no_addressee", "codes": ["mfb"], "basis": "stated"},
+        {"check": "no_requirement", "model": true, "quote": "The underlining criteria is that your bank must be the one that registered the person for BVN", "why": "Part of a definition of 'new customers'."}
+      ]
+    },
+    {
+      "id": "cites-shared-reference",
+      "document": "fixture-cites-shared-reference",
+      "why": "A reference shared by two library documents can only be a suggestion.",
+      "checks": [
+        {"check": "link", "relation": "references", "to": "doc:f1a2c7f3-d13e-4a95-9ae9-7d6817e1eeec", "basis": "suggested"},
+        {"check": "link", "relation": "references", "to": "doc:17df5c74-d087-4511-be95-7f6eb978f622", "basis": "suggested"},
+        {"check": "no_link", "relations": ["references"], "to": "doc:*", "basis": "stated"},
+        {"check": "addressee", "code": "mfb", "basis": "stated"},
+        {"check": "requirement", "model": true, "quote": "render the monthly report on new customers", "deadline": {"kind": "monthly_day", "day": 10}}
+      ]
+    },
+    {
+      "id": "hereby-amends",
+      "document": "fixture-hereby-amends",
+      "why": "Positive control: a performative cue bound to a unique reference is stated and becomes a library change event.",
+      "checks": [
+        {"check": "link", "relation": "amends", "to": "doc:22dcdfae-e7a6-47ba-b657-d36ea1811e76", "basis": "stated"},
+        {"check": "change_event", "kind": "amended_by", "subject": "22dcdfae-e7a6-47ba-b657-d36ea1811e76"}
+      ]
+    },
+    {
+      "id": "payments-circular",
+      "document": "fixture-payments-circular",
+      "why": "Payment licences are not OFIs: a PSB/MMO circular never reaches an MFB, and OFI circulars never reach PSBs.",
+      "checks": [
+        {"check": "addressee", "code": "psb", "basis": "stated"},
+        {"check": "addressee", "code": "mmo", "basis": "stated"},
+        {"check": "applicability", "profile": "payments", "in": ["applies"]},
+        {"check": "applicability", "profile": "mfb", "in": ["not_addressed"]},
+        {"check": "requirement", "model": true, "quote": "submit a quarterly report on their agent networks"}
+      ]
+    },
+    {
+      "id": "typo-addressee",
+      "document": "fixture-typo-addressee",
+      "why": "A misspelt addressee with no acronym is only a suggestion.",
+      "checks": [
+        {"check": "addressee", "code": "mfb", "basis": "suggested"},
+        {"check": "no_addressee", "codes": ["mfb"], "basis": "stated"},
+        {"check": "applicability", "profile": "mfb", "in": ["likely"]}
+      ]
+    },
+    {
+      "id": "si-22-revocation",
+      "document": "abd71c76-817a-4df4-b6ad-978a50df2cb9",
+      "why": "Revokes 47 MFB licences under BOFIA s.12: it does not revoke BOFIA, is not addressed to all MFBs and imposes no requirement.",
+      "checks": [
+        {"check": "role", "equals": "regulation"},
+        {"check": "link", "relation": "issued_under", "to": "act:bofia_2020", "basis": "stated"},
+        {"check": "no_link", "relations": ["revokes", "supersedes", "amends", "references"], "to": "act:bofia_2020"},
+        {"check": "no_link", "relations": ["revokes", "supersedes", "amends"], "to": "doc:*"},
+        {"check": "no_addressee", "codes": ["mfb"], "basis": "stated"},
+        {"check": "effective", "date": "2023-05-22", "basis": "stated", "why": "The gazette's commencement note."},
+        {"check": "requirement_count", "model": true, "max": 0}
+      ]
+    },
+    {
+      "id": "si-23-revocation",
+      "document": "7df835e2-f1a9-40ff-8c6c-d93304af6e5e",
+      "why": "Revokes MFB, finance company and PMB licences; the same traps as S.I. 22.",
+      "checks": [
+        {"check": "link", "relation": "issued_under", "to": "act:bofia_2020", "basis": "stated"},
+        {"check": "no_link", "relations": ["revokes", "supersedes", "amends"], "to": "act:bofia_2020"},
+        {"check": "no_addressee", "codes": ["mfb", "finance_company", "pmb"], "basis": "stated"},
+        {"check": "effective", "date": "2023-05-22", "basis": "stated"},
+        {"check": "requirement_count", "model": true, "max": 0}
+      ]
+    },
+    {
+      "id": "ifrs-adoption",
+      "document": "fb64b718-abc0-4d49-9b3d-3953e797b6cc",
+      "why": "Mentions Nigeria's 2012 IFRS adoption date, which is not this letter's; unrelated to the IFRS 9 guidance despite the subject.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DOA/LTT/CON/002/138"},
+        {"check": "letter_date", "equals": "2021-10-08"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "not_effective", "date": "2012-01-01"},
+        {"check": "isolated_from", "document": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac"},
+        {"check": "requirement", "model": true, "quote": "to prepare their annual financial statements (AFS) in accordance and full compliance with IFRS"},
+        {"check": "requirement", "model": true, "quote": "should comply fully with IFRS 1"}
+      ]
+    },
+    {
+      "id": "ifrs9-guidance",
+      "document": "f1d1aee5-2593-47fe-a6de-5dd6c36733ac",
+      "why": "A long guidance note: many candidates, one dated submission.",
+      "checks": [
+        {"check": "reference", "equals": "OFISD/DIR/GEN/IFR/020/101"},
+        {"check": "letter_date", "equals": "2019-03-05"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "effective", "none": true},
+        {"check": "requirement", "model": true, "quote": "submit monthly status updates on the implementation projects"},
+        {"check": "requirement_count", "model": true, "min": 15}
+      ]
+    },
+    {
+      "id": "cybersecurity-framework",
+      "document": "02fe392f-4ee9-4a2e-be8f-72e03e35c172",
+      "why": "Cover letter plus a 43-page framework: OCR made the reference a heading; the framework's own effective-date clause outranks the cover letter's.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DOA/CON/ACT/004/155"},
+        {"check": "letter_date", "equals": "2022-06-29"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "effective", "date": "2023-01-01", "basis": "stated"},
+        {"check": "no_link", "relations": ["references"], "to": "ref:OFI/DOA/CON/ACT/004/155"},
+        {"check": "link", "relation": "references", "to": "act:bofia_2020", "basis": "stated"},
+        {"check": "link", "relation": "references", "to": "act:cbn_act_2007", "basis": "stated"},
+        {"check": "requirement_count", "model": true, "min": 40}
+      ]
+    },
+    {
+      "id": "guide-to-charges-amendment",
+      "document": "21a3358c-c031-4574-9062-f7bac37c1be6",
+      "why": "'hereby amend Part 2 ...' names the Guide by title only, so no instrument link can be stated; 'This new provision takes effect' is its own date.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/GEN/CIR/07/033"},
+        {"check": "letter_date", "equals": "2019-09-05"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "effective", "date": "2019-09-09", "basis": "stated"},
+        {"check": "no_link", "relations": ["amends", "supersedes", "revokes"], "to": "*"}
+      ]
+    },
+    {
+      "id": "credit-bureau-agreements",
+      "document": "c6d8a712-a05a-4030-8f4e-0338939db455",
+      "why": "Cites two older circulars outside the library and reminds OFIs to comply; changes neither.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/CIR/GEN/17/151"},
+        {"check": "letter_date", "equals": "2017-05-10"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "link", "relation": "references", "to": "ref:BSD/DIR/GEN/CIR/04/014", "basis": "stated"},
+        {"check": "link", "relation": "references", "to": "ref:BSD/DIR/GEN/LAB/06/051", "basis": "stated"},
+        {"check": "no_link", "relations": ["amends", "supersedes", "revokes", "extends_deadline_of"], "to": "ref:*"},
+        {"check": "requirement", "model": true, "quote": "insert a disclosure clause in the Terms and Conditions section of account opening packs"}
+      ]
+    },
+    {
+      "id": "sdgt-designation",
+      "document": "46c5a19e-ad17-40f8-94d9-7c5d17ea8d46",
+      "why": "An information notice: no reference to another instrument and at most a vague call to action.",
+      "checks": [
+        {"check": "reference", "equals": "OFI/DIR/GEN/CIR/17/204"},
+        {"check": "letter_date", "equals": "2017-06-14"},
+        {"check": "addressee", "code": "ofi", "basis": "stated"},
+        {"check": "no_link", "relations": ["amends", "supersedes", "revokes", "extends_deadline_of", "references"], "to": "*"},
+        {"check": "requirement_count", "model": true, "max": 1}
+      ]
+    }
+  ]
+}

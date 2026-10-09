@@ -88,8 +88,12 @@ def share_document(
     document_id: str, body: SharingRequest, user=Depends(platform_admin), db=Depends(session)
 ):
     from ingestion.workspaces import set_shared
+    from services.compliance_graph.triggers import after_sharing_change
 
     set_shared(db, user, document_id, body.shared_regulatory, body.note)
+    # Every graph workspace may have gained or lost this document's requirements.
+    after_sharing_change(db, document_id)
+    db.commit()
     return {"shared_regulatory": body.shared_regulatory}
 
 

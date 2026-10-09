@@ -38,6 +38,10 @@ class StrategistAgent:
         self.conversation_history: List[Dict] = []
         self._conversation_context: dict = {}
         self.first_name = ""
+        # Compliance-graph step for relationship questions (injectable for tests).
+        self.graph_step = None
+        self.graph_timeout = 1.5  # seconds; past this the answer uses documents only
+        self._graph_pending = 0
 
     def set_history(self, history: List[Dict]):
         self.conversation_history = history[-12:]
@@ -75,7 +79,7 @@ class StrategistAgent:
             resolved_question = classification.get("query") or question
             self._conversation_context = classification.get("conversation_context") or {}
             self._log_trace("Strategist", "intent", f"Intent: {intent} | Topic: {topic}", intent=intent)
-            factual = intent not in {"greeting", "social", "conversation_recall", "integrity_boundary", "out_of_domain", "clarification", "catalog"} and not classification.get("clarification")
+            factual = intent not in {"greeting", "social", "conversation_recall", "integrity_boundary", "out_of_domain", "clarification", "catalog", "compliance_records"} and not classification.get("clarification")
             if factual:
                 self._log_trace("Strategist", "conversation_context",
                     "Connected the question to the conversation" if resolved_question != question else "Identified the question to investigate",
@@ -114,6 +118,16 @@ class StrategistAgent:
                     result = await asyncio.to_thread(catalog_answer, classification.get("catalog_topic"))
                 except Exception as exc:
                     logger.warning("Document catalog unavailable (%s)", type(exc).__name__)
+                    result = gap("access_check_failed")
+            elif intent == "compliance_records":
+                # The organisation's own records, read straight from the compliance graph: no model.
+                from services.compliance_graph.chat import records_answer
+                from services.grounded_answers import gap
+                self._log_trace("Researcher", "compliance_records", "Reading your organisation's compliance records")
+                try:
+                    result = await asyncio.to_thread(records_answer, classification.get("records_kinds") or [], question)
+                except Exception as exc:
+                    logger.warning("Compliance records unavailable (%s)", type(exc).__name__)
                     result = gap("access_check_failed")
             elif intent == "out_of_domain":
                 result = {"answer": "I can help you understand regulations, review your organisation's documents, and work through compliance questions. What would you like to check?",
@@ -199,6 +213,7 @@ class StrategistAgent:
         # Avoid waiting/paying for an embedding/index lookup whose results would
         # be discarded. Private status/filing queries still retrieve permitted records.
         context = {"sources": [], "knowledge_gap": True} if report and report["sources"] else await self._retrieve_context(question, depth)
+        context = await self._graph_context(question, context)
         self._log_trace("Watchdog", "claim_validation", "Checking exact quotes, citation coordinates and claim support before display")
         result = None
         if not (public_research and freshness_requested(question)):
@@ -225,11 +240,44 @@ class StrategistAgent:
                 result = earlier_findings
                 self._log_trace("Watchdog", "research_gap", "Kept verified document findings; additional research did not establish further facts")
             result = finish(result, report, question, helpful=True)
+        if report:
+            discovery = [c for c in report.get("discovery_checks", []) if c.get("status") != "disabled"]
+            if discovery:
+                checked = sum(c.get("status") == "checked" for c in discovery)
+                self._log_trace("Researcher", "web_search",
+                    f"Bright Data public-topic discovery: {checked}/{len(discovery)} searches succeeded. "
+                    "Only fetched official pages can support the answer; search snippets are not evidence.")
         message = ("Reported an evidence/validation gap without a compliance conclusion" if result.get("knowledge_gap")
                    else "Rendered approved partial findings with the remaining gaps" if result.get("partial_answer")
                    else "Rendered verified claims without executive rewriting")
         self._log_trace("Scribe", "format", message)
+        if self._graph_pending and not result.get("knowledge_gap") and result.get("answer"):
+            # Suggestions are never evidence; they are only counted, deterministically.
+            from services.compliance_graph.chat import pending_note
+            result["answer"] = result["answer"] + pending_note(self._graph_pending)
         return result
+
+    async def _graph_context(self, question: str, context: dict) -> dict:
+        """Relationship questions also follow confirmed compliance-graph links (bounded, database-only)."""
+        from services.compliance_graph import chat as graph_chat
+        self._graph_pending = 0
+        # Checked before any database access: the flag and the question's wording.
+        if not context.get("sources") or not graph_chat.wanted(question):
+            return context
+        step = self.graph_step or graph_chat.expand_context
+        try:
+            expanded = await asyncio.wait_for(asyncio.to_thread(step, question, context), timeout=self.graph_timeout)
+        except Exception as exc:
+            logger.warning("Compliance graph step skipped (%s)", type(exc).__name__)
+            self._log_trace("Researcher", "graph", "The compliance graph was unavailable; answered from documents only")
+            return context
+        info = expanded.get("graph") or {}
+        self._graph_pending = int(info.get("pending") or 0)
+        if info.get("passages") or info.get("records"):
+            self._log_trace("Researcher", "graph",
+                            f"Followed confirmed links in your compliance graph: {info.get('passages', 0)} passage(s), "
+                            f"{info.get('records', 0)} record(s)", graph=info)
+        return expanded
 
     async def _retrieve_context(self, question: str, depth: str) -> dict:
         from services.grounded_answers import retrieve

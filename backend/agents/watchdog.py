@@ -5,6 +5,7 @@ Runs on a schedule via background tasks.
 """
 import json
 import logging
+import re
 from typing import Annotated, List, Optional
 from datetime import datetime, timedelta
 from agents._compat import kernel_function, Kernel
@@ -332,6 +333,139 @@ Return JSON array:
 
 Return [] if no conflicts found."""
 
+    # ── Proposed-action assessment ("may we do THIS?") ────────────────────────
+
+    async def assess_proposed_action(
+        self,
+        topic: str,
+        sector: str = "financial",
+    ) -> dict:
+        """
+        Judge one proposed action against the indexed documents.
+
+        Returns {"assessment", "basis", "missing_source", "alerts"} where assessment
+        is breach | needs_safeguards | compliant | not_covered. Silence in the
+        documents is "not_covered", never permission: an empty alert list used to
+        be read as GO, so actions governed by rules missing from the library
+        (NDPA consent, PEP due diligence, liquidity limits) were cleared.
+        Raises RuntimeError when the model's answer cannot be read.
+        """
+        results = await self._search_documents(topic)
+        if not results:
+            return {"assessment": "not_covered", "basis": "", "missing_source": "", "alerts": []}
+
+        regulators = "NCC, NDPA, NCA 2003" if sector == "network" else "CBN, SEC, NDPA, NFIU, FIRS"
+        prompt = f"""You are the Watchdog for Iroko AI, assessing a proposed action for a
+Nigerian {'telecom operator' if sector == 'network' else 'regulated financial institution'}.
+
+Indexed documents:
+
+{self._format_excerpts(results)}
+
+A proposed action has been submitted for compliance assessment:
+
+    "{topic}"
+
+Decide whether THAT PROPOSED ACTION may proceed, using ONLY the laws, regulations,
+regulatory limits and internal policy positions stated in the documents above
+({regulators}, etc.). Do not rely on any rule the documents do not state.
+
+Choose one assessment:
+- "breach": the documents state a rule, limit or prohibition the action would break.
+- "needs_safeguards": the documents allow it only with approvals, disclosures or
+  controls that the action does not mention.
+- "compliant": the documents state the rule that governs this action and the action
+  satisfies it, or the documents require or expressly permit it.
+- "not_covered": the documents do not state the rule that decides whether this action
+  is allowed. Use this whenever deciding would need knowledge from outside the
+  documents. Silence in the documents is neither permission nor prohibition: if no
+  stated rule decides the action, the answer is not_covered.
+
+Report ONLY problems with the proposed action itself. The documents may describe the
+organisation's existing breaches, open findings or control gaps; those are not about
+this action unless the action would directly cause, worsen or perpetuate them.
+
+Judge only what the action does or deliberately leaves out. Skipping or stopping
+something the documents require (such as a return they say must be filed) is a
+breach; an action about something else is not at fault for not also doing other duties.
+
+Return one JSON object:
+{{
+  "assessment": "breach|needs_safeguards|compliant|not_covered",
+  "rule_quote": "the one or two sentences from the documents that themselves state the requirement or prohibition deciding this action, copied exactly, without '...' (never background or unrelated text); empty when not_covered",
+  "basis": "that rule in your own words, with the document's name or reference; empty when not_covered",
+  "missing_source": "only when not_covered: the law or regulation that most likely governs this action (its name only); otherwise empty",
+  "alerts": [{{
+    "alert_type": "policy_conflict",
+    "severity": "critical|warning",
+    "title": "Short descriptive title",
+    "summary": "2-3 sentences on the rule and how the action breaks it",
+    "metadata": {{"regulation": "", "regulation_requirement": "", "document_ids": []}},
+    "suggested_actions": ["..."]
+  }}]
+}}
+List one alert per problem; "alerts" is [] unless the assessment is breach or needs_safeguards.
+Use severity "critical" for a breach and "warning" where safeguards are needed.
+
+JSON only — no explanation, no markdown fences."""
+
+        response = await llm_complete(prompt, max_tokens=1800, temperature=0.1)
+        try:
+            parsed = json.loads(response.strip().replace("```json", "").replace("```", "").strip())
+        except (json.JSONDecodeError, AttributeError) as exc:
+            raise RuntimeError("compliance assessment returned unreadable output") from exc
+        if not isinstance(parsed, dict):
+            raise RuntimeError("compliance assessment returned unreadable output")
+        alerts = parsed.get("alerts")
+        assessment = {
+            "assessment": str(parsed.get("assessment") or "").strip().lower(),
+            "basis": str(parsed.get("basis") or "").strip(),
+            "missing_source": str(parsed.get("missing_source") or "").strip(),
+            "alerts": [a for a in alerts if isinstance(a, dict)] if isinstance(alerts, list) else [],
+            "evidence": None,
+        }
+        if assessment["assessment"] == "not_covered":
+            return assessment
+        # A verdict stands only on a rule quoted from a retrieved passage. Small models
+        # otherwise cite laws the library does not hold, or read silence as a prohibition.
+        evidence = self._verified_rule(parsed.get("rule_quote"), results[:6])
+        if evidence is None:
+            logger.info("Compliance assessment downgraded: deciding rule not found in retrieved text")
+            return {**assessment, "assessment": "not_covered", "alerts": [], "unverified_rule": True}
+        return {**assessment, "evidence": evidence}
+
+    @staticmethod
+    def _verified_rule(quote, results: List[dict]) -> Optional[dict]:
+        """
+        The quoted rule with its source, when it appears in a retrieved passage; else None.
+
+        Checked sentence by sentence: models join real sentences with "..." or drift
+        late in a long quote. Only sentences found verbatim become evidence, all
+        from one document; fragments under eight words ("The Management of an OFI
+        shall:") state no rule and are ignored.
+        """
+        from services.grounded_answers import clean_quote, matched_quote
+
+        if not isinstance(quote, str):
+            return None
+        sentences = [clean_quote(s) for s in re.split(r"\.\.\.|…|(?<=[.;:])\s+", quote)]
+        sentences = [s for s in sentences if len(s.split()) >= 8]
+        for r in results:
+            excerpt = r.get("excerpt") or ""
+            found = [m for m in (matched_quote(s, excerpt) for s in sentences) if m]
+            if found:
+                return {"quote": " … ".join(found[:3]), "document_id": r.get("document_id", ""),
+                        "title": r.get("title", "")}
+        return None
+
+    @staticmethod
+    def _format_excerpts(results: List[dict]) -> str:
+        return "\n\n".join(
+            f"[{r.get('title', 'Untitled')}] (dept: {r.get('department', 'N/A')}, "
+            f"id: {r.get('document_id', '')})\n{r.get('excerpt', '')}"
+            for r in results[:6]
+        )
+
     # ── Regulatory Deadlines ──────────────────────────────────────────────────
 
     @kernel_function(
@@ -485,11 +619,7 @@ Return [] if no deadlines require immediate attention."""
         if not LLM_AVAILABLE or not results:
             return []
 
-        excerpts = "\n\n".join(
-            f"[{r.get('title', 'Untitled')}] (dept: {r.get('department', 'N/A')}, "
-            f"id: {r.get('document_id', '')})\n{r.get('excerpt', '')}"
-            for r in results[:6]
-        )
+        excerpts = self._format_excerpts(results)
 
         domain = (
             "NCC telecom regulatory intelligence for Nigerian network operators (e.g. MTN Nigeria)"

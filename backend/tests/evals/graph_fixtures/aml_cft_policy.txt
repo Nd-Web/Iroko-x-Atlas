@@ -1,0 +1,26 @@
+ACME MICROFINANCE BANK LIMITED
+ANTI-MONEY LAUNDERING AND COMBATING THE FINANCING OF TERRORISM POLICY
+Version 3.0 - approved by the Board of Directors on 12 February 2026
+
+1. PURPOSE AND REVIEW
+
+1.1 This policy sets out how the Bank prevents its products and services from being used for money laundering and terrorist financing.
+1.2 The Board Audit Committee shall review this policy every year to reflect changes in CBN regulations.
+
+5. CUSTOMER IDENTIFICATION
+
+5.1 The Head of Customer Service shall ensure that no account is activated until the customer's Bank Verification Number (BVN) has been obtained and validated on the NIBSS platform.
+5.2 The Head of Operations shall place every account without a linked BVN on 'post no debit' status and shall lift the restriction only after a valid BVN has been obtained.
+
+6. REGULATORY REPORTING
+
+6.1 The Chief Compliance Officer shall render the monthly AML/CFT returns, including the politically exposed persons and risk assessment reports, to the CBN on or before the 14th day after the end of each month, and shall render a NIL return where there is nothing to report.
+6.2 The Chief Compliance Officer shall file Suspicious Transaction Reports with the NFIU within 24 hours of a suspicion being formed.
+
+7. TRAINING
+
+7.1 The Head of Human Resources shall organise annual AML/CFT training for all staff and keep the signed attendance register.
+
+8. MARKETING
+
+8.3 The Marketing Unit shall feature the Bank's BVN-linked mobile application in its quarterly newspaper advertisements.

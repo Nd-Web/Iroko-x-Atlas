@@ -148,7 +148,6 @@ async def _ingest_file(
                 os.remove(dest_path)
     from services.document_processor import process_document
     from services.blob_storage import upload_document as upload_to_blob
-    from services.cosmos_graph import upsert_document_node
     from models.database import Document, generate_id
 
     doc_id = generate_id()
@@ -209,15 +208,6 @@ async def _ingest_file(
             os.remove(dest_path)
         except Exception:
             pass
-
-    if document.status == "indexed":
-        upsert_document_node(
-            document_id=doc_id,
-            title=document.title,
-            doc_type=ext,
-            department=department,
-            blob_url=blob_url or "",
-        )
 
     db.commit()
     return document

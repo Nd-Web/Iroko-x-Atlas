@@ -103,9 +103,13 @@ def research_recall_answer(history, *, availability=False):
         else:
             lines.append("No live website-check results are recorded for that answer.")
         if not availability:
-            citations = [{**c, "excerpt": c.get("excerpt") or ""} for c in turn.get("citations", [])[:6]
+            # Historical citation identity is not newly retrieved evidence. Do not
+            # carry old excerpts back into an answer as though checked on this turn.
+            citations = [{"document_id": c["document_id"], "document_title": c["document_title"], "excerpt": ""}
+                         for c in turn.get("citations", [])[:6]
                          if isinstance(c, dict) and c.get("document_title") and c.get("document_id")]
             if citations:
+                citations = list({c["document_id"]: c for c in citations}.values())
                 lines.append("The previous answer cited:")
                 lines.extend(f"- {_literal(c['document_title'])} [{i}]" for i, c in enumerate(citations, 1))
             else:

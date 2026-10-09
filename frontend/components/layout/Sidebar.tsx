@@ -3,7 +3,7 @@
  * components/layout/Sidebar.tsx — Premium dark sidebar redesign.
  * Collapsed icon-only state with tooltips, nav groups, Live pulse badge.
  */
-import Link from "next/link";
+import Link from "@/components/ui/IntentLink";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth, getInitials, formatRole } from "@/context/AuthContext";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AppShell from "@/components/layout/AppShell";
 import ChatWindow from "./ChatWindow";
@@ -9,6 +9,7 @@ import ChatReasoning from "./ChatReasoning";
 import { useChat } from "@/hooks/useChat";
 import { useAuth } from "@/context/AuthContext";
 import { formatRelativeTime, cn } from "@/lib/utils";
+import { createChatMessageAdapter } from "@/lib/chat-presentation";
 
 interface ConvSummary { id: string; title: string; updatedAt: string; }
 
@@ -138,14 +139,8 @@ export default function ChatWorkspace() {
   const latestQuestion = lastQuery ?? [...messages].reverse().find(message => message.role === "user")?.content;
   const activeTitle = convsQuery.data?.find(item => item.id === conversationId)?.title;
   const isEmpty = messages.length === 0 && !isLoading;
-  const chatMessages = messages.map(message => ({
-    ...message,
-    reasoning_steps: message.trace?.map(step => ({ agent: step.agent, status: "done" as const, message: step.description, timestamp: step.timestamp })),
-    citations: message.citations?.map(citation => {
-      const item = citation as { document_id?: string; document_title?: string; source?: string; excerpt?: string; source_url?: string | null };
-      return { document_id: item.document_id ?? item.source ?? "unknown", document_title: item.document_title ?? item.source ?? "Source document", excerpt: item.excerpt, source_url: item.source_url };
-    }),
-  }));
+  const adaptMessage = useMemo(() => createChatMessageAdapter(), []);
+  const chatMessages = useMemo(() => messages.map(adaptMessage), [messages, adaptMessage]);
   const history = (mobile = false) => <ConversationHistory conversations={convsQuery.data ?? []} loading={convsQuery.isFetching}
     failed={convsQuery.isError} activeId={conversationId} onSelect={handleSelect} onNew={handleNew}
     onRetry={() => void refreshConvs()} onClose={mobile ? () => historyRef.current?.close() : undefined} />;

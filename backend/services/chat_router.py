@@ -327,9 +327,41 @@ def _anchor(turn: Mapping) -> str:
     return source.split("\nFollow-up:", 1)[0].split("\nUser-provided institution context:", 1)[0][:1200]
 
 
+# "Which requirements don't have evidence?", "Who owns the BVN obligation?", "What is due next?",
+# "Which controls need reviewing?", "Trace the CTR requirement": the organisation's own records.
+_RECORDS = {
+    "gaps": re.compile(
+        r"\b(?:which|what)\s+(?:requirements?|obligations?|rules?)\b[^?]*(?:\b(?:no|not|lack\w*|missing|without)\b|n[’']t\b)"
+        r"[^?]*\b(?:evidence|evidenced|controls?|covered)\b"
+        r"|\b(?:evidence|control|coverage)\s+gaps?\b|\bgaps?\s+in\s+(?:our|my)\s+(?:evidence|controls?|records?)\b"
+        r"|\bnot\s+(?:yet\s+)?(?:evidenced|covered)\b", re.I),
+    "owners": re.compile(r"\bwho\s+(?:owns|is\s+(?:the\s+)?(?:owner|responsible)|handles|is\s+accountable)\b"
+                         r"|\b(?:requirements?|obligations?)\s+(?:with(?:out)?|that\s+have\s+no)\s+(?:an?\s+)?owners?\b", re.I),
+    "due": re.compile(r"\bwhat(?:'s|\s+is)\s+(?:due|coming\s+up)\b|\bupcoming\s+(?:deadlines?|due\s+dates?|returns?)\b"
+                      r"|\bdeadlines?\s+(?:this|next)\s+(?:week|month|quarter)\b|\bdue\s+next\b|\bnext\s+deadlines?\b", re.I),
+    "re_review": re.compile(r"\b(?:which|what)\s+(?:of\s+(?:our|my|the)\s+)?controls?\s+(?:need|needs|should|must)\s+"
+                            r"(?:a\s+|to\s+be\s+)?(?:review\w*|re-?review\w*|update\w*|look\w*)"
+                            r"|\bneeds?\s+re-?review\b|\bwhat\s+(?:has\s+)?changed\b[^?]*\b(?:our|my)\s+(?:controls?|policy|policies|records?)\b"
+                            r"|\brequirements?\s+(?:has\s+|have\s+)?changed\b", re.I),
+    "trace": re.compile(r"\btrac(?:e|eability)\b[^?]*\b(?:requirement|obligation|control|evidence|chain)\b"
+                        r"|\bshow\s+(?:me\s+)?the\s+requirement\b[^?]*\bcontrol\b|\baudit\s+trail\s+for\b", re.I),
+    "review": re.compile(r"\b(?:awaiting|pending|waiting\s+for)\s+(?:my\s+|our\s+)?review\b"
+                         r"|\bsuggestions?\s+(?:to|for\s+me\s+to)\s+review\b", re.I),
+}
+
+
+def records_kinds(question: str) -> list[str]:
+    """Which kinds of record question this is; empty when the compliance graph is off."""
+    from services.compliance_graph.common import enabled
+
+    if not enabled():
+        return []
+    return [kind for kind, pattern in _RECORDS.items() if pattern.search(question or "")]
+
+
 def _is_topic(turn: Mapping) -> bool:
     question = turn["user_question"]
-    if turn.get("intent") in {"clarification", "greeting", "social", "conversation_recall", "integrity_boundary", "out_of_domain", "catalog"} or conversational_kind(question):
+    if turn.get("intent") in {"clarification", "greeting", "social", "conversation_recall", "integrity_boundary", "out_of_domain", "catalog", "compliance_records"} or conversational_kind(question):
         return False
     if _CATALOG.match(question):
         return False
@@ -359,7 +391,7 @@ def _clarification(missing: str = "topic") -> str:
 
 def _result(question: str, context: dict, intent: str, *, turn: Mapping | None = None,
             title_index: int | None = None, missing: str | None = None, kind: str | None = None,
-            catalog_topic: str | None = None) -> dict:
+            catalog_topic: str | None = None, records_kinds: list[str] | None = None) -> dict:
     query = question
     if turn is not None:
         topic = _anchor(turn)
@@ -377,6 +409,7 @@ def _result(question: str, context: dict, intent: str, *, turn: Mapping | None =
         "clarification": _clarification(missing or "topic") if intent == "clarification" else None,
         "conversational_kind": kind,
         "catalog_topic": catalog_topic,
+        "records_kinds": records_kinds or [],
     }
 
 
@@ -405,6 +438,9 @@ def heuristic_route(question: str, history: Sequence[Mapping] | None = None) -> 
     if _CATALOG.match(question):
         topic = _CATALOG_TOPIC.search(question)
         return _result(question, context, "catalog", catalog_topic=topic.group("topic").strip() if topic else None)
+    kinds = records_kinds(question)
+    if kinds:
+        return _result(question, context, "compliance_records", records_kinds=kinds)
     if _is_followup(question):
         turn = _latest_topic(context)
         if turn:
@@ -501,7 +537,7 @@ async def route_question(question: str, history: Sequence[Mapping] | None = None
     """Use one bounded selection call only when interpretation needs it."""
     fallback = heuristic_route(question, history)
     question = question.strip()
-    if fallback["intent"] in {"greeting", "catalog", "conversation_recall", "integrity_boundary"} or not question or complete is None:
+    if fallback["intent"] in {"greeting", "catalog", "compliance_records", "conversation_recall", "integrity_boundary"} or not question or complete is None:
         return fallback
     # Common acknowledgements and explicit subjects cost no classification call.
     followup = _is_followup(question)

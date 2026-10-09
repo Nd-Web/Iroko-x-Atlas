@@ -128,5 +128,21 @@ def finish(db, key, token, error=None, state="done", permanent=False):
     db.commit()
 
 
+def defer(db, key, token, until, note=None):
+    """Release the lease and retry at `until` WITHOUT spending an attempt.
+
+    For waits that say nothing about the job's health: a daily budget, a
+    time-boxed slice of a long document, a model outage, a schema that is not
+    deployed yet. Real failures still go through finish(error=...).
+    """
+    job = owned(db, key, token)
+    job.lease_token, job.lease_until = None, None
+    job.state = "retry"
+    job.attempts = max(0, (job.attempts or 0) - 1)
+    job.available_at = until
+    job.error = note
+    db.commit()
+
+
 def enabled():
     return os.getenv("DOCUMENT_PIPELINE_ENABLED", "false").lower() == "true"

@@ -105,21 +105,6 @@ class AppSettings(BaseSettings):
         default="raw-documents", description="Blob container name for document storage"
     )
 
-    # -- Cosmos DB (Gremlin Graph) -----------------------------------------
-
-    COSMOS_GREMLIN_ENDPOINT: str = Field(
-        ..., description="Cosmos DB Gremlin endpoint (wss://...)"
-    )
-    COSMOS_PRIMARY_KEY: str = Field(
-        ..., description="Cosmos DB primary key"
-    )
-    COSMOS_DATABASE: str = Field(
-        default="iroko-graph-db", description="Cosmos DB database name"
-    )
-    COSMOS_GRAPH: str = Field(
-        default="iroko-knowledge-graph", description="Cosmos DB graph name"
-    )
-
     # -- Azure Communication Services --------------------------------------
 
     ACS_CONNECTION_STRING: str = Field(
@@ -295,7 +280,6 @@ class AppSettings(BaseSettings):
         "AZURE_SEARCH_ENDPOINT", "AZURE_SEARCH_API_KEY",
         "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", "AZURE_DOCUMENT_INTELLIGENCE_KEY",
         "AZURE_STORAGE_CONNECTION_STRING",
-        "COSMOS_GREMLIN_ENDPOINT", "COSMOS_PRIMARY_KEY",
         "ACS_CONNECTION_STRING",
     )
     @classmethod

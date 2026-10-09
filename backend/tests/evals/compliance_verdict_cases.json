@@ -1,0 +1,19 @@
+[
+  {"id": "bvn-marketing-no-consent", "text": "Share customer BVN records with a marketing partner without asking customers for consent", "truth": "NO-GO", "covered": false},
+  {"id": "ctr-skip", "text": "Accept a N12 million cash deposit from a company and not file a currency transaction report with the NFIU", "truth": "NO-GO", "covered": true},
+  {"id": "pep-no-edd", "text": "Onboard a politically exposed person as a customer without enhanced due diligence or senior management approval", "truth": "NO-GO", "covered": false},
+  {"id": "records-3-years", "text": "Delete customer transaction records three years after the account is closed", "truth": "NO-GO", "covered": false},
+  {"id": "liquidity-12", "text": "Run the microfinance bank with a liquidity ratio of 12 percent", "truth": "NO-GO", "covered": false},
+  {"id": "accounts-no-bvn", "text": "Open accounts for new customers without collecting their BVN", "truth": "NO-GO", "covered": true},
+  {"id": "uninsured-fund", "text": "Place our customers' deposits in an investment fund managed by an uninsured entity", "truth": "NO-GO", "covered": true},
+  {"id": "stop-aml-returns", "text": "Stop sending our monthly AML/CFT returns to the CBN", "truth": "NO-GO", "covered": true},
+  {"id": "sdgt-customer", "text": "Keep processing transactions for a customer who appears on the Specially Designated Global Terrorist list", "truth": "NO-GO", "covered": true},
+  {"id": "one-credit-bureau", "text": "Exchange customer credit data with only one licensed credit bureau", "truth": "NO-GO", "accept": ["NO-GO", "MONITOR"], "covered": true},
+  {"id": "personal-email", "text": "Let staff use their personal Gmail accounts for official correspondence with the CBN", "truth": "NO-GO", "accept": ["NO-GO", "MONITOR"], "covered": true},
+  {"id": "kyc-savings", "text": "Open a savings account for a new customer after full KYC and BVN verification", "truth": "GO", "covered": true},
+  {"id": "aml-returns-on-time", "text": "Submit our monthly AML/CFT returns to the CBN on time", "truth": "GO", "covered": true},
+  {"id": "two-bureaux", "text": "Sign data exchange agreements with two licensed credit bureaux", "truth": "GO", "covered": true},
+  {"id": "ifrs-statements", "text": "Prepare our financial statements under IFRS", "truth": "GO", "covered": true},
+  {"id": "sdgt-screening", "text": "Screen every new customer against the Specially Designated Global Terrorist list before onboarding", "truth": "GO", "covered": true},
+  {"id": "aml-training", "text": "Train all staff on anti-money laundering procedures this quarter", "truth": "GO", "covered": false}
+]

@@ -77,7 +77,20 @@ class Settings(BaseSettings):
     )
     AZURE_OPENAI_WHISPER_DEPLOYMENT: str = Field(
         default="whisper",
-        description="Azure OpenAI Whisper deployment name (speech-to-text)",
+        description="Speech-to-text deployment name (Whisper or a gpt-*-transcribe model)",
+    )
+    # Speech-to-text may live on its own resource; each falls back to the main one.
+    AZURE_OPENAI_TRANSCRIBE_ENDPOINT: str = Field(
+        default="",
+        description="Speech-to-text resource endpoint (empty = AZURE_OPENAI_ENDPOINT)",
+    )
+    AZURE_OPENAI_TRANSCRIBE_API_KEY: str = Field(
+        default="",
+        description="Speech-to-text resource API key (empty = AZURE_OPENAI_API_KEY)",
+    )
+    AZURE_OPENAI_TRANSCRIBE_API_VERSION: str = Field(
+        default="",
+        description="Speech-to-text API version (empty = AZURE_OPENAI_API_VERSION)",
     )
 
     # ── Azure OpenAI Responses API (main chat/text LLM) ──────────────────────

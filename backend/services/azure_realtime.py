@@ -36,6 +36,7 @@ import logging
 import os
 import subprocess
 import urllib.error
+import urllib.parse
 import urllib.request
 
 import websockets
@@ -264,6 +265,9 @@ def mint_webrtc_client_secret(instructions: str = "", voice: str | None = None) 
             data = json.loads(resp.read())
     except urllib.error.HTTPError as e:
         raise RealtimeError(f"client_secrets {e.code}: {e.read().decode()[:200]}") from e
+    except (urllib.error.URLError, TimeoutError) as e:
+        # An unreachable or deleted resource (DNS failure) used to escape as a 500.
+        raise RealtimeError(f"Cannot reach the voice service at {urllib.parse.urlparse(ENDPOINT).hostname}.") from e
 
     client_secret = data.get("value", "")
     if not client_secret:

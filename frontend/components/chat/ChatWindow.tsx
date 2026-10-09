@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import MessageBubble from "./MessageBubble";
 import { DEFAULT_SUGGESTED_PROMPTS, type ChatMessage } from "@/types/chat";
-import { isNearChatBottom, splitLatestExchange } from "@/lib/chat-ux";
+import { isNearChatBottom, splitLatestExchange, previousQuestions } from "@/lib/chat-ux";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -69,6 +69,7 @@ export default function ChatWindow({ conversationId, messages, isStreaming, isLo
   const previousUserRef = useRef<string | undefined>(undefined);
   const [showJump, setShowJump] = useState(false);
   const [expandedHistoryFor, setExpandedHistoryFor] = useState<string | null>(null);
+  const questions = useMemo(() => previousQuestions(messages), [messages]);
 
   useEffect(() => {
     const lastUser = [...messages].reverse().find(message => message.role === "user");
@@ -128,9 +129,7 @@ export default function ChatWindow({ conversationId, messages, isStreaming, isLo
                 {historyOpen ? "Hide earlier messages" : "Show earlier messages"}<span className="rounded-full bg-gray-50 px-2 py-0.5 tabular-nums text-gray-400">{exchange.previous.length}</span><span aria-hidden="true">{historyOpen ? "↑" : "↓"}</span>
               </button>}
               {visible.map(message => {
-                const originalIndex = messages.findIndex(item => item.id === message.id);
-                const previousQuestion = messages.slice(0, originalIndex).reverse().find(item => item.role === "user");
-                return <MessageBubble key={message.id} message={message} contextQuery={previousQuestion?.content}
+                return <MessageBubble key={message.id} message={message} contextQuery={questions.get(message.id)}
                   isStreaming={isStreaming && message.id === latest?.id} compact={compact && message.id !== latest?.id} />;
               })}
               {isStreaming && <ResponseProgress progress={progress} writing={!!latest?.content} />}

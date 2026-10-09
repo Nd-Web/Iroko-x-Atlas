@@ -13,6 +13,7 @@ from ingestion.sources import collect
 from models.database import Document
 
 logger = logging.getLogger(__name__)
+GRAPH_JOB_KINDS = ("graph", "graph_ws")  # services.compliance_graph.jobs
 
 
 async def renew(key, token):
@@ -47,11 +48,17 @@ async def run_once(*, include_scheduled=True):
             return False
         key, token = lease
         pulse = asyncio.create_task(renew(key, token))
+        kind = None
         try:
             job = db.get(Job, key)
+            kind = job.kind
             if job.kind == "source":
                 await collect(db, job.target_id)
                 finish(db, key, token)
+            elif job.kind in GRAPH_JOB_KINDS:
+                from services.compliance_graph.jobs import run_job
+
+                await run_job(db, key, token, job.kind, job.target_id)
             else:
                 await process(db, key, token)
         except Exception as exc:
@@ -59,7 +66,12 @@ async def run_once(*, include_scheduled=True):
             logger.exception("Ingestion job %s failed", key)
             # Validation, checksum and parser errors are deterministic and raised
             # with user-facing messages; outages and lost leases are retried.
-            permanent = isinstance(exc, ValueError)
+            # Graph jobs handle their own expected failures; anything escaping is
+            # retried unless it says it is permanent.
+            if kind in GRAPH_JOB_KINDS:
+                permanent = bool(getattr(exc, "permanent", False))
+            else:
+                permanent = isinstance(exc, ValueError)
             try:
                 finish(
                     db,

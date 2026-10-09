@@ -8,13 +8,18 @@ Built by Team 4 | AI Lead: Ndubuisi Ekeh
 Stack: FastAPI + Semantic Kernel + Azure OpenAI + Azure AI Search
 """
 
+import os as _os
+
 from dotenv import load_dotenv
 # override=True so .env is authoritative locally. Without it, a stale machine-wide
 # env var (e.g. an old AZURE_OPENAI_API_KEY left in the Windows user profile)
 # silently beats .env and every LLM call 401s — surfacing as raw context dumps
 # instead of AI answers. Safe in production: .env is gitignored and excluded in
 # .dockerignore, so no file exists there and this is a no-op.
-load_dotenv(override=True)
+# IROKO_LOAD_DOTENV=false skips it: the local backend/.env points at the
+# production database, so isolated local runs must not load it.
+if _os.getenv("IROKO_LOAD_DOTENV", "true").strip().lower() != "false":
+    load_dotenv(override=True)
 
 import sys
 import asyncio
@@ -22,9 +27,12 @@ import asyncio
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-# Load remaining secrets from Azure Key Vault (fills any gaps not covered by .env)
+# Load remaining secrets from Azure Key Vault (fills any gaps not covered by .env).
+# IROKO_LOAD_KEYVAULT=false keeps an isolated local run away from production
+# storage, search and model keys.
 from services.keyvault import load_secrets_from_keyvault
-load_secrets_from_keyvault()
+if _os.getenv("IROKO_LOAD_KEYVAULT", "true").strip().lower() != "false":
+    load_secrets_from_keyvault()
 
 # ── Strict environment validation ────────────────────────────────────────────
 # Validates ALL required env vars before proceeding. Exits with a clear
@@ -68,7 +76,7 @@ from routes.web_intel import router as web_intel_router
 from routes.pdf import router as pdf_router
 from routes.compliance_api import router as compliance_api_router
 from routes.workflows import router as workflows_router
-from routes.graph import router as graph_router
+from routes.compliance_graph import router as compliance_graph_router
 from routes.meeting import router as meeting_router
 from routes.voice import router as voice_router
 from routes.pilot import router as pilot_router
@@ -223,7 +231,7 @@ app.include_router(web_intel_router)
 app.include_router(pdf_router, prefix="/api/v1/pdf", tags=["pdf"])
 app.include_router(compliance_api_router, prefix="/api/v1")
 app.include_router(workflows_router)
-app.include_router(graph_router)
+app.include_router(compliance_graph_router)
 app.include_router(meeting_router)
 app.include_router(voice_router)
 app.include_router(pilot_router)

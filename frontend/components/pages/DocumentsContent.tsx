@@ -13,6 +13,8 @@ import { useDeleteDocument } from "@/app/(app)/documents/_hooks/useDeleteDocumen
 import { cn, formatBytes, formatRelativeTime, utcTimestamp } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import Modal from "@/components/ui/Modal";
+import { DOCUMENT_ROLES, roleHint } from "@/lib/compliance-graph-view";
 import DocumentEvidence from "@/components/documents/DocumentEvidence";
 import RegulatorySources from "@/components/documents/RegulatorySources";
 
@@ -24,6 +26,8 @@ interface Doc {
   type: string;
   status: "indexed" | "indexing" | "error" | "review required" | "rejected" | "archived" | "superseded";
   pipeline?: boolean;
+  /** What the uploader said this document is (compliance graph role). */
+  role?: string;
   department?: string;
   tags?: string[];
   chunks?: number;
@@ -91,6 +95,7 @@ export default function DocumentsContent({
     return data.documents.map((doc) => ({
       id: doc.id,
       pipeline: !!doc.extra_metadata?.pipeline,
+      role: doc.extra_metadata?.document_role,
       name: doc.filename ?? doc.title ?? "Untitled document",
       title: doc.title ?? undefined,
       size: doc.file_size ?? 0,
@@ -123,14 +128,32 @@ export default function DocumentsContent({
     return () => window.removeEventListener("keydown", h);
   }, [selected]);
 
-  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Choosing a file first asks what it is (for the compliance graph) and whether
+  // it replaces an earlier document, so new versions keep their history.
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploadRole, setUploadRole] = useState("");
+  const [replaces, setReplaces] = useState("");
+  const replaceable = useMemo(() => docs.filter(d => d.pipeline && d.status !== "archived" && d.status !== "rejected"), [docs]);
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    setUploadRole(roleHint(file.name) ?? "");
+    setReplaces("");
+    setPendingFile(file);
+  };
+
+  const confirmUpload = async () => {
+    const file = pendingFile;
+    if (!file || !uploadRole) return;
+    setPendingFile(null);
     const toastId = toast.loading(`Uploading ${file.name}…`);
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("document_role", uploadRole);
+      if (replaces) formData.append("replaces_document_id", replaces);
       // onSuccess invalidates the ["documents"] query — the list refreshes itself.
       const saved = await uploadMutation.mutateAsync(formData);
       toast.success(`${file.name} saved · ${normaliseStatus(saved.status)}`, { id: toastId });
@@ -307,6 +330,11 @@ export default function DocumentsContent({
                 </div>
                 <h4 className="text-[13px] font-semibold text-gray-800 truncate mb-0.5" title={doc.title ?? doc.name}>{doc.title ?? doc.name}</h4>
                 {doc.title && <p className="text-[11px] text-gray-400 font-mono truncate m-0 mb-1" title={doc.name}>{doc.name}</p>}
+                {doc.role && (
+                  <span className="mb-1 inline-block rounded-full badge-gray px-2 py-0.5 text-[10px]">
+                    {DOCUMENT_ROLES.find(r => r.value === doc.role)?.label ?? doc.role}
+                  </span>
+                )}
                 <div className="text-[11px] text-gray-400 flex justify-between gap-2">
                   <span>{doc.size ? formatBytes(doc.size) : "—"}</span>
                   <span className="truncate">{doc.department ?? doc.type.toUpperCase()}</span>
@@ -459,6 +487,44 @@ export default function DocumentsContent({
           </div>
         </div>
       )}
+
+      {/* Upload: what is this document? */}
+      <Modal open={!!pendingFile} onClose={() => setPendingFile(null)} title="What is this document?" maxWidth="520px" footer={
+        <div className="flex justify-end gap-2">
+          <button className="btn-secondary" onClick={() => setPendingFile(null)}>Cancel</button>
+          <button className="btn-primary" disabled={!uploadRole || uploading} onClick={confirmUpload}>Upload</button>
+        </div>
+      }>
+        <div className="space-y-4">
+          <p className="text-[13px] text-gray-600 truncate" title={pendingFile?.name}>{pendingFile?.name}</p>
+          <fieldset className="space-y-2">
+            <legend className="sr-only">Document type</legend>
+            {DOCUMENT_ROLES.map(r => (
+              <label key={r.value} className={cn("flex items-start gap-3 rounded-lg border px-3 py-2 cursor-pointer",
+                uploadRole === r.value ? "border-brand-500" : "border-border-default hover:border-border-strong")}>
+                <input type="radio" name="document_role" value={r.value} checked={uploadRole === r.value}
+                  onChange={() => setUploadRole(r.value)} className="mt-1" />
+                <span>
+                  <span className="block text-[13px] text-gray-800">{r.label}</span>
+                  <span className="block text-[11px] text-gray-500">{r.hint}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+          {uploadRole && roleHint(pendingFile?.name) === uploadRole && (
+            <p className="text-[11px] text-gray-500">Pre-selected from the file name. Change it if it is wrong; Iroko will also check the content.</p>
+          )}
+          {replaceable.length > 0 && (
+            <label className="block text-[12px] text-gray-500">Replaces an existing document (optional)
+              <select className="input-base mt-1 text-[13px]" value={replaces} onChange={e => setReplaces(e.target.value)}>
+                <option value="">No — this is a new document</option>
+                {replaceable.map(d => <option key={d.id} value={d.id}>{d.title ?? d.name}</option>)}
+              </select>
+              <span className="mt-1 block text-[11px]">A replacement becomes a new version: links and decisions carry over, and changed wording is flagged for review.</span>
+            </label>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

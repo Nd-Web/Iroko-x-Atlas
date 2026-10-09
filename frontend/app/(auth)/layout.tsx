@@ -1,3 +1,5 @@
+import AppProviders from "@/providers/AppProviders";
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <AppProviders>{children}</AppProviders>;
 }

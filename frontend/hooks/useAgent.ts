@@ -1,20 +1,19 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import {
-  getRealtimeSession,
-  negotiateWebRTC,
+  createLiveSession,
   runComplianceCheck,
   type ComplianceVerdict,
 } from "@/lib/agent";
+import { createLiveCall, type LiveServerEvent } from "@/lib/live-call";
 
 export type AgentCallStatus = "idle" | "connecting" | "active" | "ending";
 
 interface UseAgentOptions {
-  instructions?: string;
-  onError?:      (msg: string) => void;
+  onError?:   (msg: string) => void;
   /** Fires when the agent runs a compliance check, so the UI can show the verdict card. */
-  onVerdict?:    (verdict: ComplianceVerdict) => void;
+  onVerdict?: (verdict: ComplianceVerdict) => void;
 }
 
 interface UseAgentReturn {
@@ -23,111 +22,112 @@ interface UseAgentReturn {
   endCall:   () => Promise<void>;
 }
 
-export function useAgent({
-  instructions = "",
-  onError,
-  onVerdict,
-}: UseAgentOptions): UseAgentReturn {
+function startErrorMessage(err: unknown): string {
+  const e = err as Error;
+  if (e?.name === "NotAllowedError") return "Microphone access was blocked. Allow the microphone for this site and try again.";
+  if (e?.name === "NotFoundError") return "No microphone was found.";
+  return e?.message || "Failed to start voice call";
+}
+
+/** Live voice call with the GPT-Live compliance agent (see lib/live-call.ts). */
+export function useAgent({ onError, onVerdict }: UseAgentOptions): UseAgentReturn {
   const [status, setStatus] = useState<AgentCallStatus>("idle");
 
-  const pcRef = useRef<RTCPeerConnection | null>(null);
-  const dcRef = useRef<RTCDataChannel | null>(null);
+  const pcRef     = useRef<RTCPeerConnection | null>(null);
+  const dcRef     = useRef<RTCDataChannel | null>(null);
+  const micRef    = useRef<MediaStream | null>(null);
+  const audioRef  = useRef<HTMLAudioElement | null>(null);
+  const closedRef = useRef<(() => void) | null>(null);
 
-  const endCall = useCallback(async () => {
-    if (status === "idle") return;
-    setStatus("ending");
-
+  const teardown = useCallback(() => {
     dcRef.current?.close();
     dcRef.current = null;
     pcRef.current?.close();
     pcRef.current = null;
+    micRef.current?.getTracks().forEach((t) => t.stop());
+    micRef.current = null;
+    if (audioRef.current) audioRef.current.srcObject = null;
+    audioRef.current = null;
     setStatus("idle");
-  }, [status]);
+  }, []);
+
+  useEffect(() => teardown, [teardown]);
+
+  const endCall = useCallback(async () => {
+    if (status === "idle" || status === "ending") return;
+    setStatus("ending");
+    const dc = dcRef.current;
+    if (dc?.readyState === "open") {
+      // Graceful close: GPT-Live drains its work and answers session.closed.
+      dc.send(JSON.stringify({ type: "session.close" }));
+      await new Promise<void>((resolve) => {
+        closedRef.current = resolve;
+        setTimeout(resolve, 2000);
+      });
+      closedRef.current = null;
+    }
+    teardown();
+  }, [status, teardown]);
 
   const startCall = useCallback(async () => {
     if (status !== "idle") return;
     setStatus("connecting");
 
     try {
-      const { clientSecret, callsUrl, greeting } = await getRealtimeSession(instructions);
-
       const pc = new RTCPeerConnection();
       pcRef.current = pc;
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getAudioTracks().forEach((t) => pc.addTrack(t, stream));
+      const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micRef.current = mic;
+      mic.getAudioTracks().forEach((t) => pc.addTrack(t, mic));
 
       pc.ontrack = (evt) => {
         const audio = new Audio();
         audio.srcObject = evt.streams[0];
+        audioRef.current = audio;
         audio.play().catch(() => {});
       };
 
       pc.onconnectionstatechange = () => {
         const s = pc.connectionState;
-        if (s === "connected")                                         setStatus("active");
-        if (s === "disconnected" || s === "failed" || s === "closed") setStatus("idle");
+        if (s === "connected") setStatus("active");
+        if (s === "disconnected" || s === "failed" || s === "closed") teardown();
       };
 
-      // Must exist before the offer so Azure negotiates it into the SDP.
-      const dc = pc.createDataChannel("realtime-channel");
+      // Must exist before the offer so it is negotiated into the SDP.
+      const dc = pc.createDataChannel("oai-events");
       dcRef.current = dc;
 
-      dc.addEventListener("open", () => {
-        if (!greeting) return;
-        dc.send(JSON.stringify({
-          type: "response.create",
-          response: { instructions: `Greet the caller by saying exactly: ${greeting}` },
-        }));
-      });
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      const session = await createLiveSession(offer.sdp!);
 
-      dc.addEventListener("message", async (evt) => {
-        let event: { type?: string; name?: string; call_id?: string; arguments?: string };
+      const call = createLiveCall({
+        send: (event) => { if (dc.readyState === "open") dc.send(JSON.stringify(event)); },
+        check: (question) => runComplianceCheck(question, "financial"),
+        greeting: session.greeting,
+        onVerdict,
+        onClosed: () => {
+          if (closedRef.current) closedRef.current();
+          else teardown();
+        },
+      });
+      dc.addEventListener("message", (evt) => {
+        let event: LiveServerEvent;
         try {
           event = JSON.parse(evt.data);
         } catch {
           return;
         }
-        if (event.type !== "response.function_call_arguments.done") return;
-        if (event.name !== "check_compliance" || !event.call_id) return;
-
-        let output: string;
-        try {
-          const args = JSON.parse(event.arguments ?? "{}") as {
-            text?: string;
-            sector?: "network" | "financial";
-          };
-          const verdict = await runComplianceCheck(args.text ?? "", args.sector ?? "financial");
-          onVerdict?.(verdict);
-          output = JSON.stringify(verdict);
-        } catch (err) {
-          output = JSON.stringify({ error: (err as Error).message ?? "Compliance check failed" });
-        }
-
-        // Hand the result back and let the agent speak it.
-        dc.send(JSON.stringify({
-          type: "conversation.item.create",
-          item: { type: "function_call_output", call_id: event.call_id, output },
-        }));
-        dc.send(JSON.stringify({ type: "response.create" }));
+        void call.handle(event);
       });
 
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      const answerSdp = await negotiateWebRTC(callsUrl, clientSecret, offer.sdp!);
-      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
-
+      await pc.setRemoteDescription({ type: "answer", sdp: session.sdp });
     } catch (err) {
-      const msg = (err as Error).message ?? "Failed to start voice call";
-      onError?.(msg);
-      dcRef.current?.close();
-      dcRef.current = null;
-      pcRef.current?.close();
-      pcRef.current = null;
-      setStatus("idle");
+      onError?.(startErrorMessage(err));
+      teardown();
     }
-  }, [instructions, status, onError, onVerdict]);
+  }, [status, onError, onVerdict, teardown]);
 
   return { status, startCall, endCall };
 }

@@ -1,8 +1,6 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import HomeHeader from "./HomeHeader";
 import s from "./homepage.module.css";
 
 const PILOT = "Request Free 30-Day Pilot";
@@ -39,14 +37,14 @@ function AgentVisual({ kind }: { kind: typeof agents[number]["visual"] }) {
 }
 
 export default function HomePage() {
-  const [menuOpen, setMenuOpen] = useState(false);
   return <div className={s.page}>
     <a className={s.skip} href="#main">Skip to content</a>
-    <header className={s.header}><div className={s.navWrap}>
-      <Brand />
-      <nav aria-label="Main navigation" className={s.desktopNav}><a href="#platform">Platform</a><a href="#who-its-for">Who it’s for</a><a href="#audit-trail">Trust & traceability</a><a href="#questions">FAQs</a></nav>
-      <div className={s.navActions}><Link href="/login" className={s.signIn}>Sign in</Link><PilotLink /><button className={s.menuToggle} aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? "✕" : "☰"}</button></div>
-    </div>{menuOpen && <nav id="mobile-navigation" aria-label="Mobile navigation" className={s.mobileNav} onClick={() => setMenuOpen(false)}><a href="#platform">Platform</a><a href="#who-its-for">Who it’s for</a><a href="#audit-trail">Trust & traceability</a><a href="#questions">FAQs</a><Link href="/login">Sign in</Link><PilotLink /></nav>}</header>
+    <HomeHeader
+      brand={<Brand />}
+      navigation={<><a href="#platform">Platform</a><a href="#who-its-for">Who it’s for</a><a href="#audit-trail">Trust & traceability</a><a href="#questions">FAQs</a></>}
+      actions={<><Link href="/login" prefetch={false} className={s.signIn}>Sign in</Link><PilotLink /></>}
+      mobileNavigation={<><a href="#platform">Platform</a><a href="#who-its-for">Who it’s for</a><a href="#audit-trail">Trust & traceability</a><a href="#questions">FAQs</a><Link href="/login" prefetch={false}>Sign in</Link><PilotLink /></>}
+    />
 
     <main id="main">
       <section className={s.hero}><div className={`${s.container} ${s.heroGrid}`}>

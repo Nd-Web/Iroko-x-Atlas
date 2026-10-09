@@ -33,6 +33,8 @@ class TaskSource(str, enum.Enum):
     compliance = "compliance"       # NO-GO / MONITOR verdict → task
     chat = "chat"                   # created from a chat insight
     manual = "manual"               # created by a user
+    graph_review = "graph_review"   # compliance-graph suggestions awaiting review
+    change_impact = "change_impact" # a regulation or policy change affecting confirmed links
 
 
 class WorkflowTask(Base):

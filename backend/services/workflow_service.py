@@ -27,6 +27,8 @@ _DEPARTMENT_ROUTING: dict[str, str] = {
     "compliance_verdict": "Regulatory Affairs",
     "fraud_signal": "Revenue Assurance",
     "network_incident": "Network Operations",
+    "graph_review": "Compliance",
+    "change_impact": "Compliance",
 }
 _DEFAULT_DEPARTMENT = "Operations"
 
@@ -154,6 +156,71 @@ def create_task_from_verdict(
     )
     db.add(task)
     return task
+
+
+_OPEN = [TaskStatus.open, TaskStatus.in_progress, TaskStatus.blocked]
+
+
+def upsert_graph_task(
+    db: Session,
+    *,
+    workspace_id: str,
+    source_type: str,
+    source_id: str,
+    title: str,
+    description: str = "",
+    priority: str = TaskPriority.medium,
+    sla_hours: int = 72,
+    related_document_ids: Optional[list] = None,
+    assigned_to_id: Optional[str] = None,
+) -> WorkflowTask:
+    """One open task per (source_type, source_id): created once, then kept current.
+
+    Called from the compliance-graph worker, which has no signed-in user, so the
+    task's workspace is recorded explicitly (record_access would otherwise leave
+    it invisible to everyone).
+    """
+    existing = (
+        db.query(WorkflowTask)
+        .filter(WorkflowTask.source_type == source_type, WorkflowTask.source_id == source_id,
+                WorkflowTask.status.in_(_OPEN))
+        .first()
+    )
+    if existing:
+        existing.title = title[:300]
+        existing.description = description
+        existing.related_document_ids = list(related_document_ids or existing.related_document_ids or [])
+        return existing
+    task = WorkflowTask(
+        title=title[:300],
+        description=description,
+        source_type=source_type,
+        source_id=source_id,
+        alert_type=source_type,
+        related_document_ids=list(related_document_ids or []),
+        department=route_department(source_type),
+        assigned_to_id=assigned_to_id,
+        priority=priority,
+        status=TaskStatus.open,
+        sla_hours=sla_hours,
+        due_date=datetime.utcnow() + timedelta(hours=sla_hours),
+    )
+    db.add(task)
+    db.flush()
+    from ingestion.access import principal
+    from ingestion.models import RecordAccess
+
+    if principal.get() is None and db.get(RecordAccess, ("task", task.id)) is None:
+        db.add(RecordAccess(kind="task", record_id=task.id, workspace_id=workspace_id))
+    return task
+
+
+def close_graph_task(db: Session, source_type: str, source_id: str) -> None:
+    for task in (db.query(WorkflowTask)
+                 .filter(WorkflowTask.source_type == source_type, WorkflowTask.source_id == source_id,
+                         WorkflowTask.status.in_(_OPEN))):
+        task.status = TaskStatus.done
+        task.completed_at = datetime.utcnow()
 
 
 def workflow_stats(db: Session) -> dict[str, Any]:

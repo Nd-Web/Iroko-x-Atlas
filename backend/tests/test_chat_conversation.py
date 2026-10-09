@@ -142,4 +142,4 @@ def test_research_activity_survives_persistence(history_db):
     db.commit()
     history = _load_history(db, "saved-0")
     assert history[-1]["research_activity"]["source_checks"][0]["status"] == "unavailable"
-    assert history[-1]["citations"][0]["excerpt"] == "Original excerpt"
+    assert "Original excerpt" not in json.dumps(history)

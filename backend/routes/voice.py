@@ -10,6 +10,7 @@ as the rest of the app.
   POST /api/voice/tts         {text, voice?}          -> audio/mpeg bytes
   POST /api/voice/transcribe  multipart file          -> {transcript}
   POST /api/voice/session     {instructions?, voice?} -> {client_secret, calls_url}
+  POST /api/voice/live-session {sdp, voice?}          -> {sdp, session_id, greeting}  (GPT-Live)
 """
 import logging
 
@@ -21,6 +22,7 @@ from models.database import User
 from services.auth_utils import get_current_user
 from services import azure_realtime
 from services import azure_openai
+from services import gpt_live
 
 router = APIRouter(prefix="/api/voice", tags=["Voice"])
 logger = logging.getLogger(__name__)
@@ -34,6 +36,11 @@ class TTSRequest(BaseModel):
 class SessionRequest(BaseModel):
     instructions: str = ""
     voice: str | None = None
+
+
+class LiveSessionRequest(BaseModel):
+    sdp: str = Field(..., min_length=1, max_length=20000)
+    voice: str | None = Field(default=None, max_length=40)
 
 
 @router.post("/tts")
@@ -67,3 +74,16 @@ async def session(body: SessionRequest, current_user: User = Depends(get_current
         return azure_realtime.mint_webrtc_client_secret(body.instructions, body.voice)
     except azure_realtime.RealtimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/live-session")
+async def live_session(body: LiveSessionRequest, current_user: User = Depends(get_current_user)):
+    # Instructions stay server-side: the persona and its delegation rules are not
+    # a browser-controlled prompt.
+    try:
+        return await gpt_live.create_webrtc_session(body.sdp, voice=body.voice)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except gpt_live.LiveError as e:
+        logger.warning("GPT-Live session failed: %s", e)
+        raise HTTPException(status_code=502, detail=str(e))

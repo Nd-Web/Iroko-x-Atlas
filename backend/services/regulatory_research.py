@@ -1,4 +1,4 @@
-"""Bounded, free public-regulator research. Never send customer prompts to a search vendor.
+"""Bounded public-regulator research, with optional public-topic search discovery.
 
 Public pages are discovery/evidence, not proof that a rule is in force or that a
 customer is compliant. Downloaded page text is untrusted, never instructions.
@@ -17,6 +17,7 @@ from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
 from ingestion.sources import OfficialClient, official_url, parse_cbn
+from services.regulatory_discovery import discover
 
 logger = logging.getLogger(__name__)
 
@@ -247,14 +248,33 @@ def evidence(page, regulator, words):
     return result
 
 
+def regulatory_candidate(url, title):
+    """Exclude website housekeeping from regulatory discovery, not regulatory acts.
+
+    A regulator's policy for its own website visitors is not a regulated firm's
+    obligation. Domain authenticity alone does not make a page a regulatory source.
+    """
+    path = urlsplit(url).path.lower().rstrip("/")
+    label = re.sub(r"[\s_-]+", " ", title.lower()).strip()
+    return not (
+        path in {"", "/about", "/about-us", "/contact", "/contact-us", "/careers", "/sitemap"}
+        or re.search(r"/(?:our[-_])?(?:data[-_])?privacy[-_]policy(?:\.html?)?$|/(?:cookie[-_]policy|terms[-_]of[-_](?:use|service))(?:\.html?)?$", path)
+        or label in {"privacy policy", "our privacy policy", "our data privacy policy", "cookie policy", "terms of use", "terms of service"}
+    )
+
+
 async def research(question):
     """At most three regulators, two documents each, and 28 seconds of network/parser work."""
+    if not eligible(question):
+        return {"sources": [], "checks": [], "discovery_checks": [], "regulators": [],
+                "checked_at": datetime.now(timezone.utc).isoformat(), "exhaustive": False}
     selected, words = regulators(question), terms(question)
-    sources, checks = [], []
+    sources, checks, discovery_checks = [], [], []
     async def one(regulator):
         client = OfficialClient(regulator, timeout=6, attempts=1, max_bytes=3_000_000)
         candidates = []
-        try:
+
+        async def catalogues():
             for url in CATALOGUES[regulator]:
                 check = {"regulator": regulator, "url": url, "status": "unavailable"}
                 checks.append(check)
@@ -267,6 +287,8 @@ async def research(question):
                             link = official_url(urljoin(url, href), regulator)
                         except (ValueError, TypeError):
                             continue
+                        if not regulatory_candidate(link, title):
+                            continue
                         score = relevance(title + " " + urlsplit(link).path, words)
                         if score and link != url and not re.search(r"\.(png|jpg|jpeg|css|js|zip)$", urlsplit(link).path, re.I):
                             if re.search(r"\b(act|rule|directive|guidelines|circular|notice)\b", title, re.I):
@@ -274,9 +296,50 @@ async def research(question):
                             candidates.append((score, link, page.get("catalogue_dates", {}).get(link, "")))
                 except Exception as error:
                     check["failure_type"] = type(error).__name__
+
+        async def bounded_catalogues():
+            try:
+                await asyncio.wait_for(catalogues(), timeout=10)
+            except TimeoutError:
+                logger.info("Official catalogue discovery reached its deadline (%s)", regulator)
+
+        try:
+            discovery, _ = await asyncio.gather(discover(regulator, question), bounded_catalogues())
+            discovery_checks.append(discovery["check"])
+            for item in discovery["candidates"]:
+                # Recheck the boundary here, even if a discovery adapter is replaced.
+                try:
+                    link = official_url(item["url"], regulator)
+                except (ValueError, TypeError, KeyError):
+                    continue
+                title = item.get("title", "")
+                if not regulatory_candidate(link, title):
+                    continue
+                if re.search(r"\.(png|jpg|jpeg|css|js|zip)$", urlsplit(link).path, re.I):
+                    continue
+                if link in CATALOGUES[regulator]:
+                    continue
+                # Search may match PDF contents while its filename/title is an
+                # opaque reference number. Fetch it before judging its evidence.
+                score = max(1, relevance(title + " " + urlsplit(link).path, words))
+                if score:
+                    # Search ranking is discovery, never a publication/effective date.
+                    if re.search(r"\b(acts?|rules?|regulations?|directives?|guidelines?|circulars?|notices?)\b", title, re.I):
+                        score += 4
+                    if urlsplit(link).path.lower().endswith(".pdf"):
+                        score += 2
+                    candidates.append((score + 2, link, ""))
             seen = set()
-            # Preserve catalogue order for equal relevance (CBN catalogue is date-sorted).
-            for _, url, _ in sorted(candidates, key=lambda item: (item[2], item[0]) if freshness_requested(question) else (item[0], item[2]), reverse=True):
+            # Reserve one document slot for search discovery when available. An old
+            # dated catalogue entry must not exclude all undated search candidates.
+            search_urls = {item["url"] for item in discovery["candidates"]}
+            search_candidates = sorted((item for item in candidates if item[1] in search_urls),
+                                       key=lambda item: item[0], reverse=True)
+            ordered = sorted(candidates, key=lambda item: (item[2], item[0]) if freshness_requested(question) else (item[0], item[2]), reverse=True)
+            if search_candidates:
+                ordered = [search_candidates[0], *ordered]
+            # Preserve catalogue order for equal relevance.
+            for _, url, _ in ordered:
                 if url in seen:
                     continue
                 seen.add(url)
@@ -310,7 +373,7 @@ async def research(question):
         ranked.append(source)
         if len(ranked) == 9:
             break
-    return {"sources": ranked, "checks": checks, "regulators": selected,
+    return {"sources": ranked, "checks": checks, "discovery_checks": discovery_checks, "regulators": selected,
             "checked_at": datetime.now(timezone.utc).isoformat(), "exhaustive": False}
 
 

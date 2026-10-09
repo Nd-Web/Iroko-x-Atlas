@@ -7,7 +7,8 @@
  */
 
 import PersistentShell from "@/components/layout/PersistentShell";
+import AppProviders from "@/providers/AppProviders";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return <PersistentShell>{children}</PersistentShell>;
+  return <AppProviders><PersistentShell>{children}</PersistentShell></AppProviders>;
 }

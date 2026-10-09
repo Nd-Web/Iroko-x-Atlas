@@ -106,11 +106,18 @@ async def get_catalog(
     ws = drafts.workspace_id(db, current_user)
     status = drafts.statuses(db, ws)
     items = calendar.upcoming(today, per_return=2, fy_end_month=fy_end_month)
+    # Which returns apply to this workspace's licence (compliance-graph profile;
+    # every return applies until a licence is declared).
+    from services.compliance_graph import core as graph_core, taxonomy as graph_taxonomy
+
+    licence = graph_core.profile(db, ws)["category_codes"]
     for item in items:
         item.update(status.get((item["return_id"], item["period"]), {"status": "not_started", "draft_id": None}))
+        item["applicable"] = graph_taxonomy.return_applies(item["return_id"], licence)
     returns = catalog.catalog_dict()
     for r in returns:
         r["datasets"] = assist.datasets_dict(r["id"])
+        r["applicable"] = graph_taxonomy.return_applies(r["id"], licence)
     return {
         "returns": returns,
         "profile_fields": catalog.profile_schema(),

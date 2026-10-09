@@ -24,7 +24,6 @@ from services.auth_utils import get_current_user
 from services.token_encryption import encrypt_token, decrypt_token
 from services.document_processor import process_document
 from services.blob_storage import upload_document as upload_to_blob
-from services.cosmos_graph import upsert_document_node
 
 router = APIRouter(prefix="/api/connectors", tags=["Connectors"])
 logger = logging.getLogger(__name__)
@@ -459,8 +458,6 @@ async def import_files(
                 try: os.remove(dest)
                 except Exception: pass
 
-            if document.status == "indexed":
-                upsert_document_node(doc_id, document.title, ext, body.department or "", blob_url or "")
             db.commit()
             results.append(ImportFileResult(item_id=item_id, filename=filename, document_id=doc_id, success=True))
             imported += 1

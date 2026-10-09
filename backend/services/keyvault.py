@@ -20,8 +20,6 @@ SECRET_MAP = {
     "document-intelligence-key":        "AZURE_DOCUMENT_INTELLIGENCE_KEY",
     "document-intelligence-endpoint":   "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT",
     "storage-connection-string":        "AZURE_STORAGE_CONNECTION_STRING",
-    "cosmosdb-gremlin-endpoint":        "COSMOS_GREMLIN_ENDPOINT",
-    "cosmosdb-primary-key":             "COSMOS_PRIMARY_KEY",
     "speech-key":                       "AZURE_SPEECH_KEY",
     "acs-connection-string":            "ACS_CONNECTION_STRING",
     "jwt-secret-key":                   "SECRET_KEY",

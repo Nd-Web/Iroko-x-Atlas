@@ -108,9 +108,10 @@ class BrightDataConfig(BaseSettings):
         description="Bright Data Web Unlocker proxy host:port.",
     )
     BRIGHTDATA_SERP_API_ENDPOINT: str = Field(
-        default="https://api.brightdata.com/serp",
+        default="https://api.brightdata.com/request",
         description="Bright Data SERP API base URL.",
     )
+    BRIGHTDATA_REGULATORY_SEARCH_ENABLED: bool = False
     BRIGHTDATA_MCP_SERVER_URL: Optional[str] = Field(
         default=None,
         description="Optional Bright Data MCP (Model Context Protocol) server URL.",
@@ -170,7 +171,7 @@ class BrightDataClient:
                 )
             elif not self._config.BRIGHTDATA_CUSTOMER_ID:
                 logger.warning(
-                    "[BrightData] BRIGHTDATA_CUSTOMER_ID not set. Cannot build proxy auth. Mock mode active."
+                    "[BrightData] Proxy customer ID is absent. Direct SERP API remains available."
                 )
         return self._config
 
@@ -178,6 +179,11 @@ class BrightDataClient:
     def mock_mode(self) -> bool:
         """Return True when no API key or customer ID is configured (local dev fallback)."""
         return not self.config.BRIGHTDATA_API_KEY or not self.config.BRIGHTDATA_CUSTOMER_ID
+
+    @property
+    def serp_configured(self) -> bool:
+        """Direct SERP REST requests need an API key and zone, not proxy credentials."""
+        return bool(self.config.BRIGHTDATA_API_KEY and self.config.BRIGHTDATA_SERP_ZONE)
 
     def _get_http(self) -> httpx.AsyncClient:
         """Return the shared async HTTP client, creating it on first call."""
@@ -342,13 +348,15 @@ class BrightDataClient:
         query: str,
         country: str = "ng",
         num_results: int = 10,
+        *,
+        timeout_seconds: float = _TIMEOUT_SECONDS,
+        max_attempts: int = _MAX_RETRIES,
     ) -> list[dict[str, Any]]:
         """
         Run a Google SERP query through the **Bright Data SERP API**.
 
-        The SERP API returns structured, parsed search-engine result pages
-        without requiring a browser. Results include organic listings,
-        knowledge panels, and featured snippets flattened into a clean list.
+        Returns organic search results, excluding ads and generated answers.
+        These are discovery pointers, not verified source evidence.
 
         Parameters
         ----------
@@ -358,7 +366,7 @@ class BrightDataClient:
             ISO 3166-1 alpha-2 country code for localising results (default: ``"ng"``
             for Nigeria — the primary Iroko AI market).
         num_results : int
-            Maximum number of organic results to return (1–100).
+            Maximum number of organic results to return (1–10).
 
         Returns
         -------
@@ -368,12 +376,14 @@ class BrightDataClient:
         Raises
         ------
         BrightDataError
-            On non-retryable API errors or if API key is absent.
+            On provider/network errors. An unconfigured client returns no results.
         """
-        if self.mock_mode:
+        if not self.serp_configured:
             logger.warning("[BrightData] SERP is not configured; no source results available.")
             return []
 
+        num_results = max(1, min(10, num_results))
+        attempts = max(1, min(_MAX_RETRIES, max_attempts))
 
         endpoint = "https://api.brightdata.com/request"
         api_key = self.config.BRIGHTDATA_API_KEY
@@ -386,13 +396,16 @@ class BrightDataClient:
         # body is raw Google HTML and the "organic" parse below yields 0 results.
         target_url = (
             f"https://www.google.com/search?q={search_query}"
-            f"&gl={country}&num={num_results}&brd_json=1"
+            f"&hl=en&brd_json=1"
         )
+        if country:
+            target_url += f"&gl={urllib.parse.quote_plus(country)}"
 
         payload = {
             "zone": zone,
             "url": target_url,
-            "format": "json"
+            "format": "json",
+            "data_options": {"return_mismatch": False},
         }
 
         headers = {
@@ -404,9 +417,9 @@ class BrightDataClient:
         last_exc: Optional[Exception] = None
         http = self._get_http()
 
-        for attempt in range(_MAX_RETRIES):
+        for attempt in range(attempts):
             try:
-                response = await http.post(endpoint, json=payload, headers=headers)
+                response = await http.post(endpoint, json=payload, headers=headers, timeout=timeout_seconds)
 
                 if response.status_code == 429:
                     delay = _BACKOFF_BASE ** (attempt + 2)  # heavier back-off for rate limits
@@ -416,14 +429,14 @@ class BrightDataClient:
                         _MAX_RETRIES,
                         delay,
                     )
-                    if attempt < _MAX_RETRIES - 1:
+                    if attempt < attempts - 1:
                         await asyncio.sleep(delay)
                         continue
                     raise BrightDataError("SERP API rate limit exceeded after retries.", status_code=429)
 
                 if response.status_code not in (200, 201):
                     raise BrightDataError(
-                        f"SERP API returned HTTP {response.status_code}: {response.text[:200]}",
+                        f"SERP API returned HTTP {response.status_code}",
                         status_code=response.status_code,
                     )
 
@@ -432,23 +445,45 @@ class BrightDataClient:
                 # Check if response is wrapped in {"status_code": 200, "headers": ..., "body": ...}
                 body_data = data
                 if isinstance(data, dict) and "body" in data:
+                    upstream_status = data.get("status_code", 200)
+                    if upstream_status != 200:
+                        raise BrightDataError("SERP upstream request failed", status_code=upstream_status)
                     body_val = data["body"]
                     if isinstance(body_val, str):
                         try:
                             import json
                             body_data = json.loads(body_val)
                         except Exception as pe:
-                            logger.error(f"[BrightData] Failed to parse nested JSON body: {pe}")
-                            body_data = {}
+                            raise BrightDataError("SERP returned an invalid JSON body") from pe
                     elif isinstance(body_val, dict):
                         body_data = body_val
+                    else:
+                        raise BrightDataError("SERP returned an invalid body")
 
                 organic: list[dict] = []
                 if isinstance(body_data, dict):
-                    organic = body_data.get("organic", [])
+                    general = body_data.get("general")
+                    if isinstance(general, dict):
+                        sent, detected = general.get("query"), general.get("detected_query")
+                        if (isinstance(sent, str) and isinstance(detected, str)
+                                and " ".join(sent.casefold().split()) != " ".join(detected.casefold().split())
+                                and not body_data.get("spelling")):
+                            raise BrightDataError("SERP returned results for a different query")
+                    organic = body_data.get("organic")
+                    if organic is None:
+                        if not isinstance(body_data.get("results"), list):
+                            raise BrightDataError("SERP response has no organic result list")
+                        organic = [item for item in body_data["results"]
+                                   if isinstance(item, dict) and item.get("type") == "organic"]
+                else:
+                    raise BrightDataError("SERP returned an invalid response shape")
+                if not isinstance(organic, list):
+                    raise BrightDataError("SERP returned an invalid result list")
 
                 results: list[dict[str, Any]] = []
                 for i, item in enumerate(organic[:num_results]):
+                    if not isinstance(item, dict):
+                        continue
                     results.append({
                         "title": item.get("title", ""),
                         "url": item.get("link", item.get("url", "")),
@@ -457,8 +492,7 @@ class BrightDataClient:
                     })
 
                 logger.info(
-                    "[BrightData] SERP search '%s' → %d results (country=%s)",
-                    query[:60],
+                    "[BrightData] SERP returned %d results (country=%s)",
                     len(results),
                     country,
                 )
@@ -473,19 +507,19 @@ class BrightDataClient:
                     "[BrightData] serp_search attempt %d/%d failed: %s. Retrying in %.1fs…",
                     attempt + 1,
                     _MAX_RETRIES,
-                    exc,
+                    type(exc).__name__,
                     delay,
                 )
-                if attempt < _MAX_RETRIES - 1:
+                if attempt < attempts - 1:
                     await asyncio.sleep(delay)
             except Exception as exc:
                 last_exc = exc
-                logger.warning("[BrightData] serp_search unexpected error: %s", exc)
-                if attempt < _MAX_RETRIES - 1:
+                logger.warning("[BrightData] serp_search unexpected error: %s", type(exc).__name__)
+                if attempt < attempts - 1:
                     await asyncio.sleep(_BACKOFF_BASE ** attempt)
 
         raise BrightDataError(
-            f"serp_search exhausted {_MAX_RETRIES} retries for '{query}': {last_exc}"
+            f"SERP search exhausted {attempts} attempts ({type(last_exc).__name__})"
         ) from last_exc
 
     # ─────────────────────────────────────────────────────────────────────────

@@ -949,6 +949,20 @@ def render(claims, calculations, sources, lead=None, question=""):
     }
 
 
+RECORD_RULES = (
+    "\nSome evidence items are the organisation's own Iroko compliance records (provenance.source_kind "
+    "\"iroko_record\"), not regulatory text. Use them only to say what the organisation's team has recorded "
+    "or confirmed (for example: \"Your team confirmed that ...\"). Never present a record as what a regulation "
+    "says, and never conclude from records that the organisation complies or does not comply."
+)
+
+
+def record_rules(sources):
+    """The record-source rule, only when such a source is present (other prompts stay unchanged)."""
+    return RECORD_RULES if any((s.get("provenance") or {}).get("source_kind") == "iroko_record"
+                               for s in sources.values()) else ""
+
+
 def usable_sources(context):
     return {
         s["chunk_id"]: s
@@ -991,7 +1005,7 @@ async def answer(question, context, complete, is_pidgin=False, *, allow_partial=
         for attempt in range(2):
             draft = json.loads(
                 await complete(
-                    prompt, system_prompt=SYSTEM + CONTEXT_RULES, json_schema=DRAFT_SCHEMA, max_tokens=DRAFT_MAX_TOKENS
+                    prompt, system_prompt=SYSTEM + CONTEXT_RULES + record_rules(sources), json_schema=DRAFT_SCHEMA, max_tokens=DRAFT_MAX_TOKENS
                 )
             )
             if not isinstance(draft, dict) or draft.get("answerable") is not True:
@@ -1023,7 +1037,7 @@ async def answer(question, context, complete, is_pidgin=False, *, allow_partial=
                             },
                             ensure_ascii=False,
                         ),
-                        system_prompt=AUDIT_SYSTEM + CONTEXT_RULES, json_schema=AUDIT_SCHEMA,
+                        system_prompt=AUDIT_SYSTEM + CONTEXT_RULES + record_rules(sources), json_schema=AUDIT_SCHEMA,
                         max_tokens=AUDIT_MAX_TOKENS,
                     )
                 )
@@ -1071,7 +1085,7 @@ async def _partial_answer(question, sources, payload, complete, *, helpful=False
     try:
         for attempt in range(2):
             draft = json.loads(await complete(json.dumps(payload, ensure_ascii=False),
-                system_prompt=HELPFUL_SYSTEM if helpful else PARTIAL_SYSTEM + CONTEXT_RULES,
+                system_prompt=(HELPFUL_SYSTEM if helpful else PARTIAL_SYSTEM + CONTEXT_RULES) + record_rules(sources),
                 json_schema=HELPFUL_DRAFT_SCHEMA if helpful else PARTIAL_DRAFT_SCHEMA,
                 max_tokens=3200 if helpful and re.search(r"\b(?:top\s+(?:10|11|12|ten)|(?:10|11|12|ten)\s+(?:rules|requirements|steps|points))\b", question, re.I) else DRAFT_MAX_TOKENS))
             if not isinstance(draft, dict) or type(draft.get("answerable")) is not bool or not valid_missing(draft.get("missing_information")):
@@ -1109,7 +1123,7 @@ async def _partial_answer(question, sources, payload, complete, *, helpful=False
                     "supported_claims": len(claims), "supported_calculations": len(calculations)}
                 for audit_attempt in range(2):
                     audit = json.loads(await complete(json.dumps(audit_payload, ensure_ascii=False),
-                        system_prompt=HELPFUL_AUDIT_SYSTEM if helpful else PARTIAL_AUDIT_SYSTEM + CONTEXT_RULES,
+                        system_prompt=(HELPFUL_AUDIT_SYSTEM if helpful else PARTIAL_AUDIT_SYSTEM + CONTEXT_RULES) + record_rules(sources),
                         json_schema=HELPFUL_AUDIT_SCHEMA if helpful else PARTIAL_AUDIT_SCHEMA,
                         max_tokens=AUDIT_MAX_TOKENS))
                     if isinstance(audit, dict) and not calculations:

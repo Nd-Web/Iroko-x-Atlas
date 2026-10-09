@@ -6,7 +6,6 @@ Rate limit: 60 req / 60 s per API key
             TODO: replace _rate_buckets with Redis (INCR + EXPIRE) before production
 """
 
-import json
 import logging
 import time
 from collections import defaultdict
@@ -79,6 +78,8 @@ class ComplianceCheckResponse(BaseModel):
     regulation: str
     confidence: float
     checked_at: str
+    evidence: Optional[str] = None  # the deciding rule, verbatim from a retrieved document
+    source: Optional[str] = None    # that document's title
 
 
 # ---------------------------------------------------------------------------
@@ -86,6 +87,65 @@ class ComplianceCheckResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 _watchdog = WatchdogAgent()
+
+
+# ---------------------------------------------------------------------------
+# Verdict
+# ---------------------------------------------------------------------------
+
+UNVERIFIED_FLAG = "Not covered by Iroko's regulation library"
+
+
+def derive_verdict(assessment: dict) -> dict:
+    """
+    Map the engine's assessment to GO / MONITOR / NO-GO.
+
+    Every GO, NO-GO or MONITOR stands on a deciding rule quoted verbatim from a
+    retrieved document ("evidence"). Without one, the answer is an unverified
+    MONITOR — never GO, because the absence of a finding is not evidence of
+    compliance.
+    """
+    kind = assessment.get("assessment", "")
+    basis = assessment.get("basis", "")
+    evidence = assessment.get("evidence") or {}
+    alerts = assessment.get("alerts", []) if evidence else []
+    if evidence and not alerts and kind in ("breach", "needs_safeguards"):
+        alerts = [{"severity": "critical" if kind == "breach" else "warning",
+                   "title": (basis or evidence["quote"])[:120], "summary": basis or evidence["quote"],
+                   "metadata": {"regulation": basis}}]
+    cited = {"evidence": evidence.get("quote"), "source": evidence.get("title") or None}
+
+    # The assessment decides; alert severity only matters when the assessment is unclear.
+    # (Models embellish labels — "critical for a breach" — or tag a safeguard "critical".)
+    def severity(alert):
+        if kind in ("breach", "needs_safeguards"):
+            return "critical" if kind == "breach" else "warning"
+        label = str(alert.get("severity", "")).lower()
+        return "critical" if "critical" in label else "warning"
+
+    critical = [a for a in alerts if severity(a) == "critical"]
+    warnings = [a for a in alerts if severity(a) == "warning"]
+    top = (critical or warnings or [None])[0]
+    if top:
+        return {
+            "verdict": "NO-GO" if critical else "MONITOR",
+            "confidence": 0.90 if critical else 0.75,
+            "flags": [a["title"] for a in alerts if a.get("title")],
+            "reasoning": top.get("summary") or basis,
+            "regulation": (top.get("metadata") or {}).get("regulation") or basis or evidence.get("title", ""),
+            **cited,
+        }
+    if evidence and kind == "compliant":
+        return {"verdict": "GO", "confidence": 0.85, "flags": [], "reasoning": basis or evidence["quote"],
+                "regulation": basis or evidence.get("title", ""), **cited}
+
+    missing = assessment.get("missing_source", "")
+    reasoning = ("Iroko could not verify this: its regulation library has no rule that decides it, "
+                 "so it cannot be cleared. Confirm it against the governing regulation before proceeding.")
+    if missing:
+        reasoning += f" It is most likely governed by {missing}, which is not in the library."
+    return {"verdict": "MONITOR", "confidence": 0.30, "flags": [UNVERIFIED_FLAG],
+            "reasoning": reasoning, "regulation": "", "evidence": None, "source": None}
 
 
 # ---------------------------------------------------------------------------
@@ -138,9 +198,7 @@ async def compliance_check(
         org = body.context or default_org
         from ingestion.access import as_user
         with as_user(user):
-            raw = await _watchdog.find_policy_conflicts(organisation=org, topic=body.text, sector=sector)
-        result = json.loads(raw)
-        alerts = result.get("alerts", [])
+            assessment = await _watchdog.assess_proposed_action(topic=body.text, sector=sector)
     except HTTPException:
         raise
     except Exception as exc:
@@ -151,30 +209,20 @@ async def compliance_check(
         )
 
     # ── Derive verdict ────────────────────────────────────────────────────────
-    critical = [a for a in alerts if a.get("severity") == "critical"]
-    warnings = [a for a in alerts if a.get("severity") == "warning"]
-
-    if critical:
-        verdict = "NO-GO"
-        confidence = 0.90
-    elif warnings:
-        verdict = "MONITOR"
-        confidence = 0.75
-    else:
-        verdict = "GO"
-        confidence = 0.95
-
-    flags: List[str] = [a["title"] for a in alerts if a.get("title")]
-
-    top = (critical or warnings or alerts or [None])[0]
-    reasoning = (
-        top.get("summary", "No compliance issues identified.")
-        if top else "No compliance issues identified."
-    )
-    regulation = (
-        top.get("metadata", {}).get("regulation", "")
-        if top else ""
-    )
+    result = derive_verdict(assessment)
+    # ── Compliance graph: is the deciding rule still the current rule? (flags only) ──
+    try:
+        from ingestion.access import as_user as _as_user
+        from services.compliance_graph.verdicts import apply_rule_status
+        with _as_user(user):
+            result = apply_rule_status(db, user, assessment, result)
+    except Exception:
+        logger.exception("Compliance graph rule check skipped")
+    verdict = result["verdict"]
+    confidence = result["confidence"]
+    flags: List[str] = result["flags"]
+    reasoning = result["reasoning"]
+    regulation = result["regulation"]
 
     # ── Workflow hook: NO-GO / MONITOR verdicts become actionable tasks ──────
     try:
@@ -202,4 +250,6 @@ async def compliance_check(
         regulation=regulation,
         confidence=confidence,
         checked_at=datetime.now(timezone.utc).isoformat(),
+        evidence=result["evidence"],
+        source=result["source"],
     )

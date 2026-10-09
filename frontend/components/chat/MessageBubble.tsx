@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, useId, type ComponentProps } from "react";
+import { memo, useState, useRef, useEffect, useId, type ComponentProps } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn, formatRelativeTime, getRiskHex, getRiskLabel } from "@/lib/utils";
 import { toast } from "sonner";
 import type { AnswerFeedbackState, ChatMessage } from "@/types/chat";
-import { citationUrl } from "@/lib/citation-url";
+import { citationUrl, recordUrl } from "@/lib/citation-url";
 
 // Reviewed "not right" answers become evaluation cases, so the reason matters more than a score.
 const FEEDBACK_REASONS = [
@@ -108,7 +108,7 @@ const markdownComponents: ComponentProps<typeof ReactMarkdown>["components"] = {
   a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="break-words text-info-700 underline decoration-info-500/40 underline-offset-4 hover:decoration-info-500">{children}</a>,
 };
 
-export default function MessageBubble({ message, contextQuery, isStreaming = false, compact = false }: Props) {
+function MessageBubble({ message, contextQuery, isStreaming = false, compact = false }: Props) {
   const isUser = message.role === "user";
   const isConversational = message.answer_status === "conversational";
   const [copied, setCopied] = useState(false);
@@ -203,13 +203,15 @@ export default function MessageBubble({ message, contextQuery, isStreaming = fal
           <p className="text-[11px] leading-relaxed text-gray-400">Inspect the source context and applicability before relying on an answer.</p>
           {message.citations.map((source, index) => {
             const href = citationUrl(source.source_url);
+            // A confirmed compliance-graph record opens its evidence in the Knowledge Graph.
+            const record = recordUrl(source.provenance);
             return <div key={source.document_id + index} className="rounded-lg border border-border-default p-3">
-              <Link href={href ?? "/documents"} target={href ? "_blank" : undefined} rel={href ? "noopener noreferrer" : undefined}
+              <Link href={record ?? href ?? "/documents"} target={href && !record ? "_blank" : undefined} rel={href && !record ? "noopener noreferrer" : undefined}
                 className="flex items-start gap-2 text-xs font-medium leading-relaxed text-info-700 hover:underline">
                 <span className="shrink-0 text-gray-400">[{index + 1}]</span><span className="min-w-0 break-words">{source.document_title}</span><span aria-hidden="true" className="ml-auto shrink-0">↗</span>
               </Link>
               {source.excerpt && <blockquote className="mt-2 whitespace-pre-wrap break-words border-l border-border-strong pl-3 text-xs leading-relaxed text-gray-500">{source.excerpt}</blockquote>}
-              <p className="mt-2 text-[10px] text-gray-400">{href ? new URL(href).hostname : "Open document library"}</p>
+              <p className="mt-2 text-[10px] text-gray-400">{record ? "Your team's record · open in Knowledge Graph" : href ? new URL(href).hostname : "Open document library"}</p>
             </div>;
           })}
         </div>
@@ -232,3 +234,6 @@ export default function MessageBubble({ message, contextQuery, isStreaming = fal
     </article>
   );
 }
+
+// An unchanged answer should not re-parse Markdown as another answer streams.
+export default memo(MessageBubble);

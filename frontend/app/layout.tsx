@@ -1,17 +1,13 @@
 /**
  * app/layout.tsx
  *
- * Root layout — wraps every page with the AuthProvider so that all client
- * components can call useAuth() to access the current user.
+ * Shared metadata, fonts and styles. App/auth route groups own their providers
+ * so public pages don't load session polling, query caching or toast code.
  */
 
 import type { Metadata } from "next";
 import { DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext";
-import SessionExpiredToast from "@/components/ui/SessionExpiredToast";
-import { QueryProvider } from "@/providers/QueryProvider";
-import { Toaster } from "sonner";
 
 // Self-hosted via next/font — no runtime request to fonts.googleapis.com,
 // zero layout shift (size-adjusted fallbacks generated at build time).
@@ -118,25 +114,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}
         />
-        <QueryProvider>
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: "#1A1A1F",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "#EBEBEF",
-              },
-            }}
-          />
-          {/* AuthProvider fetches /api/auth/me on mount and makes the user
-            object available to every client component via useAuth() */}
-          <AuthProvider>
-            {children}
-            {/* Shown globally whenever the user's session expires mid-use */}
-            <SessionExpiredToast />
-          </AuthProvider>
-        </QueryProvider>
+        {children}
       </body>
     </html>
   );

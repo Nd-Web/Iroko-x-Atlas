@@ -80,7 +80,8 @@ async def health_full() -> dict:
     """
     Checks every external dependency with per-component status + latency:
     database, Azure AI Search, Azure OpenAI chat, embeddings, blob storage,
-    Cosmos Gremlin graph, and Bright Data web intelligence.
+    and Bright Data web intelligence. (The compliance graph lives in the
+    database, so the database check covers it.)
 
     Components degrade independently — one failure never hides the others.
     """
@@ -168,22 +169,7 @@ async def health_full() -> dict:
     except Exception as exc:
         _record("blob_storage", False, t, str(exc))
 
-    # ── 6. Cosmos Gremlin knowledge graph ───────────────────────────────────
-    t = time.perf_counter()
-    try:
-        from services.cosmos_graph import _get_client as _get_gremlin
-        client = _get_gremlin()
-        if client is None:
-            _record("cosmos_graph", False, t, "not configured")
-        else:
-            def _count():
-                return client.submit("g.V().limit(1).count()").all().result()
-            await asyncio.wait_for(asyncio.get_event_loop().run_in_executor(None, _count), timeout=15)
-            _record("cosmos_graph", True, t)
-    except Exception as exc:
-        _record("cosmos_graph", False, t, str(exc))
-
-    # ── 7. Bright Data web intelligence ─────────────────────────────────────
+    # ── 6. Bright Data web intelligence ─────────────────────────────────────
     t = time.perf_counter()
     try:
         from services.brightdata import bright_data_client

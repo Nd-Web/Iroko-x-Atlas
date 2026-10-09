@@ -22,3 +22,14 @@ export function splitLatestExchange<T extends { role: string }>(messages: T[]) {
     ? { previous: messages.slice(0, lastUserIndex), current: messages.slice(lastUserIndex) }
     : { previous: [] as T[], current: messages };
 }
+
+/** Find preceding questions in one pass rather than rescanning each prefix. */
+export function previousQuestions(messages: readonly { id: string; role: string; content: string }[]) {
+  const questions = new Map<string, string | undefined>();
+  let previous: string | undefined;
+  for (const message of messages) {
+    questions.set(message.id, previous);
+    if (message.role === "user") previous = message.content;
+  }
+  return questions;
+}

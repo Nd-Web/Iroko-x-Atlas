@@ -118,9 +118,7 @@ def _load_history(db: Session, conversation_id: str, limit: int = 24) -> list:
             history[-1]["answer_summary"] = (m.content or "")[:1200]
             history[-1]["citations"] = [
                 {"document_id": str(c.get("document_id", ""))[:200],
-                 "document_title": str(c.get("document_title") or c.get("source") or "")[:240],
-                 "excerpt": str(c.get("excerpt") or "")[:1200],
-                 "chunk_id": c.get("chunk_id")}
+                 "document_title": str(c.get("document_title") or c.get("source") or "")[:240]}
                 for c in (m.citations or [])[:6] if isinstance(c, dict)
             ]
             for step in m.agent_trace or []:
@@ -533,28 +531,18 @@ _VOICE_UPLOAD_DIR = "/tmp/atlas_voice"
 os.makedirs(_VOICE_UPLOAD_DIR, exist_ok=True)
 
 _ALLOWED_AUDIO = {"mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "ogg"}
-_WHISPER_DEPLOYMENT = os.getenv("AZURE_OPENAI_WHISPER_DEPLOYMENT", "whisper")
 
 
 async def _transcribe_audio(file_path: str, filename: str) -> str:
-    """Transcribe an audio file using Azure OpenAI Whisper. Returns transcript text."""
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    if not endpoint or not api_key:
-        raise HTTPException(status_code=503, detail="Voice transcription not configured (missing Azure OpenAI credentials)")
+    """Transcribe an audio file with the shared speech-to-text client. Returns transcript text."""
+    from core.config import settings
+    from services import azure_openai
 
-    from openai import AsyncAzureOpenAI
-    client = AsyncAzureOpenAI(
-        azure_endpoint=endpoint,
-        api_key=api_key,
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview"),
-    )
+    if not ((settings.AZURE_OPENAI_TRANSCRIBE_ENDPOINT or settings.AZURE_OPENAI_ENDPOINT)
+            and (settings.AZURE_OPENAI_TRANSCRIBE_API_KEY or settings.AZURE_OPENAI_API_KEY)):
+        raise HTTPException(status_code=503, detail="Voice transcription not configured (missing Azure OpenAI credentials)")
     with open(file_path, "rb") as f:
-        response = await client.audio.transcriptions.create(
-            model=_WHISPER_DEPLOYMENT,
-            file=(filename, f),
-        )
-    return response.text
+        return await azure_openai.transcribe_audio(f.read(), filename)
 
 
 @router.post("/voice")
