@@ -222,7 +222,7 @@ function RequirementView({ id, onOpen }: { id: string; onOpen: PanelProps["onOpe
       <QuoteBlock label="The requirement, in the regulator's words" anchor={{
         quote: r.quote, document_title: r.document?.title, reference: r.document?.reference, page_number: r.page_number,
         section: r.section, published_date: r.document?.published_date, effective_date: r.document?.effective_date,
-        awaiting_publication: r.document?.awaiting_publication,
+        effective_basis: r.document?.effective_basis, awaiting_publication: r.document?.awaiting_publication,
       }} />
       {r.summary && (
         <p className="text-[13px] text-gray-700"><span className="text-[11px] uppercase tracking-wide text-gray-400">Iroko&apos;s summary · </span>{r.summary}</p>

@@ -99,6 +99,7 @@ def anchor_payload(anchor: dict, docs: dict[str, dict]) -> dict:
     info = docs.get(anchor.get("document_id")) or {}
     return {**anchor, "document_title": info.get("title"), "reference": info.get("reference"),
             "published_date": info.get("published_date"), "effective_date": info.get("effective_date"),
+            "effective_basis": info.get("effective_basis"),
             "awaiting_publication": info.get("awaiting_publication", False)}
 
 

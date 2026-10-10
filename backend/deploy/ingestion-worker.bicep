@@ -1,4 +1,5 @@
 // Separate scheduled worker; the existing manual job is retained.
+// Values match the live job as of 2026-10-10 (resources, timeout, page budgets).
 param location string = 'eastus2'
 param environmentId string
 param registryIdentityId string
@@ -38,7 +39,7 @@ resource worker 'Microsoft.App/jobs@2024-03-01' = {
     environmentId: environmentId
     configuration: {
       triggerType: 'Schedule'
-      replicaTimeout: 900
+      replicaTimeout: 1800
       replicaRetryLimit: 0
       scheduleTriggerConfig: {
         cronExpression: cronExpression
@@ -61,7 +62,7 @@ resource worker 'Microsoft.App/jobs@2024-03-01' = {
         image: image
         command: ['python']
         args: ['-m', 'ingestion', 'scheduled-drain', '--max-seconds', '240']
-        resources: { cpu: json('0.5'), memory: '1Gi' }
+        resources: { cpu: json('1.0'), memory: '2Gi' }
         env: [
           { name: 'DATABASE_URL', secretRef: 'database-url' }
           { name: 'DOCUMENT_PIPELINE_ENABLED', value: 'true' }
@@ -77,9 +78,12 @@ resource worker 'Microsoft.App/jobs@2024-03-01' = {
           { name: 'AZURE_OPENAI_EMBEDDING_API_KEY', secretRef: 'embedding-key' }
           { name: 'AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT', value: 'https://irokoai.cognitiveservices.azure.com/' }
           { name: 'AZURE_DOCUMENT_INTELLIGENCE_KEY', secretRef: 'docintel-key' }
-          { name: 'DOCINTEL_DAILY_PAGE_BUDGET', value: '500' }
-          { name: 'DOCINTEL_MAX_PAGES_PER_DOCUMENT', value: '50' }
-          { name: 'WORKSPACE_DAILY_OCR_PAGES', value: '200' }
+          { name: 'DOCINTEL_DAILY_PAGE_BUDGET', value: '3000' }
+          { name: 'DOCINTEL_MAX_PAGES_PER_DOCUMENT', value: '400' }
+          { name: 'WORKSPACE_DAILY_OCR_PAGES', value: '3000' }
+          { name: 'DOCUMENT_MAX_PAGES', value: '1000' }
+          { name: 'EXTRACTION_TIMEOUT_SECONDS', value: '600' }
+          { name: 'EXTRACTION_MEMORY_MB', value: '1536' }
           { name: 'AZURE_OPENAI_RESPONSES_ENDPOINT', value: responsesEndpoint }
           { name: 'AZURE_OPENAI_RESPONSES_DEPLOYMENT', value: responsesDeployment }
           { name: 'AZURE_OPENAI_RESPONSES_API_KEY', secretRef: 'responses-key' }

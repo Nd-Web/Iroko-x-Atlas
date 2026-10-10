@@ -89,6 +89,7 @@ export interface Anchor {
   section?: string | null;
   published_date?: string | null;
   effective_date?: string | null;
+  effective_basis?: string | null;
   awaiting_publication?: boolean;
   cue?: string | null;
 }

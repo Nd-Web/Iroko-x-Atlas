@@ -41,7 +41,9 @@ export function QuoteBlock({ anchor, label }: { anchor: Anchor; label?: string }
   ].filter(Boolean).join(" · ");
   const dates = [
     anchor.published_date ? `Published ${anchor.published_date}` : null,
-    anchor.effective_date ? `Effective ${anchor.effective_date}` : null,
+    // A date Iroko inferred ("takes effect immediately" = the letter's date) never reads as a stated one.
+    anchor.effective_date ? `Effective ${anchor.effective_date}${anchor.effective_basis === "suggested" ? " (suggested by Iroko)"
+      : anchor.effective_basis === "confirmed" ? " (confirmed)" : ""}` : null,
   ].filter(Boolean).join(" · ");
   return (
     <figure className="rounded-lg border border-border-default bg-surface-page/60 p-3">

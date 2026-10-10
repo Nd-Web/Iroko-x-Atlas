@@ -93,11 +93,15 @@ export default function KnowledgeGraph() {
   const changeCount = overview.data?.totals.open_changes ?? 0;
   const actions = (
     <div className="flex items-center gap-2">
+      {/* Short labels on phones so both actions fit beside the menu button. */}
       <button className="btn-secondary text-[12px]" onClick={() => setProfileOpen(true)}>
-        {overview.data?.profile.labels.length ? `Licence: ${overview.data.profile.labels.join(", ")}` : "Set licence"}
+        <span className="sm:hidden">Licence</span>
+        <span className="hidden sm:inline">
+          {overview.data?.profile.labels.length ? `Licence: ${overview.data.profile.labels.join(", ")}` : "Set licence"}
+        </span>
       </button>
       <button className="btn-secondary text-[12px]" onClick={download} disabled={downloading}>
-        {downloading ? "Preparing…" : "Download audit pack"}
+        {downloading ? "Preparing…" : <><span className="sm:hidden">Audit pack</span><span className="hidden sm:inline">Download audit pack</span></>}
       </button>
     </div>
   );
