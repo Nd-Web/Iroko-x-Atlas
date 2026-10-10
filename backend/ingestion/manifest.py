@@ -232,6 +232,8 @@ async def import_folder(db, folder, entries, owner_id):
             if len(candidates) > 1:
                 named = [e for e in candidates if _name_key(attachment_filename(e["url"])) == _name_key(path.name)]
                 candidates = named or candidates
+            # Only a size match is checked against the regulator's catalogue.
+            checks = {"size_verified_against": "regulator catalogue"} if candidates else {"matched_by": "official file name"}
             if not candidates:
                 # Documents the catalogue gives no size for match on their exact official file name.
                 candidates = [e for e in entries if not e.get("catalogue_size")
@@ -247,8 +249,7 @@ async def import_folder(db, folder, entries, owner_id):
                     results.append({"file": path.name, "id": entry.get("id"), "status": "exists", "document_id": existing})
                     continue
                 document_id = await _accept(db, path.read_bytes(), entry, owner_id,
-                                            {"acquisition": "browser_download_import",
-                                             "size_verified_against": "regulator catalogue"}, directory)
+                                            {"acquisition": "browser_download_import", **checks}, directory)
                 results.append({"file": path.name, "id": entry.get("id"), "status": "accepted", "document_id": document_id})
             except Exception as exc:
                 db.rollback()

@@ -91,6 +91,7 @@ async def test_browser_files_match_by_exact_size_and_name(db, adapters, pdf_byte
     assert "notes.txt" not in by_file
     revision = db.get(Revision, by_file["PEP Guidance.pdf"]["document_id"])
     assert revision.provenance["acquisition"] == "browser_download_import"
+    assert revision.provenance["size_verified_against"] == "regulator catalogue"
 
 
 async def test_archive_copies_and_download_handler_links(db, adapters, pdf_bytes):
@@ -141,6 +142,9 @@ async def test_browser_files_without_catalogue_size_match_by_official_name(db, a
                "url": "https://www.cbn.gov.ng/out/publications/bsd/2007/cbnact.pdf", "published_date": "2007"}]
     results = await import_folder(db, tmp_path, listed, "owner")
     assert results[0]["status"] == "accepted" and results[0]["id"] == "law-cbn-act"
+    provenance = db.get(Revision, results[0]["document_id"]).provenance
+    assert provenance["matched_by"] == "official file name"
+    assert "size_verified_against" not in provenance  # Nothing was checked against a catalogue size.
 
 
 async def test_archive_client_returns_only_an_exact_size_capture(monkeypatch):
