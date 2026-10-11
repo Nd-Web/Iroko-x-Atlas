@@ -128,6 +128,36 @@ def test_comparison_claim_may_use_a_checked_calculation_result():
     assert claims and claims[0]["text"].startswith("The printed annual figure (774)")
 
 
+def test_comparison_claim_may_restate_the_calculation_operands():
+    # The 12 comes from the question ("times 12"), not the letter; the checked calculation vouches for it.
+    flagged = claim("The printed figures are arithmetically inconsistent: 64 × 12 = 768, not the printed 774.", TARGETS)
+    claims, _ = check([flagged], [calc("64", "multiply", "12")],
+                      question="Calculate monthly times 12 and flag whether the figures are consistent.")
+    assert claims and "768" in claims[0]["text"]
+    # Without the calculation, the question's 12 is not evidence for a claim.
+    alone, _ = check([flagged], [], question="Calculate monthly times 12 and flag whether the figures are consistent.")
+    assert alone == []
+
+
+def test_short_quote_counts_only_when_it_pins_one_place():
+    names = {"chunk_id": "sdgt", "document_id": "sdgt", "title": "SDGT letter", "provenance": {},
+             "content": "designation of Mark John Taylor, Anjem Choudary, Sami Bouras and Shane Crawford as SDGTs."}
+    draft = {"answerable": True, "calculations": [], "claims": [
+        claim("The fourth name printed is Sami Bouras.", "Sami Bouras", "sdgt"),
+        claim("The letter concerns SDGTs.", "SDGTs", "sdgt"),  # one word: proves nothing about where
+    ]}
+    claims, _ = validated_candidates(draft, {"sdgt": names}, "Which names are listed?")
+    assert [c["quote"] for c in claims] == ["Sami Bouras"]
+    # A name printed in the heading and again in the body is still a name.
+    heading = {**names, "content": "## DESIGNATION OF SAMI BOURAS\n\nthe designation of Sami Bouras as an SDGT."}
+    named, _ = validated_candidates({**draft, "claims": draft["claims"][:1]}, {"sdgt": heading}, "Which names?")
+    assert [c["quote"] for c in named] == ["Sami Bouras"]
+    # A short, ordinary phrase that recurs pins nothing.
+    rules = {**names, "content": "Returns shall be filed monthly. Records shall be kept for five years."}
+    vague = {"answerable": True, "calculations": [], "claims": [claim("Returns must be filed.", "shall be", "sdgt")]}
+    assert validated_candidates(vague, {"sdgt": rules}, "What is required?")[0] == []
+
+
 def test_comparison_claim_cannot_use_an_uncomputed_figure():
     invented = claim("The printed annual figure (774) differs from the expected 770.", TARGETS)
     claims, _ = check([invented], [calc("64", "multiply", "12")],

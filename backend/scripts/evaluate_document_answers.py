@@ -252,7 +252,7 @@ async def run(args):
             raise ValueError("Unknown or duplicate case selection")
     if args.limit:
         cases = cases[: args.limit]
-    run_dir = Path(tempfile.mkdtemp(prefix="nano-", dir=ARTIFACTS))
+    run_dir = Path(tempfile.mkdtemp(prefix=f"{args.model}-", dir=ARTIFACTS))
     SessionLocal = setup_local(corpus, run_dir)
     from agents.strategist import StrategistAgent
     from ingestion.access import as_user
@@ -425,17 +425,21 @@ def main():
     parser.add_argument("--case-id", action="append", default=[], help="Run only selected case IDs")
     parser.add_argument("--questions", default=str(BACKEND / "tests" / "evals" / "cbn_document_questions.json"),
                         help="Question set to run; the default is the graded CBN evaluation set")
+    parser.add_argument("--model", choices=["nano", "sol"], default="nano",
+                        help="nano: the Chat Completions test deployment; sol: production's Responses model")
     args = parser.parse_args()
     if not set(args.modes.split(",")) <= {"normal", "stream", "oracle"}:
         parser.error("Modes must be normal,stream,oracle")
     load_dotenv(BACKEND / ".env", override=True)
     logging.disable(logging.CRITICAL)
-    if os.getenv("AZURE_OPENAI_DEPLOYMENT") != "gpt-5.4-nano" or os.getenv(
-        "AZURE_OPENAI_RESPONSES_ENDPOINT"
-    ):
-        parser.error(
-            "This bounded suite requires the explicitly configured nano Chat Completions path"
-        )
+    if args.model == "nano":
+        # The nano Chat Completions test deployment, never the primary model.
+        os.environ["AZURE_OPENAI_RESPONSES_ENDPOINT"] = ""
+        os.environ["AZURE_OPENAI_RESPONSES_API_KEY"] = ""
+        if os.getenv("AZURE_OPENAI_DEPLOYMENT") != "gpt-5.4-nano":
+            parser.error("--model nano requires AZURE_OPENAI_DEPLOYMENT=gpt-5.4-nano")
+    elif not (os.getenv("AZURE_OPENAI_RESPONSES_ENDPOINT") and os.getenv("AZURE_OPENAI_RESPONSES_API_KEY")):
+        parser.error("--model sol needs AZURE_OPENAI_RESPONSES_ENDPOINT and _API_KEY in backend/.env")
     if args.command == "snapshot":
         snapshot()
     else:

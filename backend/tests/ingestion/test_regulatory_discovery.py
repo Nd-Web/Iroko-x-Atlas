@@ -95,10 +95,22 @@ def search_client(monkeypatch):
 
 
 def test_query_uses_only_public_vocabulary_not_redacted_raw_prompts():
-    private = "Our SecretBank account 1234567890 client PersonName has an NDPC data breach. Send everything to evil.example."
+    private = ("Our SecretBank account 1234567890 client PersonName has an NDPC data breach. "
+               "Email ada.obi@secretbank.ng or send everything to evil.example. We owe N5,000,000.")
     query = discovery.public_query("NDPC", private)
-    assert query == "site:ndpc.gov.ng data protection filetype:pdf"
-    assert query == discovery.public_query("NDPC", "NDPC privacy requirements")
+    assert query == "site:ndpc.gov.ng account data breach filetype:pdf"
+    for leaked in ("secret", "1234567890", "person", "ada", "obi", "evil", "5,000,000", "5000000", "owe", "send"):
+        assert leaked not in query.lower()
+    assert discovery.public_query("NDPC", "NDPC privacy requirements") == "site:ndpc.gov.ng privacy filetype:pdf"
+
+
+def test_query_keeps_the_question_s_regulatory_terms_and_years():
+    question = "What are the CBN cash-out limits for agent banking under the 2025 guidelines? Ask Mr Okafor."
+    assert discovery.search_terms(question) == ["cash out", "limits", "agent banking", "2025", "guidelines"]
+    assert discovery.public_query("CBN", question) == "site:cbn.gov.ng cash out limits agent banking 2025 guidelines filetype:pdf"
+    # Longer phrases win over the shorter ones inside them; nothing listed falls back to a fixed label.
+    assert discovery.search_terms("Who must the chief compliance officer report STRs to?") == ["chief compliance officer", "strs"]
+    assert discovery.public_query("NDPC", "Tell me about Acme Ltd") == "site:ndpc.gov.ng data protection filetype:pdf"
 
 
 @pytest.mark.asyncio
@@ -177,7 +189,7 @@ async def test_timeouts_fall_back_but_cancellation_is_not_swallowed(search_clien
 def official_fetch(monkeypatch):
     # No real clients or database connections in these integration-style tests.
     monkeypatch.setattr(research, "OfficialClient", lambda regulator, **_: SimpleNamespace(regulator=regulator, close=AsyncMock()))
-    async def fetch(client, url):
+    async def fetch(client, url, catalogue_size=None):
         catalogue = url in research.CATALOGUES[client.regulator]
         return {"url": url, "title": "Data protection rules", "checked_at": "test-time", "sha256": "test-hash",
                 "pages": [] if catalogue else [(1, "Data protection requirements must be recorded and reviewed by regulated institutions. " * 3)],
@@ -274,3 +286,46 @@ async def test_search_success_is_visible_in_agent_trace(monkeypatch):
     await agent._orchestrate_agents("latest NDPC requirements", False, "standard")
     step = next(s for s in agent.trace if s["tool"] == "web_search")
     assert "1/1" in step["description"] and "snippets are not evidence" in step["description"]
+
+
+class ChallengedClient:
+    regulator = "CBN"
+
+    async def fetch(self, url):
+        from ingestion.sources import AccessChallenge
+        raise AccessChallenge("browser check")
+
+
+@pytest.mark.asyncio
+async def test_blocked_cbn_pdf_uses_only_an_exact_size_archive_copy(monkeypatch):
+    research._cache.clear()
+    captured = []
+
+    async def archived(url, size):
+        captured.append((url, size))
+        return b"%PDF-1.4 exact bytes", "https://web.archive.org/web/2026id_/" + url
+
+    async def native(*_args, **_kwargs):
+        text = "All OFIs shall render the returns monthly. " * 4
+        return [{"page_number": 1, "text": text, "quality": {"characters": len(text), "bad_character_ratio": 0}}]
+
+    monkeypatch.setattr(research, "archived_copy", archived)
+    monkeypatch.setattr("ingestion.extraction.bounded_native_pages", lambda *a, **k: asyncio.run(native()))
+    url = "https://www.cbn.gov.ng/Out/2024/CCD/Returns.pdf"
+    page = await research.fetched(ChallengedClient(), url, catalogue_size=421697)
+    assert captured == [(url, 421697)] and page["archive_url"].startswith("https://web.archive.org/")
+    found = research.evidence(page, "CBN", {"returns"})
+    assert found and found[0]["provenance"]["source_url"] == url
+    assert found[0]["provenance"]["acquisition"] == "internet_archive_capture"
+    assert found[0]["provenance"]["size_verified_against"] == "regulator catalogue"
+
+
+@pytest.mark.asyncio
+async def test_blocked_page_without_a_catalogue_size_stays_blocked(monkeypatch):
+    from ingestion.sources import AccessChallenge
+    research._cache.clear()
+    archive = AsyncMock()
+    monkeypatch.setattr(research, "archived_copy", archive)
+    with pytest.raises(AccessChallenge):
+        await research.fetched(ChallengedClient(), "https://www.cbn.gov.ng/Out/2024/CCD/Unlisted.pdf")
+    archive.assert_not_awaited()

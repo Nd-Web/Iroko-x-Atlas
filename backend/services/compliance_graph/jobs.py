@@ -327,12 +327,13 @@ async def stage_addressees(ctx):
     ctx.gd.facts = {**(ctx.gd.facts or {}), "addressees": [
         {"codes": a["codes"], "basis": a["basis"], "span": a["span"], "term": a["term"]} for a in found]}
     for item in found:
-        anchor = {"document_id": doc.id, "page_number": item.get("page_number"), "page_position": item.get("page_position"),
-                  "start": item.get("start"), "end": item.get("end"), "quote": item["quote"], "span": item["span"],
-                  "side": "source", "source": item.get("source", "page")}
+        anchors = [{"document_id": doc.id, "page_number": a.get("page_number"), "page_position": a.get("page_position"),
+                    "start": a.get("start"), "end": a.get("end"), "quote": a["quote"], "span": a["span"],
+                    "side": "source", "source": a.get("source", "page")}
+                   for a in (item, item.get("header")) if a]  # a title that narrows a header shows both
         for code in item["codes"]:
             store.upsert_link(db, relation="applies_to", layer="library", from_type="document", from_id=doc.id,
-                              to_type="category", to_id=code, basis=item["basis"], anchors=[anchor],
+                              to_type="category", to_id=code, basis=item["basis"], anchors=anchors,
                               attributes={"term": item["term"], "fuzzy": bool(item.get("fuzzy"))},
                               from_document_id=doc.id, run_id=ctx.run_id)
     store.withdraw_untouched_links(

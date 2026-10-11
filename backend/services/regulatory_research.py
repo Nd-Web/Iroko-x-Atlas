@@ -16,7 +16,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
-from ingestion.sources import OfficialClient, official_url, parse_cbn
+from ingestion.sources import AccessChallenge, OfficialClient, official_url, parse_cbn
 from services.regulatory_discovery import discover
 
 logger = logging.getLogger(__name__)
@@ -177,13 +177,34 @@ class PageText(HTMLParser):
         return "\n".join(line for line in paragraphs if line), " ".join(self.title).strip()
 
 
-async def fetched(client, url):
+async def archived_copy(url, size):
+    """(bytes, capture URL) of an Internet Archive capture of `url` with exactly `size` bytes."""
+    from ingestion.manifest import ArchiveClient
+
+    archive = ArchiveClient(delay=0.5, timeout=8)
+    try:
+        return await archive.capture(url, int(size))
+    finally:
+        await archive.close()
+
+
+async def fetched(client, url, catalogue_size=None):
     url = official_url(url, client.regulator)
     cached = _cache.get(url)
     if cached and time.monotonic() - cached[0] < CACHE_TTL:
         _cache.move_to_end(url)
         return cached[1]
-    status, headers, body = await client.fetch(url)
+    archive_url = None
+    try:
+        status, headers, body = await client.fetch(url)
+    except AccessChallenge:
+        # A host's bot check is never bypassed. When the regulator's own catalogue states the
+        # file's exact size, an archived capture of the same official URL with exactly those
+        # bytes is that file: the rule the library import follows.
+        if not catalogue_size:
+            raise
+        body, archive_url = await archived_copy(url, catalogue_size)
+        status, headers = 200, {"content-type": "application/pdf"}
     if status != 200:
         raise ValueError("Official source did not return a successful page")
     checked = datetime.now(timezone.utc).isoformat()
@@ -193,6 +214,8 @@ async def fetched(client, url):
         value = {"url": url, "title": "Official circular catalogue", "pages": [],
                  "links": [(item["source_url"], item["title"]) for item in entries],
                  "catalogue_dates": {item["source_url"]: item["published_date"] for item in entries},
+                 "catalogue_sizes": {item["source_url"]: item["catalogue_size"] for item in entries
+                                     if item.get("catalogue_size")},
                  "checked_at": checked, "sha256": hashlib.sha256(body).hexdigest()}
     elif "pdf" in kind or body.startswith(b"%PDF-"):
         from ingestion.extraction import bounded_native_pages
@@ -207,6 +230,8 @@ async def fetched(client, url):
         value = {"url": url, "title": Path(urlsplit(url).path).name,
                  "pages": pages, "links": [], "checked_at": checked,
                  "sha256": hashlib.sha256(body).hexdigest()}
+        if archive_url:
+            value["archive_url"] = archive_url
     elif "html" in kind:
         parser = PageText()
         parser.feed(body.decode("utf-8", errors="replace"))
@@ -234,6 +259,8 @@ def evidence(page, regulator, words):
             if score < 1 or len(block) < 80:
                 continue
             key = hashlib.sha256(f"{page['url']}|{page['sha256']}|{number}|{offset}".encode()).hexdigest()
+            acquired = {"acquisition": "internet_archive_capture", "archive_url": page["archive_url"],
+                        "size_verified_against": "regulator catalogue"} if page.get("archive_url") else {}
             result.append({
                 "document_id": "public:" + hashlib.sha256(page["url"].encode()).hexdigest()[:24],
                 "chunk_id": "public:" + key[:24],
@@ -241,7 +268,7 @@ def evidence(page, regulator, words):
                 "provenance": {"source_url": page["url"], "source_kind": "official_live",
                     "regulator": regulator, "fetched_at": page["checked_at"],
                     "sha256": page["sha256"], "physical_page": number,
-                    "text_offset": offset, "legal_applicability_status": "not_assessed"},
+                    "text_offset": offset, "legal_applicability_status": "not_assessed", **acquired},
                 "_relevance": score,
                 "_mentioned_date": mentioned_date(block),
             })
@@ -272,7 +299,7 @@ async def research(question):
     sources, checks, discovery_checks = [], [], []
     async def one(regulator):
         client = OfficialClient(regulator, timeout=6, attempts=1, max_bytes=3_000_000)
-        candidates = []
+        candidates, sizes = [], {}
 
         async def catalogues():
             for url in CATALOGUES[regulator]:
@@ -280,6 +307,7 @@ async def research(question):
                 checks.append(check)
                 try:
                     page = await fetched(client, url)
+                    sizes.update(page.get("catalogue_sizes", {}))
                     check.update(status="checked", fetched_at=page["checked_at"])
                     sources.extend(evidence(page, regulator, words))
                     for href, title in page["links"]:
@@ -348,8 +376,10 @@ async def research(question):
                 check = {"regulator": regulator, "url": url, "status": "unavailable"}
                 checks.append(check)
                 try:
-                    page = await fetched(client, url)
+                    page = await fetched(client, url, catalogue_size=sizes.get(url))
                     check.update(status="checked", fetched_at=page["checked_at"])
+                    if page.get("archive_url"):
+                        check["archive_url"] = page["archive_url"]
                     sources.extend(evidence(page, regulator, words))
                 except Exception as error:
                     check["failure_type"] = type(error).__name__

@@ -59,7 +59,30 @@ def document_addressees(pages, title: str | None = None) -> list[dict]:
         for m in taxonomy.match_addressees(title):
             found.append({"codes": list(m.codes), "basis": "suggested", "term": m.term, "quote": title,
                           "span": m.span, "source": "title"})
+    elif found and title:
+        found = _narrowed_by_title(found, title)
     return _dedupe(found)
+
+
+def _narrowed_by_title(found: list[dict], title: str) -> list[dict]:
+    """A title naming one licence inside the header's group sets the scope.
+
+    "CIRCULAR TO ALL OTHER FINANCIAL INSTITUTIONS" sent with the "Code of Corporate
+    Governance for Finance Companies" is addressed to finance companies, not to MFBs.
+    """
+    named = [m for m in taxonomy.match_addressees(title) if m.explicit]
+    if not named or any(tuple(item["codes"]) == m.codes for item in found for m in named):
+        return found  # the title repeats the header's addressees
+    narrow = taxonomy.leaves([c for m in named for c in m.codes])
+    out = []
+    for item in found:
+        if narrow < taxonomy.leaves(item["codes"]):
+            # Iroko's reading of title and header together: a suggestion for a reviewer.
+            out.extend({"codes": list(m.codes), "basis": "suggested", "term": m.term, "quote": title,
+                        "span": m.span, "source": "title", "header": item} for m in named)
+        else:
+            out.append(item)
+    return out
 
 
 def _dedupe(items: list[dict]) -> list[dict]:

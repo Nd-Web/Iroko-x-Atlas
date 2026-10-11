@@ -80,6 +80,23 @@ def test_misspelt_licence_outranks_the_generic_word_inside_it():
     assert [(a["codes"], a["basis"]) for a in exact] == [(["mfb"], "stated")]
 
 
+def test_a_title_naming_one_licence_narrows_a_group_header():
+    header = [page("# CIRCULAR TO ALL OTHER FINANCIAL INSTITUTIONS IN NIGERIA\n")]
+    found = applicability.document_addressees(header, "Code of Corporate Governance for Finance Companies in Nigeria")
+    assert [(a["codes"], a["basis"], a["source"]) for a in found] == [(["finance_company"], "suggested", "title")]
+    mfb = applicability.document_addressees(header, "Code of Corporate Governance for Microfinance Banks in Nigeria")
+    assert [a["codes"] for a in mfb] == [["mfb"]]
+    # A title that repeats the header changes nothing; neither does one naming no licence.
+    same = applicability.document_addressees(header, "Guidance Notes to Other Financial Institutions on IFRS 9")
+    assert [(a["codes"], a["basis"]) for a in same] == [(["ofi"], "stated")]
+    plain = applicability.document_addressees(header, "Prohibition of Placement in Funds Managed by Uninsured Entities")
+    assert [(a["codes"], a["basis"]) for a in plain] == [(["ofi"], "stated")]
+    # Headers listing several groups keep the ones the title does not narrow.
+    mixed = applicability.document_addressees(
+        [page("# CIRCULAR TO ALL BANKS AND OTHER FINANCIAL INSTITUTIONS\n")], "Guidelines for Microfinance Banks")
+    assert sorted(tuple(a["codes"]) for a in mixed) == [("dmb", "psb"), ("mfb",)]
+
+
 def test_addressee_header_lines_and_rejected_body_lines():
     text = ("Ref: OFI/DIR/CIR/GEN/17/139\n\n# LETTER TO ALL OTHER FINANCIAL INSTITUTIONS (OFIs)\n\n"
             "all banks and OFIs are required\nto forward the audited financial statements to the CBN.")

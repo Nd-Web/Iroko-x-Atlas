@@ -1,4 +1,9 @@
-"""Opt-in search discovery. Only fixed public topic labels leave Iroko.
+"""Opt-in search discovery. Only public regulatory vocabulary leaves Iroko.
+
+The query is built from the regulatory words and phrases the question itself
+uses ("agent banking", "cash-out limits", "data breach"), taken from a fixed
+vocabulary, plus years. Anything outside that vocabulary (names, companies,
+numbers, amounts, emails, links, instructions) never reaches the search engine.
 
 Search results are pointers, never legal evidence. The research service must
 fetch their approved official URLs before any text reaches the answer pipeline.
@@ -32,18 +37,81 @@ TOPIC_LABELS = (
     (r"\b(cyber\w*|security)\b", "cybersecurity"),
     (r"\b(licen[cs]\w*|registration)\b", "licensing registration"),
 )
+# Public regulatory vocabulary a question may contribute to a search, longest phrases first.
+# Selection, never redaction: a word reaches the search engine only if it is listed here.
+PHRASES = (
+    "anti money laundering", "know your customer", "customer due diligence", "enhanced due diligence",
+    "politically exposed persons", "politically exposed person", "beneficial ownership", "targeted financial sanctions",
+    "suspicious transaction", "currency transaction", "terrorist financing", "terrorism financing",
+    "proliferation financing", "money laundering", "data protection", "data breach", "data subject", "data controller",
+    "data processor", "cross border", "consumer protection", "deposit insurance", "credit bureau", "credit reporting",
+    "corporate governance", "risk management", "business continuity", "whistle blowing", "regulatory sandbox",
+    "open banking", "agent banking", "mobile money", "digital lending", "consumer lending", "payment service bank",
+    "payment service banks", "payment service provider", "payment service providers", "payment terminal",
+    "point of sale", "merchant acquiring", "switching and processing", "money transfer", "foreign exchange",
+    "bureau de change", "virtual assets", "digital assets", "minimum capital", "capital adequacy",
+    "liquidity ratio", "single obligor", "cash out", "cash withdrawal", "transaction limits", "transaction limit",
+    "account opening", "dormant accounts", "unclaimed balances", "instant payments", "electronic payments",
+    "card scheme", "financial inclusion", "audited financial statements", "financial statements",
+    "annual returns", "monthly returns", "license renewal", "licence renewal", "fit and proper", "board appraisal",
+    "chief compliance officer", "compliance officer", "internal audit", "external auditor", "information security",
+    "cyber security", "incident reporting", "third party", "service level", "global standing instruction",
+    "e money",
+)
+WORDS = {
+    "aml", "cft", "cpf", "kyc", "cdd", "edd", "bvn", "nin", "pep", "peps", "str", "strs", "ctr", "ctrs", "ftr",
+    "mfb", "mfbs", "psb", "psbs", "psp", "psps", "pssp", "ptsp", "ptsa", "mmo", "mmos", "imto", "imtos", "bdc", "bdcs",
+    "ofi", "ofis", "dmb", "dmbs", "dfi", "dfis", "pmb", "pmbs", "ndpa", "gaid", "dpia", "dpo", "ifrs", "bofia",
+    "cama", "mlppa", "tppa", "ussd", "pos", "atm", "nip", "nibss", "enaira", "gsi", "api", "apis", "otp", "fx", "vasp",
+    "microfinance", "fintech", "fintechs", "payments", "payment", "remittance", "remittances", "wallet", "wallets",
+    "lending", "loan", "loans", "credit", "deposit", "deposits", "savings", "account", "accounts", "tier", "tiers",
+    "capital", "recapitalisation", "recapitalization", "liquidity", "prudential", "provisioning", "impairment",
+    "licence", "license", "licensing", "licensed", "registration", "renewal", "approval", "permit",
+    "penalty", "penalties", "fine", "fines", "sanction", "sanctions", "enforcement", "revocation", "suspension",
+    "breach", "breaches", "contravention", "infraction", "compliance", "regulation", "regulations", "guidelines",
+    "guideline", "circular", "circulars", "framework", "directive", "directives", "rules", "act", "code",
+    "exposure", "draft", "amendment", "amended", "revised", "repeal", "returns", "rendition", "reporting",
+    "deadline", "timeline", "disclosure", "governance", "board", "directors", "shareholding", "ownership",
+    "audit", "auditor", "outsourcing", "cloud", "cybersecurity", "privacy", "consent", "retention", "records",
+    "fraud", "frauds", "forgeries", "complaints", "complaint", "dispute", "disputes", "chargeback", "refund",
+    "charges", "fees", "tariff", "interest", "agent", "agents", "agency", "merchant", "merchants", "terminal",
+    "terminals", "card", "cards", "transfer", "transfers", "cashless", "cash", "limits", "limit", "threshold",
+    "interoperability", "settlement", "clearing", "switching", "crypto", "cryptocurrency", "stablecoin",
+    "sandbox", "insurance", "terrorism", "proliferation", "whistleblowing", "training", "inclusion",
+}
+# The search runs inside the regulator's own site; naming the regulator again only narrows it.
+_REGULATOR_WORDS = {"cbn", "sec", "ndpc", "ndic", "nfiu", "fccpc", "central", "bank", "nigeria", "nigerian"}
+_NOT_WORDS = re.compile(r"\S+@\S+|https?://\S+|www\.\S+|\b[\w-]+\.(?:com|ng|org|net|gov|io|example)\b\S*", re.I)
 _cache = OrderedDict()  # Generic public discovery only, never prompts or answers.
 CACHE_TTL = 600
 FAILURE_TTL = 30
 
 
+def search_terms(question, limit=6):
+    """The question's public regulatory terms, in its own order: phrases, listed words and years."""
+    text = " " + re.sub(r"[^a-z0-9]+", " ", _NOT_WORDS.sub(" ", question or "").lower()) + " "
+    found = []
+    for phrase in sorted(PHRASES, key=len, reverse=True):
+        if f" {phrase} " in text:
+            found.append((text.index(f" {phrase} "), phrase))
+            text = text.replace(f" {phrase} ", " " + " " * len(phrase) + " ")
+    for match in re.finditer(r"[a-z]+|\d+", text):
+        token = match.group()
+        if token in WORDS or (token.isdigit() and len(token) == 4 and 1990 <= int(token) <= 2039):
+            found.append((match.start(), token))
+    terms = [term for _, term in sorted(found) if term not in _REGULATOR_WORDS]
+    return list(dict.fromkeys(terms))[:limit]
+
+
 def public_query(regulator, question):
     """Construct from our vocabulary, not by redacting or rewriting user text."""
-    labels = [label for pattern, label in TOPIC_LABELS if re.search(pattern, question, re.I)]
-    topic = " ".join(labels[:2]) or DEFAULT_TOPICS[regulator]
+    terms = search_terms(question)
+    if not terms:
+        labels = [label for pattern, label in TOPIC_LABELS if re.search(pattern, question, re.I)]
+        terms = [" ".join(labels[:2]) or DEFAULT_TOPICS[regulator]]
     # Prefer actual published instruments over homepages/news. The parallel
     # catalogue path still discovers HTML notices and other official material.
-    return f"site:{DOMAINS[regulator]} {topic} filetype:pdf"
+    return f"site:{DOMAINS[regulator]} {' '.join(terms)} filetype:pdf"
 
 
 async def discover(regulator, question):

@@ -560,6 +560,20 @@ def matched_quote(quote, content):
 _INTERNAL_ELLIPSIS = re.compile(r"\.\.\.|…")
 
 
+def distinctive_short_quote(quote, content):
+    """A quote under 12 characters counts only when it is at least two words and either
+    pins one place in the passage or is a proper name.
+
+    "Sami Bouras" is a listed name (printed in a heading and again in the body); "MFBs",
+    "30 days" or a repeated "shall be" could match many places and prove nothing about
+    which sentence was meant.
+    """
+    words = re.findall(r"[^\W\d_]{2,}", quote)
+    if len(quote) < 6 or len(words) < 2 or len(" ".join(words)) < len(quote.strip()) - 2:
+        return False  # mostly digits or symbols
+    return normalized(content).count(normalized(quote)) == 1 or all(word[0].isupper() for word in words)
+
+
 def resolve_support(ref, sources):
     """Verbatim, contiguous source text for one cited quote as {chunk_id, quote}, or None.
 
@@ -571,7 +585,9 @@ def resolve_support(ref, sources):
     if not isinstance(ref, dict) or ref.get("chunk_id") not in sources or not isinstance(ref.get("quote"), str):
         return None
     cited, quote = ref["chunk_id"], clean_quote(ref["quote"])
-    if not 12 <= len(quote) <= 10000 or _INTERNAL_ELLIPSIS.search(quote):
+    if len(quote) > 10000 or _INTERNAL_ELLIPSIS.search(quote):
+        return None
+    if len(quote) < 12 and not distinctive_short_quote(quote, sources[cited]["content"]):
         return None
     text = matched_quote(quote, sources[cited]["content"])
     if text is not None:
@@ -796,6 +812,11 @@ def validated_candidates(draft, sources, question):
         return claims, calculations
     # Calculations first: a claim comparing printed figures may cite their checked results.
     calculations, computed = checked_calculations(draft, sources, question)
+    # A claim may restate a checked calculation: its result and both operands ("64 × 12 = 768"),
+    # including an operand the question supplied, such as 12 months.
+    restated = set(computed)
+    for calc in calculations:
+        restated |= {canonical_number(format(operand(calc[side]).normalize(), "f")) for side in ("left", "right")}
     for item in draft.get("claims", [])[:12]:
         if not isinstance(item, dict):
             continue
@@ -816,7 +837,7 @@ def validated_candidates(draft, sources, question):
             + json.dumps(sources[ref["chunk_id"]].get("provenance", {}))
             for ref in supports
         )
-        if not number_tokens(claim) <= number_tokens(cited_text) | computed:
+        if not number_tokens(claim) <= number_tokens(cited_text) | restated:
             continue
         claims.append({**item, "text": claim.strip(), "chunk_id": supports[0]["chunk_id"],
                        "quote": supports[0]["quote"], "additional_evidence": supports[1:]})
