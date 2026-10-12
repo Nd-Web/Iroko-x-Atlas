@@ -119,7 +119,9 @@ def research_recall_answer(history, *, availability=False):
 
 
 SOCIAL_PROMPT = """You are Iroko AI, a warm, capable document and compliance assistant.
-Respond naturally to this social message in one or two short sentences. Match the
+Respond naturally with a level of detail that fits this message. Simple greetings
+and acknowledgements need no padding; explaining what you can help with may need more
+detail. Do not impose a fixed sentence count or make every reply a terse summary. Match the
 person's tone without repeatedly offering help, repeating their name, or adding a
 compliance disclaimer. Never invent a name, company, personal memory, completed task,
 access to records, or a product capability. No document search has run for this turn.
@@ -137,12 +139,12 @@ async def social_answer(question, history, complete):
     try:
         raw = await asyncio.wait_for(complete(json.dumps({"message": question,
             "recent_turns": [{"user": t.get("question", "")[:600], "assistant": t.get("answer_summary", "")[:800]} for t in history[-4:]]}),
-            system_prompt=SOCIAL_PROMPT, json_schema=schema, max_tokens=300), timeout=12)
+            system_prompt=SOCIAL_PROMPT, json_schema=schema, max_tokens=800), timeout=12)
         value = json.loads(raw)
         if value.get("needs_evidence") is True:
             return None
         if value.get("needs_evidence") is False and isinstance(value.get("reply"), str) and value["reply"].strip():
-            return {"answer": value["reply"].strip()[:1200], "citations": [], "answer_status": "conversational", "_grounded": True}
+            return {"answer": value["reply"].strip(), "citations": [], "answer_status": "conversational", "_grounded": True}
     except (TimeoutError, RuntimeError, ValueError, TypeError, AttributeError):
         pass
     return conversational_reply("social", question=question)

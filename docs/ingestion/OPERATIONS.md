@@ -114,6 +114,49 @@ live regulatory document pull or Azure worker deployment has run.
 The index schema does not change. Provenance is attached from Postgres by chunk
 ID. This avoids a destructive Azure index recreation or a second vector database.
 
+### Reusing a reviewed local extraction (11 October 2026)
+
+Trusted operator code can pass `cached_extraction` to `ingestion.pipeline.accept`
+for a validated PDF or XLSX original. This is not a new public upload/API field.
+The cache must match the original SHA-256, preserve every physical page or sheet,
+and retain raw text, the documented normalization and recomputed quality counts.
+It cannot supply generated rewrites or skip difficult pages. A visually verified
+transcription correction must retain the original OCR text and a review record in
+the artifact, and still pass through the extraction-review gate before publication.
+
+The original and complete JSON evidence artifact are preserved as separate
+immutable objects in the private Blob container. Artifact URL/hash and extraction
+version are recorded in revision provenance. Canonical pages, exact-substring
+chunks, access records and the processing job are committed together, so a worker
+cannot race a partially seeded extraction. Rich table geometry and saved OCR
+responses remain in the artifact rather than being discarded or added as arbitrary
+database columns.
+
+The normal job then uses the saved pages and chunks, without repeating native
+extraction or paid OCR. It still requires complete embeddings/indexing before
+publication. Numeric-confidence, local-OCR, missing-confidence, layout and source
+version flags hold the document for review; a cache is not an approval bypass.
+Different bytes at an existing source still require version review. Existing
+source/hash duplicates remain unchanged.
+
+On 11 October 2026, the saved 29 April 2020 MFB capital circular was re-extracted
+with Azure Document Intelligence and visually checked against its original page.
+The original local OCR confused numeric characters in important amounts. The new
+artifact retains the OCR output, the small logo-text correction, a visual-review
+record, exact original SHA-256 and physical page coordinates. It was deliberately
+held for review, approved through the existing audited extraction-review workflow,
+and selectively indexed as a shared official reference. No unrelated queue was drained.
+The circular's thresholds and 2021/2022 dates remain historical findings, not a
+certification of current applicability or a new deadline for a pilot institution.
+
+For a selective operator import, process only its own document jobs using the
+normal lease/heartbeat fencing. Do not run a global queue drain merely to import
+a batch: it may also claim unrelated collection or graph work. Sharing official
+references still uses the audited administrator workflow; archive reproductions
+must remain clearly labelled and cannot masquerade as official regulator sources.
+Quality checks and publication dates do not verify legal currency, applicability
+or an institution's compliance status.
+
 ## Where information lives
 
 | Data | Location |

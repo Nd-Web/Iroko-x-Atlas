@@ -37,6 +37,8 @@ class StrategistAgent:
         self.trace: list = []
         self.conversation_history: List[Dict] = []
         self._conversation_context: dict = {}
+        self._source_references: list = []
+        self._current_question = ""
         self.first_name = ""
         # Compliance-graph step for relationship questions (injectable for tests).
         self.graph_step = None
@@ -69,6 +71,7 @@ class StrategistAgent:
 
         start = time.time()
         self.trace = []
+        self._current_question = question
         is_pidgin = self._detect_pidgin(question)
 
         try:
@@ -78,6 +81,7 @@ class StrategistAgent:
             topic = classification.get("topic", "")
             resolved_question = classification.get("query") or question
             self._conversation_context = classification.get("conversation_context") or {}
+            self._source_references = classification.get("source_references") or []
             self._log_trace("Strategist", "intent", f"Intent: {intent} | Topic: {topic}", intent=intent)
             factual = intent not in {"greeting", "social", "conversation_recall", "integrity_boundary", "out_of_domain", "clarification", "catalog", "compliance_records"} and not classification.get("clarification")
             if factual:
@@ -203,35 +207,45 @@ class StrategistAgent:
 
     async def _orchestrate_agents(self, question: str, is_pidgin: bool, depth: str) -> dict:
         from services.grounded_answers import answer
-        from services.regulatory_research import eligible, finish, freshness_requested, needs_internal_records, research
+        from services.regulatory_research import eligible, finish, freshness_requested, research
+        # The resolved query finds evidence; only the current message defines the
+        # requested answer. A follow-up definition must not inherit "latest" or
+        # "tell me everything" from a previous question.
+        current_question = self._current_question or question
+        async def public_lookup():
+            if self._source_references:
+                return await research(question, source_references=self._source_references)
+            return await research(question)
         public_research = eligible(question)
-        fresh_public = public_research and freshness_requested(question) and not needs_internal_records(question)
+        fresh_requested = freshness_requested(current_question)
         report = None
-        if fresh_public:
+        if public_research and fresh_requested:
             self._log_trace("Researcher", "official_research", "Checking bounded official regulatory sources; customer documents are not sent to external search services")
-            report = await research(question)
-        # Avoid waiting/paying for an embedding/index lookup whose results would
-        # be discarded. Private status/filing queries still retrieve permitted records.
-        context = {"sources": [], "knowledge_gap": True} if report and report["sources"] else await self._retrieve_context(question, depth)
+            context, report = await asyncio.gather(self._retrieve_context(question, depth), public_lookup())
+        else:
+            context = await self._retrieve_context(question, depth)
         context = await self._graph_context(question, context)
         self._log_trace("Watchdog", "claim_validation", "Checking exact quotes, citation coordinates and claim support before display")
         result = None
-        if not (public_research and freshness_requested(question)):
-            result = await answer(question, context, llm_complete, is_pidgin,
+        if not (public_research and fresh_requested):
+            result = await answer(current_question, context, llm_complete, is_pidgin,
                                   answer_mode="helpful", conversation_context=self._conversation_context)
         researchable_gap = result and result.get("partial_answer") and set(result.get("missing_information", [])) & {
-            "penalty", "current_applicability", "other_requested_fact"
+            "penalty", "current_applicability", "other_requested_fact", "document_identity",
+            "capital_requirement", "deadline"
         }
         if public_research and (result is None or result.get("knowledge_gap") or researchable_gap):
             if report is None:
                 self._log_trace("Researcher", "official_research", "Checking bounded official regulatory sources; customer documents are not sent to external search services")
-                report = await research(question)
-            # Freshness requests should not be dominated by the older local corpus.
-            internal = [] if fresh_public and report["sources"] else context.get("sources", [])[:6]
-            combined = [*report["sources"], *internal]
+                report = await public_lookup()
+            # A recent news hit never replaces the permitted canonical instruments.
+            # Keep both, so historical rules can be read alongside amendment checks.
+            internal = context.get("sources", [])[:6]
+            combined = list({source["chunk_id"]: source for source in [*internal, *report["sources"]]
+                             if isinstance(source, dict) and source.get("chunk_id")}.values())
             self._log_trace("Watchdog", "research_validation", "Separately auditing supported findings and missing facts; never estimating an unsupported penalty")
             earlier_findings = result if result and not result.get("knowledge_gap") else None
-            result = await answer(question, {**context, "sources": combined, "knowledge_gap": not combined,
+            result = await answer(current_question, {**context, "sources": combined, "knowledge_gap": not combined,
                                   "retrieval_status": "ok" if combined else context.get("retrieval_status", "empty")}, llm_complete, is_pidgin,
                                   allow_partial=True, answer_mode="helpful", conversation_context=self._conversation_context)
             if result.get("knowledge_gap") and earlier_findings:
@@ -239,7 +253,7 @@ class StrategistAgent:
                 # findings from the permitted local evidence.
                 result = earlier_findings
                 self._log_trace("Watchdog", "research_gap", "Kept verified document findings; additional research did not establish further facts")
-            result = finish(result, report, question, helpful=True)
+            result = finish(result, report, current_question, helpful=True)
         if report:
             discovery = [c for c in report.get("discovery_checks", []) if c.get("status") != "disabled"]
             if discovery:
@@ -282,6 +296,8 @@ class StrategistAgent:
     async def _retrieve_context(self, question: str, depth: str) -> dict:
         from services.grounded_answers import retrieve
         self._log_trace("Researcher", "search", "Retrieving accessible extracted source passages")
+        if self._source_references:
+            return await retrieve(question, source_references=self._source_references)
         return await retrieve(question)
 
     async def _llm_classify(self, question: str, is_pidgin: bool) -> dict:

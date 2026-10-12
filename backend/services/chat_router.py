@@ -33,7 +33,8 @@ _REGULATORY = re.compile(
     r"fine(?:s)?|sanctions?|anti.money laundering|breach notification|"
     # Compliance shorthand users type ("STR deadline?") must not need a model to route.
     r"strs?|ctrs?|ftrs?|peps?|cdd|edd|financial statements?|audited accounts?|"
-    r"ofis?|mfbs?|dfis?|bdcs?|microfinance banks?|bureaux? de change|other financial institutions?)\b", re.I,
+    r"ofis?|mfbs?|dfis?|bdcs?|microfinance banks?|bureaux? de change|foreign[- ]exchange|"
+    r"other financial institutions?)\b", re.I,
 )
 _DOCUMENT = re.compile(
     r"\b(?:document|pdf|report|letter|circular|gazette|guideline|worksheet|spreadsheet|"
@@ -281,9 +282,27 @@ def _titles(entry: Mapping) -> list[str]:
     return result[:4]
 
 
+def _source_references(entry: Mapping) -> list[dict]:
+    """Pointers only; history never supplies source text or access permission."""
+    citations = entry.get("citations")
+    result = []
+    for citation in citations[:8] if isinstance(citations, list) else []:
+        if not isinstance(citation, Mapping):
+            continue
+        title = _text(citation.get("document_title") or citation.get("title") or citation.get("source"), 160)
+        provenance = citation.get("provenance")
+        provenance = provenance if isinstance(provenance, Mapping) else {}
+        reference = {"title": title, "document_id": _text(citation.get("document_id"), 200),
+                     "source_url": _text(citation.get("source_url") or provenance.get("source_url"), 2000)}
+        if title and reference not in result:
+            result.append(reference)
+    return result[:4]
+
+
 def conversation_context(history: Sequence[Mapping] | None, question: str = "") -> dict:
     """Copy known text fields only. No secrets, arbitrary metadata, or old evidence."""
-    context: dict = {"status": "unverified_conversation_context", "turns": [], "user_statements": []}
+    context: dict = {"status": "unverified_conversation_context", "current_question": question[:2400],
+                     "turns": [], "user_statements": []}
     if isinstance(history, (list, tuple)):
         for entry in history[-12:]:
             if not isinstance(entry, Mapping):
@@ -297,6 +316,7 @@ def conversation_context(history: Sequence[Mapping] | None, question: str = "") 
                 "resolved_question": _text(entry.get("resolved_question"), 1800),
                 "assistant_summary": _text(entry.get("answer_summary"), 1200),
                 "source_titles": _titles(entry),
+                "source_references": _source_references(entry),
                 "intent": _text(entry.get("intent"), 40),
             })
             if _SCOPE.fullmatch(user_question):
@@ -324,7 +344,47 @@ def _anchor(turn: Mapping) -> str:
     # so several 'tell me more' turns retain a stable, bounded original subject.
     resolved = _text(turn.get("resolved_question"), 1800)
     source = resolved or _text(turn.get("user_question"), 1200)
-    return source.split("\nFollow-up:", 1)[0].split("\nUser-provided institution context:", 1)[0][:1200]
+    for marker in ("\nFollow-up:", "\nPreviously mentioned source to retrieve again:",
+                   "\nPreviously discussed topic:", "\nUser-provided institution context:"):
+        source = source.split(marker, 1)[0]
+    return source[:1200]
+
+
+def _subject_words(text: str) -> set[str]:
+    words = re.findall(r"[^\W\d_][\w]*", text.lower())
+    return {_stem(word) for word in words if word not in _FUNCTION_WORDS | _GENERIC_WORDS
+            | {"define", "definition", "meaning", "everything", "simple", "plain", "english", "language"}}
+
+
+def _named_reference(question: str, context: Mapping) -> tuple[Mapping, int | None] | None:
+    """Recognise a named explanation follow-up without inheriting an unrelated topic.
+
+    Every substantive subject word must occur in a previous substantive turn.
+    Old wording identifies a topic only; citations are retrieved again and audited.
+    """
+    if _TOPIC_SWITCH.match(question) or _DOCUMENT_BOUND.search(question):
+        return None
+    if not re.match(r"^(?:please\s+)?(?:what (?:is|are|does)|define\b|explain\b|"
+                    r"meaning of\b|tell me (?:all|everything|more) about\b)", question, re.I):
+        return None
+    subject = _subject_words(question) - {"mean"}
+    if len(subject) < 2:
+        return None
+    for turn in reversed(context["turns"]):
+        if not _is_topic(turn):
+            continue
+        previous_text = " ".join([_anchor(turn), turn["assistant_summary"], *turn["source_titles"]])
+        # Explicit years can identify a different instrument with the same topic.
+        if not set(re.findall(r"\b\d{4}\b", question)) <= set(re.findall(r"\b\d{4}\b", previous_text)):
+            continue
+        available = _subject_words(previous_text)
+        if not subject <= available:
+            continue
+        scores = [len(subject & _subject_words(title)) for title in turn["source_titles"]]
+        best = max(scores, default=0)
+        index = scores.index(best) if best >= 2 and scores.count(best) == 1 else None
+        return turn, index
+    return None
 
 
 # "Which requirements don't have evidence?", "Who owns the BVN obligation?", "What is due next?",
@@ -391,14 +451,22 @@ def _clarification(missing: str = "topic") -> str:
 
 def _result(question: str, context: dict, intent: str, *, turn: Mapping | None = None,
             title_index: int | None = None, missing: str | None = None, kind: str | None = None,
-            catalog_topic: str | None = None, records_kinds: list[str] | None = None) -> dict:
+            catalog_topic: str | None = None, records_kinds: list[str] | None = None,
+            named_reference: bool = False) -> dict:
     query = question
+    references = []
     if turn is not None:
         topic = _anchor(turn)
-        if topic:
+        if topic and not named_reference:
             query = f"{topic}\nFollow-up: {question}"
         if title_index is not None and 0 <= title_index < len(turn["source_titles"]):
-            query += f"\nPreviously mentioned source to retrieve again: {turn['source_titles'][title_index]}"
+            title = turn['source_titles'][title_index]
+            query += f"\nPreviously mentioned source to retrieve again: {title}"
+            references = [ref for ref in turn.get("source_references", []) if ref["title"] == title]
+        elif named_reference:
+            query += f"\nPreviously discussed topic: {topic}"
+        else:
+            references = turn.get("source_references", [])[:4]
         if context["user_statements"]:
             query += "\nUser-provided institution context: " + "; ".join(context["user_statements"][-2:])
     return {
@@ -410,6 +478,8 @@ def _result(question: str, context: dict, intent: str, *, turn: Mapping | None =
         "conversational_kind": kind,
         "catalog_topic": catalog_topic,
         "records_kinds": records_kinds or [],
+        "source_references": references,
+        "named_reference": named_reference,
     }
 
 
@@ -441,6 +511,9 @@ def heuristic_route(question: str, history: Sequence[Mapping] | None = None) -> 
     kinds = records_kinds(question)
     if kinds:
         return _result(question, context, "compliance_records", records_kinds=kinds)
+    named = _named_reference(question, context)
+    if named:
+        return _result(question, context, "follow_up", turn=named[0], title_index=named[1], named_reference=True)
     if _is_followup(question):
         turn = _latest_topic(context)
         if turn:
@@ -538,6 +611,8 @@ async def route_question(question: str, history: Sequence[Mapping] | None = None
     fallback = heuristic_route(question, history)
     question = question.strip()
     if fallback["intent"] in {"greeting", "catalog", "compliance_records", "conversation_recall", "integrity_boundary"} or not question or complete is None:
+        return fallback
+    if fallback.get("named_reference"):
         return fallback
     # Common acknowledgements and explicit subjects cost no classification call.
     followup = _is_followup(question)

@@ -101,7 +101,7 @@ def test_query_uses_only_public_vocabulary_not_redacted_raw_prompts():
     assert query == "site:ndpc.gov.ng account data breach filetype:pdf"
     for leaked in ("secret", "1234567890", "person", "ada", "obi", "evil", "5,000,000", "5000000", "owe", "send"):
         assert leaked not in query.lower()
-    assert discovery.public_query("NDPC", "NDPC privacy requirements") == "site:ndpc.gov.ng privacy filetype:pdf"
+    assert discovery.public_query("NDPC", "NDPC privacy requirements") == "site:ndpc.gov.ng privacy requirements filetype:pdf"
 
 
 def test_query_keeps_the_question_s_regulatory_terms_and_years():

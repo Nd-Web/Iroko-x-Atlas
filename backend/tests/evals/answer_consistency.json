@@ -1,0 +1,11 @@
+[
+  {
+    "id": "state-mfb-capital-current-versus-historical",
+    "question": "We are a state-licensed microfinance bank in Lagos with ₦1.2bn in paid-up capital. Which current CBN capital requirements apply to us, what is our gap, and what are the deadlines?",
+    "requires_missing_core_opening": true,
+    "expected_missing": ["capital_gap", "institution_status"],
+    "required_answer_terms": ["2022", "2020", "unimpaired", "billion"],
+    "required_citation_titles": ["Review of Minimum Capital Requirements for Microfinance Banks"],
+    "forbidden_followup_terms": ["revocation", "other breaches"]
+  }
+]

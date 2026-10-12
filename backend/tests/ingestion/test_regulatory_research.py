@@ -140,6 +140,75 @@ def test_eligible_keeps_private_source_questions_inside_their_boundary():
     assert research.needs_internal_records("Which regulatory returns have our staff submitted?")
 
 
+@pytest.mark.parametrize("question", [
+    "what is Bureau de Change foreign-exchange access", "Explain BDC foreign exchange access",
+    "What does the FXBT do?", "Explain the NFEM", "What are Authorised Dealer Banks?",
+])
+def test_foreign_exchange_questions_enable_targeted_official_research(question):
+    assert research.eligible(question)
+    assert research.regulators(question) == ["CBN"]
+    assert research.terms(question) & set(research.TOPICS["foreign_exchange"])
+
+
+@pytest.mark.parametrize("question", ["Explain BDC access from the document",
+                                     "What FXBT conditions are in the uploaded letter?"])
+def test_foreign_exchange_does_not_override_private_document_boundary(question):
+    assert not research.eligible(question)
+
+
+@pytest.mark.parametrize("url", ["https://evil.example/source", "http://127.0.0.1/private",
+                                "https://www.cbn.gov.ng.evil.example/source",
+                                "https://user:password@www.cbn.gov.ng/source",
+                                "https://www.cbn.gov.ng:8443/source"])
+def test_prior_official_pointer_cannot_widen_the_network_boundary(url):
+    assert research.official_references([{"source_url": url}]) == []
+
+
+async def test_research_refetches_prior_official_page_not_old_answer(monkeypatch):
+    prior = "https://www.cbn.gov.ng/fixture-framework"
+    other = "https://www.cbn.gov.ng/fixture-other"
+    fetched_urls = []
+    class Client:
+        def __init__(self, regulator, **kwargs):
+            self.regulator = regulator
+        async def close(self):
+            pass
+    async def fetched(client, url, **kwargs):
+        fetched_urls.append(url)
+        if url in research.CATALOGUES["CBN"]:
+            return {"url": url, "title": "Catalogue", "pages": [], "links": [(other, "BDC foreign exchange circular")],
+                    "checked_at": "test", "sha256": "catalogue"}
+        text = "The official fixture describes Bureau de Change access to foreign exchange through authorised dealers."
+        return {"url": url, "title": "Official fixture", "pages": [(None, text)], "links": [],
+                "checked_at": "test", "sha256": "fresh-fixture"}
+    monkeypatch.setattr(research, "OfficialClient", Client)
+    monkeypatch.setattr(research, "fetched", fetched)
+    monkeypatch.setattr(research, "discover", AsyncMock(return_value={"candidates": [], "check": {"status": "disabled"}}))
+    report = await research.research("Explain BDC foreign exchange access", source_references=[{
+        "source_url": prior, "content": "UNVERIFIED OLD CLAIM", "title": "OLD TITLE"}])
+    assert prior in fetched_urls
+    assert report["regulators"] == ["CBN"]
+    assert report["sources"][0]["provenance"]["source_url"] == prior
+    assert "UNVERIFIED OLD CLAIM" not in json.dumps(report)
+
+
+async def test_partial_document_identity_gap_triggers_official_recovery(monkeypatch):
+    from agents.strategist import StrategistAgent
+    from services import grounded_answers
+    agent = StrategistAgent()
+    monkeypatch.setattr(agent, "_retrieve_context", AsyncMock(return_value={"sources": [source()], "knowledge_gap": False}))
+    lookup = AsyncMock(return_value={"sources": [source()], "checks": [], "checked_at": "test"})
+    monkeypatch.setattr(research, "research", lookup)
+    partial = {"answer": "A supported definition", "knowledge_gap": False, "partial_answer": True,
+               "missing_information": ["document_identity"]}
+    complete = {"answer": "The framework meaning", "knowledge_gap": False, "missing_information": []}
+    monkeypatch.setattr(grounded_answers, "answer", AsyncMock(side_effect=[partial, complete]))
+    result = await agent._orchestrate_agents("What is BDC foreign exchange access?", False, "standard")
+    lookup.assert_awaited_once()
+    assert result["answer_status"] == "answered"
+    assert "Which document" not in result["answer"]
+
+
 def test_freshness_is_bounded_and_no_fine_is_not_inferred():
     report = {"sources": [], "checks": [{"status": "unavailable"}], "checked_at": "test"}
     result = research.finish(gap(), report, "latest compliance risk and cost")
@@ -203,9 +272,37 @@ async def test_orchestration_checks_official_sources_for_latest_request(monkeypa
     monkeypatch.setattr(grounded_answers, "answer", grounded)
     result = await agent._orchestrate_agents("latest compliance risk and cost", False, "standard")
     assert lookup.call_count == 1 and grounded.call_args.kwargs["allow_partial"] is True
-    agent._retrieve_context.assert_not_called()
+    agent._retrieve_context.assert_awaited_once_with("latest compliance risk and cost", "standard")
     assert result["source_checks"] == [] and result["research_checked_at"] == "test"
     assert "official_research" in [step["tool"] for step in agent.trace]
+
+
+@pytest.mark.asyncio
+async def test_current_capital_question_keeps_primary_corpus_when_live_news_succeeds(monkeypatch):
+    from agents.strategist import StrategistAgent
+    from services import grounded_answers
+
+    agent = StrategistAgent()
+    local = {**source(), 'document_id': 'canonical-rule', 'chunk_id': 'canonical-rule:1',
+             'title': 'Synthetic capital circular', 'provenance': {'historical_document': True}}
+    retrieve = AsyncMock(return_value={'sources': [local], 'knowledge_gap': False})
+    monkeypatch.setattr(agent, '_retrieve_context', retrieve)
+    monkeypatch.setattr(agent, '_graph_context', AsyncMock(side_effect=lambda question, context: context))
+    report = {'sources': [source()], 'checks': [], 'checked_at': 'test'}
+    monkeypatch.setattr(research, 'research', AsyncMock(return_value=report))
+    grounded = AsyncMock(return_value={'answer': 'Verified historical finding', 'knowledge_gap': False,
+        'citations': [], 'missing_information': ['capital_requirement', 'capital_gap', 'deadline']})
+    monkeypatch.setattr(grounded_answers, 'answer', grounded)
+    question = 'Which current CBN capital requirements apply to our bank and what is our gap and deadline?'
+    await agent._orchestrate_agents(question, False, 'standard')
+    retrieve.assert_awaited_once_with(question, 'standard')
+    assert {item['chunk_id'] for item in grounded.call_args.args[1]['sources']} == {'canonical-rule:1', 'public:chunk'}
+
+
+def test_requirement_research_does_not_rank_solely_by_freshness():
+    assert research.instrument_question('What current capital minimum and deadlines apply?')
+    assert research.instrument_hint('https://www.cbn.gov.ng/synthetic.pdf', 'Capital requirements circular')
+    assert not research.instrument_hint('https://www.cbn.gov.ng/news.html', 'Latest licence revocations')
 
 
 @pytest.mark.asyncio

@@ -183,6 +183,14 @@ def extraction_issues(pages):
             reasons.append("pending_ocr")
         if q.get("ocr_confidence") is not None and q["ocr_confidence"] < 0.85:
             reasons.append("low_ocr_confidence")
+        if q.get("low_confidence_numeric_tokens"):
+            reasons.append("low_confidence_numeric_tokens")
+        if q.get("local_ocr_manual_review_required"):
+            reasons.append("local_ocr_requires_manual_review")
+        if q.get("layout_review_required"):
+            reasons.append("table_layout_requires_manual_review")
+        if q.get("ocr_confidence_missing"):
+            reasons.append("ocr_confidence_missing")
         if reasons:
             issues.append(
                 {"page": item["page_number"], "locator": item["locator"], "reasons": reasons}

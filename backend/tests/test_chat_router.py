@@ -308,6 +308,79 @@ def test_context_is_bounded_typed_and_copies_only_whitelisted_fields():
     assert history[:20] == original
 
 
+BDC_HISTORY = [turn(
+    "Tell me everything about Bureau de Change foreign-exchange access",
+    answer_summary="The CBN framework describes Bureau de Change foreign-exchange access through Authorised Dealer Banks.",
+    citations=[{"document_title": "CBN Bureau de Change foreign-exchange access framework",
+                "document_id": "public:fixture", "source_url": "https://www.cbn.gov.ng/fx-framework"},
+               {"document_title": "Historical customer due diligence guidance", "document_id": "old-guidance"}],
+)]
+
+
+async def test_named_definition_reuses_framework_but_not_previous_breadth():
+    question = "what is Bureau de Change foreign-exchange access"
+    complete = AsyncMock()
+    result = await route_question(question, BDC_HISTORY, complete)
+    assert result["intent"] == "follow_up"
+    assert result["query"].startswith(question + "\n")
+    assert "Previously mentioned source to retrieve again: CBN Bureau de Change" in result["query"]
+    assert "Tell me everything" not in result["query"]
+    assert "Historical customer" not in result["query"]
+    assert result["conversation_context"]["current_question"] == question
+    assert [ref["document_id"] for ref in result["source_references"]] == ["public:fixture"]
+    complete.assert_not_called()
+
+
+def test_named_item_in_a_broad_risk_answer_selects_only_relevant_source():
+    history = [turn("What are the latest compliance risks?",
+                    answer_summary="Relevant topics include data protection and agent banking cash-out limits.",
+                    citations=[{"document_title": "Agent banking cash-out limits circular", "document_id": "agent-rules"},
+                               {"document_title": "Data protection guidelines", "document_id": "privacy-rules"}])]
+    result = heuristic_route("Explain agent banking cash-out limits", history)
+    assert result["named_reference"]
+    assert "latest compliance risks" not in result["query"]
+    assert [ref["document_id"] for ref in result["source_references"]] == ["agent-rules"]
+
+
+@pytest.mark.parametrize("question", ["What is the STR deadline?", "Explain data protection",
+                                     "Separately, what is Bureau de Change foreign-exchange access?"])
+def test_a_different_named_subject_does_not_borrow_bdc_sources(question):
+    result = heuristic_route(question, BDC_HISTORY)
+    assert not result["named_reference"]
+    assert result["source_references"] == []
+    assert result["query"] == question
+
+
+def test_named_reference_survives_acknowledgement_and_chained_explanation():
+    first = heuristic_route("what is Bureau de Change foreign-exchange access", BDC_HISTORY)
+    history = BDC_HISTORY + [turn("ok", intent="greeting"), turn(
+        "what is Bureau de Change foreign-exchange access", resolved_question=first["query"],
+        answer_summary="An evidence-backed explanation.", citations=BDC_HISTORY[0]["citations"])]
+    result = heuristic_route("Explain Bureau de Change foreign-exchange access", history)
+    assert result["intent"] == "follow_up"
+    assert result["query"].count("Previously mentioned source to retrieve again:") == 1
+
+
+def test_equal_source_title_matches_do_not_guess_which_instrument():
+    history = [turn("Compare the two agent banking frameworks", citations=[
+        {"document_title": "Agent banking framework A", "document_id": "a"},
+        {"document_title": "Agent banking framework B", "document_id": "b"}])]
+    result = heuristic_route("What is agent banking?", history)
+    assert result["intent"] == "follow_up"
+    assert result["source_references"] == []
+    assert "Previously mentioned source" not in result["query"]
+
+
+def test_explicit_new_year_does_not_borrow_an_old_instrument():
+    history = [turn("Explain the 2022 Bureau de Change framework", citations=[
+        {"document_title": "2022 Bureau de Change framework", "document_id": "old-framework"}])]
+    question = "What is the 2026 Bureau de Change framework?"
+    result = heuristic_route(question, history)
+    assert not result["named_reference"]
+    assert result["source_references"] == []
+    assert result["query"] == question
+
+
 async def test_classification_failure_falls_back_and_timeout_is_bounded(monkeypatch):
     async def slow(*args, **kwargs):
         await asyncio.sleep(1)

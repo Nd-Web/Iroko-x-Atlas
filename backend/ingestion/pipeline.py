@@ -33,6 +33,7 @@ async def accept(
     source_key=None,
     connector_id=None,
     source_item_id=None,
+    cached_extraction=None,
 ):
     """Commit Document, immutable revision and job together after preserving bytes."""
     # Blocking transaction locks run on a dedicated thread while the caller awaits.
@@ -48,11 +49,13 @@ async def accept(
         source_key,
         connector_id,
         source_item_id,
+        cached_extraction,
     )
 
 
 def _accept_sync(
-    db, path, filename, title, user_id, metadata, source_key, connector_id, source_item_id
+    db, path, filename, title, user_id, metadata, source_key, connector_id, source_item_id,
+    cached_extraction=None,
 ):
     prepare_session(db)
     from ingestion.access import ensure_workspace
@@ -75,6 +78,13 @@ def _accept_sync(
         if document is None:
             raise ValueError("Archived document; contact an administrator before restoring it")
         return document
+    cached_pages, artifact_bytes = None, None
+    if cached_extraction is not None:
+        from ingestion.cached_extraction import validate_cached
+
+        cached_pages, artifact_bytes = validate_cached(
+            cached_extraction, digest, filename.rsplit(".", 1)[-1].lower(), path
+        )
     reserve_upload(db, workspace, size)
     previous = (
         db.query(Revision)
@@ -84,6 +94,17 @@ def _accept_sync(
     )
     document_id = generate_id()
     blob_url = asyncio.run(preserve(path, document_id, filename))
+    if artifact_bytes is not None:
+        artifact_sha256 = hashlib.sha256(artifact_bytes).hexdigest()
+        with tempfile.TemporaryDirectory(prefix="iroko-cached-evidence-") as directory:
+            artifact_path = Path(directory) / "extracted-evidence-v1.json"
+            artifact_path.write_bytes(artifact_bytes)
+            artifact_url = asyncio.run(preserve(artifact_path, document_id, artifact_path.name))
+        metadata["cached_extraction"] = {
+            "artifact_url": artifact_url, "artifact_sha256": artifact_sha256,
+            "extractor_version": cached_extraction.get("extractor_version"),
+            "physical_pages_or_sheets": len(cached_pages),
+        }
     metadata.update(
         {
             "source": metadata.get("source_url") or filename,
@@ -113,22 +134,49 @@ def _accept_sync(
     )
     db.add(doc)
     db.add(DocumentAccess(document_id=document_id, workspace_id=workspace, shared_regulatory=False))
-    db.add(
-        Revision(
-            id=document_id,
-            source_key=source_key,
-            sha256=digest,
-            previous_id=previous.id if previous else None,
-            provenance=metadata,
-        )
+    revision = Revision(
+        id=document_id,
+        source_key=source_key,
+        sha256=digest,
+        previous_id=previous.id if previous else None,
+        provenance=metadata,
     )
-    enqueue(db, "document", document_id)
+    db.add(revision)
+    job = enqueue(db, "document", document_id)
+    if cached_pages is not None:
+        issues = extraction.extraction_issues(cached_pages)
+        if previous:
+            issues.append({"reasons": ["new_version_requires_review"]})
+        if metadata.get("regulator") and not metadata.get("published_date"):
+            issues.append({"reasons": ["publication_date_missing"]})
+        if str(metadata.get("legal_status", "")).lower().startswith(("draft", "historical", "version")):
+            issues.append({"reasons": ["source_version_requires_review"]})
+        if not any(page["text"].strip() for page in cached_pages):
+            issues.append({"reasons": ["empty_document"]})
+        for position, item in enumerate(cached_pages):
+            item["quality"]["extraction_artifact"] = metadata["cached_extraction"]
+            db.add(Page(document_id=document_id, position=position, **item))
+        chunks = chunk_pages(cached_pages)
+        for chunk in chunks:
+            index = chunk["chunk_index"]
+            db.add(Chunk(
+                id=f"{document_id}_chunk_{index}", document_id=document_id,
+                chunk_index=index, content=chunk["content"],
+                provenance={key: value for key, value in chunk.items() if key not in {"content", "chunk_index"}},
+            ))
+        doc.chunk_count = len(chunks)
+        revision.issues = issues
+        revision.extraction = extraction.regulatory_evidence(cached_pages, metadata)
+        if issues:
+            revision.review_status, doc.status, job.state = "required", "review_required", "review_required"
+            doc.error_message = "Saved extraction or source version needs review before use in answers."
     db.add(
         AuditLog(
             user_id=user_id,
-            action="document_queued",
+            action="document_held_for_review" if doc.status == "review_required" else "document_queued",
             resource=f"documents/{document_id}",
-            details={"sha256": digest, "previous_id": previous.id if previous else None},
+            details={"sha256": digest, "previous_id": previous.id if previous else None,
+                     **({"cached_extraction": metadata["cached_extraction"]} if cached_pages is not None else {})},
         )
     )
     try:

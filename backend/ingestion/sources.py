@@ -29,6 +29,7 @@ DOMAINS = {
     "NFIU": {"nfiu.gov.ng", "www.nfiu.gov.ng"},
     "NDPC": {"ndpc.gov.ng", "www.ndpc.gov.ng"},
     "FCCPC": {"fccpc.gov.ng", "www.fccpc.gov.ng"},
+    "FRC": {"frcnigeria.gov.ng", "www.frcnigeria.gov.ng"},
     # Government publishers of Acts: the National Assembly and the tax authority.
     "NASS": {"nass.gov.ng", "www.nass.gov.ng"},
     "NRS": {"nrs.gov.ng", "www.nrs.gov.ng"},

@@ -104,6 +104,15 @@ async def test_every_factual_intent_retrieves_then_drafts_and_audits(evidence_pi
     assert any(step["tool"] == "claim_validation" for step in result["agent_trace"])
 
 
+async def test_bounded_history_does_not_truncate_the_current_answer_request(evidence_pipeline):
+    question = "Explain the regulatory compliance register. " + "Context " * 400 + "Compare the final item too."
+    result = json.loads(await StrategistAgent().investigate(question))
+    assert result["answer_status"] == "answered"
+    drafting = next(payload for payload in evidence_pipeline["payloads"] if "evidence" in payload)
+    assert drafting["question"] == question
+    assert len(drafting["conversation_context"]["current_question"]) <= 2400
+
+
 @pytest.mark.parametrize("intent,question", FACTUAL_CASES)
 async def test_every_factual_intent_rejects_semantically_false_claim(evidence_pipeline, intent, question):
     state = evidence_pipeline
@@ -220,7 +229,7 @@ async def test_followup_uses_saved_context_without_treating_prior_answer_as_evid
     assert "UNVERIFIED HISTORICAL CLAIM" not in result["answer"]
 
 
-async def test_fresh_official_findings_keep_partial_status_and_skip_unused_local_search(monkeypatch, evidence_pipeline):
+async def test_fresh_official_findings_keep_partial_status_and_preserve_local_search(monkeypatch, evidence_pipeline):
     official = {**source(), "provenance": {"official_live": True, "source_url": "https://www.cbn.gov.ng/fixture"}}
     report = {"sources": [official], "checks": [{"regulator": "CBN", "url": "https://www.cbn.gov.ng/fixture", "status": "checked"}],
               "checked_at": "2026-10-06T12:00:00+00:00"}
@@ -235,7 +244,7 @@ async def test_fresh_official_findings_keep_partial_status_and_skip_unused_local
     assert result["source_checks"] == report["checks"]
     assert result["research_checked_at"] == report["checked_at"]
     research.assert_awaited_once()
-    evidence_pipeline["retrieve"].assert_not_awaited()
+    evidence_pipeline["retrieve"].assert_awaited_once()
 
 
 @pytest.fixture
@@ -355,13 +364,16 @@ def test_saved_history_restores_resolved_topic_and_bounds_prior_answer(stored_ch
         Message(conversation_id="saved-context", role="assistant", content="Context " * 500,
                 created_at=now + timedelta(seconds=1),
                 agent_trace=[{"tool": "conversation_context", "resolved_question": "Original report question\nFollow-up: tell me more"}],
-                citations=[{"document_title": "Saved title", "document_id": "saved-document", "excerpt": "OLD QUOTE IS NOT EVIDENCE"}]),
+                citations=[{"document_title": "Saved title", "document_id": "saved-document",
+                            "provenance": {"source_url": "https://www.cbn.gov.ng/saved-source"},
+                            "excerpt": "OLD QUOTE IS NOT EVIDENCE"}]),
     ])
     db.commit()
     history = _load_history(db, "saved-context")
     assert len(history) == 1
     assert history[0]["resolved_question"].startswith("Original report question")
     assert len(history[0]["answer_summary"]) <= 1200
-    assert history[0]["citations"] == [{"document_id": "saved-document", "document_title": "Saved title"}]
+    assert history[0]["citations"] == [{"document_id": "saved-document", "document_title": "Saved title",
+                                        "source_url": "https://www.cbn.gov.ng/saved-source"}]
     assert "PRIVATE OTHER USER TOPIC" not in json.dumps(history)
     assert "OLD QUOTE IS NOT EVIDENCE" not in json.dumps(history)

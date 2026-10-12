@@ -19,7 +19,7 @@ from models.compliance_graph import (ChangeEvent, Control, GraphDocument, GraphE
 from models.database import Document, User
 from services.compliance_graph import applicability, core, deadlines, taxonomy
 from services.compliance_graph.common import lagos_today
-from services.compliance_graph.permissions import GraphNotFound, can_review_library, is_workspace_admin
+from services.compliance_graph.permissions import GraphNotFound, is_workspace_admin
 from services.compliance_graph.visibility import (Scope, awaiting_publication, control_visible, document_visible,
                                                   is_document_visible, link_visible, obligation_visible)
 
@@ -692,14 +692,36 @@ def review_queue(db, scope: Scope, kind: str | None = None, limit: int = 100, co
         doc_ids |= {link.from_document_id, link.to_document_id} | {a.get("document_id") for a in link.anchors or []}
     docs = document_info(db, scope, doc_ids)
     people = {} if counts_only else names(db, [link.created_by for link in links])
-    from services.compliance_graph.review import can_review
+
+    graph_docs = db.query(GraphDocument).filter(
+        document_visible(scope, GraphDocument.document_id, current=True),
+        (GraphDocument.role_suggestion.isnot(None)) | (GraphDocument.role_basis == "suggested")
+        | (GraphDocument.effective_basis == "suggested")).all()
+
+    # One lookup serves every reviewer check below; per-row queries cost a round trip each.
+    access_ids = {d for link in links if link.layer == "library" for d in (link.from_document_id, link.to_document_id) if d}
+    access_ids |= {gd.document_id for gd in graph_docs}
+    access_rows = {a.document_id: a for a in db.query(DocumentAccess).filter(DocumentAccess.document_id.in_(access_ids))} \
+        if access_ids else {}
+
+    def library_reviewer(document_ids) -> bool:
+        """can_review_library from the prefetched rows: same answers, including False for the error cases."""
+        ids = [d for d in dict.fromkeys(document_ids) if d]
+        rows = [access_rows[d] for d in ids if d in access_rows]
+        if len(rows) != len(ids):
+            return False  # a source document is not available
+        private = {r.workspace_id for r in rows if not r.shared_regulatory}
+        if len(private) > 1:
+            return False  # spans private documents of different workspaces
+        owner = next(iter(private), None)
+        return scope.is_superadmin if owner is None else is_workspace_admin(scope, owner)
 
     chosen: list[tuple[str, Link]] = []
     for link in links:
         if link.layer == "library":
             if link.basis == "stated" and link.relation in ("references", "issued_under"):
                 continue  # plain citations are facts; they need no decision
-            if not can_review(db, scope, link):
+            if not library_reviewer([link.from_document_id, link.to_document_id]):
                 continue
             key = "applicability" if link.relation == "applies_to" else "regulation_facts"
         else:
@@ -723,16 +745,10 @@ def review_queue(db, scope: Scope, kind: str | None = None, limit: int = 100, co
                                        "performer": c.performer_span, "frequency": c.frequency,
                                        "status": status_payload(c, {}), "document": docs.get(c.document_id)})
 
-    graph_docs = db.query(GraphDocument).filter(
-        document_visible(scope, GraphDocument.document_id, current=True),
-        (GraphDocument.role_suggestion.isnot(None)) | (GraphDocument.role_basis == "suggested")
-        | (GraphDocument.effective_basis == "suggested")).all()
+    graph_info = {} if not graph_docs else document_info(db, scope, [gd.document_id for gd in graph_docs])
     for gd in graph_docs:
-        try:
-            reviewer = can_review_library(db, scope, [gd.document_id])
-        except Exception:
-            reviewer = False
-        info = document_info(db, scope, [gd.document_id]).get(gd.document_id)
+        reviewer = library_reviewer([gd.document_id])
+        info = graph_info.get(gd.document_id)
         if (gd.role_suggestion or gd.role_basis == "suggested") and (reviewer or (
                 info and not info["shared"] and is_workspace_admin(scope, gd.workspace_id))):
             groups["document_roles"].append({"document": info, "role": gd.role, "role_basis": gd.role_basis,
@@ -744,8 +760,11 @@ def review_queue(db, scope: Scope, kind: str | None = None, limit: int = 100, co
     if scope.is_superadmin:
         from services.compliance_graph.sync import _newer_unshared
 
-        for access in db.query(DocumentAccess).filter(DocumentAccess.shared_regulatory.is_(True)):
-            doc = db.get(Document, access.document_id)
+        shared = db.query(DocumentAccess).filter(DocumentAccess.shared_regulatory.is_(True)).all()
+        shared_docs = {d.id: d for d in db.query(Document).filter(Document.id.in_([a.document_id for a in shared]))} \
+            if shared else {}
+        for access in shared:
+            doc = shared_docs.get(access.document_id)
             if doc is None or doc.status != "superseded":
                 continue
             newer = _newer_unshared(db, access.document_id)

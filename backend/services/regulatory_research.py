@@ -37,7 +37,11 @@ TOPICS = {
     "aml": ("aml", "cft", "kyc", "bvn", "money laundering", "suspicious"),
     "privacy": ("privacy", "data protection", "ndpa", "ndpc", "data breach"),
     "penalty": ("penalt", "fine", "sanction", "enforcement", "revoke", "revocation", "non-compliance"),
+    "foreign_exchange": ("bureau de change", "bureaux de change", "bdc", "foreign exchange", "foreign-exchange",
+                         "authorised dealer", "authorized dealer", "fxbt", "nfem"),
 }
+FOREIGN_EXCHANGE = re.compile(r"\b(?:bdcs?|bureaux? de change|foreign[- ]exchange|"
+                              r"authori[sz]ed dealer|fxbt|nfem)\b", re.I)
 _cache = OrderedDict()  # Only public fetched text; no query/customer-specific answers.
 CACHE_TTL = 600
 
@@ -67,7 +71,8 @@ def eligible(question):
     # A precise source-reading question must remain within that source's boundary.
     if re.search(r"\b(uploaded|attached|letter|spreadsheet|template|circular dated|from the document|in the document)\b", q):
         return False
-    return bool(re.search(r"\b(cbn|sec|ndpc|ndpa|nfiu|ndic|fccpc|compliance|regulat\w*|aml|kyc)\b", q))
+    return bool(re.search(r"\b(cbn|sec|ndpc|ndpa|nfiu|ndic|fccpc|compliance|regulat\w*|aml|kyc)\b", q)
+                or FOREIGN_EXCHANGE.search(q))
 
 
 def freshness_requested(question):
@@ -77,7 +82,7 @@ def freshness_requested(question):
 def needs_internal_records(question):
     q = question.lower()
     return bool(re.search(r"\b(our|my|organisation|organization|this institution|this company|customer|client)\b", q)
-                and re.search(r"\b(status|filings?|records?|returns?|ratios?|submitted|compliant|due|audit|exposure|risk)\b", q))
+                and re.search(r"\b(status|filings?|records?|returns?|ratios?|submitted|compliant|due|audit|exposure|risk|gap|shortfall|headroom|net worth|unimpaired|paid.up capital)\b", q))
 
 
 def regulators(question):
@@ -85,6 +90,8 @@ def regulators(question):
     explicit = [reg for reg in CATALOGUES if re.search(r"\b" + reg.lower() + r"\b", q)]
     if explicit:
         return explicit[:3]
+    if FOREIGN_EXCHANGE.search(q):
+        return ["CBN"]
     if any(term in q for term in TOPICS["privacy"]):
         return ["NDPC"]
     if any(term in q for term in TOPICS["aml"]):
@@ -110,6 +117,16 @@ def terms(question):
 def relevance(text, words):
     q = text.lower()
     return sum(1 for word in words if word in q)
+
+
+def instrument_question(question):
+    """Retrieval intent, not a judgement that a source is legally binding."""
+    return bool(re.search(r"\b(minimum|requirements?|thresholds?|deadlines?|guidelines?|capital rules)\b", question, re.I))
+
+
+def instrument_hint(url, title):
+    return bool(urlsplit(url).path.lower().endswith('.pdf') and re.search(
+        r"\b(circular|guidelines?|regulations?|requirements?|rule\s*book|acts?|directives?)\b", title, re.I))
 
 
 class PageText(HTMLParser):
@@ -266,6 +283,7 @@ def evidence(page, regulator, words):
                 "chunk_id": "public:" + key[:24],
                 "title": page["title"], "content": block, "full_document": False,
                 "provenance": {"source_url": page["url"], "source_kind": "official_live",
+                    "retrieval_source_role": "primary_instrument_candidate" if instrument_hint(page["url"], page["title"]) else "announcement_or_other_page",
                     "regulator": regulator, "fetched_at": page["checked_at"],
                     "sha256": page["sha256"], "physical_page": number,
                     "text_offset": offset, "legal_applicability_status": "not_assessed", **acquired},
@@ -290,12 +308,35 @@ def regulatory_candidate(url, title):
     )
 
 
-async def research(question):
+def official_references(references):
+    """Validate history pointers against the same official URL boundary as discovery."""
+    result = []
+    for reference in references[:4] if isinstance(references, list) else []:
+        if not isinstance(reference, dict) or not isinstance(reference.get("source_url"), str):
+            continue
+        url = reference["source_url"]
+        if len(url) > 2000:
+            continue
+        for regulator in CATALOGUES:
+            try:
+                approved = official_url(url, regulator)
+            except (ValueError, TypeError):
+                continue
+            if regulatory_candidate(approved, "") and (regulator, approved) not in result:
+                result.append((regulator, approved))
+            break
+    return result
+
+
+async def research(question, *, source_references=None):
     """At most three regulators, two documents each, and 28 seconds of network/parser work."""
     if not eligible(question):
         return {"sources": [], "checks": [], "discovery_checks": [], "regulators": [],
                 "checked_at": datetime.now(timezone.utc).isoformat(), "exhaustive": False}
     selected, words = regulators(question), terms(question)
+    references = official_references(source_references)
+    # Source pointers can identify the regulator, but can never widen the URL allowlist.
+    selected = list(dict.fromkeys([reg for reg, _ in references] + selected))[:3]
     sources, checks, discovery_checks = [], [], []
     async def one(regulator):
         client = OfficialClient(regulator, timeout=6, attempts=1, max_bytes=3_000_000)
@@ -363,9 +404,13 @@ async def research(question):
             search_urls = {item["url"] for item in discovery["candidates"]}
             search_candidates = sorted((item for item in candidates if item[1] in search_urls),
                                        key=lambda item: item[0], reverse=True)
-            ordered = sorted(candidates, key=lambda item: (item[2], item[0]) if freshness_requested(question) else (item[0], item[2]), reverse=True)
+            ordered = sorted(candidates, key=lambda item: (item[2], item[0])
+                             if freshness_requested(question) and not instrument_question(question)
+                             else (item[0], item[2]), reverse=True)
             if search_candidates:
                 ordered = [search_candidates[0], *ordered]
+            # Reacquire the selected prior official source before unrelated discovery hits.
+            ordered = [(0, url, "") for reg, url in references if reg == regulator] + ordered
             # Preserve catalogue order for equal relevance.
             for _, url, _ in ordered:
                 if url in seen:
@@ -392,7 +437,13 @@ async def research(question):
         logger.info("Official research reached its bounded deadline")
     # Diversify so one long PDF cannot monopolize the answer evidence.
     ranked, counts, unique = [], {}, set()
-    for source in sorted(sources, key=lambda s: (s["_mentioned_date"], s["_relevance"]) if freshness_requested(question) else (s["_relevance"], s["_mentioned_date"]), reverse=True):
+    reference_urls = {url for _, url in references}
+    def rank(source):
+        relevance_rank = ((source["_mentioned_date"], source["_relevance"]) if freshness_requested(question) and not instrument_question(question)
+                          else (source["_relevance"], source["_mentioned_date"]))
+        primary = instrument_question(question) and instrument_hint(source["provenance"]["source_url"], source["title"])
+        return (source["provenance"]["source_url"] in reference_urls, primary, *relevance_rank)
+    for source in sorted(sources, key=rank, reverse=True):
         doc = source["document_id"]
         if counts.get(doc, 0) >= 3 or source["chunk_id"] in unique:
             continue

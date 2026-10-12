@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from services.grounded_answers import AUDIT_MAX_TOKENS, DRAFT_MAX_TOKENS, answer
+from services.grounded_answers import AUDIT_MAX_TOKENS, HELPFUL_DRAFT_MAX_TOKENS, answer
 
 QUESTION = "Can an account without BVN still receive deposits while on post no debit?"
 CREDITS = "Credit lodgments, including deposits and inward transfers, may still be received on such accounts."
@@ -49,12 +49,15 @@ def audit(flags=(True, True), lead_ok=True):
 async def ask(*responses, question=QUESTION):
     complete = AsyncMock(side_effect=[json.dumps(value) for value in responses])
     result = await answer(question, {"sources": sources()}, complete, answer_mode="helpful")
+    # These tests isolate the audited lead/claim renderer; the public four-section
+    # completeness contract has its own dedicated consistency regressions.
+    result["established"] = result["_finding_answer"]
     return result, complete
 
 
 async def test_supported_direct_answer_leads_the_cited_findings():
     result, _ = await ask(draft(), audit())
-    lead, rest = result["answer"].split("\n\n**What the sources say**\n\n", 1)
+    lead, rest = result["established"].split("\n\n**What the sources say**\n\n", 1)
     assert lead == "Yes. Accounts on post no debit can still receive deposits and inward transfers."
     assert rest.startswith("- Accounts on post no debit may still receive deposits")
     assert "[1]" in rest and "[2]" in rest
@@ -65,7 +68,7 @@ async def test_supported_direct_answer_leads_the_cited_findings():
 async def test_direct_answer_needs_an_explicit_audit_approval(lead_ok):
     result, _ = await ask(draft(), audit(lead_ok=lead_ok))
     assert "What the sources say" not in result["answer"]
-    assert result["answer"].startswith("- Accounts on post no debit")
+    assert result["established"].startswith("- Accounts on post no debit")
 
 
 async def test_direct_answer_dropped_when_any_claim_is_rejected():
@@ -86,12 +89,12 @@ async def test_direct_answer_dropped_when_a_claim_fails_exact_quote_checks():
 async def test_direct_answer_cannot_add_a_figure_the_claims_lack():
     result, _ = await ask(draft(lead="Yes, and a fine of 2,000,000 naira applies."), audit())
     assert "2,000,000" not in result["answer"]
-    assert result["answer"].startswith("- ")
+    assert result["established"].startswith("- ")
 
 
 async def test_citation_markers_are_removed_from_the_direct_answer():
     result, _ = await ask(draft(lead="Yes [1]. The restriction lifts once a valid BVN is submitted [2]."), audit())
-    assert result["answer"].startswith("Yes. The restriction lifts once a valid BVN is submitted.")
+    assert result["established"].startswith("Yes. The restriction lifts once a valid BVN is submitted.")
 
 
 LEAD = "Yes. The restriction lifts once a valid BVN is submitted."
@@ -107,18 +110,18 @@ LEAD = "Yes. The restriction lifts once a valid BVN is submitted."
 async def test_yes_or_no_opener_only_answers_a_yes_no_question(question, kept):
     result, _ = await ask(draft(lead=LEAD), audit(), question=question)
     expected = LEAD if kept else "The restriction lifts once a valid BVN is submitted."
-    assert result["answer"].split("\n\n", 1)[0] == expected
+    assert result["established"].split("\n\n", 1)[0] == expected
 
 
 async def test_removed_opener_leaves_a_capitalised_sentence():
     result, _ = await ask(draft(lead="Yes, the restriction lifts once a valid BVN is submitted."), audit(),
                           question="Which event lifts the restriction?")
-    assert result["answer"].startswith("The restriction lifts once a valid BVN is submitted.")
+    assert result["established"].startswith("The restriction lifts once a valid BVN is submitted.")
 
 
 async def test_empty_direct_answer_keeps_the_plain_findings():
     result, _ = await ask(draft(lead=""), audit())
-    assert result["answer"].startswith("- Accounts on post no debit")
+    assert result["established"].startswith("- Accounts on post no debit")
 
 
 async def test_exact_repeated_lead_is_omitted_without_losing_citations():
@@ -140,14 +143,14 @@ async def test_one_fact_answer_uses_cited_claim_without_paraphrase_intro():
     item = claims()[0]
     result, _ = await ask(draft(lead="The directive permits deposits and inward transfers to those accounts.", items=[item]),
                           audit(flags=(True,)), question="What can those accounts receive?")
-    assert result["answer"] == item["text"] + " [1]"
+    assert result["established"] == item["text"] + " [1]"
     assert len(result["citations"]) == 1
 
 
 async def test_qualified_lead_is_not_removed_as_a_fuzzy_duplicate():
     lead = "The directive does not establish that these accounts may receive deposits today."
     result, _ = await ask(draft(lead=lead), audit())
-    assert result["answer"].startswith(lead)
+    assert result["established"].startswith(lead)
 
 
 async def test_valid_next_questions_become_the_suggested_followups():
@@ -218,13 +221,14 @@ async def test_applicability_gaps_are_listed_only_when_asked(question, listed):
     result, _ = await ask(flagged, {**audit(), "answerable": False}, question=question)
     assert ("current_applicability" in result["missing_information"]) is listed
     assert (result["answer_status"] == "partial") is listed
-    assert ("Still to establish" in result["answer"]) is listed
+    assert result["answer"].startswith("I cannot establish") is listed
+    assert "**What is not established**" in result["answer"]
 
 
 async def test_output_allowances_stay_within_the_quota_budget():
     _, complete = await ask(draft(), audit())
     draft_call, audit_call = complete.await_args_list
-    assert draft_call.kwargs["max_tokens"] == DRAFT_MAX_TOKENS
+    assert draft_call.kwargs["max_tokens"] == HELPFUL_DRAFT_MAX_TOKENS
     assert audit_call.kwargs["max_tokens"] == AUDIT_MAX_TOKENS
     assert "direct_answer" in draft_call.kwargs["json_schema"]["properties"]
     assert "direct_answer_supported" in audit_call.kwargs["json_schema"]["properties"]

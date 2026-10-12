@@ -118,7 +118,10 @@ def _load_history(db: Session, conversation_id: str, limit: int = 24) -> list:
             history[-1]["answer_summary"] = (m.content or "")[:1200]
             history[-1]["citations"] = [
                 {"document_id": str(c.get("document_id", ""))[:200],
-                 "document_title": str(c.get("document_title") or c.get("source") or "")[:240]}
+                 "document_title": str(c.get("document_title") or c.get("source") or "")[:240],
+                 "source_url": str(c.get("source_url") or
+                                   (c.get("provenance", {}).get("source_url")
+                                    if isinstance(c.get("provenance"), dict) else "") or "")[:2000]}
                 for c in (m.citations or [])[:6] if isinstance(c, dict)
             ]
             for step in m.agent_trace or []:
