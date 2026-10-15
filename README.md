@@ -1,274 +1,335 @@
 <div align="center">
 
-# 🌳 IROKO AI
-### Enterprise Web Intelligence for African Telecoms
+# 🌳 Iroko AI
 
+### Regulatory intelligence for Nigerian microfinance banks and fintechs
+
+**Ask the rulebook. Map your controls. File your returns. Prove it to the examiner.**
+
+[![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Semantic Kernel](https://img.shields.io/badge/Semantic_Kernel-1.11-5C2D91?style=for-the-badge&logo=microsoft&logoColor=white)](https://github.com/microsoft/semantic-kernel)
-[![Azure OpenAI](https://img.shields.io/badge/Azure_OpenAI-GPT--4o-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/en-us/products/ai-services/openai-service)
-[![Bright Data](https://img.shields.io/badge/Bright_Data-Web_Intelligence-FF6B35?style=for-the-badge)](https://brightdata.com)
-[![Next.js](https://img.shields.io/badge/Next.js-14-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org)
-[![Railway](https://img.shields.io/badge/Railway-Deployed-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![Azure OpenAI](https://img.shields.io/badge/Azure_OpenAI-GPT--6.1-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/products/ai-services/openai-service)
+[![Azure AI Search](https://img.shields.io/badge/Azure_AI_Search-Hybrid_+_Semantic-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/products/ai-services/ai-search)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-SQLAlchemy_2-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![Tests](https://img.shields.io/badge/backend_tests-1%2C311-2EA44F?style=for-the-badge)](#quality-and-evaluation)
 
-*Built for the **Web Data Unlocked** Hackathon — Bright Data × NVIDIA × LabLab.ai · May 25–31, 2026*
-
-🎥 [Demo Video](#) &nbsp;|&nbsp; 🚀 [Live Platform](#) &nbsp;|&nbsp; 📄 [API Docs](#)
+[Live platform](https://irokoai.site) · [Architecture](#architecture) · [How an answer is made](#how-an-answer-is-made) · [Compliance knowledge graph](#the-compliance-knowledge-graph) · [Run it locally](#run-it-locally)
 
 </div>
 
 ---
 
-> **With over $3.5 billion annually lost to telecom fraud and cybercrime in Africa, ₦2.97 billion in recent NCC service quality sanctions, and the sudden April 2026 suspension of MTN's high-margin "Xtratime" service, African telcos operate in a high-stakes environment.** These critical events break first on the open web, yet operators continue to make decisions without live web intelligence.
+Nigerian financial institutions answer to a crowded rulebook: CBN circulars, guidelines and frameworks, the BOFIA, the
+Money Laundering (Prevention and Prohibition) Act, NDPA 2023 and its GAID, NFIU, NDIC, FCCPC and SEC instruments. Much of it is
+published as scanned PDFs, amended by later letters, and addressed to some licence categories but not others. Compliance teams
+read it by hand, map it to their policies in spreadsheets, and rebuild the evidence trail before every examination.
 
-Nigerian telecoms operate inside one of the most aggressive regulatory environments on the continent. The NCC issues enforcement updates, frequency directives, and consumer protection rulings continuously — none of it available via structured API. Competitive signals (tariff undercuts, infrastructure deals, spectrum acquisitions) break first on the open web, days before they reach internal intelligence channels. Fraud patterns evolve weekly. Vendor risk surfaces in procurement news before it surfaces in contracts. The operators making billion-naira capital allocation decisions are doing so with data that is weeks stale.
+**Iroko turns that rulebook into a system.** Every answer quotes the regulation word for word, with the page it came from. Every
+requirement is linked to the licence categories it binds, the institution's own controls, and the evidence that those controls
+run. When a regulator amends, supersedes or revokes something, Iroko shows which controls need another look.
 
-**Iroko AI is the fix.** It deploys five specialised AI agents against live web sources, applies Nigeria-specific NCC regulatory logic, and delivers GO / NO-GO / MONITOR verdicts with a SHA-256-chained audit trail that maps every finding to specific NCC regulation sections — in real time, before the decision is made.
+## What Iroko does
 
----
-
-## What Iroko AI Does
-
-- **Monitors five live intelligence domains simultaneously** — NCC regulatory updates, competitor moves (MTN, Airtel, Glo, 9mobile), vendor risk signals, active fraud patterns, and market shifts — pulling fresh data from the open web on every query via Bright Data connectors.
-- **Converts raw web signals into compliance verdicts** — a multi-stage pipeline runs signals through a signal knowledge graph (NetworkX compound risk detection), an adversarial debate sub-agent (threat vs. noise), institutional memory recall, and a VerdictEngine that outputs GO / MONITOR / NO-GO with mapped NCC regulation references.
-- **Generates a tamper-evident audit trail** — every agent action, verdict, and compliance check is written to a SHA-256 hash-chained log pinned to the exact NCC regulation section it references, providing regulator-ready evidence of due diligence.
-- **Streams live reasoning via SSE** — the full 6-stage web intelligence pipeline streams agent reasoning steps to the frontend in real time, so compliance teams see exactly how a verdict was reached, not just what it was.
-- **Produces boardroom-ready compliance briefs** — on demand, a PDF brief (ReportLab) consolidates the live signal scan, compound risk entities, verdict, NCC references, and recommended actions into a single downloadable document.
-
----
-
-## Why Bright Data Is Essential
-
-African government and telecom web sources present a class of problems that standard HTTP clients cannot solve. Iroko AI uses **all five** Bright Data product surfaces — this is not an optional integration, it is load-bearing infrastructure.
-
-**Web Unlocker** is the foundation layer. `ncc.gov.ng` is a JavaScript-rendered portal that blocks datacenter IP ranges and returns empty DOM to headless browsers without residential proxy resolution. The same is true for NCC enforcement bulletin pages, Nigerian court record portals, and telco investor relations pages. Web Unlocker's residential proxy network — combined with automatic Cloudflare and bot-detection bypass — is the only reliable way to retrieve this content programmatically. Every call to `fetch_regulatory_signals()`, `fetch_vendor_risk_signals()`, and `fetch_fraud_signals()` routes through Web Unlocker.
-
-**SERP API** powers real-time competitive and market signal collection. `fetch_competitor_signals()` and `fetch_market_intel_signals()` issue structured Google/Bing SERP queries — "MTN Nigeria tariff 2026", "Airtel spectrum acquisition", "NCC fine Q2 2026" — and receive ranked, structured results without browser overhead. This allows the agent pipeline to sweep five competitive dimensions in parallel in under 10 seconds. Without SERP API, this would require a fleet of browser instances.
-
-**Web Scraper API** (Bright Data Datasets v3) handles schema-driven extraction for structured sources — telecom procurement portals, stock exchange filings, and regulatory gazette PDFs — where raw HTML extraction would require custom parsers per site. The `scrape_structured()` method submits a schema and URL to the Datasets trigger endpoint and receives clean, typed data. The system gracefully falls back to Web Unlocker + raw HTML when the Datasets API is unreachable, ensuring no signal category goes dark.
-
-**Scraping Browser** handles the hardest extraction cases — JS-heavy government regulatory portals with lazy-loaded tables, dynamically paginated enforcement documents, and interactive NCC data pages that require clicks and scrolls to reveal complete content. When the Researcher Agent detects that a static Web Unlocker fetch returned incomplete or empty DOM, it escalates to Scraping Browser, which opens a full Playwright browser session over Bright Data's Chrome DevTools Protocol (CDP) endpoint with residential proxy routing. The agent programmatically scrolls the page, clicks pagination controls, and waits for dynamic content to load before extracting the full regulatory text. This gracefully falls back to Web Unlocker when the Scraping Browser zone is unavailable.
-
-**MCP Server** (Model Context Protocol) enables LLM-native web access. The Semantic Kernel agent pipeline can invoke Bright Data's MCP server directly from agent tool calls, allowing agents to request live web data mid-reasoning without round-tripping to the FastAPI layer. This is what makes the streaming pipeline genuinely agentic — agents don't receive pre-fetched context, they pull the web data they need when they need it, within the reasoning loop.
-
----
+| | Capability | What makes it different |
+|---|---|---|
+| 💬 | **Cited compliance answers** | Every quote is verified verbatim against the source passage before display; figures must come from a cited passage or a calculation Iroko recomputes in code. Gaps are stated, never guessed: *"not established in Iroko's records."* |
+| ⚖️ | **GO / MONITOR / NO-GO compliance check** | Verdicts are grounded in quoted rules; anything unverified is MONITOR, and "nothing found" can never become GO. Revoked, superseded, amended and not-yet-in-force instruments adjust the verdict. |
+| 🕸️ | **Compliance knowledge graph** | Requirements extracted from regulations with exact quotes, addressees, deadlines and effective dates; relationships between instruments; the institution's controls and evidence mapped to every requirement, with per-licence applicability and coverage. |
+| 🔔 | **Regulatory change tracking** | New versions, amendments, revocations and deadline extensions raise impacts on exactly the controls they touch, flag them for re-review and open tasks. |
+| 📑 | **Regulatory returns assistant** | Ten MFB returns pre-filled from the institution's profile, past filings, documents and raw core-banking exports. Every figure carries its source, and an officer confirms every value. |
+| 📚 | **Regulator library with provenance** | 90+ official instruments, each with its source URL, how it was acquired and checksum verification; page-accurate OCR, hybrid search and versioning. |
+| 🌐 | **Live official research** | When the library lacks an answer, Iroko reads the regulators' own websites. Only public regulatory vocabulary reaches the search engine, never names, figures or customer details. |
+| 🧾 | **Audit-ready by construction** | One-click audit pack (.xlsx), append-only review history and a SHA-256 hash-chained audit trail. |
 
 ## Architecture
 
-```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                         IROKO AI — WEB INTELLIGENCE PLATFORM                ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║                                                                              ║
-║   ┌─────────────────────────────────────────────────────────────────────┐   ║
-║   │                    BRIGHT DATA INTELLIGENCE LAYER                   │   ║
-║   │                                                                     │   ║
-║   │  ┌────────────┐ ┌──────────┐ ┌────────────┐ ┌───────────┐ ┌────────┐│   ║
-║   │  │Web Unlocker│ │ SERP API │ │Web Scraper │ │ Scraping  │ │  MCP   ││   ║
-║   │  │ncc.gov.ng  │ │Competitor│ │   API      │ │ Browser   │ │ Server ││   ║
-║   │  │Fraud portal│ │Market    │ │Structured  │ │JS-heavy   │ │LLM-    ││   ║
-║   │  │Vendor sites│ │sweeps    │ │extraction  │ │govt pages │ │native  ││   ║
-║   │  └─────┬──────┘ └────┬─────┘ └─────┬──────┘ └─────┬─────┘ └───┬───┘│   ║
-║   └────────┼─────────────┼─────────────┼──────────────┼────────────┼────┘   ║
-║            └─────────────┴─────────────┴──────────────┴────────────┘        ║
-║                                      │                                      ║
-║                          run_all_signals(client)                            ║
-║                   [regulatory · competitor · vendor_risk                    ║
-║                         · fraud · market_intel]                             ║
-║                                      │                                      ║
-║   ┌──────────────────────────────────▼──────────────────────────────────┐  ║
-║   │                      5-AGENT SEMANTIC KERNEL PIPELINE               │  ║
-║   │                                                                     │  ║
-║   │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐              │  ║
-║   │  │  RESEARCHER │   │  WATCHDOG   │   │   ANALYST   │              │  ║
-║   │  │             │   │             │   │             │              │  ║
-║   │  │ Regulatory  │   │ Competitor  │   │ Vendor Risk │              │  ║
-║   │  │ signals +   │   │ + fraud     │   │ + debate    │              │  ║
-║   │  │ NCC corpus  │   │ signals +   │   │ sub-agents  │              │  ║
-║   │  │ Azure Search│   │ audit write │   │ + graph     │              │  ║
-║   │  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘              │  ║
-║   │         │                 │                  │                     │  ║
-║   │  ┌──────▼──────┐   ┌──────▼────────────────────────────────────┐  │  ║
-║   │  │ STRATEGIST  │   │                  SCRIBE                   │  │  ║
-║   │  │             │   │                                           │  │  ║
-║   │  │ Market intel│   │  Report generation · PDF brief · Audit   │  │  ║
-║   │  │ + verdict   │   │  synthesis · NCC reference formatting     │  │  ║
-║   │  │ orchestrate │   │                                           │  │  ║
-║   │  └──────┬──────┘   └───────────────────────┬───────────────────┘  │  ║
-║   └─────────┼───────────────────────────────────┼───────────────────────┘  ║
-║             │                                   │                           ║
-║   ┌─────────▼───────────────────────────────────▼───────────────────────┐  ║
-║   │                    INTELLIGENCE SERVICES LAYER                      │  ║
-║   │                                                                     │  ║
-║   │  ┌──────────────┐  ┌──────────────┐  ┌─────────────────────────┐  │  ║
-║   │  │Signal Graph  │  │  Verdict     │  │   NCC Live Rules        │  │  ║
-║   │  │(NetworkX)    │  │  Engine      │  │   (PDF→enforcement)     │  │  ║
-║   │  │Compound risk │  │  GO/MONITOR/ │  │   Section mapping       │  │  ║
-║   │  │detection     │  │  NO-GO       │  │   Live delta tracking   │  │  ║
-║   │  └──────────────┘  └──────────────┘  └─────────────────────────┘  │  ║
-║   │                                                                     │  ║
-║   │  ┌──────────────┐  ┌──────────────┐  ┌─────────────────────────┐  │  ║
-║   │  │ Regulatory   │  │    Fraud     │  │   Capability Guard      │  │  ║
-║   │  │ Memory       │  │ Intelligence │  │   (Heimdall pattern)    │  │  ║
-║   │  │ (historical  │  │ (noise filter│  │   Per-agent scoping     │  │  ║
-║   │  │  recall)     │  │ + LLM triage)│  │   PermissionError guard │  │  ║
-║   │  └──────────────┘  └──────────────┘  └─────────────────────────┘  │  ║
-║   └─────────────────────────────────────────────────────────────────────┘  ║
-║                                      │                                      ║
-║   ┌──────────────────────────────────▼──────────────────────────────────┐  ║
-║   │                   SHA-256 HASH-CHAINED AUDIT TRAIL                  │  ║
-║   │     Every verdict · Every agent action · Every NCC section ref      │  ║
-║   │     Tamper-evident · Verifiable · Regulator-ready                   │  ║
-║   └─────────────────────────────────────────────────────────────────────┘  ║
-║                                      │                                      ║
-║   ┌──────────────────────────────────▼──────────────────────────────────┐  ║
-║   │          NEXT.JS 14 DASHBOARD — 3-TAB INTELLIGENCE PANEL           │  ║
-║   │   Live Signals · Verdict & Compliance · Audit Trail + Chain Badge   │  ║
-║   └─────────────────────────────────────────────────────────────────────┘  ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+```mermaid
+flowchart LR
+    U["Compliance officer<br/>browser"] --> FE["Next.js 16 · React 19<br/>Vercel · irokoai.site"]
+    FE -->|"REST + SSE<br/>JWT"| API["FastAPI<br/>Render"]
+
+    subgraph Core["Iroko backend"]
+        API --> CHAT["Strategist agent<br/>router · retrieval · drafting · validation"]
+        API --> GRAPHAPI["Compliance graph API<br/>visibility enforced in SQL"]
+        API --> RET["Returns engine<br/>importers · calendar · DOCX"]
+        API --> ING["Ingestion API<br/>uploads · review · sharing"]
+    end
+
+    CHAT --> AOAI["Azure OpenAI<br/>GPT-6.1 Sol · nano fallback<br/>3072-d embeddings"]
+    CHAT --> SRCH["Azure AI Search<br/>hybrid + semantic ranker"]
+    CHAT -. "gaps only" .-> RES["Official research<br/>CBN · SEC · NDPC · NDIC · NFIU · FCCPC"]
+    API --> PG[("PostgreSQL<br/>documents · pages · chunks<br/>graph · returns · audit")]
+    ING --> BLOB[("Azure Blob<br/>immutable originals")]
+
+    subgraph Worker["Azure Container Apps job · every 5 min"]
+        Q["Leased job queue"] --> EXT["Extraction<br/>native text · Document Intelligence OCR"]
+        EXT --> CHK["Exact-substring chunking<br/>offsets + SHA-256"]
+        CHK --> IDX["Embed + index"]
+        IDX --> CG["Graph extraction<br/>budgeted · time-boxed"]
+    end
+
+    ING --> Q
+    Worker --> PG
+    Worker --> SRCH
+    Worker --> AOAI
+    CRAWL["Regulator catalogues<br/>CBN JSON · SEC listings"] --> Q
 ```
 
----
+The API never calls a model while holding a database lock, and graph queries at answer time touch only the database. A model,
+search or web outage therefore degrades features one at a time instead of taking the product down.
 
-## Hackathon Track Coverage
+## How an answer is made
 
-| Track | Iroko AI Capability | Implementation |
+```mermaid
+sequenceDiagram
+    participant User
+    participant Router as Intent router
+    participant Retrieve as Retrieval
+    participant Graph as Graph step
+    participant Draft as Drafting model
+    participant Check as Deterministic validator
+    participant Audit as Audit model
+
+    User->>Router: question
+    Router->>Router: catalogue, records or document question?
+    Router->>Retrieve: document question
+    Retrieve->>Retrieve: hybrid + semantic search (semantic → hybrid → keyword fallback)
+    Retrieve->>Graph: relationship cues only (≤ 2 hops, 1.5 s, database-only)
+    Graph-->>Retrieve: confirmed links + record sources
+    Retrieve->>Draft: numbered passages + strict JSON schema
+    Draft-->>Check: claims, quotes, calculations
+    Check->>Check: verbatim quotes · citation coordinates · numbers · recomputed arithmetic
+    Check->>Audit: surviving claims only
+    Audit-->>User: direct answer · what the sources say · still to establish
+```
+
+- **The model never writes a quote.** It cites a passage and a span, and the validator accepts the span only if it is a contiguous,
+  verbatim substring of that passage. Near-exact misquotes are realigned to the true text, and the right words cited to the wrong
+  passage are re-attributed only on an exact match. Ellipsis-joined quotes are always rejected, because elided words can hide a qualifier.
+- **Numbers are evidence too.** A claim may contain only figures found in its cited passages or produced by a checked calculation.
+  Arithmetic is recomputed with `Decimal` in code, never trusted from the model.
+- **An audit pass re-checks the survivors** against the evidence before anything is rendered.
+- **When the library falls short**, bounded research fetches official regulator pages: at most three regulators and two documents each
+  within 28 seconds. Search results are pointers, never evidence. Text is used only after Iroko has fetched it from an approved
+  domain. A CBN PDF behind a bot check is read from an Internet Archive capture of the same official URL **only when its bytes match
+  CBN's catalogue size exactly**; bot checks are never bypassed.
+
+Reference: [docs/chat-request-flow.md](docs/chat-request-flow.md) · [docs/chat-decision-policy.md](docs/chat-decision-policy.md)
+
+## The document pipeline
+
+| Stage | What happens |
+|---|---|
+| **Accept** | Content-type and size validation, workspace quotas, SHA-256 of the original, immutable write to Blob (`<document>/<file>`, never overwritten) |
+| **Extract** | Native PDF/DOCX/XLSX text where it exists; Azure Document Intelligence OCR for scanned pages, metered by a daily page budget; per-page quality metrics |
+| **Review gates** | Missing publication date, near-empty pages or pending OCR hold a document for human review instead of indexing it silently |
+| **Chunk** | Exact substrings of the joined page text (600-token target, 1,000 max, 60 overlap) carrying `char_start`/`char_end`, page range, section heading and a content hash, so every citation resolves to a precise location |
+| **Index** | 3072-dimension embeddings and hybrid documents in Azure AI Search, keyed `<document>_chunk_<n>` |
+| **Version** | `source_key` lineage links each revision to its predecessor, and a new version of a shared regulation stays private until a superadmin publishes it |
+| **Queue** | Postgres-backed jobs with leases, 30-second heartbeats, retries, and `defer()` for budget exhaustion, time-boxing and outages without spending attempts |
+
+Imports keep **provenance** on every document: official download, browser download, or exact-size archive capture, plus what the
+file was verified against. Curated imports run with `python -m ingestion import-manifest` or `import-folder`.
+Operations: [docs/ingestion/OPERATIONS.md](docs/ingestion/OPERATIONS.md)
+
+## The compliance knowledge graph
+
+```mermaid
+flowchart LR
+    I["Instrument<br/>circular · guideline · Act"] -->|contains| R["Requirement<br/>quote · addressees · deadline · effective date"]
+    I -->|"amends · supersedes · revokes<br/>extends deadline · references · issued under"| I2["Other instrument"]
+    R -->|applies to| L["Licence category<br/>Unit · State · National MFB · PSB · MMO<br/>Switching · PSSP · PTSP · Super-agent · IMTO"]
+    R -->|reported through| RT["Regulatory return"]
+    C["Control<br/>from the institution's policies"] -->|"addresses (full / partial)"| R
+    E["Evidence<br/>records with period covered"] -->|evidences| C
+    E -->|evidences| R
+```
+
+- **Three states for every relationship.** Basis is *stated in source*, *suggested by Iroko* or *entered by a person*. Review
+  status is *proposed*, *confirmed*, *rejected* or *needs re-review*. Suggestions are never auto-confirmed. There are no
+  confidence scores, only quotes and a named reviewer.
+- **"Stated" is earned.** It needs a performative cue bound to its target in the same clause ("hereby revokes…") and a unique,
+  deterministic target match. Licence revocations that mention an Act, "(as amended)" and shared reference numbers are
+  covered by trap cases in the evaluation set.
+- **Addressees from the instrument's own words.** Exact header matches are stated. Typo-tolerant matches, generic terms and a title
+  that narrows a group header ("all OFIs" + "…for Finance Companies") are suggestions for a reviewer.
+- **Stable identity across versions.** Requirements keep a `lineage_id` through exact and fuzzy matching (same section, ±15 %
+  position), so owners, applicability decisions and confirmations survive new versions, and changed text raises an impact.
+- **Coverage is computed, never stored as a verdict.** A requirement can be *no control linked*, *control confirmed, no evidence*,
+  *evidence out of date* or *needs re-review*. A gap reads *"Not established in Iroko's records"*, never "non-compliant".
+- **Tenancy in SQL.** Library rows are visible only when all their documents are visible to the caller. Private documents from two
+  workspaces are never linked, and leak tests cover pages, counts, search, the explorer, exports and chat.
+- **Split review.** Iroko superadmins confirm shared regulation facts; each institution's admins confirm its own controls, evidence and
+  applicability decisions.
+- **Cost control.** Daily token budgets (global and per workspace), a per-minute pacer to protect chat's quota, a judgement cache so
+  unchanged pairs are never re-judged, and stage checkpoints with a 150-second time box per claim.
+
+UI: Overview · Requirements · Controls · Explorer (instruments → requirements → controls → evidence) · Review · Changes, an Evidence
+panel with both sides' quotes and history, and an audit-pack export. Runbook: [docs/compliance-graph.md](docs/compliance-graph.md)
+
+## Regulatory returns assistant
+
+| Return | Regulator |
+|---|---|
+| Monthly prudential returns (MMFBR 300/1000 and schedules) | CBN |
+| Frauds and forgeries · Corporate governance compliance · Whistle-blowing compliance | CBN |
+| Audited financial statements submission · Board and directors' appraisal | CBN |
+| Suspicious transaction report · Currency transaction report | NFIU |
+| Certified deposit liabilities (premium assessment) | NDIC |
+| Annual data protection compliance audit return | NDPC |
+
+- **Reads the files a bank already produces.** Trial balance, loan book and cash transactions are read in whatever layout the core
+  banking system exports. Columns are found by header synonyms; if one is still missing, the model picks from the real headers, and
+  the officer can override.
+- **Learns the chart of accounts.** GL accounts map to MMFBR lines from the institution's own earlier mappings first, then
+  accounting rules, then the model. Corrections are remembered, so next month maps without help, and an unmapped account is never
+  guessed silently.
+- **Every amount comes from a file.** The model only classifies labels it is shown. Prudential computations and minimum-capital
+  checks run per licence category, due dates follow each return's rule on Lagos working days, and filings are generated as Word documents.
+
+## Trust and safety principles
+
+1. **No invented quotes, figures or penalties.** Everything shown is checked against a source or recomputed.
+2. **Absence is not compliance.** Missing evidence produces MONITOR or a stated gap, never GO.
+3. **People decide.** Suggestions, mappings and returns values need a named human confirmation, and every decision carries a note and an audit event.
+4. **Read-gate, never delete.** Archived, rejected or unshared material leaves current views but stays in history.
+5. **Customer data stays inside Iroko.** Searches carry only public regulatory vocabulary, and downloaded web text is treated as data, never as instructions.
+6. **Degrade, don't fail.** Semantic-ranker quotas fall back to hybrid, then keyword, search. Model outages switch chat to a fallback model, while background extraction defers rather than downgrading.
+
+## Quality and evaluation
+
+Iroko is measured with isolated evaluation harnesses (SQLite copies, never production writes) and error analysis. Fixes target
+the system, not the model.
+
+| Suite | Result | Date |
 |---|---|---|
-| **GTM Intelligence** | Competitor signal sweep across all 4 Nigerian MNOs | `fetch_competitor_signals()` → SERP API → Watchdog agent → compound risk graph |
-| **GTM Intelligence** | Market entry signal detection (infrastructure deals, spectrum) | `fetch_market_intel_signals()` → StrategistAgent → GO/MONITOR verdict |
-| **Finance & Market Intelligence** | Vendor financial risk assessment with adversarial debate | `fetch_vendor_risk_signals()` → ThreatDebateAgent (argue\_threat ∥ argue\_noise) → reconcile() |
-| **Finance & Market Intelligence** | Compound risk scoring across correlated signals | SignalGraphService (NetworkX DiGraph) → volume-boosted compound\_risk\_score |
-| **Finance & Market Intelligence** | Institutional memory for historical regulatory impact | RegulatoryMemoryService → keyword-Jaccard similarity → lessons\_learned injection |
-| **Security & Compliance** | NCC PDF → live enforcement rules auto-compilation | `ncc_live_rules.py` → `compile_live_enforcement_rules()` → regulation section delta |
-| **Security & Compliance** | GO / NO-GO / MONITOR verdict per decision | VerdictEngine → `check_decision_against_rules()` → mapped NCC refs + violations |
-| **Security & Compliance** | SHA-256 hash-chained, tamper-evident audit trail | AuditService → chain integrity verification → `GET /api/v1/intel/audit-trail?verify_chain=true` |
-| **Security & Compliance** | Per-agent capability enforcement (zero scope creep) | CapabilityGuard → `require()` → PermissionError on violation → audit\_access\_attempt() |
-| **Security & Compliance** | Multi-source fraud noise filter + LLM triage | FraudIntelligenceService → entity gate + Jaccard dedup + llm\_triage → fraud alert |
+| Graded CBN document questions (28, production model) | 26/28 on the full run; both failures fixed and passing on re-test | Oct 2026 |
+| Multi-turn conversation scenarios | 24/24 | Oct 2026 |
+| Retrieval: right passage in top 12 · right document first | 100 % · 97 % | Oct 2026 |
+| Graph extraction: deterministic checks · model checks · traps | 125/125 · 44/44 (100 % recall) · 8/8 | Oct 2026 |
+| Control-to-requirement mapping · graph chat scenarios | 18/18 · 6/6 | Oct 2026 |
+| Backend unit and integration tests | 1,311 tests across 52 files | Oct 2026 |
 
----
+Method and tooling: [docs/ai-quality-playbook.md](docs/ai-quality-playbook.md) · `scripts/evaluate_document_answers.py --model sol` ·
+`scripts/evaluate_graph_extraction.py` · `scripts/evaluate_conversations.py` · `scripts/build_review_viewer.py`
 
-## Architectural Inspirations
+## Technology
 
-This system assembled patterns from ten reference projects, each contributing a distinct architectural principle:
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, TanStack Query 5, server-sent events, on Vercel |
+| API | FastAPI 0.115, Pydantic, SQLAlchemy 2, JWT auth, role-based access (superadmin · admin · analyst · viewer), on Render |
+| Data | PostgreSQL (application schema plus an Alembic-managed `ingestion` schema), Azure Blob Storage |
+| AI | Azure OpenAI Responses API (GPT-6.1 Sol) with Chat Completions fallback (gpt-5.4-nano), strict JSON-schema outputs, 3072-d embeddings |
+| Search | Azure AI Search, hybrid vector + BM25 with semantic ranker, plus a pure-Python BM25 for graph candidate ranking |
+| Documents | Azure AI Document Intelligence (OCR), pdfplumber, openpyxl, tiktoken |
+| Background | Azure Container Apps scheduled job (Bicep in `backend/deploy/`), Postgres-backed leased queue |
+| Research | Official regulator clients (robots.txt-aware, domain allowlist, size limits), Bright Data SERP for discovery |
 
-| Reference Project | Pattern Borrowed | Applied In |
-|---|---|---|
-| **ContextBridge** | Institutional memory layer with historical event recall | `regulatory_memory.py` — RegulatoryMemoryEntry + Jaccard similarity search |
-| **NexusGraph AI** | In-memory signal correlation graph, compound risk scoring | `signal_graph.py` — NetworkX DiGraph, volume-boost compound score formula |
-| **BrandIntel** | Multi-source signal collection → noise filter → alert pipeline | `fraud_intelligence.py` — collect → filter → triage → verdict |
-| **Diligence** | Adversarial sub-agent debate (pro/con) → reconciler scoring | `debate_agent.py` — `argue_threat` ∥ `argue_noise` → `reconcile()` |
-| **Heimdall** | Cryptographic-style permission scoping per agent | `agent_capabilities.py` — AgentCapability enum + CapabilityGuard |
-| **InsightForge** | Boardroom-ready intelligence panel, multi-tab dashboard | `WebIntelDashboard.tsx` — Live Signals, Verdict & Compliance, Audit Trail |
-| **Foxhole** | Sharp opening statistic hook, confident technical framing | This README — $500m statistic as first sentence |
-| **Core Iroko Architecture** | Streaming SSE reasoning pipeline with per-step yield | `orchestrator.py` → `web_intel_pipeline()` — 6-stage async generator |
-| **Core Iroko Architecture** | FastAPI router pattern with Pydantic response models | `routes/web_intel.py` — 6 typed endpoints |
-| **Core Iroko Architecture** | BaseAgent with `_log_trace()` and `_with_retry()` | All 5 specialist agents + ThreatDebateAgent |
+## Repository layout
 
----
+```
+backend/
+  agents/                 strategist (chat orchestration), kernel (model calls, fallback)
+  services/
+    grounded_answers.py   drafting schema, verbatim-quote and number validation, rendering
+    chat_router.py        intent routing (catalogue · records · documents · shorthand)
+    azure_search.py       hybrid/semantic retrieval with graded fallback
+    regulatory_research.py, regulatory_discovery.py   bounded official research
+    compliance_graph/     taxonomy, segment, relations, deadlines, lineage, mapping, sync, review, queries, export
+    regulatory_returns/   catalogue, importers, prudential, calendar, drafts, docx
+  ingestion/              accept → extract → chunk → index pipeline, queue, worker, crawlers, manifests, CLI
+  routes/                 REST API (chat, documents, compliance graph, returns, workflows, audit, users)
+  models/                 SQLAlchemy models (application, compliance graph, filing, workflow, audit trail)
+  scripts/                evaluation harnesses and review tooling
+  tests/                  1,311 tests: ingestion, compliance_graph, regulatory_returns, llm, chat
+  deploy/                 Azure Container Apps job (Bicep)
+frontend/
+  app/(app)/              chat, documents, knowledge-graph, compliance (check · returns · reports), workflows, audit-trail
+  components/, lib/       UI kit, typed API hooks, chat presentation
+docs/                     architecture, runbooks, evaluation reports
+```
 
-## Setup
+## Run it locally
 
-### Prerequisites
-
-- Python 3.11+, Node.js 18+
-- Azure OpenAI resource (GPT-4o deployment)
-- Bright Data account with Web Unlocker, SERP API, Web Scraper API enabled
-- PostgreSQL 16 (or Docker)
-
-### Environment Variables
+**Prerequisites:** Python 3.13, Node.js 20+, PostgreSQL (or SQLite for tests), and Azure OpenAI, AI Search, Blob and
+Document Intelligence resources.
 
 ```bash
-# Azure OpenAI
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-key
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
-AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-large
+# Backend API
+cd backend
+python -m venv .venv && .venv/Scripts/activate    # source .venv/bin/activate on macOS/Linux
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000             # OpenAPI docs at http://localhost:8000/docs
 
-# Bright Data
-BRIGHTDATA_API_KEY=your-bright-data-api-key
-BRIGHTDATA_WEB_UNLOCKER_ZONE=isp_proxy1
-BRIGHTDATA_SERP_ZONE=serp_api1
-BRIGHTDATA_SCRAPER_DATASET_ID=your-dataset-id
-BRIGHTDATA_MCP_SERVER_URL=https://mcp.brightdata.com  # optional
+# Document worker (needs DOCUMENT_PIPELINE_ENABLED=true on both API and worker)
+python -m ingestion worker
 
-# Database
-DATABASE_URL=postgresql://user:pass@localhost:5432/iroko
-SECRET_KEY=your-jwt-secret
-
-# Azure AI Search (optional — for document RAG)
-AZURE_SEARCH_ENDPOINT=https://your-search.search.windows.net
-AZURE_SEARCH_KEY=your-search-key
-AZURE_SEARCH_INDEX=iroko-chunks
+# Frontend
+cd ../frontend
+npm install
+npm run dev                                       # http://localhost:3000
 ```
 
-### Bright Data Setup
+Configuration uses environment variables. Names only; keep values out of the repository:
 
-1. Log in to [brightdata.com](https://brightdata.com) and create a project.
-2. Enable three zones: **Web Unlocker** (residential), **SERP API**, and **Web Scraper API** (Datasets v3).
-3. Copy the API key and zone names to your `.env`.
-4. (Optional) Enable the **MCP Server** add-on and set `BRIGHTDATA_MCP_SERVER_URL`.
+```
+DATABASE_URL  SECRET_KEY
+AZURE_OPENAI_ENDPOINT  AZURE_OPENAI_API_KEY  AZURE_OPENAI_DEPLOYMENT  AZURE_OPENAI_NANO_DEPLOYMENT
+AZURE_OPENAI_RESPONSES_ENDPOINT  AZURE_OPENAI_RESPONSES_API_KEY  AZURE_OPENAI_RESPONSES_DEPLOYMENT
+AZURE_SEARCH_ENDPOINT  AZURE_SEARCH_API_KEY  AZURE_SEARCH_INDEX_NAME
+AZURE_STORAGE_CONNECTION_STRING  AZURE_STORAGE_CONTAINER
+AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT  AZURE_DOCUMENT_INTELLIGENCE_KEY  DOCINTEL_DAILY_PAGE_BUDGET
+DOCUMENT_PIPELINE_ENABLED  COMPLIANCE_GRAPH_ENABLED
+GRAPH_DAILY_TOKEN_BUDGET  GRAPH_WORKSPACE_DAILY_TOKEN_BUDGET  GRAPH_TOKENS_PER_MINUTE
+BRIGHTDATA_API_KEY  BRIGHTDATA_SERP_ZONE  BRIGHTDATA_REGULATORY_SEARCH_ENABLED
+```
 
-### Run Backend
+**Tests** run against an isolated SQLite file and never load `backend/.env`:
 
 ```bash
 cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-# API docs: http://localhost:8000/docs
+IROKO_LOAD_DOTENV=false DATABASE_URL=sqlite:///iroko_test.db python -m pytest tests -q
+cd ../frontend && node --test tests/ && npx tsc --noEmit
 ```
 
-### Run Frontend
+**Ingestion CLI:** `python -m ingestion {worker|once|drain|scheduled-drain|stats|check|import-manifest|import-folder|graph-backfill}`.
+`graph-backfill` refuses to queue work in a non-SQLite database unless `--production` is passed explicitly.
 
-```bash
-cd frontend
-npm install
-npm run dev
-# Dashboard: http://localhost:3000
-```
+## Deployment
 
-### Docker (full stack)
+| Component | Where | How |
+|---|---|---|
+| Frontend | Vercel (`irokoai.site`) | Builds from `main` |
+| API | Render | Auto-deploys on push to `main`; configuration in Render environment variables |
+| Worker | Azure Container Apps job | `az acr build --file Dockerfile.ingestion-job` from a clean checkout, then update the job image |
+| Health | `GET /health/full` | Database, search, both models, embeddings, blob and web intelligence, with latencies |
 
-```bash
-docker-compose up --build
-# Frontend: http://localhost:3000
-# Backend:  http://localhost:8000/docs
-# Login:    admin@mtn.ng / AtlasAdmin2026!
-```
+## Documentation
 
-### Key API Endpoints
+| Topic | Document |
+|---|---|
+| Compliance knowledge graph: design, rollout, runbook | [docs/compliance-graph.md](docs/compliance-graph.md) |
+| How a chat request flows | [docs/chat-request-flow.md](docs/chat-request-flow.md) |
+| Answer decision policy | [docs/chat-decision-policy.md](docs/chat-decision-policy.md) |
+| AI quality method: evals, error analysis, feedback | [docs/ai-quality-playbook.md](docs/ai-quality-playbook.md) |
+| Ingestion operations | [docs/ingestion/OPERATIONS.md](docs/ingestion/OPERATIONS.md) |
+| Official-site search discovery | [docs/brightdata-regulatory-search.md](docs/brightdata-regulatory-search.md) |
 
-```
-GET  /api/v1/intel/signals              # Live signals — all 5 domains
-GET  /api/v1/intel/regulatory           # NCC live enforcement rules
-POST /api/v1/intel/check-compliance     # Verdict check for a decision text
-GET  /api/v1/intel/audit-trail          # Hash-chained audit trail
-GET  /api/v1/intel/brief                # PDF compliance brief (download)
-GET  /api/v1/intel/health               # Bright Data connection status
-GET  /api/v1/intel/stream?query=...     # SSE streaming pipeline
-```
+## Roadmap
 
----
-
-## What Makes This Submission Different
-
-**1. African market monopoly — built for no one else.**
-Every design decision is Africa-specific: the NCC regulation corpus, the four Nigerian MNO competitive map (MTN, Airtel, Glo, 9mobile), the web sources (ncc.gov.ng, Nigerian court portals, local telco investor pages), the fraud signal patterns (MoMo abuse, SIM swap, interconnect fraud). This is not a generic compliance tool with a Nigeria flag. The entity extraction, regulation mapping, and signal weighting are tuned to the specific intelligence needs of operators under NCC jurisdiction. No other submission in this hackathon is solving this problem for this market.
-
-**2. A compliance audit trail that would survive a regulator audit.**
-The hash-chained SHA-256 audit log is not a dashboard feature — it is the accountability layer. Every compliance check is written as a chain entry that references the specific NCC regulation section it evaluated against. `verify_chain_integrity()` detects any post-hoc modification. A telecom operator could hand this log to the NCC in a dispute and demonstrate exactly what signals were seen, what verdict was issued, and when — with a cryptographic proof that the record was not altered. No other submission in this space produces audit evidence at this fidelity.
-
-**3. Adversarial debate agents — verdicts that have been challenged before they reach you.**
-When a vendor risk signal fires, Iroko AI does not just surface it. It spawns two sub-agents: one makes the strongest possible case that the signal is a genuine threat; the other makes the strongest possible case that it is noise. A senior reconciler reads both arguments and issues a confidence-weighted verdict. This is not a gimmick — it is a systematic way to reduce false-positive fatigue in compliance workflows. Operators act on NO-GO verdicts. A verdict that has already survived an adversarial challenge is a verdict worth acting on.
-
----
+- Fintech returns (Payments System Management Department returns, scheme and NIBSS reporting) alongside the MFB set
+- Streaming imports for institutions whose exports exceed the current 10 MB / 50,000-row limits
+- Live regulatory change feeds into the graph's change tracking
+- Data-subject-request and DPIA workflows, now prototypes, connected to the NDPA requirements in the graph
+- Voice agent and meeting assistant, built and awaiting production configuration
 
 ## Team
 
-**Ndubuisi Ekeh** — AI Lead, Lagos, Nigeria  
-TeKnowledge × Microsoft 2026 Agentic AI Hackathon Finalist  
-Building production AI systems for African enterprise since 2023.
+**Ndubuisi Ekeh**, Founder and AI Lead, Lagos, Nigeria
 
 ---
 
-## License
-
-Hackathon submission — all rights reserved, Iroko AI / Ndubuisi Ekeh, 2026.
+<sub>© 2026 Iroko AI. All rights reserved.</sub>
